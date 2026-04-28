@@ -1,0 +1,106 @@
+import type { PrismaClient } from "@prisma/client";
+
+type RetentionConfig = {
+  unverifiedUserDays: number;
+  emptyCompanyDays: number;
+  workLogDays: number;
+  vacationDays: number;
+};
+
+export type DataRetentionReport = {
+  deletedExpiredSessions: number;
+  deletedExpiredVerificationTokens: number;
+  deletedUnverifiedUsers: number;
+  deletedEmptyCompanies: number;
+  deletedOldWorkLogs: number;
+  deletedOldVacationRequests: number;
+  config: RetentionConfig;
+  executedAt: string;
+};
+
+function parseDays(value: string | undefined, fallback: number) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  if (parsed < 0) return 0;
+  return Math.floor(parsed);
+}
+
+function minusDays(days: number) {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+}
+
+export function resolveRetentionConfig(): RetentionConfig {
+  return {
+    unverifiedUserDays: parseDays(process.env.DATA_RETENTION_UNVERIFIED_USER_DAYS, 14),
+    emptyCompanyDays: parseDays(process.env.DATA_RETENTION_EMPTY_COMPANY_DAYS, 30),
+    workLogDays: parseDays(process.env.DATA_RETENTION_WORKLOG_DAYS, 0),
+    vacationDays: parseDays(process.env.DATA_RETENTION_VACATION_DAYS, 0),
+  };
+}
+
+export async function runDataRetention(prisma: PrismaClient): Promise<DataRetentionReport> {
+  const config = resolveRetentionConfig();
+  const now = new Date();
+
+  const [expiredSessions, expiredTokens] = await prisma.$transaction([
+    prisma.session.deleteMany({
+      where: { expires: { lt: now } },
+    }),
+    prisma.verificationToken.deleteMany({
+      where: { expires: { lt: now } },
+    }),
+  ]);
+
+  const staleUserCutoff = minusDays(config.unverifiedUserDays);
+  const staleCompanyCutoff = minusDays(config.emptyCompanyDays);
+
+  const [unverifiedUsers, emptyCompanies] = await prisma.$transaction([
+    prisma.user.deleteMany({
+      where: {
+        role: { not: "SUPER_ADMIN" },
+        emailVerified: null,
+        createdAt: { lt: staleUserCutoff },
+        sessions: { none: {} },
+      },
+    }),
+    prisma.company.deleteMany({
+      where: {
+        createdAt: { lt: staleCompanyCutoff },
+        users: { none: {} },
+      },
+    }),
+  ]);
+
+  let deletedOldWorkLogs = 0;
+  if (config.workLogDays > 0) {
+    const oldWorkLogCutoff = minusDays(config.workLogDays);
+    const deleted = await prisma.workLog.deleteMany({
+      where: {
+        clockIn: { lt: oldWorkLogCutoff },
+      },
+    });
+    deletedOldWorkLogs = deleted.count;
+  }
+
+  let deletedOldVacationRequests = 0;
+  if (config.vacationDays > 0) {
+    const oldVacationCutoff = minusDays(config.vacationDays);
+    const deleted = await prisma.vacationRequest.deleteMany({
+      where: {
+        endDate: { lt: oldVacationCutoff },
+      },
+    });
+    deletedOldVacationRequests = deleted.count;
+  }
+
+  return {
+    deletedExpiredSessions: expiredSessions.count,
+    deletedExpiredVerificationTokens: expiredTokens.count,
+    deletedUnverifiedUsers: unverifiedUsers.count,
+    deletedEmptyCompanies: emptyCompanies.count,
+    deletedOldWorkLogs,
+    deletedOldVacationRequests,
+    config,
+    executedAt: now.toISOString(),
+  };
+}

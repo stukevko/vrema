@@ -1,0 +1,167 @@
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { db } from "@/lib/db";
+import { PLANS } from "@/lib/stripe";
+import { createCheckoutSession, createBillingPortalSession } from "@/lib/actions/billing";
+import { Check, Zap, CreditCard } from "lucide-react";
+import Link from "next/link";
+
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ success?: string; canceled?: string }>;
+}) {
+  const session = await auth();
+  if (!session?.user?.companyId) redirect("/auth/login");
+
+  const params = await searchParams;
+  const { companyId } = session.user as { companyId: string };
+  const role = session.user.role ?? "EMPLOYEE";
+  if (role === "EMPLOYEE") redirect("/dashboard");
+
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+    select: { plan: true, billingInterval: true, stripeCustomerId: true, subEndsAt: true },
+  });
+
+  if (!company) redirect("/auth/login");
+
+  const currentPlan = company.plan;
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Abonnement & Billing</h1>
+        <p className="text-white/40 text-sm mt-1">Verwalte dein Abo und deine Zahlungsmethoden.</p>
+      </div>
+
+      {params.success && (
+        <div className="rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/30 p-4 flex items-center gap-3">
+          <Check className="w-5 h-5 text-[#22c55e]" />
+          <p className="text-sm text-[#22c55e] font-medium">Zahlung erfolgreich! Dein Plan wurde aktualisiert.</p>
+        </div>
+      )}
+
+      {/* Current plan */}
+      <div className="rounded-2xl bg-[#141414] border border-white/5 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-white/40 mb-1">Aktueller Plan</p>
+            <p className="text-2xl font-bold capitalize">{currentPlan}</p>
+            {company.subEndsAt && (
+              <p className="text-xs text-white/40 mt-1">
+                Läuft bis: {new Date(company.subEndsAt).toLocaleDateString("de-DE")}
+              </p>
+            )}
+          </div>
+          {company.stripeCustomerId && (
+            <form action={createBillingPortalSession}>
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors"
+              >
+                <CreditCard className="w-4 h-4" />
+                Zahlungsportal
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+
+      {/* Plan cards */}
+      <div className="grid md:grid-cols-3 gap-3 md:gap-4">
+        {(Object.entries(PLANS) as [keyof typeof PLANS, (typeof PLANS)[keyof typeof PLANS]][]).map(([key, plan]) => {
+          const isCurrent = currentPlan === key;
+          return (
+            <div
+              key={key}
+              className={`rounded-2xl p-4 md:p-6 border transition-all ${
+                isCurrent
+                  ? "bg-[#22c55e]/5 border-[#22c55e]/30"
+                  : "bg-[#141414] border-white/5"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold">{plan.name}</h3>
+                {isCurrent && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#22c55e]/20 text-[#22c55e] font-semibold">
+                    Aktiv
+                  </span>
+                )}
+              </div>
+
+              {isCurrent ? (
+                <a
+                  href="/dashboard"
+                  className="mb-1 inline-flex w-full items-center justify-center rounded-xl bg-[#22c55e] px-4 py-3 text-sm font-bold text-black hover:bg-[#16a34a] transition-colors"
+                >
+                  Zum Dashboard gehen
+                </a>
+              ) : (
+                <p className="text-2xl md:text-3xl font-bold mb-1">
+                  {plan.monthlyPrice === null ? "Auf Anfrage" : `${plan.monthlyPrice}€`}
+                  {plan.monthlyPrice !== null && <span className="text-sm font-normal text-white/40">/mo</span>}
+                </p>
+              )}
+
+              <ul className="mt-4 mb-6 space-y-2">
+                {plan.features.slice(0, 4).map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-xs text-white/60">
+                    <Check className="w-3.5 h-3.5 text-[#22c55e] shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              {!isCurrent && key !== "ENTERPRISE" && (
+                <div className="flex flex-col gap-2">
+                  <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "monthly")}>
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 rounded-xl bg-[#22c55e] text-black text-sm font-bold hover:bg-[#16a34a] transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Zap className="w-4 h-4" />
+                      Monatlich upgraden
+                    </button>
+                  </form>
+                  <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "yearly")}>
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-medium hover:bg-white/10 transition-colors"
+                    >
+                      Jährlich (2 Monate gratis)
+                    </button>
+                  </form>
+                </div>
+              )}
+              {key === "ENTERPRISE" && !isCurrent && (
+                <a
+                  href="mailto:kontakt@kevko.studio?subject=Enterprise%20Anfrage%20Vrema"
+                  className="block w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-center hover:bg-white/10 transition-colors"
+                >
+                  Kontakt aufnehmen
+                </a>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-[#141414] px-4 py-3 text-xs text-white/55">
+        Mit dem Abschluss eines kostenpflichtigen Plans gelten die{" "}
+        <Link href="/agb" className="text-white/80 underline underline-offset-2 hover:text-white">
+          AGB
+        </Link>{" "}
+        , die{" "}
+        <Link href="/datenschutz" className="text-white/80 underline underline-offset-2 hover:text-white">
+          Datenschutzhinweise
+        </Link>{" "}
+        und bei Bedarf die{" "}
+        <Link href="/avv" className="text-white/80 underline underline-offset-2 hover:text-white">
+          AVV
+        </Link>
+        .
+      </div>
+    </div>
+  );
+}

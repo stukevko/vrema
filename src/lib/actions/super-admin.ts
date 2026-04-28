@@ -1,0 +1,403 @@
+"use server";
+
+import { auth } from "@/auth";
+import { db } from "@/lib/db";
+import { revalidatePath } from "next/cache";
+import { Prisma, type BillingInterval, type Plan } from "@prisma/client";
+import { generateUniqueAffiliateCode, publicRegisterRefUrl } from "@/lib/affiliate-code";
+import { randomUUID } from "crypto";
+import bcrypt from "bcryptjs";
+
+function assertSuperAdmin(session: { user?: { role?: string | null; id?: string | null } } | null) {
+  const allowed =
+    session?.user?.role === "SUPER_ADMIN" ||
+    session?.user?.id === process.env.SUPER_ADMIN_USER_ID;
+  if (!allowed) {
+    throw new Error("Keine Berechtigung.");
+  }
+}
+
+async function generateUniqueCompanySlug(name: string) {
+  const base = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 50) || "company";
+
+  let slug = base;
+  let i = 1;
+  while (await db.company.findUnique({ where: { slug }, select: { id: true } })) {
+    slug = `${base}-${i++}`;
+  }
+  return slug;
+}
+
+export async function getSuperAdminOverview() {
+  const session = await auth();
+  assertSuperAdmin(session);
+
+  const companies = await db.company.findMany({
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      plan: true,
+      billingInterval: true,
+      isActive: true,
+      createdAt: true,
+    },
+  });
+
+  const companiesWithCounts = await Promise.all(
+    companies.map(async (c) => ({
+      ...c,
+      userCount: await db.user.count({ where: { companyId: c.id } }),
+      activeUserCount: await db.user.count({ where: { companyId: c.id, isActive: true } }),
+    })),
+  );
+
+  return companiesWithCounts;
+}
+
+export async function getSuperAdminMonitoring() {
+  const session = await auth();
+  assertSuperAdmin(session);
+
+  const now = new Date();
+  const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const [
+    totalCompanies,
+    activeCompanies,
+    totalUsers,
+    activeUsers,
+    openWorkLogs,
+    logsLast24h,
+    newUsersLast7d,
+    verificationTokensOpen,
+    staleVerificationTokens,
+    expiredSessions,
+  ] = await Promise.all([
+    db.company.count(),
+    db.company.count({ where: { isActive: true } }),
+    db.user.count(),
+    db.user.count({ where: { isActive: true } }),
+    db.workLog.count({ where: { clockOut: null } }),
+    db.workLog.count({ where: { createdAt: { gte: dayAgo } } }),
+    db.user.count({ where: { createdAt: { gte: weekAgo } } }),
+    db.verificationToken.count(),
+    db.verificationToken.count({ where: { expires: { lt: now } } }),
+    db.session.count({ where: { expires: { lt: now } } }),
+  ]);
+
+  return {
+    totalCompanies,
+    activeCompanies,
+    totalUsers,
+    activeUsers,
+    openWorkLogs,
+    logsLast24h,
+    newUsersLast7d,
+    verificationTokensOpen,
+    staleVerificationTokens,
+    expiredSessions,
+    retentionCronConfigured: Boolean(process.env.DATA_RETENTION_CRON_SECRET),
+    generatedAt: now.toISOString(),
+  };
+}
+
+export async function updateCompanyBySuperAdmin(params: {
+  companyId: string;
+  plan: Plan;
+  billingInterval: BillingInterval;
+  isActive: boolean;
+}) {
+  const session = await auth();
+  assertSuperAdmin(session);
+
+  await db.company.update({
+    where: { id: params.companyId },
+    data: {
+      plan: params.plan,
+      billingInterval: params.billingInterval,
+      isActive: params.isActive,
+    },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/partners");
+}
+
+export async function deleteCompanyBySuperAdmin(companyId: string) {
+  const session = await auth();
+  assertSuperAdmin(session);
+
+  await db.company.delete({
+    where: { id: companyId },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/partners");
+}
+
+export async function createCompanyBySuperAdmin(params: {
+  companyName: string;
+  ownerName: string;
+  ownerEmail: string;
+}) {
+  const session = await auth();
+  assertSuperAdmin(session);
+
+  const companyName = params.companyName.trim();
+  const ownerName = params.ownerName.trim();
+  const ownerEmail = params.ownerEmail.toLowerCase().trim();
+
+  if (!companyName || !ownerName || !ownerEmail) {
+    throw new Error("Bitte alle Felder ausfüllen.");
+  }
+
+  const existingUser = await db.user.findUnique({
+    where: { email: ownerEmail },
+    select: { id: true },
+  });
+  if (existingUser) {
+    throw new Error("Diese Owner-E-Mail ist bereits vergeben.");
+  }
+
+  const slug = await generateUniqueCompanySlug(companyName);
+  const tempPassword = Math.random().toString(36).slice(2, 10) + "Aa1!";
+  const hashed = await bcrypt.hash(tempPassword, 12);
+
+  const company = await db.company.create({
+    data: {
+      name: companyName,
+      slug,
+      plan: "STARTER",
+      billingInterval: "MONTHLY",
+      isActive: true,
+      users: {
+        create: {
+          name: ownerName,
+          email: ownerEmail,
+          password: hashed,
+          role: "COMPANY_OWNER",
+          emailVerified: new Date(),
+          isActive: true,
+        },
+      },
+    },
+    select: { id: true, name: true, slug: true },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/partners");
+
+  return {
+    company,
+    ownerEmail,
+    tempPassword,
+  };
+}
+
+export type SuperAdminAffiliateRecentEntry = {
+  id: string;
+  createdAt: string;
+  commissionCents: number;
+  currency: string;
+  status: "PENDING" | "AVAILABLE" | "PAID" | "CANCELLED";
+  plan: "STARTER" | "BUSINESS" | "ENTERPRISE";
+  companyName: string;
+};
+
+export type SuperAdminAffiliateSummary = {
+  id: string;
+  code: string;
+  name: string;
+  email: string | null;
+  referredCompanies: number;
+  pendingCents: number;
+  availableCents: number;
+  paidCents: number;
+  recentCommissions: SuperAdminAffiliateRecentEntry[];
+};
+
+/** Anstehende Bounties (Haltefrist oder auszahlbar). */
+export type SuperAdminAffiliatePayoutQueueRow = {
+  id: string;
+  status: "PENDING" | "AVAILABLE";
+  plan: "STARTER" | "BUSINESS" | "ENTERPRISE";
+  commissionCents: number;
+  currency: string;
+  invoiceAmountCents: number;
+  stripeInvoiceId: string;
+  createdAt: string;
+  maturesAt: string;
+  affiliate: { id: string; name: string; code: string };
+  company: { id: string; name: string };
+};
+
+export async function getSuperAdminAffiliatePayoutData(): Promise<{
+  affiliates: SuperAdminAffiliateSummary[];
+  payoutQueue: SuperAdminAffiliatePayoutQueueRow[];
+}> {
+  const session = await auth();
+  assertSuperAdmin(session);
+
+  const affiliates = await db.affiliate.findMany({
+    orderBy: { name: "asc" },
+  });
+
+  const summaries: SuperAdminAffiliateSummary[] = await Promise.all(
+    affiliates.map(async (a) => {
+      const [pendingAgg, availableAgg, paidAgg, referredCompanies, recentRaw] = await Promise.all([
+        db.affiliateEarning.aggregate({
+          where: { affiliateId: a.id, status: "PENDING" },
+          _sum: { commissionCents: true },
+        }),
+        db.affiliateEarning.aggregate({
+          where: { affiliateId: a.id, status: "AVAILABLE" },
+          _sum: { commissionCents: true },
+        }),
+        db.affiliateEarning.aggregate({
+          where: { affiliateId: a.id, status: "PAID" },
+          _sum: { commissionCents: true },
+        }),
+        db.company.count({
+          where: { affiliateId: a.id },
+        }),
+        db.affiliateEarning.findMany({
+          where: {
+            affiliateId: a.id,
+            status: { in: ["PENDING", "AVAILABLE", "PAID"] },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          include: { company: { select: { name: true } } },
+        }),
+      ]);
+      return {
+        id: a.id,
+        code: a.code,
+        name: a.name,
+        email: a.email,
+        referredCompanies,
+        pendingCents: pendingAgg._sum.commissionCents ?? 0,
+        availableCents: availableAgg._sum.commissionCents ?? 0,
+        paidCents: paidAgg._sum.commissionCents ?? 0,
+        recentCommissions: recentRaw.map((r) => ({
+          id: r.id,
+          createdAt: r.createdAt.toISOString(),
+          commissionCents: r.commissionCents,
+          currency: r.currency,
+          status: r.status,
+          plan: r.plan,
+          companyName: r.company.name,
+        })),
+      };
+    }),
+  );
+
+  const queueRaw = await db.affiliateEarning.findMany({
+    where: { status: { in: ["PENDING", "AVAILABLE"] } },
+    include: {
+      affiliate: { select: { id: true, name: true, code: true } },
+      company: { select: { id: true, name: true } },
+    },
+  });
+
+  const payoutQueue: SuperAdminAffiliatePayoutQueueRow[] = [...queueRaw]
+    .sort((a, b) => {
+      if (a.status === "AVAILABLE" && b.status !== "AVAILABLE") return -1;
+      if (a.status !== "AVAILABLE" && b.status === "AVAILABLE") return 1;
+      return new Date(a.maturesAt).getTime() - new Date(b.maturesAt).getTime();
+    })
+    .map((e) => ({
+      id: e.id,
+      status: e.status as "PENDING" | "AVAILABLE",
+      plan: e.plan,
+      commissionCents: e.commissionCents,
+      currency: e.currency,
+      invoiceAmountCents: e.invoiceAmountCents,
+      stripeInvoiceId: e.stripeInvoiceId,
+      createdAt: e.createdAt.toISOString(),
+      maturesAt: e.maturesAt.toISOString(),
+      affiliate: e.affiliate,
+      company: e.company,
+    }));
+
+  return { affiliates: summaries, payoutQueue };
+}
+
+export async function markAffiliateEarningsPaid(earningIds: string[]) {
+  const session = await auth();
+  assertSuperAdmin(session);
+
+  if (earningIds.length === 0) {
+    throw new Error("Keine Zeilen ausgewählt.");
+  }
+
+  const rows = await db.affiliateEarning.findMany({
+    where: { id: { in: earningIds } },
+    select: { id: true, status: true },
+  });
+  if (rows.length !== earningIds.length) {
+    throw new Error("Mindestens eine ID ist ungültig.");
+  }
+  if (rows.some((r) => r.status !== "AVAILABLE")) {
+    throw new Error("Nur Einträge mit Status „auszahlbar“ können markiert werden.");
+  }
+
+  const now = new Date();
+  await db.affiliateEarning.updateMany({
+    where: {
+      id: { in: earningIds },
+      status: "AVAILABLE",
+    },
+    data: {
+      status: "PAID",
+      paidAt: now,
+    },
+  });
+
+  revalidatePath("/dashboard/partners");
+}
+
+export async function createAffiliateForSuperAdmin(params: {
+  name: string;
+  email?: string | null;
+}): Promise<{ code: string; refUrl: string; tempPassword: string }> {
+  const session = await auth();
+  assertSuperAdmin(session);
+
+  const name = params.name.trim();
+  const email = params.email?.trim().toLowerCase() ?? "";
+  if (!name) {
+    throw new Error("Name ist erforderlich.");
+  }
+  if (!email) {
+    throw new Error("E-Mail ist erforderlich, damit der Partner sich einloggen kann.");
+  }
+
+  const code = await generateUniqueAffiliateCode(name);
+  const tempPassword = Math.random().toString(36).slice(2, 10) + "Aa1!";
+  const passwordHash = await bcrypt.hash(tempPassword, 12);
+
+  try {
+    await db.$executeRaw`
+      INSERT INTO "Affiliate" ("id","code","name","email","passwordHash","isActive","createdAt","updatedAt")
+      VALUES (${randomUUID()}, ${code}, ${name}, ${email}, ${passwordHash}, ${true}, NOW(), NOW())
+    `;
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      throw new Error("Code oder E-Mail bereits vorhanden.");
+    }
+    throw e;
+  }
+
+  revalidatePath("/dashboard/partners");
+
+  return { code, refUrl: publicRegisterRefUrl(code), tempPassword };
+}

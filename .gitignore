@@ -1,0 +1,25 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+node_modules/
+.next/
+dist/
+build/
+coverage/
+test-results/
+playwright-report/
+
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+tsconfig.tsbuildinfo
+
+# accidental nested repo (GitHub Desktop default path)
+vrema/
+
