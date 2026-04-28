@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
+import { randomUUID } from "crypto";
 
 function parseShiftTimeToDate(baseDate: Date, hhmm: string) {
   const [hRaw, mRaw] = hhmm.split(":");
@@ -64,32 +65,48 @@ export async function createAbsentEntriesForMissingShifts(prisma: PrismaClient):
       continue;
     }
 
-    const existingToday = await prisma.workLog.findFirst({
-      where: {
-        companyId: shift.companyId,
-        userId: shift.userId,
-        clockIn: { gte: start, lte: end },
-      },
-      select: { id: true },
-    });
-    if (existingToday) {
-      skippedExistingEntries += 1;
-      continue;
-    }
-
     const shiftEnd = parseShiftTimeToDate(now, shift.endTime) ?? shiftStart;
-    await prisma.workLog.create({
-      data: {
-        companyId: shift.companyId,
-        userId: shift.userId,
-        clockIn: shiftStart,
-        clockOut: shiftEnd,
-        breakMins: 0,
-        note: "[AUTO_ABSENT] Automatisch als fehlend markiert.",
-        status: "ABSENT",
-      },
+    const created = await prisma.$transaction(async (tx) => {
+      const existingToday = await tx.workLog.findFirst({
+        where: {
+          companyId: shift.companyId,
+          userId: shift.userId,
+          clockIn: { gte: start, lte: end },
+        },
+        select: { id: true },
+      });
+      if (existingToday) return null;
+
+      const row = await tx.workLog.create({
+        data: {
+          companyId: shift.companyId,
+          userId: shift.userId,
+          clockIn: shiftStart,
+          clockOut: shiftEnd,
+          breakMins: 0,
+          note: "[AUTO_ABSENT] Automatisch als fehlend markiert.",
+          status: "ABSENT",
+        },
+      });
+      await tx.$executeRawUnsafe(
+        `
+        INSERT INTO "WorkLogAudit"
+          ("id","companyId","workLogId","action","source","reason","afterJson")
+        VALUES
+          ($1,$2,$3,$4,$5,$6,$7::jsonb)
+        `,
+        randomUUID(),
+        shift.companyId,
+        row.id,
+        "AUTO_ABSENT_CREATE",
+        "system",
+        "missing_clock_in_after_shift_start",
+        JSON.stringify(row)
+      );
+      return row;
     });
-    createdAbsentEntries += 1;
+    if (created) createdAbsentEntries += 1;
+    else skippedExistingEntries += 1;
   }
 
   return {

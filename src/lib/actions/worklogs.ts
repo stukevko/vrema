@@ -6,8 +6,69 @@ import { revalidatePath } from "next/cache";
 import { calculateDistance } from "@/lib/geo";
 import type { CorrectionRequestStatus, EntryStatus } from "@prisma/client";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
+import { sumWorkedMinutes } from "@/lib/time/payroll";
+import { randomUUID } from "crypto";
 
 const LATE_GRACE_MINUTES = 15;
+let constraintsEnsured = false;
+
+async function ensureWorkLogOpenUniqueConstraint() {
+  if (constraintsEnsured) return;
+  await db.$executeRawUnsafe(
+    'CREATE UNIQUE INDEX IF NOT EXISTS "worklog_open_unique_idx" ON "WorkLog" ("companyId","userId") WHERE "clockOut" IS NULL'
+  );
+  constraintsEnsured = true;
+}
+
+let auditTableEnsured = false;
+async function ensureWorkLogAuditTable() {
+  if (auditTableEnsured) return;
+  await db.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "WorkLogAudit" (
+      "id" TEXT PRIMARY KEY,
+      "companyId" TEXT NOT NULL,
+      "workLogId" TEXT,
+      "actorUserId" TEXT,
+      "action" TEXT NOT NULL,
+      "source" TEXT NOT NULL DEFAULT 'app',
+      "reason" TEXT,
+      "beforeJson" JSONB,
+      "afterJson" JSONB,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT NOW()
+    )
+  `);
+  auditTableEnsured = true;
+}
+
+async function writeWorkLogAudit(params: {
+  companyId: string;
+  workLogId?: string | null;
+  actorUserId?: string | null;
+  action: string;
+  source?: string;
+  reason?: string | null;
+  beforeJson?: unknown;
+  afterJson?: unknown;
+}) {
+  await ensureWorkLogAuditTable();
+  await db.$executeRawUnsafe(
+    `
+    INSERT INTO "WorkLogAudit"
+      ("id","companyId","workLogId","actorUserId","action","source","reason","beforeJson","afterJson")
+    VALUES
+      ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb)
+    `,
+    randomUUID(),
+    params.companyId,
+    params.workLogId ?? null,
+    params.actorUserId ?? null,
+    params.action,
+    params.source ?? "app",
+    params.reason ?? null,
+    params.beforeJson ? JSON.stringify(params.beforeJson) : null,
+    params.afterJson ? JSON.stringify(params.afterJson) : null
+  );
+}
 
 function parseShiftTimeToDate(baseDate: Date, hhmm: string) {
   const [hRaw, mRaw] = hhmm.split(":");
@@ -23,16 +84,13 @@ async function createClockInEntry(params: {
   companyId: string;
   userId: string;
   role: string;
+  actorUserId?: string;
   latitude?: number;
   longitude?: number;
 }) {
-  const { companyId, userId, role, latitude, longitude } = params;
-  // Check if already clocked in
-  const active = await db.workLog.findFirst({
-    where: tenantWhere(companyId, { userId, clockOut: null }),
-  });
-
-  if (active) throw new Error("Bereits eingestempelt");
+  const { companyId, userId, role, latitude, longitude, actorUserId } = params;
+  await ensureWorkLogOpenUniqueConstraint();
+  await ensureWorkLogAuditTable();
 
   const company = await db.company.findUnique({
     where: { id: companyId },
@@ -87,18 +145,42 @@ async function createClockInEntry(params: {
     extraShiftNote = "[EXTRA_SHIFT] Kein geplanter Schichtslot gefunden.";
   }
 
-  const log = await db.workLog.create({
-    data: {
+  const log = await db.$transaction(async (tx) => {
+    const active = await tx.workLog.findFirst({
+      where: tenantWhere(companyId, { userId, clockOut: null }),
+      select: { id: true },
+    });
+    if (active) throw new Error("Bereits eingestempelt");
+
+    const created = await tx.workLog.create({
+      data: {
+        companyId,
+        userId,
+        clockIn: now,
+        latitude,
+        longitude,
+        isOutOfRange,
+        distanceMeters,
+        status,
+        ...(extraShiftNote ? { note: extraShiftNote } : {}),
+      },
+    });
+    await tx.$executeRawUnsafe(
+      `
+      INSERT INTO "WorkLogAudit"
+        ("id","companyId","workLogId","actorUserId","action","source","afterJson")
+      VALUES
+        ($1,$2,$3,$4,$5,$6,$7::jsonb)
+      `,
+      randomUUID(),
       companyId,
-      userId,
-      clockIn: now,
-      latitude,
-      longitude,
-      isOutOfRange,
-      distanceMeters,
-      status,
-      ...(extraShiftNote ? { note: extraShiftNote } : {}),
-    },
+      created.id,
+      actorUserId ?? userId,
+      "CLOCK_IN",
+      "app",
+      JSON.stringify(created)
+    );
+    return created;
   });
 
   return { log, warning, isOutOfRange };
@@ -106,7 +188,7 @@ async function createClockInEntry(params: {
 
 export async function clockIn(latitude?: number, longitude?: number) {
   const { userId, companyId, role } = await requireTenant();
-  const result = await createClockInEntry({ companyId, userId, role, latitude, longitude });
+  const result = await createClockInEntry({ companyId, userId, role, actorUserId: userId, latitude, longitude });
   revalidatePath("/dashboard");
   return result;
 }
@@ -114,86 +196,118 @@ export async function clockIn(latitude?: number, longitude?: number) {
 async function closeClockForUser(params: {
   companyId: string;
   userId: string;
+  actorUserId?: string;
   logId?: string;
 }) {
-  const { companyId, userId, logId } = params;
-  const active = logId
-    ? await db.workLog.findFirst({ where: tenantWhere(companyId, { id: logId, userId }) })
-    : await db.workLog.findFirst({ where: tenantWhere(companyId, { userId, clockOut: null }) });
+  const { companyId, userId, logId, actorUserId } = params;
+  await ensureWorkLogAuditTable();
+  return db.$transaction(async (tx) => {
+    const active = logId
+      ? await tx.workLog.findFirst({ where: tenantWhere(companyId, { id: logId, userId, clockOut: null }) })
+      : await tx.workLog.findFirst({ where: tenantWhere(companyId, { userId, clockOut: null }) });
 
-  if (!active) throw new Error("Kein aktiver Stempel gefunden");
+    if (!active) throw new Error("Kein aktiver Stempel gefunden");
 
-  const now = new Date();
-  let nextBreakMins = active.breakMins;
-  if (active.isOnBreak && active.breakStartedAt) {
-    const extraBreak = Math.max(
-      0,
-      Math.round((now.getTime() - active.breakStartedAt.getTime()) / 60000)
+    const now = new Date();
+    let nextBreakMins = active.breakMins;
+    if (active.isOnBreak && active.breakStartedAt) {
+      const extraBreak = Math.max(0, Math.round((now.getTime() - active.breakStartedAt.getTime()) / 60000));
+      nextBreakMins += extraBreak;
+    }
+
+    const updated = await tx.workLog.update({
+      where: { id: active.id },
+      data: {
+        clockOut: now,
+        breakMins: nextBreakMins,
+        isOnBreak: false,
+        breakStartedAt: null,
+      },
+    });
+    await tx.$executeRawUnsafe(
+      `
+      INSERT INTO "WorkLogAudit"
+        ("id","companyId","workLogId","actorUserId","action","source","beforeJson","afterJson")
+      VALUES
+        ($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb)
+      `,
+      randomUUID(),
+      companyId,
+      active.id,
+      actorUserId ?? userId,
+      "CLOCK_OUT",
+      "app",
+      JSON.stringify(active),
+      JSON.stringify(updated)
     );
-    nextBreakMins += extraBreak;
-  }
-
-  const updated = await db.workLog.update({
-    where: { id: active.id },
-    data: {
-      clockOut: now,
-      breakMins: nextBreakMins,
-      isOnBreak: false,
-      breakStartedAt: null,
-    },
+    return updated;
   });
-
-  return updated;
 }
 
 export async function clockOut(logId?: string) {
   const { userId, companyId } = await requireTenant();
-  const updated = await closeClockForUser({ companyId, userId, logId });
+  const updated = await closeClockForUser({ companyId, userId, actorUserId: userId, logId });
   revalidatePath("/dashboard");
   return updated;
 }
 
 export async function toggleBreak(logId?: string) {
   const { userId, companyId } = await requireTenant();
+  await ensureWorkLogAuditTable();
+  const { updated, status } = await db.$transaction(async (tx) => {
+    const active = logId
+      ? await tx.workLog.findFirst({
+          where: tenantWhere(companyId, { id: logId, userId, clockOut: null }),
+        })
+      : await tx.workLog.findFirst({ where: tenantWhere(companyId, { userId, clockOut: null }) });
 
-  const active = logId
-    ? await db.workLog.findFirst({
-        where: tenantWhere(companyId, { id: logId, userId, clockOut: null }),
-      })
-    : await db.workLog.findFirst({ where: tenantWhere(companyId, { userId, clockOut: null }) });
+    if (!active) throw new Error("Kein aktiver Stempel gefunden");
 
-  if (!active) throw new Error("Kein aktiver Stempel gefunden");
+    const now = new Date();
+    const isStartingBreak = !active.isOnBreak;
 
-  const now = new Date();
-  const isStartingBreak = !active.isOnBreak;
-
-  let nextBreakMins = active.breakMins;
-  let nextBreakStartedAt: Date | null = now;
-  if (!isStartingBreak) {
-    if (active.breakStartedAt) {
-      const breakDiff = Math.max(
-        0,
-        Math.round((now.getTime() - active.breakStartedAt.getTime()) / 60000)
-      );
-      nextBreakMins += breakDiff;
+    let nextBreakMins = active.breakMins;
+    let nextBreakStartedAt: Date | null = now;
+    if (!isStartingBreak) {
+      if (active.breakStartedAt) {
+        const breakDiff = Math.max(0, Math.round((now.getTime() - active.breakStartedAt.getTime()) / 60000));
+        nextBreakMins += breakDiff;
+      }
+      nextBreakStartedAt = null;
     }
-    nextBreakStartedAt = null;
-  }
 
-  const updated = await db.workLog.update({
-    where: { id: active.id },
-    data: {
-      breakMins: nextBreakMins,
-      isOnBreak: isStartingBreak,
-      breakStartedAt: nextBreakStartedAt,
-    },
+    const updatedLog = await tx.workLog.update({
+      where: { id: active.id },
+      data: {
+        breakMins: nextBreakMins,
+        isOnBreak: isStartingBreak,
+        breakStartedAt: nextBreakStartedAt,
+      },
+    });
+    await tx.$executeRawUnsafe(
+      `
+      INSERT INTO "WorkLogAudit"
+        ("id","companyId","workLogId","actorUserId","action","source","beforeJson","afterJson")
+      VALUES
+        ($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb)
+      `,
+      randomUUID(),
+      companyId,
+      active.id,
+      userId,
+      isStartingBreak ? "BREAK_START" : "BREAK_END",
+      "app",
+      JSON.stringify(active),
+      JSON.stringify(updatedLog)
+    );
+    return { updated: updatedLog, status: isStartingBreak ? "break_started" : "break_ended" as const };
   });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/reports");
   return {
     log: updated,
-    status: isStartingBreak ? "break_started" : "break_ended",
+    status,
   };
 }
 
@@ -206,14 +320,26 @@ export async function updateWorkLogByManager(params: {
   status?: EntryStatus;
   editReason?: string | null;
 }) {
-  const { companyId, role } = await requireTenant();
+  const { companyId, role, userId: actorUserId } = await requireTenant();
+  await ensureWorkLogAuditTable();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
     throw new Error("Keine Berechtigung.");
   }
 
   const existing = await db.workLog.findFirst({
     where: tenantWhere(companyId, { id: params.logId }),
-    select: { id: true },
+    select: {
+      id: true,
+      companyId: true,
+      userId: true,
+      clockIn: true,
+      clockOut: true,
+      breakMins: true,
+      status: true,
+      note: true,
+      isOnBreak: true,
+      breakStartedAt: true,
+    },
   });
   if (!existing) throw new Error("Eintrag nicht gefunden.");
 
@@ -231,6 +357,10 @@ export async function updateWorkLogByManager(params: {
   if (clockIn && clockOut instanceof Date && clockOut <= clockIn) {
     throw new Error("Ausstempelzeit muss nach Einstempelzeit liegen.");
   }
+  const reason = params.editReason?.trim();
+  if (!reason) {
+    throw new Error("Grund der Änderung ist erforderlich.");
+  }
   if (clockIn) data.clockIn = clockIn;
   if (clockOut !== undefined) data.clockOut = clockOut;
   if (typeof params.breakMins === "number") {
@@ -245,9 +375,29 @@ export async function updateWorkLogByManager(params: {
     data.status = params.status;
   }
 
-  const updated = await db.workLog.update({
-    where: { id: params.logId },
-    data,
+  const updated = await db.$transaction(async (tx) => {
+    const row = await tx.workLog.update({
+      where: { id: params.logId },
+      data,
+    });
+    await tx.$executeRawUnsafe(
+      `
+      INSERT INTO "WorkLogAudit"
+        ("id","companyId","workLogId","actorUserId","action","source","reason","beforeJson","afterJson")
+      VALUES
+        ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb)
+      `,
+      randomUUID(),
+      companyId,
+      params.logId,
+      actorUserId,
+      "MANAGER_UPDATE",
+      "manager",
+      reason,
+      JSON.stringify(existing),
+      JSON.stringify(row)
+    );
+    return row;
   });
 
   revalidatePath("/dashboard/reports");
@@ -255,19 +405,49 @@ export async function updateWorkLogByManager(params: {
   return updated;
 }
 
-export async function deleteWorkLogByManager(logId: string) {
-  const { companyId, role } = await requireTenant();
+export async function deleteWorkLogByManager(logId: string, deleteReason?: string) {
+  const { companyId, role, userId: actorUserId } = await requireTenant();
+  await ensureWorkLogAuditTable();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
     throw new Error("Keine Berechtigung.");
   }
 
   const existing = await db.workLog.findFirst({
     where: tenantWhere(companyId, { id: logId }),
-    select: { id: true },
+    select: {
+      id: true,
+      companyId: true,
+      userId: true,
+      clockIn: true,
+      clockOut: true,
+      breakMins: true,
+      status: true,
+      note: true,
+    },
   });
   if (!existing) throw new Error("Eintrag nicht gefunden.");
+  const reason = deleteReason?.trim();
+  if (!reason) throw new Error("Grund der Löschung ist erforderlich.");
 
-  await db.workLog.delete({ where: { id: logId } });
+  await db.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe(
+      `
+      INSERT INTO "WorkLogAudit"
+        ("id","companyId","workLogId","actorUserId","action","source","reason","beforeJson")
+      VALUES
+        ($1,$2,$3,$4,$5,$6,$7,$8::jsonb)
+      `,
+      randomUUID(),
+      companyId,
+      logId,
+      actorUserId,
+      "MANAGER_DELETE",
+      "manager",
+      reason,
+      JSON.stringify(existing)
+    );
+    await tx.workLog.delete({ where: { id: logId } });
+  });
   revalidatePath("/dashboard/reports");
   revalidatePath("/dashboard");
 }
@@ -279,6 +459,7 @@ export async function toggleClockForUser(params: {
   latitude?: number;
   longitude?: number;
 }) {
+  await ensureWorkLogOpenUniqueConstraint();
   const active = await db.workLog.findFirst({
     where: tenantWhere(params.companyId, { userId: params.userId, clockOut: null }),
     select: { id: true },
@@ -288,6 +469,7 @@ export async function toggleClockForUser(params: {
     const log = await closeClockForUser({
       companyId: params.companyId,
       userId: params.userId,
+      actorUserId: params.userId,
       logId: active.id,
     });
     return { type: "clock_out" as const, log, warning: null };
@@ -297,6 +479,7 @@ export async function toggleClockForUser(params: {
     companyId: params.companyId,
     userId: params.userId,
     role: params.role ?? "EMPLOYEE",
+    actorUserId: params.userId,
     latitude: params.latitude,
     longitude: params.longitude,
   });
@@ -330,13 +513,11 @@ export async function calculateSaldoForUser(companyId: string, userId: string) {
   // Get all completed work logs
   const logs = await db.workLog.findMany({
     where: tenantWhere(companyId, { userId, clockOut: { not: null } }),
+    orderBy: { clockIn: "asc" },
   });
 
   // Total worked minutes
-  const workedMinutes = logs.reduce((acc, log) => {
-    const diff = (log.clockOut!.getTime() - log.clockIn.getTime()) / 1000 / 60;
-    return acc + diff - log.breakMins;
-  }, 0);
+  const workedMinutes = sumWorkedMinutes(logs);
 
   // Calculate expected minutes based on weeks elapsed since first log
   const firstLog = logs[0]?.clockIn;
@@ -347,9 +528,9 @@ export async function calculateSaldoForUser(companyId: string, userId: string) {
   const expectedMinutes = weeksSinceStart * user.weeklyHours * 60;
 
   return {
-    workedMinutes: Math.round(workedMinutes),
+    workedMinutes,
     expectedMinutes: Math.round(expectedMinutes),
-    saldoMinutes: Math.round(workedMinutes - expectedMinutes),
+    saldoMinutes: workedMinutes - Math.round(expectedMinutes),
   };
 }
 
@@ -439,6 +620,7 @@ export async function decideWorkLogCorrectionRequest(input: {
   reviewerNote?: string | null;
 }) {
   const { companyId, userId, role } = await requireTenant();
+  await ensureWorkLogAuditTable();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
     throw new Error("Keine Berechtigung.");
   }
@@ -459,12 +641,23 @@ export async function decideWorkLogCorrectionRequest(input: {
       },
     });
     revalidatePath("/dashboard/reports");
+    await writeWorkLogAudit({
+      companyId,
+      workLogId: req.workLogId ?? null,
+      actorUserId: userId,
+      action: "CORRECTION_REJECTED",
+      source: "manager",
+      reason: input.reviewerNote?.trim() || req.reason,
+      beforeJson: req as unknown as object,
+      afterJson: rejected as unknown as object,
+    });
     return rejected;
   }
 
   await db.$transaction(async (tx) => {
     const noteParts = [req.requestedNote, `[REQUEST_APPROVED:${req.id}]`].filter(Boolean).join(" | ");
     if (req.workLogId) {
+      const before = await tx.workLog.findUnique({ where: { id: req.workLogId } });
       await tx.workLog.update({
         where: { id: req.workLogId },
         data: {
@@ -475,8 +668,26 @@ export async function decideWorkLogCorrectionRequest(input: {
           status: "MANUAL_ADJUSTED",
         },
       });
+      const after = await tx.workLog.findUnique({ where: { id: req.workLogId } });
+      await tx.$executeRawUnsafe(
+        `
+        INSERT INTO "WorkLogAudit"
+          ("id","companyId","workLogId","actorUserId","action","source","reason","beforeJson","afterJson")
+        VALUES
+          ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb)
+        `,
+        randomUUID(),
+        companyId,
+        req.workLogId,
+        userId,
+        "CORRECTION_APPROVED_UPDATE",
+        "manager",
+        req.reason,
+        JSON.stringify(before),
+        JSON.stringify(after)
+      );
     } else {
-      await tx.workLog.create({
+      const created = await tx.workLog.create({
         data: {
           companyId: req.companyId,
           userId: req.userId,
@@ -487,6 +698,22 @@ export async function decideWorkLogCorrectionRequest(input: {
           status: "MANUAL_ADJUSTED",
         },
       });
+      await tx.$executeRawUnsafe(
+        `
+        INSERT INTO "WorkLogAudit"
+          ("id","companyId","workLogId","actorUserId","action","source","reason","afterJson")
+        VALUES
+          ($1,$2,$3,$4,$5,$6,$7,$8::jsonb)
+        `,
+        randomUUID(),
+        companyId,
+        created.id,
+        userId,
+        "CORRECTION_APPROVED_CREATE",
+        "manager",
+        req.reason,
+        JSON.stringify(created)
+      );
     }
     await tx.workLogCorrectionRequest.update({
       where: { id: req.id },

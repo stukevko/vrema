@@ -77,7 +77,6 @@ export function ShiftManager({
     startMinute: number;
     endMinute: number;
   } | null>(null);
-  const [hoveredBarUserId, setHoveredBarUserId] = useState<string | null>(null);
   const [shiftEdit, setShiftEdit] = useState<{
     userId: string;
     label: string;
@@ -98,6 +97,7 @@ export function ShiftManager({
   const [recentDayAction, setRecentDayAction] = useState<{ dayOfWeek: number; action: "saved" | "deleted" } | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showOnlyGaps, setShowOnlyGaps] = useState(false);
+  const [showPlannerInfo, setShowPlannerInfo] = useState(false);
 
   const userShifts = useMemo(
     () =>
@@ -224,13 +224,13 @@ export function ShiftManager({
     }
     return slots;
   }, [timelineRows, neededStaff, coverageSlotMinutes]);
-  const criticalCoverageIndices = useMemo(
-    () => timelineCoverage.map((slot, idx) => (slot.isGap ? idx : -1)).filter((idx) => idx >= 0),
-    [timelineCoverage]
-  );
   const firstCriticalSlot = useMemo(
     () => timelineCoverage.find((slot) => slot.isGap)?.label ?? null,
     [timelineCoverage]
+  );
+  const hourMarkers = useMemo(
+    () => Array.from({ length: TIMELINE_END_HOUR - TIMELINE_START_HOUR }, (_, i) => TIMELINE_START_HOUR + i + 1),
+    []
   );
 
   const saveTimelineShift = (userId: string, startMinute: number, endMinute: number) => {
@@ -509,23 +509,6 @@ export function ShiftManager({
           <span className="font-semibold text-white/90">{selectedMember.name ?? selectedMember.email}</span>
         </div>
       )}
-      <div className="mt-4 grid gap-2 md:grid-cols-3">
-        <div className="rounded-xl border border-white/10 bg-[#0f0f0f] px-3 py-2">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Wochenstatus</p>
-          <p className="mt-1 text-sm font-semibold text-white">{plannedDaysCount}/7 Tage geplant</p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-[#0f0f0f] px-3 py-2">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Sollstunden</p>
-          <p className="mt-1 text-sm font-semibold text-[#86efac]">{formatHours(weeklyMinutes)} / Woche</p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-[#0f0f0f] px-3 py-2">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Lücken Mo-Fr</p>
-          <p className="mt-1 text-sm font-semibold text-amber-300">
-            {missingWeekdays.length === 0 ? "Keine" : missingWeekdays.join(", ")}
-          </p>
-        </div>
-      </div>
-
       {viewMode === "simple" && (
         <>
       <div className="mt-4 grid gap-2 md:grid-cols-5">
@@ -828,6 +811,26 @@ export function ShiftManager({
 
       {viewMode === "timeline" && (
         <div className="mt-4 rounded-xl border border-white/10 bg-[#0f0f0f] p-3">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <p className="text-xs text-white/45">Fokusmodus: Planung zuerst, Kennzahlen optional.</p>
+            <button
+              type="button"
+              onClick={() => setShowPlannerInfo((v) => !v)}
+              className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] text-white/75 hover:bg-white/10"
+            >
+              {showPlannerInfo ? "Info ausblenden" : "Info einblenden"}
+            </button>
+          </div>
+          {showPlannerInfo && (
+            <div className="mb-3 rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2">
+              <p className="text-[11px] text-white/60">
+                Wochenstatus: <span className="text-white/85">{plannedDaysCount}/7</span> · Sollstunden:{" "}
+                <span className="text-[#86efac]">{formatHours(weeklyMinutes)}</span> · Lücken Mo-Fr:{" "}
+                <span className="text-amber-300">{missingWeekdays.length === 0 ? "Keine" : missingWeekdays.join(", ")}</span>
+              </p>
+            </div>
+          )}
+
           <div className="grid gap-2 md:grid-cols-3">
             <select
               value={timelineDay}
@@ -853,27 +856,16 @@ export function ShiftManager({
               15-Minuten-Raster · Stunden-Hilfslinien · Balken ziehen oder anklicken zum Bearbeiten
             </p>
           </div>
-          <div className="mt-2 rounded-lg border border-white/10 bg-[#0b0b0b] px-3 py-2 text-xs">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-white/60">
-                Kritische Slots:{" "}
-                {criticalCoverageIndices.length === 0
-                  ? "Keine Unterdeckung"
-                  : timelineCoverage
-                      .filter((s) => s.isGap)
-                      .map((s) => s.label)
-                      .join(", ")}
+          <div className="mt-2 flex justify-end">
+            {firstCriticalSlot ? (
+              <span className="inline-flex items-center rounded-full border border-red-400/35 bg-red-500/15 px-2.5 py-1 text-[11px] text-red-200">
+                Erste Lücke ab {firstCriticalSlot}
               </span>
-              {firstCriticalSlot && (
-                <span className="rounded-full border border-red-400/35 bg-red-500/15 px-2 py-0.5 text-[11px] text-red-200">
-                  Erste Lücke ab {firstCriticalSlot}
-                </span>
-              )}
-            </div>
+            ) : null}
           </div>
 
           <div className="mt-3 max-h-[70vh] overflow-auto">
-            <div className="min-w-[880px] space-y-2">
+            <div className="min-w-[880px] space-y-3">
               <div className="sticky top-0 z-30 grid grid-cols-[220px_1fr] items-center gap-2 border-b border-white/10 bg-[#0f0f0f] py-1 text-[11px] text-white/45">
                 <div>Mitarbeiter</div>
                 <div className="grid grid-cols-9">
@@ -905,17 +897,17 @@ export function ShiftManager({
                 const initials = (row.member.name ?? row.member.email).slice(0, 2).toUpperCase();
                 return (
                   <div key={row.member.id} className="grid grid-cols-[220px_1fr] items-center gap-2">
-                    <div className="flex items-center rounded-lg border border-white/10 bg-[#0b0b0b] px-3 py-2">
+                    <div className="flex items-center rounded-lg border border-white/10 bg-[#0b0b0b] px-4 py-3.5">
                       <span className="inline-flex items-center gap-2 truncate text-sm text-white/80">
-                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-[10px] font-semibold text-white/70">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-semibold text-white/80">
                           {initials}
                         </span>
-                        <span className="truncate">{row.member.name ?? row.member.email}</span>
+                        <span className="truncate text-[15px] font-medium">{row.member.name ?? row.member.email}</span>
                       </span>
                     </div>
                     <div
                       data-timeline-lane
-                      className="relative h-10 rounded-lg border border-white/10 bg-[#0b0b0b]"
+                      className="relative h-14 rounded-lg border border-white/10 bg-[#0b0b0b]"
                       onMouseDown={(e) => {
                         if (row.conflict) return;
                         beginTimelineDrag(e.clientX, e.currentTarget as HTMLElement, row.member.id, "create");
@@ -937,8 +929,7 @@ export function ShiftManager({
                             />
                           ) : null
                         )}
-                        {Array.from({ length: TIMELINE_END_HOUR - TIMELINE_START_HOUR }).map((_, i) => {
-                          const hour = TIMELINE_START_HOUR + i + 1;
+                        {hourMarkers.map((hour) => {
                           const left = (((hour * 60 - TIMELINE_START_HOUR * 60) / TIMELINE_TOTAL_MINUTES) * 100).toFixed(4);
                           return (
                             <div
@@ -959,7 +950,7 @@ export function ShiftManager({
                         </div>
                       ) : widthPct > 0 ? (
                         <div
-                          className={`absolute top-1 bottom-1 z-10 rounded-md bg-[#22c55e]/40 border border-[#22c55e]/60 px-2 text-[11px] text-[#dcfce7] flex items-center cursor-grab active:cursor-grabbing ${
+                          className={`group absolute top-1.5 bottom-1.5 z-10 rounded-md bg-[#22c55e]/40 border border-[#22c55e]/60 px-2 text-[11px] text-[#dcfce7] flex items-center cursor-grab active:cursor-grabbing ${
                             activeDrag?.userId === row.member.id
                               ? "transition-none shadow-lg shadow-black/40"
                               : "transition-[left,width] duration-100 ease-out"
@@ -976,10 +967,8 @@ export function ShiftManager({
                             e.stopPropagation();
                             beginTimelineDrag(e.clientX, lane, row.member.id, "move", sm, em);
                           }}
-                          onMouseEnter={() => setHoveredBarUserId(row.member.id)}
-                          onMouseLeave={() => setHoveredBarUserId((v) => (v === row.member.id ? null : v))}
                         >
-                          {hoveredBarUserId === row.member.id && !activeDrag && (
+                          {!activeDrag && (
                             <button
                               type="button"
                               onClick={(e) => {
@@ -992,7 +981,7 @@ export function ShiftManager({
                                   });
                                 });
                               }}
-                              className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full border border-red-300/40 bg-red-500/90 text-[10px] text-white"
+                              className="absolute -top-1 -right-1 hidden h-4 w-4 items-center justify-center rounded-full border border-red-300/40 bg-red-500/90 text-[10px] text-white group-hover:inline-flex"
                               title="Schicht löschen"
                             >
                               ×
@@ -1010,25 +999,6 @@ export function ShiftManager({
                   </div>
                 );
               })}
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-lg border border-white/10 bg-[#0b0b0b] p-3">
-            <p className="text-[11px] uppercase tracking-widest text-white/40">
-              Bedarfs-Indikator ({coverageSlotMinutes === 60 ? "1h" : "2h"} Slots)
-            </p>
-            <div className="mt-2 grid grid-cols-3 md:grid-cols-8 gap-2">
-              {timelineCoverage.map((slot) => (
-                <div
-                  key={slot.label}
-                  className={`rounded-md border px-2 py-1.5 text-xs ${
-                    slot.isGap ? "border-red-400/30 bg-red-500/10 text-red-200" : "border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
-                  }`}
-                >
-                  <p className="font-mono">{slot.label}</p>
-                  <p>{slot.assigned}/{slot.needed}</p>
-                </div>
-              ))}
             </div>
           </div>
         </div>

@@ -11,6 +11,7 @@ import {
   updateWorkLogByManager,
 } from "@/lib/actions/worklogs";
 import { sendPayrollReportEmail } from "@/lib/actions/emails";
+import { minutesToDecimalHours, workedMinutes } from "@/lib/time/payroll";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -69,11 +70,11 @@ function formatMins(mins: number) {
 
 function durationMins(row: LogRow) {
   if (!row.clockOut) return null;
-  return (new Date(row.clockOut).getTime() - new Date(row.clockIn).getTime()) / 60000 - row.breakMins;
+  return workedMinutes({ clockIn: row.clockIn, clockOut: row.clockOut, breakMins: row.breakMins });
 }
 
 function decimalHoursDE(minutes: number): string {
-  return (minutes / 60).toFixed(2).replace(".", ",");
+  return minutesToDecimalHours(minutes, 2).replace(".", ",");
 }
 
 function toCsvCell(value: string | number) {
@@ -344,12 +345,14 @@ export function ReportsClient({
     const separator = ";";
     const headers = [
       "Datensatz_Typ",
+      "Lohnart_Code",
+      "Lohnart_Text",
       ...(isManager ? ["Mitarbeiter_Nr", "Mitarbeiter"] : []),
       "Datum",
       "Einstempel",
       "Ausstempel",
       "Pause_Minuten",
-      "Dauer_Minuten",
+      "Arbeitszeit_Netto_Minuten",
       "Dauer_Dezimal_Stunden",
       "Soll_Stunden_Monat",
       "Ist_Stunden_Monat",
@@ -382,6 +385,8 @@ export function ReportsClient({
         const durationMinutes = dur !== null ? Math.round(dur) : "";
         rows.push([
           "DETAIL",
+          "001",
+          "Arbeitszeit",
           ...(isManager ? [mitarbeiterNr, log.userName] : []),
           formatDateDE(inAt),
           inAt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
@@ -406,6 +411,8 @@ export function ReportsClient({
         const e = new Date(a.endDate);
         rows.push([
           "ABSENCE",
+          "",
+          "",
           ...(isManager ? [mitarbeiterNr, first.userName] : []),
           formatDateDE(s),
           "",
@@ -426,6 +433,8 @@ export function ReportsClient({
 
       rows.push([
         "SUMMARY",
+          "001",
+          "Arbeitszeit",
         ...(isManager ? [mitarbeiterNr, first.userName] : []),
         "",
         "",
@@ -442,6 +451,28 @@ export function ReportsClient({
         "",
         "",
       ]);
+      if (diff > 0) {
+        rows.push([
+          "SUMMARY_OVERTIME",
+          "002",
+          "Überstunden",
+          ...(isManager ? [mitarbeiterNr, first.userName] : []),
+          "",
+          "",
+          "",
+          "",
+          diff,
+          decimalHoursDE(diff),
+          "",
+          "",
+          "",
+          "Überstunden",
+          "OVERTIME",
+          "",
+          "",
+          "",
+        ]);
+      }
     });
 
     const csv = [
@@ -540,6 +571,11 @@ export function ReportsClient({
       log.status === "ABSENT" ? "MANUAL_ADJUSTED" : log.status
     );
     if (!next) return;
+    const reason = window.prompt("Grund der manuellen Korrektur (Pflicht)");
+    if (!reason || !reason.trim()) {
+      show("Korrekturgrund ist erforderlich.", "error");
+      return;
+    }
     if (!["ON_TIME", "LATE", "MANUAL_ADJUSTED"].includes(next)) {
       show("Ungültiger Status.", "error");
       return;
@@ -550,6 +586,7 @@ export function ReportsClient({
           logId: log.id,
           status: next as "ON_TIME" | "LATE" | "MANUAL_ADJUSTED",
           note: (log.note ? `${log.note} | ` : "") + "[MANUAL_OVERRIDE]",
+          editReason: reason.trim(),
         });
         show("ABSENT-Eintrag korrigiert.", "success");
       } catch (err: unknown) {
@@ -559,11 +596,14 @@ export function ReportsClient({
   };
 
   const handleDelete = (log: LogRow) => {
-    const ok = window.confirm("Eintrag wirklich löschen?");
-    if (!ok) return;
+    const reason = window.prompt("Grund der Löschung (Pflicht)");
+    if (!reason || !reason.trim()) {
+      show("Löschgrund ist erforderlich.", "error");
+      return;
+    }
     startTransition(async () => {
       try {
-        await deleteWorkLogByManager(log.id);
+        await deleteWorkLogByManager(log.id, reason.trim());
         show("Eintrag gelöscht.", "success");
       } catch (err: unknown) {
         show(err instanceof Error ? err.message : "Löschen fehlgeschlagen.", "error");

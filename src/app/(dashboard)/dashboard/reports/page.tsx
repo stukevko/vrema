@@ -5,6 +5,7 @@ import { tenantWhere } from "@/lib/tenant-guard";
 import { ReportsClient } from "@/components/dashboard/ReportsClient";
 import { VacationStatus } from "@prisma/client";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
+import { sumWorkedMinutes } from "@/lib/time/payroll";
 
 export default async function ReportsPage() {
   const session = await auth();
@@ -99,10 +100,7 @@ export default async function ReportsPage() {
   });
 
   // Total stats
-  const totalMinutes = logs.reduce((acc, l) => {
-    if (!l.clockOut) return acc;
-    return acc + (l.clockOut.getTime() - l.clockIn.getTime()) / 60000 - l.breakMins;
-  }, 0);
+  const totalMinutes = sumWorkedMinutes(logs);
 
   return (
     <ReportsClient
@@ -121,7 +119,7 @@ export default async function ReportsPage() {
         longitude: l.longitude,
         isOutOfRange: l.isOutOfRange,
       }))}
-      totalMinutes={Math.round(totalMinutes)}
+      totalMinutes={totalMinutes}
       month={`${now.toLocaleString("de-DE", { month: "long" })} ${year}`}
       plan={plan}
       isManager={isManager}

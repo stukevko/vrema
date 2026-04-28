@@ -126,6 +126,7 @@ model Company {
   vacationRequests  VacationRequest[]
   workSchedules     WorkSchedule[]
   shifts            Shift[]
+  workLogAudits     WorkLogAudit[]
 
   @@index([slug])
   @@index([affiliateId])
@@ -160,6 +161,7 @@ model User {
   approvedVacations VacationRequest[] @relation("ApprovedBy")
   workSchedules    WorkSchedule[]
   shifts           Shift[]
+  workLogAudits    WorkLogAudit[]
 
   @@index([companyId])
   @@index([email])
@@ -239,9 +241,31 @@ model WorkLog {
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   correctionRequests WorkLogCorrectionRequest[]
+  audits      WorkLogAudit[]
 
   @@index([companyId, userId])
   @@index([companyId, clockIn])
+}
+
+model WorkLogAudit {
+  id          String   @id @default(cuid())
+  companyId   String
+  workLogId   String?
+  actorUserId String?
+  action      String
+  source      String   @default("app")
+  reason      String?
+  beforeJson  Json?
+  afterJson   Json?
+  createdAt   DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workLog WorkLog? @relation(fields: [workLogId], references: [id], onDelete: SetNull)
+  actor   User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, createdAt])
+  @@index([workLogId])
+  @@index([actorUserId])
 }
 
 model WorkLogCorrectionRequest {
