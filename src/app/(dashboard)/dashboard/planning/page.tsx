@@ -22,9 +22,9 @@ export default async function PlanningPage() {
     ]);
     return (
       <div className="max-w-6xl mx-auto space-y-6">
-        <div>
+        <div className="rounded-2xl border border-white/5 bg-card px-5 py-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <h1 className="text-2xl font-bold">Planung</h1>
-          <p className="text-white/40 text-sm mt-1">Schichtplanung für Team und Soll/Ist-Basis.</p>
+          <p className="text-muted text-sm mt-1">Schichtplanung für Team und Soll/Ist-Basis.</p>
         </div>
         <ShiftManager
           members={members.map((m) => ({ id: m.id, name: m.name, email: m.email }))}
@@ -44,15 +44,15 @@ export default async function PlanningPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div>
+      <div className="rounded-2xl border border-white/5 bg-card px-5 py-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
         <h1 className="text-2xl font-bold">Mein Plan</h1>
-        <p className="text-white/40 text-sm mt-1">Hier siehst du deine hinterlegten Soll-Schichten pro Woche.</p>
+        <p className="text-muted text-sm mt-1">Hier siehst du deine hinterlegten Soll-Schichten pro Woche.</p>
       </div>
       <section className="rounded-2xl border border-border bg-card p-5">
         <div className="grid gap-3 md:grid-cols-2">
           {grouped.map((g) => (
-            <div key={g.label} className="rounded-xl border border-white/10 bg-[#0f0f0f] px-4 py-3">
-              <p className="text-xs uppercase tracking-widest text-white/40">{g.label}</p>
+            <div key={g.label} className="rounded-xl border border-border bg-background px-4 py-3">
+              <p className="text-xs uppercase tracking-widest text-muted">{g.label}</p>
               {g.rows.length === 0 ? (
                 <p className="mt-1 text-sm text-white/35">Frei</p>
               ) : (

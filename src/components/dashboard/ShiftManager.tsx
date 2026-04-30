@@ -460,7 +460,7 @@ export function ShiftManager({
   return (
     <section className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
       <h2 className="text-lg font-semibold">Arbeitsplan (Soll-Zeiten)</h2>
-      <p className="mt-1 text-xs text-white/45">Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.</p>
+      <p className="mt-1 text-xs text-muted">Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.</p>
       {shiftCycleWeeks > 1 && (
         <div className="mt-3 inline-flex rounded-lg border border-border bg-background p-1 text-xs">
           {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
@@ -504,7 +504,7 @@ export function ShiftManager({
         </button>
       </div>
       {selectedMember && (
-        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/65">
+        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] text-white/65">
           <span>Ausgewählt:</span>
           <span className="font-semibold text-white/90">{selectedMember.name ?? selectedMember.email}</span>
         </div>
@@ -551,13 +551,13 @@ export function ShiftManager({
           type="button"
           onClick={submitCopyToAll}
           disabled={isPending || !selectedUserId}
-          className="rounded-lg border border-blue-400/30 bg-blue-500/15 px-3 py-2 text-sm font-semibold text-blue-200 hover:bg-blue-500/20 disabled:opacity-60"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-white/80 hover:bg-card/80 disabled:opacity-60"
         >
           Auf alle übertragen
         </button>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <p className="text-[11px] text-white/45">Tipp: Zeit oben einstellen und Tage direkt antippen. Erneuter Klick mit gleicher Zeit löscht den Tag.</p>
+        <p className="text-[11px] text-muted">Tipp: Zeit oben einstellen und Tage direkt antippen. Erneuter Klick mit gleicher Zeit löscht den Tag.</p>
         {selectedUserVacationDays.size > 0 && (
           <p className="text-[11px] text-amber-300">
             Abwesenheit: {Array.from(selectedUserVacationDays).map((d) => DAY_LABELS[d]).join(", ")}
@@ -566,13 +566,13 @@ export function ShiftManager({
         )}
       </div>
       <div className="mt-3 grid gap-2 md:grid-cols-2">
-        <div className="rounded-xl border border-cyan-400/20 bg-cyan-500/5 px-3 py-2">
-          <p className="text-[10px] uppercase tracking-widest text-cyan-200/80">Schritt 1</p>
-          <p className="text-sm text-cyan-100">Zeit oben wählen (oder Früh/Standard/Spät klicken).</p>
+        <div className="rounded-xl border border-border bg-background px-3 py-2">
+          <p className="text-[10px] uppercase tracking-widest text-muted">Schritt 1</p>
+          <p className="text-sm text-white/80">Zeit oben wählen (oder Früh/Standard/Spät klicken).</p>
         </div>
-        <div className="rounded-xl border border-cyan-400/20 bg-cyan-500/5 px-3 py-2">
-          <p className="text-[10px] uppercase tracking-widest text-cyan-200/80">Schritt 2</p>
-          <p className="text-sm text-cyan-100">Tage antippen. Jeder Klick speichert sofort.</p>
+        <div className="rounded-xl border border-border bg-background px-3 py-2">
+          <p className="text-[10px] uppercase tracking-widest text-muted">Schritt 2</p>
+          <p className="text-sm text-white/80">Tage antippen. Jeder Klick speichert sofort.</p>
         </div>
       </div>
       {hasInvalidRange && (
@@ -586,7 +586,7 @@ export function ShiftManager({
             setStartTime("08:00");
             setEndTime("16:00");
           }}
-          className="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/70 hover:bg-white/10"
+          className="rounded-md border border-border bg-background px-2.5 py-1 text-white/70 hover:bg-card/80"
           disabled={isPending}
         >
           Früh: 08:00-16:00
@@ -597,7 +597,7 @@ export function ShiftManager({
             setStartTime("09:00");
             setEndTime("17:00");
           }}
-          className="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/70 hover:bg-white/10"
+          className="rounded-md border border-border bg-background px-2.5 py-1 text-white/70 hover:bg-card/80"
           disabled={isPending}
         >
           Standard: 09:00-17:00
@@ -608,7 +608,7 @@ export function ShiftManager({
             setStartTime("14:00");
             setEndTime("22:00");
           }}
-          className="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/70 hover:bg-white/10"
+          className="rounded-md border border-border bg-background px-2.5 py-1 text-white/70 hover:bg-card/80"
           disabled={isPending}
         >
           Spät: 14:00-22:00
@@ -629,8 +629,8 @@ export function ShiftManager({
                   : "border-amber-400/35 bg-amber-500/10 text-amber-100 hover:bg-amber-500/15"
                 : usedDays.has(idx)
                   ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
-                : "border-white/10 bg-white/5 text-white/75 hover:bg-white/10"
-            } ${recentDayAction?.dayOfWeek === idx ? "ring-2 ring-cyan-300/70" : ""}`}
+                : "border-border bg-background text-white/75 hover:bg-card/80"
+            } ${recentDayAction?.dayOfWeek === idx ? "ring-2 ring-primary/60" : ""}`}
           >
             <span className="block text-xs">{label}</span>
             <span className="mt-0.5 block text-[10px] font-sans opacity-80">
@@ -639,14 +639,14 @@ export function ShiftManager({
                 : "frei"}
             </span>
             {recentDayAction?.dayOfWeek === idx && (
-              <span className={`mt-1 block text-[10px] ${recentDayAction.action === "saved" ? "text-cyan-200" : "text-red-200"}`}>
+              <span className={`mt-1 block text-[10px] ${recentDayAction.action === "saved" ? "text-primary" : "text-red-200"}`}>
                 {recentDayAction.action === "saved" ? "Gespeichert" : "Gelöscht"}
               </span>
             )}
           </button>
         ))}
       </div>
-      <p className="mt-2 text-[11px] text-white/40">
+      <p className="mt-2 text-[11px] text-muted">
         Grün = Schicht, Orange = Urlaub, Rot = Krank. Klick setzt die oben gewählte Zeit direkt für den Tag.
       </p>
 
@@ -656,20 +656,20 @@ export function ShiftManager({
         <button
           type="button"
           onClick={() => setShowDetails((v) => !v)}
-          className="rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+          className="rounded-md border border-border bg-background px-3 py-1.5 text-xs text-white/75 hover:bg-card/80"
         >
           {showDetails ? "Details ausblenden" : "Details anzeigen"}
         </button>
       </div>
       {showDetails && (
       <div className="mt-3 rounded-xl border border-border bg-background">
-        <div className="grid grid-cols-3 border-b border-white/10 px-3 py-2 text-[11px] uppercase tracking-widest text-white/35">
+        <div className="grid grid-cols-3 border-b border-border px-3 py-2 text-[11px] uppercase tracking-widest text-muted">
           <span>Tag</span>
           <span>Start</span>
           <span>Ende</span>
         </div>
         {userShifts.length === 0 ? (
-          <p className="px-3 py-3 text-xs text-white/40">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
+          <p className="px-3 py-3 text-xs text-muted">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
         ) : (
           userShifts.map((s, idx) => (
             <div key={s.id} className={`grid grid-cols-3 items-center px-3 py-2 text-sm ${idx % 2 === 0 ? "bg-white/[0.01]" : ""}`}>
@@ -686,7 +686,7 @@ export function ShiftManager({
 
       {viewMode === "matrix" && (
         <div className="mt-4 rounded-xl border border-border bg-background overflow-x-auto">
-          <div className="px-3 py-3 border-b border-white/10">
+          <div className="px-3 py-3 border-b border-border">
             <div className="grid gap-2 md:grid-cols-5">
               <input
                 type="time"
@@ -708,7 +708,7 @@ export function ShiftManager({
                   setStartTime("08:00");
                   setEndTime("16:00");
                 }}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 hover:bg-white/10"
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-white/80 hover:bg-card/80"
               >
                 Früh 08-16
               </button>
@@ -718,7 +718,7 @@ export function ShiftManager({
                   setStartTime("09:00");
                   setEndTime("17:00");
                 }}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 hover:bg-white/10"
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-white/80 hover:bg-card/80"
               >
                 Standard 09-17
               </button>
@@ -727,20 +727,20 @@ export function ShiftManager({
                 onClick={() => setShowOnlyGaps((v) => !v)}
                 className={`rounded-lg border px-3 py-2 text-sm ${
                   showOnlyGaps
-                    ? "border-cyan-400/40 bg-cyan-500/15 text-cyan-100"
-                    : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                    ? "border-primary/40 bg-primary/15 text-primary"
+                    : "border-border bg-background text-white/80 hover:bg-card/80"
                 }`}
               >
                 {showOnlyGaps ? "Nur Lücken: AN" : "Nur Lücken zeigen"}
               </button>
             </div>
-            <p className="mt-2 text-[11px] text-white/45">
+            <p className="mt-2 text-[11px] text-muted">
               Quick-Entry: Zeit wählen, dann Zellen anklicken. Klick mit gleicher Zeit löscht. Urlaubszellen sind blockiert.
             </p>
           </div>
           <table className="w-full min-w-[760px] text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-white/40">
+              <tr className="border-b border-border text-muted">
                 <th className="px-3 py-2 text-left">Mitarbeiter</th>
                 {MATRIX_DAYS.map((dayOfWeek) => (
                   <th key={dayOfWeek} className="px-2 py-2 text-center text-xs font-sans uppercase tracking-wider">
@@ -770,7 +770,7 @@ export function ShiftManager({
                               ? "border-amber-400/35 bg-amber-500/15 text-amber-100 cursor-not-allowed"
                               : shift
                               ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
-                              : "border-white/10 bg-white/5 text-white/45 hover:bg-white/10"
+                              : "border-border bg-background text-white/45 hover:bg-card/80"
                           }`}
                           title={
                             conflictType === "SICK"
@@ -793,17 +793,17 @@ export function ShiftManager({
                   })}
                 </tr>
               ))}
-              <tr className="border-t border-white/15 bg-white/[0.02]">
+              <tr className="border-t border-border bg-card/60">
                 <td className="px-3 py-2 text-[11px] font-semibold uppercase tracking-widest text-white/55">Stunden-Summe</td>
                 {matrixDayTotals.map((minutes, idx) => (
-                  <td key={`sum-${MATRIX_DAYS[idx]}`} className="px-2 py-2 text-center text-xs font-semibold text-cyan-200">
+                  <td key={`sum-${MATRIX_DAYS[idx]}`} className="px-2 py-2 text-center text-xs font-semibold text-primary">
                     {formatHours(minutes)}
                   </td>
                 ))}
               </tr>
             </tbody>
           </table>
-          <p className="px-3 py-2 text-[11px] text-white/45">
+          <p className="px-3 py-2 text-[11px] text-muted">
             Grau = frei, Grün = Schicht, Orange = Urlaub, Rot = Krank (gesperrt).
           </p>
         </div>
@@ -812,11 +812,11 @@ export function ShiftManager({
       {viewMode === "timeline" && (
         <div className="mt-4 rounded-xl border border-border bg-background p-3">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <p className="text-xs text-white/45">Fokusmodus: Planung zuerst, Kennzahlen optional.</p>
+            <p className="text-xs text-muted">Fokusmodus: Planung zuerst, Kennzahlen optional.</p>
             <button
               type="button"
               onClick={() => setShowPlannerInfo((v) => !v)}
-              className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] text-white/75 hover:bg-white/10"
+              className="rounded-md border border-border bg-background px-2.5 py-1 text-[11px] text-white/75 hover:bg-card/80"
             >
               {showPlannerInfo ? "Info ausblenden" : "Info einblenden"}
             </button>
@@ -852,7 +852,7 @@ export function ShiftManager({
               className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
               title="Benötigte Mitarbeiter pro Zeitfenster"
             />
-            <p className="flex items-center text-[11px] text-white/45 leading-snug">
+            <p className="flex items-center text-[11px] text-muted leading-snug">
               15-Minuten-Raster · Stunden-Hilfslinien · Balken ziehen oder anklicken zum Bearbeiten
             </p>
           </div>
@@ -866,7 +866,7 @@ export function ShiftManager({
 
           <div className="mt-3 max-h-[70vh] overflow-auto">
             <div className="min-w-[880px] space-y-4">
-              <div className="sticky top-0 z-30 grid grid-cols-[220px_1fr] items-center gap-2 border-b border-border bg-background py-1 text-[11px] text-white/45">
+              <div className="sticky top-0 z-30 grid grid-cols-[220px_1fr] items-center gap-2 border-b border-border bg-background py-1 text-[11px] text-muted">
                 <div>Mitarbeiter</div>
                 <div className="grid grid-cols-9">
                   {Array.from({ length: 9 }).map((_, idx) => {
@@ -1018,7 +1018,7 @@ export function ShiftManager({
             <p className="mt-1 text-xs text-white/50">{DAY_LABELS[timelineDay]} · {shiftEdit.label}</p>
             <div className="mt-4 grid gap-3">
               <div>
-                <label className="text-[10px] uppercase tracking-wide text-white/40">Start</label>
+                <label className="text-[10px] uppercase tracking-wide text-muted">Start</label>
                 <input
                   type="time"
                   step={900}
@@ -1028,7 +1028,7 @@ export function ShiftManager({
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-wide text-white/40">Ende</label>
+                <label className="text-[10px] uppercase tracking-wide text-muted">Ende</label>
                 <input
                   type="time"
                   step={900}
@@ -1098,7 +1098,7 @@ export function ShiftManager({
               <button
                 type="button"
                 onClick={() => setShiftEdit(null)}
-                className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/10"
+                className="rounded-lg border border-border bg-background px-4 py-2 text-sm text-white/80 hover:bg-card/80"
               >
                 Abbrechen
               </button>
