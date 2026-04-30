@@ -58,9 +58,9 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden md:flex w-60 flex-col bg-background border-r border-border sticky top-0 h-screen">
+    <aside className="hidden md:flex w-60 flex-col bg-card border-r border-white/5 sticky top-0 h-screen shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
       {/* Logo */}
-      <div className="h-16 flex items-center gap-3 px-5 border-b border-border">
+      <div className="h-16 flex items-center gap-3 px-5 border-b border-white/5">
         <Image src="/vremalogo.png" alt="Vrema" width={48} height={48} className="shrink-0 -my-2" />
         <div>
           <span className="font-bold text-base tracking-tight">Vrema</span>
@@ -98,7 +98,7 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
       </nav>
 
       {/* Logout */}
-      <div className="p-3 border-t border-border">
+      <div className="p-3 border-t border-white/5">
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium text-white/50 md:hover:text-red-400 md:hover:bg-red-400/5 transition-all active:scale-95"
@@ -116,7 +116,7 @@ export function DashboardMobileBottomNav({ role }: { role?: string }) {
   const items = MOBILE_NAV_ITEMS.filter((item) => !(item.href === "/dashboard/billing" && role === "EMPLOYEE"));
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 rounded-t-3xl shadow-[0_-12px_24px_rgba(0,0,0,0.25)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-white/5 bg-card/95 backdrop-blur-md px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 rounded-t-3xl shadow-[0_-12px_24px_rgba(0,0,0,0.25)]">
       <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/20" />
       <div className="grid grid-cols-4 gap-1">
         {items.map((item) => {

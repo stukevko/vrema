@@ -33,7 +33,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
     : user.email?.[0]?.toUpperCase() ?? "?";
 
   return (
-    <header className="h-16 border-b border-border flex items-center justify-between px-4 md:px-6 bg-background/90 backdrop-blur-md sticky top-0 z-50">
+    <header className="h-16 border-b border-white/5 flex items-center justify-between px-4 md:px-6 bg-card/95 backdrop-blur-md sticky top-0 z-50">
       <div />
       <div className="flex items-center gap-3">
         {user.role === "SUPER_ADMIN" && (
