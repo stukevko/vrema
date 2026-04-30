@@ -35,12 +35,12 @@ export function PasskeySecurityForm() {
       </p>
 
       {error && (
-        <p className="text-xs text-red-400 font-mono bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2">
+        <p className="text-xs text-red-400 font-sans bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2">
           ✗ {error}
         </p>
       )}
       {success && (
-        <p className="text-xs text-[#22c55e] font-mono bg-[#22c55e]/5 border border-[#22c55e]/10 rounded-lg px-3 py-2">
+        <p className="text-xs text-primary font-sans bg-primary/5 border border-primary/10 rounded-lg px-3 py-2">
           ✓ {success}
         </p>
       )}

@@ -71,8 +71,8 @@ export function InviteForm() {
               className="space-y-4"
             >
               <div className="rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 p-4">
-                <p className="text-xs text-[#22c55e] font-mono mb-3">✓ {result.name} wurde angelegt</p>
-                <div className="rounded-lg bg-[#0b0b0b] border border-white/5 p-3 font-mono text-xs space-y-1.5">
+                <p className="text-xs text-primary font-sans mb-3">✓ {result.name} wurde angelegt</p>
+                <div className="rounded-lg bg-card border border-white/5 p-3 font-sans text-xs space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-white/30">email:</span>
                     <span className="text-white/70 truncate">{result.email}</span>
@@ -91,7 +91,7 @@ export function InviteForm() {
               <div className="flex gap-2">
                 <button
                   onClick={copyCredentials}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-mono transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-card hover:bg-card/70 border border-border text-sm font-sans transition-colors"
                 >
                   {copied ? <CheckCheck className="w-4 h-4 text-[#22c55e]" /> : <Copy className="w-4 h-4" />}
                   {copied ? "Kopiert!" : "Kopieren"}
@@ -119,7 +119,7 @@ export function InviteForm() {
                 { name: "email", label: "E-Mail", type: "email", placeholder: "max@firma.de" },
               ].map((f) => (
                 <div key={f.name}>
-                  <label className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1 block">
+                  <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1 block">
                     {f.label}
                   </label>
                   <input
@@ -127,38 +127,38 @@ export function InviteForm() {
                     type={f.type}
                     required
                     placeholder={f.placeholder}
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-[#22c55e]/40 transition-colors font-mono"
+                    className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/40 transition-colors font-sans"
                   />
                 </div>
               ))}
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1 block">Rolle</label>
+                  <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1 block">Rolle</label>
                   <select
                     name="role"
                     defaultValue="EMPLOYEE"
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm focus:outline-none focus:border-[#22c55e]/40 transition-colors font-mono appearance-none"
+                    className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans appearance-none"
                   >
                     <option value="EMPLOYEE">Mitarbeiter</option>
                     <option value="MANAGER">Manager</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1 block">Std/Woche</label>
+                  <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1 block">Std/Woche</label>
                   <input
                     name="weeklyHours"
                     type="number"
                     defaultValue={40}
                     min={1}
                     max={60}
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm focus:outline-none focus:border-[#22c55e]/40 transition-colors font-mono"
+                    className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans"
                   />
                 </div>
               </div>
 
               {error && (
-                <p className="text-xs text-red-400 font-mono bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2">
+                <p className="text-xs text-red-400 font-sans bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2">
                   ✗ {error}
                 </p>
               )}
@@ -166,7 +166,7 @@ export function InviteForm() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full py-3 rounded-xl bg-[#22c55e] text-black font-bold text-sm hover:bg-[#16a34a] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 font-mono"
+                className="w-full py-3 rounded-xl bg-primary text-black font-bold text-sm hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-60 font-sans"
               >
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Terminal className="w-4 h-4" />}
                 {isPending ? "Wird angelegt..." : "$ invite --send"}

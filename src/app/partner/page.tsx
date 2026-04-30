@@ -13,19 +13,19 @@ const PARTNER_MAILTO = `mailto:kontakt@kevko.studio?subject=${encodeURIComponent
 
 export default function PartnerPage() {
   return (
-    <main className="min-h-screen bg-[#080808] px-6 py-16 text-white">
+    <main className="min-h-screen bg-background px-6 py-16 text-white">
       <div className="mx-auto max-w-lg">
-        <div className="mb-6 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-xs text-white/70">
-          <span className="font-mono text-white/50">vrema — partner</span>
+        <div className="mb-6 flex items-center justify-between rounded-2xl border border-white/5 bg-card px-4 py-3 text-xs text-white/70 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+          <span className="font-sans text-white/50">vrema — partner</span>
           <Link
             href="/"
-            className="rounded-md border border-white/15 px-3 py-1.5 text-white/85 hover:bg-white/10"
+            className="rounded-xl border border-border px-3 py-1.5 text-white/85 hover:bg-card/70"
           >
             Zurück zur Startseite
           </Link>
         </div>
 
-        <div className="space-y-8 rounded-2xl border border-white/10 bg-gradient-to-b from-[#121212] to-[#0c0c0c] p-8 shadow-[0_0_40px_rgba(34,197,94,0.06)]">
+        <div className="space-y-8 rounded-2xl border border-white/5 bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <h1 className="text-2xl font-bold tracking-tight">Partner werden</h1>
 
           <div className="space-y-4 text-base leading-relaxed text-white/80">
@@ -36,12 +36,12 @@ export default function PartnerPage() {
 
           <a
             href={PARTNER_MAILTO}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-[#22c55e] px-6 py-3.5 text-sm font-bold text-black transition-colors hover:bg-[#16a34a] font-mono"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3.5 text-sm font-bold text-black transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] font-sans"
           >
             Jetzt Partner anfragen
           </a>
 
-          <p className="text-center text-xs text-white/35 font-mono">
+          <p className="text-center text-xs text-white/35 font-sans">
             Kein Login — Sie erhalten Ihren persönlichen Empfehlungslink per E-Mail.
           </p>
         </div>

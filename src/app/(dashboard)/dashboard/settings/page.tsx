@@ -17,7 +17,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div>
+      <div className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Settings className="w-6 h-6 text-white/40" />
           Einstellungen
@@ -27,28 +27,28 @@ export default async function SettingsPage() {
 
       {/* Company settings – only for owners */}
       {isOwner && company && (
-        <section>
+        <section className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <div className="flex items-center gap-2 mb-4">
             <Building2 className="w-4 h-4 text-white/30" />
-            <h2 className="font-semibold text-sm text-white/60 uppercase tracking-widest font-mono">Firmendaten</h2>
+            <h2 className="font-semibold text-sm text-white/60 uppercase tracking-widest font-sans">Firmendaten</h2>
           </div>
           <CompanySettingsForm company={company} />
         </section>
       )}
 
       {/* Password change – for all users */}
-      <section>
+      <section className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
         <div className="flex items-center gap-2 mb-4">
           <Lock className="w-4 h-4 text-white/30" />
-          <h2 className="font-semibold text-sm text-white/60 uppercase tracking-widest font-mono">Passwort ändern</h2>
+          <h2 className="font-semibold text-sm text-white/60 uppercase tracking-widest font-sans">Passwort ändern</h2>
         </div>
         <PasswordChangeForm />
       </section>
 
-      <section>
+      <section className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
         <div className="flex items-center gap-2 mb-4">
           <Fingerprint className="w-4 h-4 text-white/30" />
-          <h2 className="font-semibold text-sm text-white/60 uppercase tracking-widest font-mono">Sicherheit</h2>
+          <h2 className="font-semibold text-sm text-white/60 uppercase tracking-widest font-sans">Sicherheit</h2>
         </div>
         <PasskeySecurityForm />
       </section>

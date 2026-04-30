@@ -107,7 +107,7 @@ export default async function DashboardPage() {
       )}
 
       {employeeCount === 0 && (
-        <div className="rounded-2xl border border-[#22c55e]/20 bg-[#22c55e]/5 p-5 shadow-xl shadow-black/20">
+        <div className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <div className="flex items-center gap-2 mb-2">
             <ListChecks className="w-4 h-4 text-[#22c55e]" />
             <p className="font-semibold text-sm">Erste Schritte</p>
@@ -130,38 +130,38 @@ export default async function DashboardPage() {
       {/* Team stats (for owners/managers) */}
       {teamStats && (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-xl shadow-black/20">
+          <div className="rounded-2xl border border-white/5 bg-card p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-widest text-white/35">Command Center</p>
                 <h2 className="text-sm font-semibold mt-1">Heute im Blick: Live-Status und offene Aufgaben</h2>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Link href="/dashboard/planning" className="rounded-2xl border border-white/15 px-4 py-2 text-xs md:hover:border-slate-500 md:hover:bg-slate-900/50 transition-all active:scale-95">
+                <Link href="/dashboard/planning" className="rounded-2xl border border-border px-4 py-2 text-xs md:hover:bg-card/70 transition-all active:scale-95">
                   Wochenplan prüfen
                 </Link>
-                <Link href="/dashboard/reports" className="rounded-2xl border border-white/15 px-4 py-2 text-xs md:hover:border-slate-500 md:hover:bg-slate-900/50 transition-all active:scale-95">
+                <Link href="/dashboard/reports" className="rounded-2xl border border-border px-4 py-2 text-xs md:hover:bg-card/70 transition-all active:scale-95">
                   Zeiten prüfen
                 </Link>
-                <Link href="/dashboard/vacation" className="rounded-2xl border border-white/15 px-4 py-2 text-xs md:hover:border-slate-500 md:hover:bg-slate-900/50 transition-all active:scale-95">
+                <Link href="/dashboard/vacation" className="rounded-2xl border border-border px-4 py-2 text-xs md:hover:bg-card/70 transition-all active:scale-95">
                   Anträge öffnen
                 </Link>
               </div>
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-3 text-xs">
-              <div className="rounded-2xl bg-slate-900 border border-white/10 px-3 py-2">
+              <div className="rounded-2xl bg-card border border-white/5 px-3 py-2">
                 <span className="text-white/40">Fehlend heute</span>
                 <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-red-200" : "text-emerald-200"}`}>
                   {teamStats.absentToday > 0 ? `${teamStats.absentToday} kritisch` : "Keine offenen Ausfälle"}
                 </p>
               </div>
-              <div className="rounded-2xl bg-slate-900 border border-white/10 px-3 py-2">
+              <div className="rounded-2xl bg-card border border-white/5 px-3 py-2">
                 <span className="text-white/40">Zu spät heute</span>
                 <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-amber-200" : "text-emerald-200"}`}>
                   {teamStats.lateToday > 0 ? `${teamStats.lateToday} Hinweise` : "Alles pünktlich"}
                 </p>
               </div>
-              <div className="rounded-2xl bg-slate-900 border border-white/10 px-3 py-2">
+              <div className="rounded-2xl bg-card border border-white/5 px-3 py-2">
                 <span className="text-white/40">Unbestätigte Zeiten</span>
                 <p className={`mt-1 font-semibold ${teamStats.pendingCorrections > 0 ? "text-amber-200" : "text-emerald-200"}`}>
                   {teamStats.pendingCorrections > 0 ? `${teamStats.pendingCorrections} offen` : "Keine offenen Korrekturen"}
@@ -178,7 +178,7 @@ export default async function DashboardPage() {
             { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24" },
             { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc" },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-2xl bg-slate-900 border border-white/5 p-5 shadow-xl shadow-black/20 transition-all md:hover:border-slate-600 md:hover:bg-slate-900/50">
+            <div key={stat.label} className="rounded-2xl bg-card border border-white/5 p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all md:hover:bg-card/70">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-white/40">{stat.label}</p>
                 <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
@@ -221,7 +221,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Today summary */}
-      <div className="rounded-2xl bg-slate-900 border border-white/5 p-5 md:p-6 shadow-xl shadow-black/20 transition-all md:hover:border-slate-600 md:hover:bg-slate-900/50">
+      <div className="rounded-2xl bg-card border border-white/5 p-5 md:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all md:hover:bg-card/70">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Heute</h2>
           <span className="text-sm text-[#22c55e] tabular-nums font-bold">
@@ -234,7 +234,7 @@ export default async function DashboardPage() {
             <p className="text-sm text-white/30">Alles ruhig hier. Genieße die Pause! ☕</p>
             <Link
               href="#terminal-widget"
-              className="mt-3 inline-flex items-center rounded-2xl border border-white/15 px-4 py-2 text-sm text-white/75 transition-all active:scale-95 md:hover:bg-slate-900/50"
+              className="mt-3 inline-flex items-center rounded-2xl border border-border px-4 py-2 text-sm text-white/75 transition-all active:scale-95 md:hover:bg-card/70"
             >
               Jetzt einstempeln
             </Link>
@@ -246,9 +246,9 @@ export default async function DashboardPage() {
                 ? (log.clockOut.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins
                 : null;
               return (
-                <div key={log.id} className="flex items-center justify-between py-2.5 px-3 rounded-2xl bg-slate-950">
+                <div key={log.id} className="flex items-center justify-between py-2.5 px-3 rounded-2xl bg-background">
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-white/20" : "bg-[#22c55e] animate-pulse"}`} />
+                    <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-white/20" : "bg-primary animate-pulse"}`} />
                     <span className="text-sm text-white/70">
                       {new Date(log.clockIn).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
                       {" — "}
@@ -271,14 +271,14 @@ export default async function DashboardPage() {
 
       {/* Business plan CTA */}
       {plan === "STARTER" && (
-        <div className="rounded-2xl bg-[#22c55e]/5 border border-[#22c55e]/20 p-5 flex items-center justify-between shadow-xl shadow-black/20">
+        <div className="rounded-2xl bg-card border border-white/5 p-5 flex items-center justify-between shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <div>
             <p className="font-semibold text-sm">PDF-Export & Lohnbüro-Versand freischalten</p>
             <p className="text-xs text-white/40 mt-1">Upgrade auf Business für vollständige Berichte.</p>
           </div>
           <Link
             href="/dashboard/billing"
-            className="shrink-0 px-4 py-2 rounded-2xl bg-[#22c55e] text-black text-sm font-bold md:hover:bg-[#16a34a] transition-all active:scale-95"
+            className="shrink-0 px-4 py-2 rounded-2xl bg-primary text-black text-sm font-bold md:hover:bg-primary/90 transition-all active:scale-95"
           >
             Upgrade
           </Link>

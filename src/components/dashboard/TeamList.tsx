@@ -48,7 +48,7 @@ export function TeamList({
   return (
     <div className="rounded-2xl bg-[#141414] border border-white/5 overflow-hidden">
       {/* Header row */}
-      <div className="grid grid-cols-12 gap-3 px-5 py-3 border-b border-white/5 text-xs text-white/30 font-mono uppercase tracking-widest">
+      <div className="grid grid-cols-12 gap-3 px-5 py-3 border-b border-white/5 text-xs text-white/30 font-sans uppercase tracking-widest">
         <span className="col-span-5">Mitarbeiter</span>
         <span className="col-span-3">Rolle</span>
         <span className="col-span-2 text-right">Std/Woche</span>
@@ -79,7 +79,7 @@ export function TeamList({
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">
                     {member.name ?? "–"}
-                    {isSelf && <span className="ml-2 text-[10px] text-white/30 font-mono">(du)</span>}
+                    {isSelf && <span className="ml-2 text-[10px] text-white/30 font-sans">(du)</span>}
                   </p>
                   <p className="text-xs text-white/30 truncate">{member.email}</p>
                 </div>
@@ -88,12 +88,12 @@ export function TeamList({
               {/* Role */}
               <div className="col-span-3 flex items-center gap-1.5">
                 <meta.Icon className={clsx("w-3.5 h-3.5 shrink-0", meta.color)} />
-                <span className={clsx("text-xs font-mono", meta.color)}>{meta.label}</span>
+                <span className={clsx("text-xs font-sans", meta.color)}>{meta.label}</span>
               </div>
 
               {/* Weekly hours */}
               <div className="col-span-2 text-right">
-                <span className="text-sm font-mono text-white/60">{member.weeklyHours}h</span>
+                <span className="text-sm font-sans text-white/60">{member.weeklyHours}h</span>
               </div>
 
               {/* Actions */}

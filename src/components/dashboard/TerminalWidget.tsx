@@ -120,7 +120,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
   })();
 
   return (
-    <div className="rounded-3xl bg-slate-900/80 backdrop-blur-md border border-white/10 p-6 shadow-2xl shadow-black/25">
+    <div className="rounded-3xl bg-card/90 backdrop-blur-md border border-white/10 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-semibold text-lg">Terminal</h2>
         {gpsFeatureEnabled && (
@@ -160,26 +160,34 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
               className="flex flex-col items-center gap-3 mb-8"
             >
               <div className="relative">
-                <div className="w-20 h-20 rounded-2xl bg-[#22c55e]/10 border-2 border-[#22c55e]/30 flex items-center justify-center">
-                  <Clock className="w-8 h-8 text-[#22c55e]" />
+                <div className="w-20 h-20 rounded-2xl bg-primary/10 border-2 border-primary/30 flex items-center justify-center">
+                  <Clock className="w-8 h-8 text-primary" />
                 </div>
                 <motion.div
                   animate={{ scale: [1, 1.4, 1] }}
                   transition={{ repeat: Infinity, duration: 2 }}
-                  className="absolute top-1 right-1 w-3 h-3 rounded-full bg-[#22c55e]"
+                  className="absolute top-1 right-1 w-3 h-3 rounded-full bg-primary"
                 />
               </div>
               <div className="text-center">
-                <p className="text-3xl font-mono font-bold text-[#22c55e]">
+                <p className="text-3xl font-mono font-bold text-primary">
                   {formatDuration(workedMs)}
                 </p>
                 <p className="text-xs text-white/40 mt-1">
-                  {activeLog.isOnBreak
-                    ? "Pause aktiv"
-                    : `Eingestempelt seit ${new Date(activeLog.clockIn).toLocaleTimeString("de-DE", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })} Uhr`}
+                  {activeLog.isOnBreak ? (
+                    "Pause aktiv"
+                  ) : (
+                    <>
+                      Eingestempelt seit{" "}
+                      <span className="font-mono">
+                        {new Date(activeLog.clockIn).toLocaleTimeString("de-DE", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>{" "}
+                      Uhr
+                    </>
+                  )}
                 </p>
               </div>
             </motion.div>
@@ -206,7 +214,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
           className={`w-full py-4 rounded-full font-bold text-base flex items-center justify-center gap-2 transition-all ${
             activeLog
               ? "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20"
-              : "bg-[#22c55e] text-black hover:bg-[#16a34a]"
+              : "bg-primary text-black hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)]"
           }`}
         >
           {isPending ? (
@@ -232,7 +240,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
               disabled={isPending}
               className={`w-full rounded-2xl border px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
                 activeLog.isOnBreak
-                  ? "border-[#22c55e]/40 bg-[#22c55e]/15 text-[#86efac] hover:bg-[#22c55e]/20"
+                  ? "border-primary/40 bg-primary/15 text-primary hover:bg-primary/20"
                   : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
               }`}
             >

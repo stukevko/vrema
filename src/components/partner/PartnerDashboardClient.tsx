@@ -79,7 +79,7 @@ export function PartnerDashboardClient({
   const totalSuccessCents = starterTotalCents + businessTotalCents;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
+    <div className="min-h-screen bg-background text-white p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -88,17 +88,17 @@ export function PartnerDashboardClient({
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/partner-login" })}
-            className="rounded-2xl border border-white/10 px-3 py-2 text-sm text-white/70 hover:bg-white/5"
+            className="rounded-2xl border border-border px-3 py-2 text-sm text-white/70 hover:bg-card/70"
           >
             Abmelden
           </button>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-xl shadow-black/20">
+        <div className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <p className="text-xs uppercase tracking-wider text-white/35 mb-2">Dein Ref-Link</p>
           <div className="flex flex-wrap items-center gap-2">
-            <code className="rounded-2xl border border-white/10 bg-slate-950 px-2 py-1.5 text-xs text-white/80 break-all">{refUrl}</code>
-            <button onClick={() => void copy(refUrl)} className="inline-flex items-center gap-1 rounded-2xl border border-white/15 bg-white/10 px-2.5 py-1.5 text-xs text-white/80 hover:bg-white/15">
+            <code className="rounded-2xl border border-border bg-background px-2 py-1.5 text-xs text-white/80 break-all">{refUrl}</code>
+            <button onClick={() => void copy(refUrl)} className="inline-flex items-center gap-1 rounded-2xl border border-border bg-card px-2.5 py-1.5 text-xs text-white/80 hover:bg-card/70">
               <Copy className="w-3 h-3" />
               Link kopieren
             </button>
@@ -115,13 +115,13 @@ export function PartnerDashboardClient({
             <p className="text-xs text-white/45">Verfügbares Guthaben</p>
             <p className="text-lg font-semibold text-emerald-200 tabular-nums">{formatCents(availableCents, "eur")}</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <div className="rounded-2xl border border-white/5 bg-card p-4">
             <p className="text-xs text-white/45">Ausgezahlt</p>
             <p className="text-lg font-semibold text-white/85 tabular-nums">{formatCents(paidCents, "eur")}</p>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-xl shadow-black/20">
+        <div className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-base font-semibold">Deine Erfolgs-Statistik</h2>
@@ -129,20 +129,20 @@ export function PartnerDashboardClient({
             </div>
             <button
               type="button"
-              className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/10"
+              className="rounded-2xl border border-border bg-card px-4 py-2 text-sm text-white/80 hover:bg-card/70"
               onClick={() => window.alert("Hier findest du bald Logos, Screenshots und Texte für WhatsApp/Instagram.")}
             >
               Werbemittel-Kit
             </button>
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-slate-950 p-4">
+            <div className="rounded-2xl border border-white/5 bg-background p-4">
               <p className="text-xs text-white/45">Starter-Abschlüsse</p>
               <p className="mt-1 text-sm text-white/80 tabular-nums">
                 {starterDeals.length} (insg. {formatCents(starterTotalCents, "eur")})
               </p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-950 p-4">
+            <div className="rounded-2xl border border-white/5 bg-background p-4">
               <p className="text-xs text-white/45">Business-Abschlüsse</p>
               <p className="mt-1 text-sm text-white/80 tabular-nums">
                 {businessDeals.length} (insg. {formatCents(businessTotalCents, "eur")})
@@ -163,14 +163,14 @@ export function PartnerDashboardClient({
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-slate-900 overflow-hidden shadow-xl shadow-black/20">
-          <div className="px-4 py-3 border-b border-white/10">
+        <div className="rounded-2xl border border-white/5 bg-card overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+          <div className="px-4 py-3 border-b border-border">
             <h2 className="font-semibold">Letzte Abschlüsse</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/10 bg-white/[0.02] text-white/45">
+                <tr className="border-b border-border bg-card/80 text-white/45">
                   {["Plan", "Deine Provision"].map((h) => (
                     <th key={h} className="px-4 py-2 text-left text-xs font-medium">{h}</th>
                   ))}
@@ -183,7 +183,7 @@ export function PartnerDashboardClient({
                   </tr>
                 ) : (
                   recentDeals.map((row) => (
-                    <tr key={row.id} className="border-b border-white/5 active:bg-slate-800/60 md:hover:bg-slate-900/40 transition-colors">
+                    <tr key={row.id} className="border-b border-border active:bg-background/70 md:hover:bg-card/70 transition-colors">
                       <td className="px-4 py-4 text-white/75">{planLabel(row.plan)}</td>
                       <td className="px-4 py-4 text-emerald-200 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
                     </tr>
@@ -194,14 +194,14 @@ export function PartnerDashboardClient({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-slate-900 overflow-hidden shadow-xl shadow-black/20">
-          <div className="px-4 py-3 border-b border-white/10">
+        <div className="rounded-2xl border border-white/5 bg-card overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+          <div className="px-4 py-3 border-b border-border">
             <h2 className="font-semibold">Alle Abschlüsse</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/10 bg-white/[0.02] text-white/45">
+                <tr className="border-b border-border bg-card/80 text-white/45">
                   {["Firma", "Plan", "Provision", "Status", "Abschluss", "Ausgezahlt am"].map((h) => (
                     <th key={h} className="px-4 py-2 text-left text-xs font-medium">{h}</th>
                   ))}
@@ -214,7 +214,7 @@ export function PartnerDashboardClient({
                   </tr>
                 ) : (
                   rows.map((row) => (
-                    <tr key={row.id} className="border-b border-white/5 active:bg-slate-800/60 md:hover:bg-slate-900/40 transition-colors">
+                    <tr key={row.id} className="border-b border-border active:bg-background/70 md:hover:bg-card/70 transition-colors">
                       <td className="px-4 py-4">{row.companyName}</td>
                       <td className="px-4 py-4 text-white/60">{planLabel(row.plan)}</td>
                       <td className="px-4 py-4 text-emerald-200 tabular-nums">{formatProvisionByPlan(row.plan)}</td>

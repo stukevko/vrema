@@ -32,7 +32,7 @@ export function SaldoWidget({
 
   if (!hasWorkLogs) {
     return (
-      <div className="rounded-3xl bg-slate-900 border border-white/10 p-6 shadow-xl shadow-black/20">
+      <div className="rounded-3xl bg-card border border-white/5 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
         <h2 className="font-semibold text-lg mb-3">Stunden-Saldo</h2>
         <p className="text-sm text-white/40">
           Noch keine erfassten Zeiten. Nutze das Terminal, um zu starten.
@@ -42,7 +42,7 @@ export function SaldoWidget({
   }
 
   return (
-    <div className="rounded-3xl bg-slate-900 border border-white/10 p-6 shadow-xl shadow-black/20">
+    <div className="rounded-3xl bg-card border border-white/5 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
       <h2 className="font-semibold text-lg mb-6">Stunden-Saldo</h2>
 
       <div className="flex items-center gap-4 mb-6">

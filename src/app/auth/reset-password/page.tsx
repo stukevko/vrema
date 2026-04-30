@@ -44,17 +44,17 @@ function ResetPasswordForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0b0b] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
         <div className="flex flex-col items-center gap-3 mb-8">
           <Image src="/vremalogo.png" alt="Vrema Logo" width={96} height={96} className="-mb-2" />
           <div className="text-center">
             <span className="font-bold text-xl tracking-tight">Vrema</span>
-            <span className="block text-[10px] text-white/25 font-mono uppercase tracking-widest">by KevkoStudio</span>
+            <span className="block text-[10px] text-white/25 font-sans uppercase tracking-widest">by KevkoStudio</span>
           </div>
         </div>
 
-        <div className="rounded-2xl bg-[#141414] border border-white/5 p-8">
+        <div className="rounded-2xl bg-card border border-white/5 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <h1 className="text-xl font-bold mb-1">Neues Passwort setzen</h1>
           <p className="text-white/40 text-sm mb-6">Wähle ein sicheres Passwort mit mindestens 8 Zeichen.</p>
 
@@ -69,7 +69,7 @@ function ResetPasswordForm() {
                   minLength={8}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-[#22c55e]/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -84,7 +84,7 @@ function ResetPasswordForm() {
                   minLength={8}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-[#22c55e]/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -92,7 +92,7 @@ function ResetPasswordForm() {
             <button
               type="submit"
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-[#22c55e] text-black font-bold flex items-center justify-center gap-2 hover:bg-[#16a34a] transition-colors disabled:opacity-60"
+              className="w-full py-3 rounded-xl bg-primary text-black font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all disabled:opacity-60"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               Passwort aktualisieren
@@ -100,7 +100,7 @@ function ResetPasswordForm() {
           </form>
 
           <div className="mt-6 pt-6 border-t border-white/5 text-center">
-            <Link href="/auth/login" className="text-sm text-[#22c55e] hover:underline">
+            <Link href="/auth/login" className="text-sm text-primary hover:underline">
               Zurück zum Login
             </Link>
           </div>
@@ -113,7 +113,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0b0b0b]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
       <ResetPasswordForm />
     </Suspense>
   );

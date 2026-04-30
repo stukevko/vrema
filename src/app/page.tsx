@@ -65,14 +65,14 @@ function Cursor({ show = true }: { show?: boolean }) {
 // ─── Terminal window component ────────────────────────────────────────────────
 function TerminalWindow({ title = "vrema — zsh", children }: { title?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-black/25 bg-slate-900/90 backdrop-blur-md">
-      <div className="flex items-center gap-2 px-4 py-3 bg-slate-900 border-b border-white/10">
+    <div className="rounded-3xl overflow-hidden border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] bg-card/90 backdrop-blur-md">
+      <div className="flex items-center gap-2 px-4 py-3 bg-card border-b border-border">
         <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
         <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
         <span className="w-3 h-3 rounded-full bg-[#28c840]" />
         <span className="ml-3 text-xs text-white/35 tracking-wider">{title}</span>
       </div>
-      <div className="p-5 font-mono text-sm leading-relaxed">{children}</div>
+      <div className="p-5 font-sans text-sm leading-relaxed">{children}</div>
     </div>
   );
 }
@@ -310,7 +310,7 @@ export default function LandingPage() {
                 ].map((seal) => (
                   <div
                     key={seal.label}
-                    className="rounded-2xl border border-slate-700/60 bg-slate-900/40 px-3 py-2 backdrop-blur-sm"
+                    className="rounded-2xl border border-white/5 bg-card/50 px-3 py-2 backdrop-blur-sm"
                   >
                     <p className="text-[11px] font-semibold text-slate-300">{seal.label}</p>
                     <p className="mt-0.5 text-[10px] text-slate-400">{seal.text}</p>
@@ -377,7 +377,7 @@ export default function LandingPage() {
                   { label: "Team aktiv", value: "8 / 12", color: "#60a5fa" },
                   { label: "Offene Anträge", value: "2 Urlaub", color: "#f59e0b" },
                 ].map((badge) => (
-                  <div key={badge.label} className="rounded-2xl bg-slate-900 border border-white/10 px-4 py-3 shadow-xl shadow-black/20">
+                  <div key={badge.label} className="rounded-2xl bg-card border border-white/5 px-4 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
                     <p className="text-[10px] text-white/30 uppercase tracking-widest mb-1">{badge.label}</p>
                     <p className="font-bold text-sm tabular-nums" style={{ color: badge.color }}>{badge.value}</p>
                   </div>
@@ -420,7 +420,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className="group relative rounded-3xl bg-slate-900 border border-white/[0.08] p-7 hover:border-emerald-300/20 transition-all overflow-hidden shadow-2xl shadow-black/20"
+                className="group relative rounded-3xl bg-card border border-white/5 p-7 hover:border-emerald-300/20 transition-all overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
               >
                 {/* hover glow */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(ellipse_at_0%_0%,rgba(34,197,94,0.04),transparent_60%)]" />
@@ -473,7 +473,7 @@ export default function LandingPage() {
                   { num: "02", title: "Transparent & Fair", desc: "Feste Preise, klare Meilensteine, keine versteckten Kosten." },
                   { num: "03", title: "Lokale Verwurzelung", desc: "Speyer, Rhein-Neckar, Pfalz. Ein Handschlag zählt mehr als jedes SLA." },
                 ].map((item) => (
-                  <div key={item.num} className="flex gap-4 p-5 rounded-2xl bg-slate-900 border border-white/[0.08] shadow-xl shadow-black/20">
+                  <div key={item.num} className="flex gap-4 p-5 rounded-2xl bg-card border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
                     <span className="text-[#22c55e] text-sm font-bold shrink-0 mt-0.5">{item.num}</span>
                     <div>
                       <p className="font-semibold text-sm mb-1">{item.title}</p>
@@ -541,21 +541,21 @@ export default function LandingPage() {
           </motion.div>
 
           <div className="mb-10 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-xl shadow-black/20">
+            <div className="rounded-2xl border border-white/5 bg-card p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
               <div className="flex items-center gap-2 text-emerald-200">
                 <ShieldCheck className="h-4 w-4" />
                 <p className="text-sm font-semibold">DATEV-Ready</p>
               </div>
               <p className="mt-1 text-sm text-white/65">Exportformate für Ihr Lohnbüro optimiert.</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-xl shadow-black/20">
+            <div className="rounded-2xl border border-white/5 bg-card p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
               <div className="flex items-center gap-2 text-emerald-200">
                 <Scale className="h-4 w-4" />
                 <p className="text-sm font-semibold">Revisionssicher</p>
               </div>
               <p className="mt-1 text-sm text-white/65">Vollständiger Audit-Trail nach GoBD-Standards.</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-xl shadow-black/20">
+            <div className="rounded-2xl border border-white/5 bg-card p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
               <div className="flex items-center gap-2 text-emerald-200">
                 <Server className="h-4 w-4" />
                 <p className="text-sm font-semibold">Hosted in Germany</p>
@@ -594,8 +594,8 @@ export default function LandingPage() {
                 transition={{ delay: i * 0.1 }}
                 className={`relative rounded-3xl p-8 border transition-all shadow-2xl shadow-black/20 ${
                   plan.highlight
-                    ? "bg-slate-900 border-[#22c55e]/30 shadow-[0_0_40px_rgba(34,197,94,0.07)]"
-                    : "bg-slate-900 border-white/[0.08] hover:border-white/[0.15]"
+                    ? "bg-card border-primary/30 shadow-[0_0_40px_rgba(34,197,94,0.07)]"
+                    : "bg-card border-white/5 hover:border-white/15"
                 }`}
               >
                 {"badge" in plan && plan.badge && (
@@ -724,7 +724,7 @@ export default function LandingPage() {
       </section>
 
       <section className="py-16 px-6 border-t border-white/[0.06]">
-        <div className="max-w-4xl mx-auto rounded-3xl border border-emerald-300/20 bg-slate-900 p-8 shadow-2xl shadow-black/25">
+        <div className="max-w-4xl mx-auto rounded-3xl border border-emerald-300/20 bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <h3 className="text-2xl font-bold">Werde VREMA-Partner</h3>
           <p className="mt-2 text-white/70">
             Du kennst Betriebe, die eine moderne Zeiterfassung brauchen? Empfiehl VREMA und erhalte bis zu 15€ pro
@@ -797,7 +797,7 @@ export default function LandingPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setModal(null)}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
           >
             <motion.div
               initial={{ opacity: 0, y: 40, scale: 0.96 }}
@@ -807,9 +807,9 @@ export default function LandingPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-lg"
             >
-              <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-black/30 bg-slate-900">
+              <div className="rounded-3xl overflow-hidden border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] bg-card">
                 {/* Title bar */}
-                <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-white/10">
+                <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setModal(null)}
@@ -818,19 +818,19 @@ export default function LandingPage() {
                     <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
                     <span className="w-3 h-3 rounded-full bg-[#28c840]" />
                   </div>
-                  <span className="text-xs text-white/30 font-mono tracking-wider">
+                  <span className="text-xs text-white/30 font-sans tracking-wider">
                     vrema — {modal === "impressum" ? "impressum.txt" : "datenschutz.txt"}
                   </span>
                   <button
                     onClick={() => setModal(null)}
-                    className="text-white/20 hover:text-white transition-colors font-mono text-sm px-1"
+                    className="text-white/20 hover:text-white transition-colors font-sans text-sm px-1"
                   >
                     ✕
                   </button>
                 </div>
 
                 {/* Content */}
-                <div className="p-6 font-mono text-sm space-y-4">
+                <div className="p-6 font-sans text-sm space-y-4">
                   {modal === "impressum" ? (
                     <>
                       <div className="text-[#22c55e] text-xs uppercase tracking-widest mb-2">
@@ -897,7 +897,7 @@ export default function LandingPage() {
               </div>
 
               {/* Click outside hint */}
-              <p className="text-center text-xs text-white/20 font-mono mt-3">
+              <p className="text-center text-xs text-white/20 font-sans mt-3">
                 Klick außerhalb oder <span className="text-white/40">✕</span> zum Schließen
               </p>
             </motion.div>

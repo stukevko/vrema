@@ -197,7 +197,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
                     <Fragment key={a.id}>
                       <tr className="border-b border-white/5 hover:bg-white/[0.02]">
                         <td className="px-4 py-3 font-medium">{a.name}</td>
-                        <td className="px-4 py-3 font-mono text-xs text-white/50">{a.code}</td>
+                        <td className="px-4 py-3 font-sans text-xs text-white/50">{a.code}</td>
                         <td className="px-4 py-3 text-white/60">{a.referredCompanies}</td>
                         <td className="px-4 py-3 text-amber-200/90">{formatCents(a.pendingCents, "eur")}</td>
                         <td className="px-4 py-3 text-emerald-300">{formatCents(a.availableCents, "eur")}</td>
@@ -305,14 +305,14 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
                       </td>
                       <td className="px-3 py-2.5">
                         <span className="font-medium">{row.affiliate.name}</span>
-                        <span className="block text-[10px] text-white/35 font-mono">{row.affiliate.code}</span>
+                        <span className="block text-[10px] text-white/35 font-sans">{row.affiliate.code}</span>
                       </td>
                       <td className="px-3 py-2.5 text-white/80">{row.company.name}</td>
                       <td className="px-3 py-2.5 text-white/55 text-xs">{planDe(row.plan)}</td>
                       <td className="px-3 py-2.5 text-emerald-300 font-medium tabular-nums">
                         {formatCents(row.commissionCents, row.currency)}
                       </td>
-                      <td className="px-3 py-2.5 font-mono text-[10px] text-white/40">{row.stripeInvoiceId}</td>
+                      <td className="px-3 py-2.5 font-sans text-[10px] text-white/40">{row.stripeInvoiceId}</td>
                       <td className="px-3 py-2.5 text-xs text-white/50">
                         {new Date(row.maturesAt).toLocaleDateString("de-DE")}
                       </td>
@@ -340,7 +340,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Kevin"
                 required
-                className="mt-1 w-full px-3 py-2 rounded-lg bg-[#0b0b0b] border border-white/10 text-sm text-white"
+                className="mt-1 w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-white"
               />
             </div>
             <div>
@@ -351,7 +351,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
                 type="email"
                 placeholder="partner@…"
                   required
-                className="mt-1 w-full px-3 py-2 rounded-lg bg-[#0b0b0b] border border-white/10 text-sm text-white"
+                className="mt-1 w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-white"
               />
             </div>
             <div className="sm:col-span-2">
@@ -372,7 +372,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
                 Ref-Link für den Partner
               </p>
               <div className="flex flex-wrap items-center gap-2">
-                <code className="text-[11px] text-white/80 break-all bg-black/30 px-2 py-1.5 rounded-lg border border-white/10">
+                <code className="text-[11px] text-white/80 break-all bg-card px-2 py-1.5 rounded-lg border border-border">
                   {lastCreated.refUrl}
                 </code>
                 <button

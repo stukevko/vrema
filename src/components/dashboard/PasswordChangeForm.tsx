@@ -50,7 +50,7 @@ export function PasswordChangeForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {fields.map((f) => (
           <div key={f.name}>
-            <label className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1.5 block">
+            <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1.5 block">
               {f.label}
             </label>
             <div className="relative">
@@ -61,7 +61,7 @@ export function PasswordChangeForm() {
                 required
                 minLength={f.name !== "currentPassword" ? 8 : 1}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-[#22c55e]/40 transition-colors"
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-card border border-border text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/40 transition-colors"
               />
               <button
                 type="button"
@@ -75,12 +75,12 @@ export function PasswordChangeForm() {
         ))}
 
         {error && (
-          <p className="text-xs text-red-400 font-mono bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2">
+          <p className="text-xs text-red-400 font-sans bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2">
             ✗ {error}
           </p>
         )}
         {success && (
-          <p className="text-xs text-[#22c55e] font-mono bg-[#22c55e]/5 border border-[#22c55e]/10 rounded-lg px-3 py-2">
+          <p className="text-xs text-primary font-sans bg-primary/5 border border-primary/10 rounded-lg px-3 py-2">
             ✓ Passwort erfolgreich geändert.
           </p>
         )}

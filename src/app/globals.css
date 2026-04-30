@@ -1,10 +1,44 @@
 @import "tailwindcss";
 
 :root {
-  --background: #020617; /* slate-950 */
-  --foreground: #ffffff;
-  --accent: #22c55e;
-  --card: #0f172a; /* slate-900 */
+  --background: 222 47% 4%;
+  --card: 222 47% 7%;
+  --popover: 222 47% 7%;
+  --primary: 150 100% 50%;
+  --secondary: 217 32% 17%;
+  --accent: 217 32% 17%;
+  --border: 217 32% 12%;
+  --ring: 150 100% 50%;
+  --radius: 1.25rem;
+  --foreground: 210 40% 98%;
+  --muted: 215 20% 65%;
+}
+
+.dark {
+  --background: 222 47% 4%;
+  --card: 222 47% 7%;
+  --popover: 222 47% 7%;
+  --primary: 150 100% 50%;
+  --secondary: 217 32% 17%;
+  --accent: 217 32% 17%;
+  --border: 217 32% 12%;
+  --ring: 150 100% 50%;
+  --radius: 1.25rem;
+  --foreground: 210 40% 98%;
+  --muted: 215 20% 65%;
+}
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-card: hsl(var(--card));
+  --color-popover: hsl(var(--popover));
+  --color-primary: hsl(var(--primary));
+  --color-secondary: hsl(var(--secondary));
+  --color-accent: hsl(var(--accent));
+  --color-border: hsl(var(--border));
+  --color-ring: hsl(var(--ring));
+  --color-foreground: hsl(var(--foreground));
+  --color-muted: hsl(var(--muted));
 }
 
 * {
@@ -16,8 +50,8 @@ html {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
@@ -33,15 +67,15 @@ input[class],
 select[class],
 textarea[class] {
   border-radius: 0.75rem;
-  border-color: rgb(51 65 85 / 0.9);
+  border-color: hsl(var(--border));
 }
 
 input[class]:focus,
 select[class]:focus,
 textarea[class]:focus {
   outline: none;
-  border-color: rgb(134 239 172 / 0.7);
-  box-shadow: 0 0 0 1px rgb(134 239 172 / 0.35);
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 1px hsl(var(--ring) / 0.35);
 }
 
 /* Custom scrollbar */

@@ -45,7 +45,7 @@ export function SuperAdminInlinePanel({
   const [resultMsg, setResultMsg] = useState<string | null>(null);
 
   return (
-    <section id="super-admin" className="rounded-3xl border border-amber-400/20 bg-slate-900 p-6 shadow-2xl shadow-black/25">
+    <section id="super-admin" className="rounded-3xl border border-white/5 bg-card p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
       <div className="mb-4 flex items-center gap-2">
         <Shield className="h-4 w-4 text-amber-300" />
         <h2 className="text-sm font-semibold uppercase tracking-widest text-amber-200/90">Super Admin Modus</h2>
@@ -67,14 +67,14 @@ export function SuperAdminInlinePanel({
           { label: "Logs 24h", value: `${monitoring.logsLast24h}`, tone: "text-violet-300" },
           { label: "Offene Clock-ins", value: `${monitoring.openWorkLogs}`, tone: "text-amber-300" },
         ].map((m) => (
-          <div key={m.label} className="rounded-2xl border border-white/10 bg-slate-900 px-3 py-2">
+          <div key={m.label} className="rounded-2xl border border-white/5 bg-card px-3 py-2">
             <p className="text-[10px] uppercase tracking-widest text-white/40">{m.label}</p>
             <p className={`mt-1 text-sm font-semibold ${m.tone}`}>{m.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="mb-4 rounded-2xl border border-white/10 bg-slate-900 px-3 py-2 text-[11px] text-white/65">
+      <div className="mb-4 rounded-2xl border border-white/5 bg-card px-3 py-2 text-[11px] text-white/65">
         Monitoring: neue User (7d) <span className="text-white/90">{monitoring.newUsersLast7d}</span> · offene Tokens{" "}
         <span className="text-white/90">{monitoring.verificationTokensOpen}</span> · abgelaufene Tokens{" "}
         <span className={monitoring.staleVerificationTokens > 0 ? "text-amber-300" : "text-emerald-300"}>
@@ -91,7 +91,7 @@ export function SuperAdminInlinePanel({
       </div>
 
       <form
-        className="mb-4 grid gap-2 rounded-2xl border border-white/10 bg-slate-900 p-4 md:grid-cols-4"
+        className="mb-4 grid gap-2 rounded-2xl border border-white/5 bg-card p-4 md:grid-cols-4"
         onSubmit={(e) => {
           e.preventDefault();
           const form = e.currentTarget;
@@ -147,12 +147,12 @@ export function SuperAdminInlinePanel({
       </form>
 
       {resultMsg && (
-        <p className="mb-4 rounded-2xl border border-white/10 bg-slate-900 px-3 py-2 text-[11px] text-white/75">
+        <p className="mb-4 rounded-2xl border border-white/5 bg-card px-3 py-2 text-[11px] text-white/75">
           {resultMsg}
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-900">
+      <div className="overflow-x-auto rounded-2xl border border-white/5 bg-card">
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-white/10 text-white/50">

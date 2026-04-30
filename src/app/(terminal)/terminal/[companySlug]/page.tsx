@@ -76,18 +76,18 @@ export default function TerminalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0b0b] text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#141414] p-6">
-        <p className="text-center text-xs font-mono uppercase tracking-widest text-white/40 mb-2">
+    <div className="min-h-screen bg-background text-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-card p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <p className="text-center text-xs font-sans uppercase tracking-widest text-white/40 mb-2">
           Vrema Terminal
         </p>
         <div
           className={clsx(
             "mb-5 rounded-2xl border px-4 py-3 text-center font-semibold transition-colors",
-            feedbackState === "success" && "border-[#22c55e]/30 bg-[#22c55e]/10 text-[#86efac]",
+            feedbackState === "success" && "border-primary/30 bg-primary/10 text-primary",
             feedbackState === "warning" && "border-amber-500/30 bg-amber-500/10 text-amber-300",
             feedbackState === "error" && "border-red-500/30 bg-red-500/10 text-red-300",
-            feedbackState === "idle" && "border-white/10 bg-[#0b0b0b] text-white/80"
+            feedbackState === "idle" && "border-white/10 bg-background text-white/80"
           )}
         >
           {message}
@@ -96,8 +96,8 @@ export default function TerminalPage() {
           <p className="mb-4 -mt-2 text-center text-xs text-white/45">{guidance}</p>
         )}
 
-        <div className="mb-5 rounded-2xl bg-[#0b0b0b] border border-white/10 py-5 text-center">
-          <p className="font-mono text-3xl tracking-[0.5em] pl-[0.5em]">{pin.replace(/./g, "•") || "----"}</p>
+        <div className="mb-5 rounded-2xl bg-background border border-white/10 py-5 text-center">
+          <p className="font-sans text-3xl tracking-[0.5em] pl-[0.5em]">{pin.replace(/./g, "•") || "----"}</p>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
@@ -107,7 +107,8 @@ export default function TerminalPage() {
               onClick={() => handleKey(key)}
               className={clsx(
                 "h-16 rounded-2xl text-xl font-bold transition-colors",
-                key === "ok" && "bg-[#22c55e] text-black hover:bg-[#16a34a]",
+                key === "ok" &&
+                  "bg-primary text-black hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)]",
                 key === "clear" && "bg-red-500/15 text-red-300 hover:bg-red-500/25",
                 key !== "ok" && key !== "clear" && "bg-white/5 text-white hover:bg-white/10"
               )}

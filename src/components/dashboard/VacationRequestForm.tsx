@@ -73,7 +73,7 @@ export function VacationRequestForm() {
             type="date"
             name="startDate"
             required
-            className="w-full px-3 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm focus:outline-none focus:border-[#22c55e]/50 transition-colors"
+            className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
         <div>
@@ -82,7 +82,7 @@ export function VacationRequestForm() {
             type="date"
             name="endDate"
             required
-            className="w-full px-3 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm focus:outline-none focus:border-[#22c55e]/50 transition-colors"
+            className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
         <div>
@@ -93,7 +93,7 @@ export function VacationRequestForm() {
             name="reason"
             rows={3}
             placeholder={mode === "vacation" ? "z.B. Familienurlaub" : "z.B. krank mit Attest"}
-            className="w-full px-3 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm focus:outline-none focus:border-[#22c55e]/50 transition-colors resize-none"
+            className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/50 transition-colors resize-none"
           />
         </div>
         {mode === "sick" && (

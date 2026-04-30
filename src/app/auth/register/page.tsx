@@ -26,7 +26,7 @@ export default async function RegisterPage({ searchParams }: PageProps) {
   }
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0b0b0b]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
       <RegisterClient initialPlan={plan} refCode={refRaw} affiliatePartnerName={affiliatePartnerName} />
     </Suspense>
   );

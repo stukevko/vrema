@@ -58,7 +58,7 @@ export default async function PlanningPage() {
               ) : (
                 <div className="mt-2 space-y-1">
                   {g.rows.map((r) => (
-                    <p key={r.id} className="font-mono text-sm text-[#86efac]">
+                    <p key={r.id} className="font-sans text-sm text-primary">
                       {r.startTime} - {r.endTime}
                     </p>
                   ))}

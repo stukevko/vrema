@@ -76,7 +76,7 @@ export function CompanySettingsForm({ company }: Props) {
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1.5 block">
+            <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1.5 block">
               Firmenname
             </label>
             <input
@@ -84,40 +84,40 @@ export function CompanySettingsForm({ company }: Props) {
               type="text"
               defaultValue={company.name}
               required
-              className="w-full px-3 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm focus:outline-none focus:border-[#22c55e]/40 transition-colors"
+              className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
             />
           </div>
           <div>
-            <label className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1.5 block">
+            <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1.5 block">
               Firmen-Slug
             </label>
             <input
               value={company.slug}
               readOnly
-              className="w-full px-3 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/5 text-white/30 text-sm font-mono cursor-not-allowed"
+              className="w-full px-3 py-2.5 rounded-xl bg-card border border-white/5 text-white/30 text-sm font-sans cursor-not-allowed"
             />
           </div>
         </div>
         <div>
-          <label className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1.5 block">
+          <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1.5 block">
             Schichtzyklus (Wochen)
           </label>
           <select
             value={shiftCycleWeeks}
             onChange={(e) => setShiftCycleWeeks(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm focus:outline-none focus:border-[#22c55e]/40 transition-colors"
+            className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
           >
             <option value="1">1 Woche (Standard)</option>
             <option value="2">2 Wochen</option>
             <option value="3">3 Wochen</option>
           </select>
-          <p className="text-[10px] text-white/20 mt-1 font-mono">
+          <p className="text-[10px] text-white/20 mt-1 font-sans">
             Legt fest, ob Planungsmuster wöchentlich, alle 2 Wochen oder alle 3 Wochen rotieren.
           </p>
         </div>
 
         <div>
-          <label className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1.5 block">
+          <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1.5 block">
             GPS-Geo-Radius (km) – für Stempel-Validierung
           </label>
           <div className="relative">
@@ -129,18 +129,18 @@ export function CompanySettingsForm({ company }: Props) {
               min={0.05}
               max={50}
               step={0.05}
-              className="w-full px-3 py-2.5 pr-12 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm focus:outline-none focus:border-[#22c55e]/40 transition-colors"
+              className="w-full px-3 py-2.5 pr-12 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30 font-mono">km</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30 font-sans">km</span>
           </div>
-          <p className="text-[10px] text-white/20 mt-1 font-mono">
+          <p className="text-[10px] text-white/20 mt-1 font-sans">
             Mitarbeiter müssen sich innerhalb dieses Radius befinden, um per GPS einzustempeln.
           </p>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-[#0b0b0b] p-4 space-y-3">
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <label className="text-[10px] text-white/40 font-mono uppercase tracking-widest block">
+            <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest block">
               Standort auf Karte markieren
             </label>
             <button
@@ -161,14 +161,14 @@ export function CompanySettingsForm({ company }: Props) {
               setGeoLongitude(lng.toFixed(6));
             }}
           />
-          <p className="text-[10px] text-white/25 font-mono">
+          <p className="text-[10px] text-white/25 font-sans">
             Klick auf die Karte setzt deinen Shop-Standort. Der grüne Kreis zeigt den aktiven Radius.
           </p>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1.5 block">
+            <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1.5 block">
               Standort Breitengrad
             </label>
             <input
@@ -178,11 +178,11 @@ export function CompanySettingsForm({ company }: Props) {
               value={geoLatitude}
               onChange={(e) => setGeoLatitude(e.target.value)}
               placeholder="49.3170"
-              className="w-full px-3 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm focus:outline-none focus:border-[#22c55e]/40 transition-colors"
+              className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
             />
           </div>
           <div>
-            <label className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1.5 block">
+            <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1.5 block">
               Standort Längengrad
             </label>
             <input
@@ -192,25 +192,25 @@ export function CompanySettingsForm({ company }: Props) {
               value={geoLongitude}
               onChange={(e) => setGeoLongitude(e.target.value)}
               placeholder="8.4370"
-              className="w-full px-3 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/10 text-white text-sm focus:outline-none focus:border-[#22c55e]/40 transition-colors"
+              className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
             />
           </div>
         </div>
 
         <div>
-          <label className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1.5 block">
+          <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1.5 block">
             Aktueller Plan
           </label>
-          <div className="px-3 py-2.5 rounded-xl bg-[#0b0b0b] border border-white/5 flex items-center justify-between">
-            <span className="text-sm font-mono text-[#22c55e] font-bold">{company.plan}</span>
-            <a href="/dashboard/billing" className="text-xs text-white/30 hover:text-white transition-colors font-mono">
+          <div className="px-3 py-2.5 rounded-xl bg-card border border-white/5 flex items-center justify-between">
+            <span className="text-sm font-sans text-primary font-bold">{company.plan}</span>
+            <a href="/dashboard/billing" className="text-xs text-white/30 hover:text-white transition-colors font-sans">
               Upgrade →
             </a>
           </div>
         </div>
 
         {error && (
-          <p className="text-xs text-red-400 font-mono bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2">
+          <p className="text-xs text-red-400 font-sans bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2">
             ✗ {error}
           </p>
         )}
