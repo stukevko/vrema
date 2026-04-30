@@ -58,19 +58,19 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden md:flex w-60 flex-col bg-[#0d0d0d] border-r border-white/5 sticky top-0 h-screen">
+    <aside className="hidden md:flex w-60 flex-col bg-slate-900 border-r border-white/10 sticky top-0 h-screen">
       {/* Logo */}
       <div className="h-16 flex items-center gap-3 px-5 border-b border-white/5">
         <Image src="/vremalogo.png" alt="Vrema" width={48} height={48} className="shrink-0 -my-2" />
         <div>
           <span className="font-bold text-base tracking-tight">Vrema</span>
-          <span className="block text-[9px] text-white/25 font-mono uppercase tracking-widest -mt-0.5">by KevkoStudio</span>
+          <span className="block text-[9px] text-white/25 uppercase tracking-widest -mt-0.5">by KevkoStudio</span>
         </div>
       </div>
 
       {/* Plan badge */}
       <div className="px-4 pt-4">
-        <div className="px-3 py-1.5 rounded-lg bg-[#22c55e]/10 border border-[#22c55e]/20 text-[#22c55e] text-xs font-semibold capitalize">
+        <div className="px-3 py-1.5 rounded-2xl bg-[#22c55e]/10 border border-[#22c55e]/20 text-[#22c55e] text-xs font-semibold capitalize">
           {plan} Plan
         </div>
       </div>
@@ -84,10 +84,10 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
               key={item.href}
               href={item.href}
               className={clsx(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                "flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all active:scale-95",
                 isActive
                   ? "bg-[#22c55e]/10 text-[#22c55e]"
-                  : "text-white/50 hover:text-white hover:bg-white/5"
+                  : "text-white/50 md:hover:text-white md:hover:bg-white/5"
               )}
             >
               <item.icon className="w-4 h-4" />
@@ -101,7 +101,7 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
       <div className="p-3 border-t border-white/5">
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/50 hover:text-red-400 hover:bg-red-400/5 transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium text-white/50 md:hover:text-red-400 md:hover:bg-red-400/5 transition-all active:scale-95"
         >
           <LogOut className="w-4 h-4" />
           Abmelden
@@ -116,7 +116,8 @@ export function DashboardMobileBottomNav({ role }: { role?: string }) {
   const items = MOBILE_NAV_ITEMS.filter((item) => !(item.href === "/dashboard/billing" && role === "EMPLOYEE"));
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#0b0b0b]/95 backdrop-blur px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-2">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-slate-900/95 backdrop-blur-md px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 rounded-t-3xl shadow-[0_-12px_24px_rgba(0,0,0,0.25)]">
+      <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/20" />
       <div className="grid grid-cols-4 gap-1">
         {items.map((item) => {
           const isActive =
@@ -128,7 +129,7 @@ export function DashboardMobileBottomNav({ role }: { role?: string }) {
               key={item.href}
               href={item.href}
               className={clsx(
-                "flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium transition-colors",
+                "flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium transition-all active:scale-95",
                 isActive ? "text-[#22c55e] bg-[#22c55e]/10" : "text-white/50"
               )}
             >

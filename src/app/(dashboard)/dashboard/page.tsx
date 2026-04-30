@@ -90,7 +90,7 @@ export default async function DashboardPage() {
   }, 0);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-5 md:space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">
@@ -137,13 +137,13 @@ export default async function DashboardPage() {
                 <h2 className="text-sm font-semibold mt-1">Heute im Blick: Live-Status und offene Aufgaben</h2>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Link href="/dashboard/planning" className="rounded-2xl border border-white/15 px-4 py-2 text-xs hover:bg-white/5">
+                <Link href="/dashboard/planning" className="rounded-2xl border border-white/15 px-4 py-2 text-xs md:hover:border-slate-500 md:hover:bg-slate-900/50 transition-all active:scale-95">
                   Wochenplan prüfen
                 </Link>
-                <Link href="/dashboard/reports" className="rounded-2xl border border-white/15 px-4 py-2 text-xs hover:bg-white/5">
+                <Link href="/dashboard/reports" className="rounded-2xl border border-white/15 px-4 py-2 text-xs md:hover:border-slate-500 md:hover:bg-slate-900/50 transition-all active:scale-95">
                   Zeiten prüfen
                 </Link>
-                <Link href="/dashboard/vacation" className="rounded-2xl border border-white/15 px-4 py-2 text-xs hover:bg-white/5">
+                <Link href="/dashboard/vacation" className="rounded-2xl border border-white/15 px-4 py-2 text-xs md:hover:border-slate-500 md:hover:bg-slate-900/50 transition-all active:scale-95">
                   Anträge öffnen
                 </Link>
               </div>
@@ -169,7 +169,7 @@ export default async function DashboardPage() {
               </div>
             </div>
           </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
           {[
             { label: "Mitarbeiter gesamt", value: teamStats.totalEmployees, icon: Users, color: "#60a5fa" },
             { label: "Heute aktiv", value: teamStats.activeToday, icon: Clock, color: "#86efac" },
@@ -178,7 +178,7 @@ export default async function DashboardPage() {
             { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24" },
             { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc" },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-2xl bg-slate-900 border border-white/5 p-5 shadow-xl shadow-black/20">
+            <div key={stat.label} className="rounded-2xl bg-slate-900 border border-white/5 p-5 shadow-xl shadow-black/20 transition-all md:hover:border-slate-600 md:hover:bg-slate-900/50">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-white/40">{stat.label}</p>
                 <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
@@ -191,7 +191,7 @@ export default async function DashboardPage() {
       )}
 
       {/* Main grid */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
         {/* Terminal */}
         <div id="terminal-widget">
           <TerminalWidget
@@ -221,7 +221,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Today summary */}
-      <div className="rounded-2xl bg-slate-900 border border-white/5 p-6 shadow-xl shadow-black/20">
+      <div className="rounded-2xl bg-slate-900 border border-white/5 p-5 md:p-6 shadow-xl shadow-black/20 transition-all md:hover:border-slate-600 md:hover:bg-slate-900/50">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Heute</h2>
           <span className="text-sm text-[#22c55e] tabular-nums font-bold">
@@ -230,7 +230,15 @@ export default async function DashboardPage() {
         </div>
 
         {todayLogs.length === 0 ? (
-          <p className="text-sm text-white/30 text-center py-6">Noch keine Einträge heute.</p>
+          <div className="py-6 text-center">
+            <p className="text-sm text-white/30">Alles ruhig hier. Genieße die Pause! ☕</p>
+            <Link
+              href="#terminal-widget"
+              className="mt-3 inline-flex items-center rounded-2xl border border-white/15 px-4 py-2 text-sm text-white/75 transition-all active:scale-95 md:hover:bg-slate-900/50"
+            >
+              Jetzt einstempeln
+            </Link>
+          </div>
         ) : (
           <div className="space-y-2">
             {todayLogs.map((log) => {
@@ -270,7 +278,7 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/dashboard/billing"
-            className="shrink-0 px-4 py-2 rounded-2xl bg-[#22c55e] text-black text-sm font-bold hover:bg-[#16a34a] transition-colors"
+            className="shrink-0 px-4 py-2 rounded-2xl bg-[#22c55e] text-black text-sm font-bold md:hover:bg-[#16a34a] transition-all active:scale-95"
           >
             Upgrade
           </Link>

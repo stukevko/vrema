@@ -33,7 +33,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
     : user.email?.[0]?.toUpperCase() ?? "?";
 
   return (
-    <header className="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-[#0b0b0b]/80 backdrop-blur sticky top-0 z-20">
+    <header className="h-16 border-b border-white/10 flex items-center justify-between px-4 md:px-6 bg-slate-950/85 backdrop-blur-md sticky top-0 z-50">
       <div />
       <div className="flex items-center gap-3">
         {user.role === "SUPER_ADMIN" && (
@@ -41,23 +41,23 @@ export function DashboardTopbar({ user }: TopbarProps) {
             Super Admin
           </span>
         )}
-        <button className="relative w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+        <button className="relative w-11 h-11 rounded-2xl bg-white/5 md:hover:bg-white/10 flex items-center justify-center transition-all active:scale-95">
           <Bell className="w-4 h-4 text-white/60" />
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
         </button>
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setOpen((prev) => !prev)}
-            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 hover:bg-white/10 transition-colors"
+            className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-2 py-1.5 md:hover:bg-white/10 transition-all active:scale-95"
           >
-            <div className="w-8 h-8 rounded-lg bg-[#22c55e]/20 flex items-center justify-center text-xs font-bold text-[#22c55e]">
+            <div className="w-8 h-8 rounded-xl bg-[#22c55e]/20 flex items-center justify-center text-xs font-bold text-[#22c55e]">
               {initials}
             </div>
             <ChevronDown className="w-4 h-4 text-white/50" />
           </button>
 
           {open && (
-            <div className="absolute right-0 top-12 w-52 rounded-xl border border-white/10 bg-[#121212] p-1 shadow-2xl z-30">
+            <div className="absolute right-0 top-12 w-52 rounded-2xl border border-white/10 bg-slate-900 p-1 shadow-2xl z-30">
               <div className="px-3 py-2 border-b border-white/5 mb-1">
                 <p className="text-sm font-semibold truncate">{user.name ?? "Profil"}</p>
                 <p className="text-xs text-white/40 truncate">{user.email ?? ""}</p>
@@ -66,7 +66,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
               <Link
                 href="/dashboard/settings"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/5"
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/80 md:hover:bg-white/5 transition-all active:scale-95"
               >
                 <UserCircle2 className="w-4 h-4" />
                 Profil
@@ -74,14 +74,14 @@ export function DashboardTopbar({ user }: TopbarProps) {
               <Link
                 href="/dashboard/settings"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/80 hover:bg-white/5"
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/80 md:hover:bg-white/5 transition-all active:scale-95"
               >
                 <Settings className="w-4 h-4" />
                 Einstellungen
               </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-red-300 hover:bg-red-500/10"
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-red-300 md:hover:bg-red-500/10 transition-all active:scale-95"
               >
                 <LogOut className="w-4 h-4" />
                 Abmelden

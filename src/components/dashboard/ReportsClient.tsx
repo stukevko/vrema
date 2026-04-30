@@ -136,10 +136,10 @@ function PlanGateButton({
   return (
     <button
       onClick={locked ? onLockedClick : onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all border ${
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all active:scale-95 border ${
         locked
-          ? "bg-white/[0.02] border-white/[0.06] text-white/30 cursor-pointer hover:bg-white/[0.05]"
-          : "bg-[#22c55e] border-[#22c55e] text-black hover:bg-[#16a34a]"
+          ? "bg-white/[0.02] border-white/[0.06] text-white/30 cursor-pointer md:hover:bg-white/[0.05]"
+          : "bg-[#22c55e] border-[#22c55e] text-black md:hover:bg-[#16a34a]"
       }`}
     >
       {locked ? <Lock className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
@@ -746,7 +746,7 @@ export function ReportsClient({
 
   return (
     <>
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-5 md:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -782,10 +782,10 @@ export function ReportsClient({
             />
             <button
               onClick={plan === "BUSINESS" || plan === "ENTERPRISE" ? () => setShowDatevModal(true) : lockedMsg}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all border ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 border ${
                 plan === "BUSINESS" || plan === "ENTERPRISE"
-                  ? "bg-[#2563eb]/20 border-[#2563eb]/40 text-[#bfdbfe] hover:bg-[#2563eb]/25"
-                  : "bg-white/[0.02] border-white/[0.06] text-white/30 cursor-pointer hover:bg-white/[0.05]"
+                  ? "bg-[#2563eb]/20 border-[#2563eb]/40 text-[#bfdbfe] md:hover:bg-[#2563eb]/25"
+                  : "bg-white/[0.02] border-white/[0.06] text-white/30 cursor-pointer md:hover:bg-white/[0.05]"
               }`}
             >
               {plan === "BUSINESS" || plan === "ENTERPRISE" ? (
@@ -799,14 +799,14 @@ export function ReportsClient({
         </div>
 
         {/* Summary cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
           {[
             { label: "Einträge gesamt", value: logs.length.toString(), color: "#60a5fa" },
             { label: "Gesamtzeit", value: formatMins(totalMinutes), color: "#86efac" },
             { label: "Ø pro Eintrag", value: logs.length ? formatMins(totalMinutes / logs.length) : "–", color: "#86efac" },
             { label: "GPS-gestempelt", value: logs.filter((l) => l.latitude).length.toString(), color: "#f59e0b" },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl bg-slate-900 border border-white/5 p-5 shadow-xl shadow-black/20">
+            <div key={s.label} className="rounded-2xl bg-slate-900 border border-white/5 p-5 shadow-xl shadow-black/20 transition-all md:hover:border-slate-600 md:hover:bg-slate-900/50">
               <p className="text-[10px] text-white/30 uppercase tracking-widest mb-1">{s.label}</p>
               <p className="text-xl font-bold" style={{ color: s.color }}>{s.value}</p>
             </div>
@@ -822,7 +822,7 @@ export function ReportsClient({
           </div>
         )}
 
-        <div className="rounded-2xl bg-slate-900 border border-white/5 p-5 space-y-3 shadow-xl shadow-black/20">
+        <div className="rounded-2xl bg-slate-900 border border-white/5 p-4 md:p-5 space-y-3 shadow-xl shadow-black/20">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Zeitkorrektur-Anträge</h2>
             <span className="text-[11px] text-white/35">
@@ -925,7 +925,7 @@ export function ReportsClient({
                   type="button"
                   onClick={submitCorrectionRequest}
                   disabled={isSaving}
-                  className="rounded-lg bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black hover:bg-[#16a34a] disabled:opacity-60"
+                  className="rounded-xl bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black md:hover:bg-[#16a34a] transition-all active:scale-95 disabled:opacity-60"
                 >
                   Antrag senden
                 </button>
@@ -935,7 +935,7 @@ export function ReportsClient({
 
           <div className="space-y-2">
             {correctionRequests.length === 0 ? (
-              <p className="text-xs text-white/35">Noch keine Anträge vorhanden.</p>
+              <p className="text-xs text-white/35">Alles ruhig hier. Genieße die Pause! ☕</p>
             ) : (
               correctionRequests.map((req) => (
                 <div key={req.id} className="rounded-2xl border border-white/10 bg-slate-900 p-4 text-xs shadow-sm">
@@ -964,7 +964,7 @@ export function ReportsClient({
                       <button
                         type="button"
                         onClick={() => decideCorrectionRequest(req.id, "APPROVE")}
-                        className="rounded-xl border border-emerald-400/30 px-2.5 py-1 text-[11px] text-emerald-200 hover:bg-emerald-500/10"
+                        className="rounded-xl border border-emerald-400/30 px-2.5 py-1 text-[11px] text-emerald-200 md:hover:bg-emerald-500/10 transition-all active:scale-95"
                         disabled={isSaving}
                       >
                         Freigeben & buchen
@@ -972,7 +972,7 @@ export function ReportsClient({
                       <button
                         type="button"
                         onClick={() => decideCorrectionRequest(req.id, "REJECT")}
-                        className="rounded-xl border border-red-400/30 px-2.5 py-1 text-[11px] text-red-200 hover:bg-red-500/10"
+                        className="rounded-xl border border-red-400/30 px-2.5 py-1 text-[11px] text-red-200 md:hover:bg-red-500/10 transition-all active:scale-95"
                         disabled={isSaving}
                       >
                         Ablehnen
@@ -987,7 +987,7 @@ export function ReportsClient({
 
         {/* Table */}
         <div className="rounded-2xl bg-slate-900 border border-white/5 overflow-hidden shadow-xl shadow-black/20">
-          <div className="px-5 py-3 border-b border-white/5 flex items-center gap-2">
+          <div className="px-4 md:px-5 py-3 bg-slate-900/70 flex items-center gap-2">
             <FileText className="w-4 h-4 text-white/30" />
             <span className="text-sm font-semibold">Work-Logs – {month}</span>
           </div>
@@ -995,7 +995,13 @@ export function ReportsClient({
           {logs.length === 0 ? (
             <div className="py-16 text-center">
               <Clock className="w-8 h-8 text-white/10 mx-auto mb-3" />
-              <p className="text-sm text-white/20">Keine Einträge in diesem Monat.</p>
+              <p className="text-sm text-white/20">Alles ruhig hier. Genieße die Pause! ☕</p>
+              <a
+                href="/dashboard#terminal-widget"
+                className="mt-4 inline-flex min-h-[44px] items-center rounded-2xl border border-white/15 px-4 py-2 text-sm text-white/75 transition-all active:scale-95 md:hover:bg-slate-900/50"
+              >
+                Erste Zeit erfassen
+              </a>
             </div>
           ) : (
             <div className="max-h-[72vh] overflow-auto">
@@ -1032,31 +1038,31 @@ export function ReportsClient({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: i * 0.025 }}
-                        className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
+                        className="border-b border-white/[0.04] md:hover:bg-slate-900/40 active:bg-slate-800/60 transition-colors"
                       >
                         {isManager && (
-                          <td className="px-5 py-3">
+                          <td className="px-5 py-4">
                             <span className="text-white/70 font-medium">{log.userName}</span>
                           </td>
                         )}
-                        <td className="px-5 py-3 tabular-nums text-white/50 text-xs">
+                        <td className="px-5 py-4 tabular-nums text-white/50 text-xs">
                           {clockInDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
                         </td>
-                        <td className="px-5 py-3 tabular-nums text-[#22c55e]">
+                        <td className="px-5 py-4 tabular-nums text-[#22c55e]">
                           {clockInDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
                         </td>
-                        <td className="px-5 py-3 tabular-nums text-white/60">
+                        <td className="px-5 py-4 tabular-nums text-white/60">
                           {log.clockOut
                             ? new Date(log.clockOut).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
                             : <span className="text-amber-400 animate-pulse">läuft…</span>}
                         </td>
-                        <td className="px-5 py-3 tabular-nums text-white/40 text-xs">
+                        <td className="px-5 py-4 tabular-nums text-white/40 text-xs">
                           {log.breakMins > 0 ? `${log.breakMins}min` : "–"}
                         </td>
-                        <td className="px-5 py-3 tabular-nums font-bold text-white/80">
+                        <td className="px-5 py-4 tabular-nums font-bold text-white/80">
                           {dur !== null ? formatMins(dur) : "–"}
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-4">
                           <span
                             className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                               log.status === "ABSENT"
@@ -1071,7 +1077,7 @@ export function ReportsClient({
                             {statusLabel(log.status)}
                           </span>
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-4">
                           {log.latitude ? (
                             <span title={`${log.latitude?.toFixed(4)}, ${log.longitude?.toFixed(4)}`}>
                               <MapPin className="w-3.5 h-3.5 text-[#22c55e]" />
@@ -1080,7 +1086,7 @@ export function ReportsClient({
                             <span className="text-white/10">–</span>
                           )}
                         </td>
-                        <td className="px-5 py-3 text-white/30 text-xs max-w-[120px] truncate">
+                        <td className="px-5 py-4 text-white/30 text-xs max-w-[120px] truncate">
                           <span className="inline-flex items-center gap-1.5">
                             {log.isOutOfRange && (
                               <TriangleAlert className="w-3.5 h-3.5 text-red-400 shrink-0" />
@@ -1089,13 +1095,13 @@ export function ReportsClient({
                           </span>
                         </td>
                         {isManager && (
-                          <td className="px-5 py-3">
-                            <div className="flex items-center gap-1.5">
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => handleEdit(log)}
                                 disabled={isSaving}
-                                className="rounded-xl border border-white/10 px-2.5 py-1 text-[11px] text-white/60 hover:bg-white/5 disabled:opacity-50"
+                                className="rounded-xl border border-white/10 px-2.5 py-1 text-[11px] text-white/60 md:hover:bg-white/5 transition-all active:scale-95 disabled:opacity-50"
                               >
                                 Bearbeiten
                               </button>
@@ -1105,7 +1111,7 @@ export function ReportsClient({
                                     type="button"
                                     onClick={() => handleAbsentOverride(log)}
                                     disabled={isSaving}
-                                    className="rounded-lg border border-amber-300/30 px-2.5 py-1 text-[11px] text-amber-200 hover:bg-amber-300/10 disabled:opacity-50"
+                                    className="rounded-xl border border-amber-300/30 px-2.5 py-1 text-[11px] text-amber-200 md:hover:bg-amber-300/10 transition-all active:scale-95 disabled:opacity-50"
                                   >
                                     Korrigieren
                                   </button>
@@ -1113,7 +1119,7 @@ export function ReportsClient({
                                     type="button"
                                     onClick={() => handleDelete(log)}
                                     disabled={isSaving}
-                                    className="rounded-xl border border-red-400/30 px-2.5 py-1 text-[11px] text-red-200 hover:bg-red-500/10 disabled:opacity-50"
+                                    className="rounded-xl border border-red-400/30 px-2.5 py-1 text-[11px] text-red-200 md:hover:bg-red-500/10 transition-all active:scale-95 disabled:opacity-50"
                                   >
                                     Löschen
                                   </button>
@@ -1142,7 +1148,7 @@ export function ReportsClient({
             </div>
             <a
               href="/dashboard/billing"
-              className="shrink-0 px-4 py-2 rounded-2xl bg-[#22c55e] text-black text-sm font-bold hover:bg-[#16a34a] transition-colors"
+              className="shrink-0 px-4 py-2 rounded-2xl bg-[#22c55e] text-black text-sm font-bold md:hover:bg-[#16a34a] transition-all active:scale-95"
             >
               Upgrade
             </a>
@@ -1209,7 +1215,7 @@ export function ReportsClient({
               <button
                 type="button"
                 onClick={() => setEditingLog(null)}
-                className="rounded-xl border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/5"
+                className="rounded-xl border border-white/10 px-3 py-2 text-xs text-white/70 md:hover:bg-white/5 transition-all active:scale-95"
               >
                 Abbrechen
               </button>
@@ -1217,7 +1223,7 @@ export function ReportsClient({
                 type="button"
                 onClick={submitEdit}
                 disabled={isSaving}
-                className="rounded-xl bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black hover:bg-[#16a34a] disabled:opacity-60"
+                className="rounded-xl bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black md:hover:bg-[#16a34a] transition-all active:scale-95 disabled:opacity-60"
               >
                 {isSaving ? "Speichere..." : "Änderung speichern"}
               </button>
@@ -1242,7 +1248,7 @@ export function ReportsClient({
               <button
                 type="button"
                 onClick={() => setShowPayrollModal(false)}
-                className="rounded-xl border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/5"
+                className="rounded-xl border border-white/10 px-3 py-2 text-xs text-white/70 md:hover:bg-white/5 transition-all active:scale-95"
               >
                 Abbrechen
               </button>
@@ -1250,7 +1256,7 @@ export function ReportsClient({
                 type="button"
                 onClick={confirmSendToPayroll}
                 disabled={isSaving}
-                className="rounded-xl bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black hover:bg-[#16a34a] disabled:opacity-60"
+                className="rounded-xl bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black md:hover:bg-[#16a34a] transition-all active:scale-95 disabled:opacity-60"
               >
                 {isSaving ? "Sende..." : "PDF senden"}
               </button>
@@ -1299,7 +1305,7 @@ export function ReportsClient({
               <button
                 type="button"
                 onClick={() => setShowDatevModal(false)}
-                className="rounded-xl border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/5"
+                className="rounded-xl border border-white/10 px-3 py-2 text-xs text-white/70 md:hover:bg-white/5 transition-all active:scale-95"
               >
                 Abbrechen
               </button>
@@ -1307,7 +1313,7 @@ export function ReportsClient({
                 type="button"
                 onClick={confirmDatevExport}
                 disabled={isDatevDownloading}
-                className="rounded-xl bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black hover:bg-[#16a34a] disabled:opacity-60"
+                className="rounded-xl bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black md:hover:bg-[#16a34a] transition-all active:scale-95 disabled:opacity-60"
               >
                 {isDatevDownloading ? "Generiere..." : "Jetzt generieren & herunterladen"}
               </button>

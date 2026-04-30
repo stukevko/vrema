@@ -179,13 +179,13 @@ export function PartnerDashboardClient({
               <tbody>
                 {recentDeals.length === 0 ? (
                   <tr>
-                    <td colSpan={2} className="px-4 py-8 text-center text-white/40">Noch keine Abschlüsse.</td>
+                    <td colSpan={2} className="px-4 py-8 text-center text-white/40">Alles ruhig hier. Genieße die Pause! ☕</td>
                   </tr>
                 ) : (
                   recentDeals.map((row) => (
-                    <tr key={row.id} className="border-b border-white/5">
-                      <td className="px-4 py-2.5 text-white/75">{planLabel(row.plan)}</td>
-                      <td className="px-4 py-2.5 text-emerald-200 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
+                    <tr key={row.id} className="border-b border-white/5 active:bg-slate-800/60 md:hover:bg-slate-900/40 transition-colors">
+                      <td className="px-4 py-4 text-white/75">{planLabel(row.plan)}</td>
+                      <td className="px-4 py-4 text-emerald-200 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
                     </tr>
                   ))
                 )}
@@ -210,15 +210,15 @@ export function PartnerDashboardClient({
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-white/40">Noch keine Abschlüsse.</td>
+                    <td colSpan={6} className="px-4 py-8 text-center text-white/40">Alles ruhig hier. Genieße die Pause! ☕</td>
                   </tr>
                 ) : (
                   rows.map((row) => (
-                    <tr key={row.id} className="border-b border-white/5">
-                      <td className="px-4 py-2.5">{row.companyName}</td>
-                      <td className="px-4 py-2.5 text-white/60">{planLabel(row.plan)}</td>
-                      <td className="px-4 py-2.5 text-emerald-200 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
-                      <td className="px-4 py-2.5">
+                    <tr key={row.id} className="border-b border-white/5 active:bg-slate-800/60 md:hover:bg-slate-900/40 transition-colors">
+                      <td className="px-4 py-4">{row.companyName}</td>
+                      <td className="px-4 py-4 text-white/60">{planLabel(row.plan)}</td>
+                      <td className="px-4 py-4 text-emerald-200 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
+                      <td className="px-4 py-4">
                         <span
                           className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${statusBadgeClass(row.status)}`}
                           title={row.status === "PENDING" ? "Kunde im Testzeitraum" : undefined}
@@ -226,8 +226,8 @@ export function PartnerDashboardClient({
                           {statusLabel(row.status)}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-white/50">{new Date(row.createdAt).toLocaleDateString("de-DE")}</td>
-                      <td className="px-4 py-2.5 text-white/50">{row.paidAt ? new Date(row.paidAt).toLocaleDateString("de-DE") : "—"}</td>
+                      <td className="px-4 py-4 text-white/50">{new Date(row.createdAt).toLocaleDateString("de-DE")}</td>
+                      <td className="px-4 py-4 text-white/50">{row.paidAt ? new Date(row.paidAt).toLocaleDateString("de-DE") : "—"}</td>
                     </tr>
                   ))
                 )}

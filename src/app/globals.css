@@ -25,6 +25,10 @@ button[class]:not([class*="rounded-full"]):not([class*="rounded-2xl"]):not([clas
   border-radius: 0.75rem;
 }
 
+button[class] {
+  min-height: 44px;
+}
+
 input[class],
 select[class],
 textarea[class] {
