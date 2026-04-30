@@ -19,6 +19,32 @@ function formatCents(cents: number, currency: string) {
   return `${amount} ${currency.toUpperCase()}`;
 }
 
+function formatProvisionByPlan(plan: Row["plan"]) {
+  if (plan === "STARTER") return "5,00 EUR";
+  if (plan === "BUSINESS") return "15,00 EUR";
+  return "—";
+}
+
+function planLabel(plan: Row["plan"]) {
+  if (plan === "STARTER") return "Starter";
+  if (plan === "BUSINESS") return "Business";
+  return "Enterprise";
+}
+
+function statusLabel(status: Row["status"]) {
+  if (status === "PENDING") return "In Prüfung";
+  if (status === "AVAILABLE") return "Auszahlbar";
+  if (status === "PAID") return "Bereits ausgezahlt";
+  return "Storniert";
+}
+
+function statusBadgeClass(status: Row["status"]) {
+  if (status === "PENDING") return "border-amber-300/35 bg-amber-400/10 text-slate-300";
+  if (status === "AVAILABLE") return "border-emerald-300/35 bg-emerald-400/10 text-emerald-300";
+  if (status === "PAID") return "border-slate-500/40 bg-slate-500/15 text-slate-300";
+  return "border-red-400/35 bg-red-500/10 text-red-200";
+}
+
 export function PartnerDashboardClient({
   name,
   code,
@@ -44,58 +70,139 @@ export function PartnerDashboardClient({
     }
   };
 
+  const recentDeals = rows.slice(0, 8);
+  const validDeals = rows.filter((r) => r.status !== "CANCELLED");
+  const starterDeals = validDeals.filter((r) => r.plan === "STARTER");
+  const businessDeals = validDeals.filter((r) => r.plan === "BUSINESS");
+  const starterTotalCents = starterDeals.length * 500;
+  const businessTotalCents = businessDeals.length * 1500;
+  const totalSuccessCents = starterTotalCents + businessTotalCents;
+
   return (
-    <div className="min-h-screen bg-[#0b0b0b] text-white p-6">
+    <div className="min-h-screen bg-slate-950 text-white p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">Partner Dashboard</h1>
-            <p className="text-sm text-white/45">Willkommen, {name}. Hier siehst du deine Abschluesse und Bounties.</p>
+            <p className="text-sm text-white/45">Willkommen, {name}. Hier siehst du deine Abschluesse und Provisionen.</p>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/partner-login" })}
-            className="rounded-lg border border-white/10 px-3 py-2 text-sm text-white/70 hover:bg-white/5"
+            className="rounded-2xl border border-white/10 px-3 py-2 text-sm text-white/70 hover:bg-white/5"
           >
             Abmelden
           </button>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-[#141414] p-4">
+        <div className="rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-xl shadow-black/20">
           <p className="text-xs uppercase tracking-wider text-white/35 mb-2">Dein Ref-Link</p>
           <div className="flex flex-wrap items-center gap-2">
-            <code className="rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-xs text-white/80 break-all">{refUrl}</code>
-            <button onClick={() => void copy(refUrl)} className="inline-flex items-center gap-1 rounded-lg border border-white/15 bg-white/10 px-2.5 py-1.5 text-xs text-white/80 hover:bg-white/15">
+            <code className="rounded-2xl border border-white/10 bg-slate-950 px-2 py-1.5 text-xs text-white/80 break-all">{refUrl}</code>
+            <button onClick={() => void copy(refUrl)} className="inline-flex items-center gap-1 rounded-2xl border border-white/15 bg-white/10 px-2.5 py-1.5 text-xs text-white/80 hover:bg-white/15">
               <Copy className="w-3 h-3" />
               Link kopieren
             </button>
-            <span className="text-[11px] text-white/45 font-mono">Code: {code}</span>
+            <span className="text-[11px] text-white/45">Code: {code}</span>
           </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-3">
-          <div className="rounded-xl border border-amber-300/20 bg-amber-400/5 p-4">
+          <div className="rounded-2xl border border-amber-300/20 bg-amber-400/5 p-4">
             <p className="text-xs text-white/45">Ausstehend</p>
-            <p className="text-lg font-semibold text-amber-200">{formatCents(pendingCents, "eur")}</p>
+            <p className="text-lg font-semibold text-amber-200 tabular-nums">{formatCents(pendingCents, "eur")}</p>
           </div>
-          <div className="rounded-xl border border-emerald-300/20 bg-emerald-500/5 p-4">
-            <p className="text-xs text-white/45">Verfuegbar</p>
-            <p className="text-lg font-semibold text-emerald-200">{formatCents(availableCents, "eur")}</p>
+          <div className="rounded-2xl border border-emerald-300/20 bg-emerald-500/5 p-4">
+            <p className="text-xs text-white/45">Verfügbares Guthaben</p>
+            <p className="text-lg font-semibold text-emerald-200 tabular-nums">{formatCents(availableCents, "eur")}</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <p className="text-xs text-white/45">Ausgezahlt</p>
-            <p className="text-lg font-semibold text-white/85">{formatCents(paidCents, "eur")}</p>
+            <p className="text-lg font-semibold text-white/85 tabular-nums">{formatCents(paidCents, "eur")}</p>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-[#141414] overflow-hidden">
+        <div className="rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-xl shadow-black/20">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-base font-semibold">Deine Erfolgs-Statistik</h2>
+              <p className="text-xs text-white/45">Einmalige Provision pro direktem Abschluss (ohne Testphase).</p>
+            </div>
+            <button
+              type="button"
+              className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/10"
+              onClick={() => window.alert("Hier findest du bald Logos, Screenshots und Texte für WhatsApp/Instagram.")}
+            >
+              Werbemittel-Kit
+            </button>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-slate-950 p-4">
+              <p className="text-xs text-white/45">Starter-Abschlüsse</p>
+              <p className="mt-1 text-sm text-white/80 tabular-nums">
+                {starterDeals.length} (insg. {formatCents(starterTotalCents, "eur")})
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-slate-950 p-4">
+              <p className="text-xs text-white/45">Business-Abschlüsse</p>
+              <p className="mt-1 text-sm text-white/80 tabular-nums">
+                {businessDeals.length} (insg. {formatCents(businessTotalCents, "eur")})
+              </p>
+            </div>
+            <div className="rounded-2xl border border-emerald-300/25 bg-emerald-500/10 p-4">
+              <p className="text-xs text-white/50">Gesamtguthaben</p>
+              <p className="mt-1 text-sm font-semibold text-emerald-200 tabular-nums">{formatCents(totalSuccessCents, "eur")}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/5 p-5">
+          <p className="text-sm font-semibold text-emerald-100">Verdienst-Struktur</p>
+          <p className="mt-1 text-sm text-emerald-100/85 leading-relaxed">
+            5€ für jeden Starter-Abschluss, 15€ für jeden Business-Abschluss. Auszahlung erfolgt nach Bestätigung des
+            Kunden-Abos. Es zählt nur ein direkter Abschluss - eine 14-Tage-Testphase zählt nicht.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-slate-900 overflow-hidden shadow-xl shadow-black/20">
           <div className="px-4 py-3 border-b border-white/10">
-            <h2 className="font-semibold">Abschluesse & Bounties</h2>
+            <h2 className="font-semibold">Letzte Abschlüsse</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10 bg-white/[0.02] text-white/45">
-                  {["Firma", "Plan", "Bounty", "Status", "Abschluss", "Ausgezahlt am"].map((h) => (
+                  {["Plan", "Deine Provision"].map((h) => (
+                    <th key={h} className="px-4 py-2 text-left text-xs font-medium">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {recentDeals.length === 0 ? (
+                  <tr>
+                    <td colSpan={2} className="px-4 py-8 text-center text-white/40">Noch keine Abschlüsse.</td>
+                  </tr>
+                ) : (
+                  recentDeals.map((row) => (
+                    <tr key={row.id} className="border-b border-white/5">
+                      <td className="px-4 py-2.5 text-white/75">{planLabel(row.plan)}</td>
+                      <td className="px-4 py-2.5 text-emerald-200 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-slate-900 overflow-hidden shadow-xl shadow-black/20">
+          <div className="px-4 py-3 border-b border-white/10">
+            <h2 className="font-semibold">Alle Abschlüsse</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10 bg-white/[0.02] text-white/45">
+                  {["Firma", "Plan", "Provision", "Status", "Abschluss", "Ausgezahlt am"].map((h) => (
                     <th key={h} className="px-4 py-2 text-left text-xs font-medium">{h}</th>
                   ))}
                 </tr>
@@ -103,15 +210,22 @@ export function PartnerDashboardClient({
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-white/40">Noch keine Abschluesse.</td>
+                    <td colSpan={6} className="px-4 py-8 text-center text-white/40">Noch keine Abschlüsse.</td>
                   </tr>
                 ) : (
                   rows.map((row) => (
                     <tr key={row.id} className="border-b border-white/5">
                       <td className="px-4 py-2.5">{row.companyName}</td>
-                      <td className="px-4 py-2.5 text-white/60">{row.plan}</td>
-                      <td className="px-4 py-2.5 text-emerald-300">{formatCents(row.commissionCents, row.currency)}</td>
-                      <td className="px-4 py-2.5 text-white/65">{row.status}</td>
+                      <td className="px-4 py-2.5 text-white/60">{planLabel(row.plan)}</td>
+                      <td className="px-4 py-2.5 text-emerald-200 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
+                      <td className="px-4 py-2.5">
+                        <span
+                          className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${statusBadgeClass(row.status)}`}
+                          title={row.status === "PENDING" ? "Kunde im Testzeitraum" : undefined}
+                        >
+                          {statusLabel(row.status)}
+                        </span>
+                      </td>
                       <td className="px-4 py-2.5 text-white/50">{new Date(row.createdAt).toLocaleDateString("de-DE")}</td>
                       <td className="px-4 py-2.5 text-white/50">{row.paidAt ? new Date(row.paidAt).toLocaleDateString("de-DE") : "—"}</td>
                     </tr>

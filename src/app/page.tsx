@@ -11,6 +11,9 @@ import {
   MapPin,
   FileText,
   Shield,
+  ShieldCheck,
+  Scale,
+  Server,
   Wifi,
   ChevronRight,
   Check,
@@ -62,12 +65,12 @@ function Cursor({ show = true }: { show?: boolean }) {
 // ─── Terminal window component ────────────────────────────────────────────────
 function TerminalWindow({ title = "vrema — zsh", children }: { title?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_60px_rgba(34,197,94,0.08)] bg-[#0d0d0d]">
-      <div className="flex items-center gap-2 px-4 py-3 bg-[#161616] border-b border-white/5">
+    <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-black/25 bg-slate-900/90 backdrop-blur-md">
+      <div className="flex items-center gap-2 px-4 py-3 bg-slate-900 border-b border-white/10">
         <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
         <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
         <span className="w-3 h-3 rounded-full bg-[#28c840]" />
-        <span className="ml-3 text-xs text-white/30 font-mono tracking-wider">{title}</span>
+        <span className="ml-3 text-xs text-white/35 tracking-wider">{title}</span>
       </div>
       <div className="p-5 font-mono text-sm leading-relaxed">{children}</div>
     </div>
@@ -134,7 +137,7 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
       transition={{ duration: 0.5 }}
       className="text-center"
     >
-      <p className="text-2xl md:text-3xl font-mono font-bold text-[#22c55e]">{value}</p>
+      <p className="text-2xl md:text-3xl font-bold text-emerald-300">{value}</p>
       <p className="text-xs text-white/40 mt-1 uppercase tracking-widest">{label}</p>
     </motion.div>
   );
@@ -214,7 +217,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
       <Script
         id="ld-json-vrema"
         type="application/ld+json"
@@ -227,13 +230,13 @@ export default function LandingPage() {
       </div>
 
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/[0.06] bg-[#080808]/90 backdrop-blur-2xl">
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/[0.08] bg-slate-950/90 backdrop-blur-2xl">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image src="/vremalogo.png" alt="Vrema Logo" width={52} height={52} className="-my-2" />
             <div>
               <span className="font-bold text-base tracking-tight">Vrema</span>
-              <span className="ml-2 text-[10px] text-white/30 font-mono uppercase tracking-widest">by KevkoStudio</span>
+              <span className="ml-2 text-[10px] text-white/30 uppercase tracking-widest">by KevkoStudio</span>
             </div>
           </div>
 
@@ -243,12 +246,12 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/auth/login" className="text-sm text-white/50 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5">
+            <Link href="/auth/login" className="text-sm text-white/50 hover:text-white transition-colors px-3 py-1.5 rounded-xl hover:bg-white/5">
               Anmelden
             </Link>
             <Link
               href="/auth/register"
-              className="text-sm px-4 py-2 rounded-lg bg-[#22c55e] text-black font-bold hover:bg-[#16a34a] transition-all hover:scale-105 active:scale-95"
+              className="text-sm px-4 py-2 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-all"
             >
               Registrieren
             </Link>
@@ -267,8 +270,8 @@ export default function LandingPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7 }}
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#22c55e]/20 bg-[#22c55e]/5 text-[#22c55e] text-xs font-mono mb-8">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-300/25 bg-emerald-300/10 text-emerald-200 text-xs mb-8">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
                 Ein Produkt von KevkoStudio
               </div>
 
@@ -286,20 +289,36 @@ export default function LandingPage() {
               <div className="flex items-center gap-4 flex-wrap">
                 <Link
                   href="/auth/register"
-                  className="group flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#22c55e] text-black font-bold hover:bg-[#16a34a] transition-all hover:scale-105 active:scale-95"
+                  className="group flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-[#22c55e] text-black font-bold hover:bg-[#16a34a] transition-all hover:scale-105 active:scale-95 shadow-xl shadow-[#22c55e]/20"
                 >
                   Kostenlos starten
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <a
                   href="#pricing"
-                  className="flex items-center gap-2 px-7 py-3.5 rounded-xl border border-white/10 text-white/60 font-medium hover:text-white hover:border-white/20 transition-all"
+                  className="flex items-center gap-2 px-7 py-3.5 rounded-2xl border border-white/10 text-white/60 font-medium hover:text-white hover:border-white/20 transition-all"
                 >
                   Pläne ansehen
                 </a>
               </div>
 
-              <div className="flex items-center gap-6 mt-8 text-xs text-white/25 font-mono uppercase tracking-widest">
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {[
+                  { label: "DATEV-Ready", text: "Lohnbüro-Export optimiert." },
+                  { label: "Revisionssicher", text: "Audit-Trail nach GoBD." },
+                  { label: "Hosted in Germany", text: "DSGVO-konform & sicher." },
+                ].map((seal) => (
+                  <div
+                    key={seal.label}
+                    className="rounded-2xl border border-slate-700/60 bg-slate-900/40 px-3 py-2 backdrop-blur-sm"
+                  >
+                    <p className="text-[11px] font-semibold text-slate-300">{seal.label}</p>
+                    <p className="mt-0.5 text-[10px] text-slate-400">{seal.text}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-6 mt-8 text-xs text-white/25 uppercase tracking-widest">
                 <span>DSGVO-konform</span>
                 <span className="w-1 h-1 rounded-full bg-white/20" />
                 <span>Made in Germany</span>
@@ -358,9 +377,9 @@ export default function LandingPage() {
                   { label: "Team aktiv", value: "8 / 12", color: "#60a5fa" },
                   { label: "Offene Anträge", value: "2 Urlaub", color: "#f59e0b" },
                 ].map((badge) => (
-                  <div key={badge.label} className="rounded-xl bg-[#111] border border-white/5 px-4 py-3">
-                    <p className="text-[10px] text-white/30 font-mono uppercase tracking-widest mb-1">{badge.label}</p>
-                    <p className="font-mono font-bold text-sm" style={{ color: badge.color }}>{badge.value}</p>
+                  <div key={badge.label} className="rounded-2xl bg-slate-900 border border-white/10 px-4 py-3 shadow-xl shadow-black/20">
+                    <p className="text-[10px] text-white/30 uppercase tracking-widest mb-1">{badge.label}</p>
+                    <p className="font-bold text-sm tabular-nums" style={{ color: badge.color }}>{badge.value}</p>
                   </div>
                 ))}
               </div>
@@ -385,7 +404,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="mb-16"
           >
-            <p className="text-xs font-mono text-[#22c55e] uppercase tracking-widest mb-4">01 / Features</p>
+            <p className="text-xs text-[#22c55e] uppercase tracking-widest mb-4">01 / Features</p>
             <h2 className="text-4xl md:text-5xl font-black leading-tight">
               Alles, was du brauchst.
               <br />
@@ -393,7 +412,7 @@ export default function LandingPage() {
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((feature, i) => (
               <motion.div
                 key={feature.title}
@@ -401,14 +420,14 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className="group relative rounded-2xl bg-[#0e0e0e] border border-white/[0.07] p-6 hover:border-[#22c55e]/20 transition-all overflow-hidden"
+                className="group relative rounded-3xl bg-slate-900 border border-white/[0.08] p-7 hover:border-emerald-300/20 transition-all overflow-hidden shadow-2xl shadow-black/20"
               >
                 {/* hover glow */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(ellipse_at_0%_0%,rgba(34,197,94,0.04),transparent_60%)]" />
 
                 <div className="relative z-10">
                   {/* Terminal command badge */}
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#22c55e]/5 border border-[#22c55e]/15 text-[#22c55e] text-[10px] font-mono mb-4">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-300/10 border border-emerald-300/20 text-emerald-200 text-[10px] mb-4">
                     <span className="opacity-50">$</span> {feature.cmd}
                   </div>
 
@@ -437,7 +456,7 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <p className="text-xs font-mono text-[#22c55e] uppercase tracking-widest mb-4">02 / Philosophie</p>
+            <p className="text-xs text-[#22c55e] uppercase tracking-widest mb-4">02 / Philosophie</p>
               <h2 className="text-4xl md:text-5xl font-black leading-tight mb-6">
                 Kein Großkonzern.
                 <br />
@@ -454,8 +473,8 @@ export default function LandingPage() {
                   { num: "02", title: "Transparent & Fair", desc: "Feste Preise, klare Meilensteine, keine versteckten Kosten." },
                   { num: "03", title: "Lokale Verwurzelung", desc: "Speyer, Rhein-Neckar, Pfalz. Ein Handschlag zählt mehr als jedes SLA." },
                 ].map((item) => (
-                  <div key={item.num} className="flex gap-4 p-4 rounded-xl bg-[#0e0e0e] border border-white/[0.06]">
-                    <span className="text-[#22c55e] font-mono text-sm font-bold shrink-0 mt-0.5">{item.num}</span>
+                  <div key={item.num} className="flex gap-4 p-5 rounded-2xl bg-slate-900 border border-white/[0.08] shadow-xl shadow-black/20">
+                    <span className="text-[#22c55e] text-sm font-bold shrink-0 mt-0.5">{item.num}</span>
                     <div>
                       <p className="font-semibold text-sm mb-1">{item.title}</p>
                       <p className="text-white/40 text-sm">{item.desc}</p>
@@ -483,14 +502,14 @@ export default function LandingPage() {
                   </div>
                   <div className="grid grid-cols-3 gap-3 mt-4">
                     {[{ v: "10+", l: "Jahre" }, { v: "Full", l: "Stack" }, { v: "5★", l: "Feedback" }].map((s) => (
-                      <div key={s.l} className="text-center p-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                        <p className="text-[#22c55e] font-mono font-bold text-lg">{s.v}</p>
+                      <div key={s.l} className="text-center p-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                        <p className="text-[#22c55e] font-bold text-lg">{s.v}</p>
                         <p className="text-white/30 text-xs">{s.l}</p>
                       </div>
                     ))}
                   </div>
                   <div className="mt-4 p-3 rounded-lg bg-[#22c55e]/5 border border-[#22c55e]/10">
-                    <p className="text-[#22c55e]/80 text-sm font-mono">
+                    <p className="text-[#22c55e]/80 text-sm">
                       &gt; "Problemlösung durch Handschlagqualität."
                     </p>
                   </div>
@@ -513,7 +532,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="mb-12"
           >
-            <p className="text-xs font-mono text-[#22c55e] uppercase tracking-widest mb-4">03 / Preise</p>
+            <p className="text-xs text-[#22c55e] uppercase tracking-widest mb-4">03 / Preise</p>
             <h2 className="text-4xl md:text-5xl font-black mb-4">Starten.</h2>
             <p className="text-white/40">Kostenlos testen. Keine Kreditkarte. Keine Verpflichtungen.</p>
             <p className="mt-2 text-sm text-white/60">
@@ -521,9 +540,33 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
+          <div className="mb-10 grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-xl shadow-black/20">
+              <div className="flex items-center gap-2 text-emerald-200">
+                <ShieldCheck className="h-4 w-4" />
+                <p className="text-sm font-semibold">DATEV-Ready</p>
+              </div>
+              <p className="mt-1 text-sm text-white/65">Exportformate für Ihr Lohnbüro optimiert.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-xl shadow-black/20">
+              <div className="flex items-center gap-2 text-emerald-200">
+                <Scale className="h-4 w-4" />
+                <p className="text-sm font-semibold">Revisionssicher</p>
+              </div>
+              <p className="mt-1 text-sm text-white/65">Vollständiger Audit-Trail nach GoBD-Standards.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-xl shadow-black/20">
+              <div className="flex items-center gap-2 text-emerald-200">
+                <Server className="h-4 w-4" />
+                <p className="text-sm font-semibold">Hosted in Germany</p>
+              </div>
+              <p className="mt-1 text-sm text-white/65">100% DSGVO-konform & sicher.</p>
+            </div>
+          </div>
+
           {/* Toggle */}
           <div className="flex items-center gap-4 mb-10">
-            <span className={`text-sm font-mono transition-colors ${!yearly ? "text-white" : "text-white/30"}`}>monatlich</span>
+            <span className={`text-sm transition-colors ${!yearly ? "text-white" : "text-white/30"}`}>monatlich</span>
             <button
               onClick={() => setYearly(!yearly)}
               className={`relative w-12 h-6 rounded-full transition-colors ${yearly ? "bg-[#22c55e]" : "bg-white/10"}`}
@@ -535,7 +578,7 @@ export default function LandingPage() {
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               />
             </button>
-            <span className={`text-sm font-mono transition-colors ${yearly ? "text-white" : "text-white/30"}`}>
+            <span className={`text-sm transition-colors ${yearly ? "text-white" : "text-white/30"}`}>
               jährlich
               <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-[#22c55e]/15 text-[#22c55e] font-bold">-2 Monate</span>
             </span>
@@ -549,28 +592,28 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className={`relative rounded-2xl p-7 border transition-all ${
+                className={`relative rounded-3xl p-8 border transition-all shadow-2xl shadow-black/20 ${
                   plan.highlight
-                    ? "bg-[#0e0e0e] border-[#22c55e]/30 shadow-[0_0_40px_rgba(34,197,94,0.07)]"
-                    : "bg-[#0e0e0e] border-white/[0.07] hover:border-white/[0.15]"
+                    ? "bg-slate-900 border-[#22c55e]/30 shadow-[0_0_40px_rgba(34,197,94,0.07)]"
+                    : "bg-slate-900 border-white/[0.08] hover:border-white/[0.15]"
                 }`}
               >
                 {"badge" in plan && plan.badge && (
-                  <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-[#22c55e] text-black text-[10px] font-bold font-mono uppercase tracking-wider">
+                  <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-emerald-300 text-black text-[10px] font-bold uppercase tracking-wider">
                     {plan.badge}
                   </div>
                 )}
 
                 {/* Plan header as terminal comment */}
-                <div className="font-mono text-xs text-white/20 mb-4"># {plan.name.toLowerCase()}.plan</div>
+                <div className="text-xs text-white/20 mb-4"># {plan.name.toLowerCase()}.plan</div>
 
                 <h3 className="font-black text-xl mb-4">{plan.name}</h3>
 
                 <AnimatePresence mode="wait">
                   {plan.monthlyPrice === null ? (
                     <div className="mb-6">
-                      <p className="text-3xl font-black font-mono">Auf Anfrage</p>
-                      <p className="text-white/30 text-xs mt-1 font-mono">individuell</p>
+                      <p className="text-3xl font-black">Auf Anfrage</p>
+                      <p className="text-white/30 text-xs mt-1">individuell</p>
                     </div>
                   ) : (
                     <motion.div
@@ -581,13 +624,13 @@ export default function LandingPage() {
                       className="mb-6"
                     >
                       <div className="flex items-end gap-1">
-                        <span className="text-4xl font-black font-mono">
+                        <span className="text-4xl font-black">
                           {yearly ? plan.yearlyPrice : plan.monthlyPrice}€
                         </span>
-                        <span className="text-white/30 text-sm mb-1.5 font-mono">/mo</span>
+                        <span className="text-white/30 text-sm mb-1.5">/mo</span>
                       </div>
                       {yearly && (
-                        <p className="text-white/30 text-xs font-mono mt-1">
+                        <p className="text-white/30 text-xs mt-1">
                           = {(plan.yearlyPrice! * 12)}€/Jahr · spare {((plan.monthlyPrice! - plan.yearlyPrice!) * 12)}€
                         </p>
                       )}
@@ -604,7 +647,7 @@ export default function LandingPage() {
                   ))}
                   {plan.missing.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm opacity-25">
-                      <span className="w-3.5 h-3.5 shrink-0 text-center text-white/30 font-mono text-xs">—</span>
+                      <span className="w-3.5 h-3.5 shrink-0 text-center text-white/30 text-xs">—</span>
                       <span>{f}</span>
                     </li>
                   ))}
@@ -616,7 +659,7 @@ export default function LandingPage() {
                       ? "mailto:kontakt@kevko.studio?subject=Enterprise%20Anfrage%20Vrema"
                       : `/auth/register?plan=${plan.key}&interval=${yearly ? "yearly" : "monthly"}`
                   }
-                  className={`block w-full text-center py-3 rounded-xl font-bold text-sm transition-all font-mono ${
+                  className={`block w-full text-center py-3 rounded-2xl font-bold text-sm transition-all ${
                     plan.highlight
                       ? "bg-[#22c55e] text-black hover:bg-[#16a34a]"
                       : "bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white border border-white/[0.08]"
@@ -631,7 +674,7 @@ export default function LandingPage() {
           <p className="mt-10 text-center text-sm text-white/40">
             <Link
               href="/partner"
-              className="text-[#22c55e]/90 hover:text-[#22c55e] underline underline-offset-2 font-mono text-xs"
+              className="text-[#22c55e]/90 hover:text-[#22c55e] underline underline-offset-2 text-xs"
             >
               Partner werden
             </Link>
@@ -651,24 +694,24 @@ export default function LandingPage() {
           >
             <TerminalWindow title="vrema — System-Transformation starten">
               <div className="py-8 text-center space-y-6">
-                <p className="text-xs font-mono text-[#22c55e] uppercase tracking-widest">03 / Starten</p>
+                <p className="text-xs text-[#22c55e] uppercase tracking-widest">03 / Starten</p>
                 <h2 className="text-3xl md:text-4xl font-black">
                   System-Transformation starten.
                 </h2>
-                <p className="text-white/40 font-mono text-sm">
+                <p className="text-white/40 text-sm">
                   Kostenlos testen. Keine Kreditkarte. Keine Verpflichtungen.
                 </p>
                 <div className="flex items-center justify-center gap-4 pt-2 flex-wrap">
                   <Link
                     href="/auth/register"
-                    className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#22c55e] text-black font-bold hover:bg-[#16a34a] transition-all hover:scale-105 active:scale-95 font-mono"
+                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-[#22c55e] text-black font-bold hover:bg-[#16a34a] transition-all hover:scale-105 active:scale-95"
                   >
                     <Zap className="w-4 h-4" />
                     Jetzt registrieren
                   </Link>
                   <a
                     href="#pricing"
-                    className="flex items-center gap-2 px-8 py-3.5 rounded-xl border border-white/10 text-white/60 font-medium hover:text-white hover:border-white/20 transition-all font-mono"
+                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-white/10 text-white/60 font-medium hover:text-white hover:border-white/20 transition-all"
                   >
                     Pläne & Preise
                     <ChevronRight className="w-4 h-4" />
@@ -680,6 +723,25 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className="py-16 px-6 border-t border-white/[0.06]">
+        <div className="max-w-4xl mx-auto rounded-3xl border border-emerald-300/20 bg-slate-900 p-8 shadow-2xl shadow-black/25">
+          <h3 className="text-2xl font-bold">Werde VREMA-Partner</h3>
+          <p className="mt-2 text-white/70">
+            Du kennst Betriebe, die eine moderne Zeiterfassung brauchen? Empfiehl VREMA und erhalte bis zu 15€ pro
+            Abschluss. Ohne Haken, direkt in dein Dashboard.
+          </p>
+          <div className="mt-5">
+            <Link
+              href="/partner-login"
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#22c55e] px-6 py-3 font-bold text-black hover:bg-[#16a34a] transition-colors"
+            >
+              Jetzt Partner werden
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── FOOTER ──────────────────────────────────────────────────────────── */}
       <footer className="border-t border-white/[0.06] py-10 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -687,11 +749,11 @@ export default function LandingPage() {
             <Image src="/vremalogo.png" alt="Vrema Logo" width={46} height={46} className="opacity-60 -my-2" />
             <div>
               <span className="font-bold text-sm">Vrema</span>
-              <span className="ml-1.5 text-[10px] text-white/25 font-mono">by KevkoStudio</span>
+              <span className="ml-1.5 text-[10px] text-white/25">by KevkoStudio</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-6 text-xs text-white/30 font-mono">
+          <div className="flex items-center gap-6 text-xs text-white/30">
             <button
               onClick={() => setModal("impressum")}
               className="hover:text-white transition-colors cursor-pointer"
@@ -722,7 +784,7 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <p className="text-xs text-white/20 font-mono">© 2026 Vrema by KevkoStudio</p>
+          <p className="text-xs text-white/20">© 2026 Vrema by KevkoStudio</p>
         </div>
       </footer>
 
@@ -745,9 +807,9 @@ export default function LandingPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-lg"
             >
-              <div className="rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_80px_rgba(34,197,94,0.1)] bg-[#0d0d0d]">
+              <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-black/30 bg-slate-900">
                 {/* Title bar */}
-                <div className="flex items-center justify-between px-4 py-3 bg-[#161616] border-b border-white/5">
+                <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-white/10">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setModal(null)}

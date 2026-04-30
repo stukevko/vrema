@@ -45,7 +45,7 @@ export function SuperAdminInlinePanel({
   const [resultMsg, setResultMsg] = useState<string | null>(null);
 
   return (
-    <section id="super-admin" className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-5">
+    <section id="super-admin" className="rounded-3xl border border-amber-400/20 bg-slate-900 p-6 shadow-2xl shadow-black/25">
       <div className="mb-4 flex items-center gap-2">
         <Shield className="h-4 w-4 text-amber-300" />
         <h2 className="text-sm font-semibold uppercase tracking-widest text-amber-200/90">Super Admin Modus</h2>
@@ -60,21 +60,21 @@ export function SuperAdminInlinePanel({
         unter „Affiliate & Auszahlungen“.
       </p>
 
-      <div className="mb-4 grid gap-2 md:grid-cols-4">
+      <div className="mb-4 grid gap-3 md:grid-cols-4">
         {[
           { label: "Firmen", value: `${monitoring.activeCompanies}/${monitoring.totalCompanies}`, tone: "text-sky-300" },
           { label: "User", value: `${monitoring.activeUsers}/${monitoring.totalUsers}`, tone: "text-emerald-300" },
           { label: "Logs 24h", value: `${monitoring.logsLast24h}`, tone: "text-violet-300" },
           { label: "Offene Clock-ins", value: `${monitoring.openWorkLogs}`, tone: "text-amber-300" },
         ].map((m) => (
-          <div key={m.label} className="rounded-xl border border-white/10 bg-[#111] px-3 py-2">
+          <div key={m.label} className="rounded-2xl border border-white/10 bg-slate-900 px-3 py-2">
             <p className="text-[10px] uppercase tracking-widest text-white/40">{m.label}</p>
             <p className={`mt-1 text-sm font-semibold ${m.tone}`}>{m.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="mb-4 rounded-xl border border-white/10 bg-[#111] px-3 py-2 text-[11px] text-white/65">
+      <div className="mb-4 rounded-2xl border border-white/10 bg-slate-900 px-3 py-2 text-[11px] text-white/65">
         Monitoring: neue User (7d) <span className="text-white/90">{monitoring.newUsersLast7d}</span> · offene Tokens{" "}
         <span className="text-white/90">{monitoring.verificationTokensOpen}</span> · abgelaufene Tokens{" "}
         <span className={monitoring.staleVerificationTokens > 0 ? "text-amber-300" : "text-emerald-300"}>
@@ -91,7 +91,7 @@ export function SuperAdminInlinePanel({
       </div>
 
       <form
-        className="mb-4 grid gap-2 rounded-xl border border-white/10 bg-[#111] p-3 md:grid-cols-4"
+        className="mb-4 grid gap-2 rounded-2xl border border-white/10 bg-slate-900 p-4 md:grid-cols-4"
         onSubmit={(e) => {
           e.preventDefault();
           const form = e.currentTarget;
@@ -121,25 +121,25 @@ export function SuperAdminInlinePanel({
         <input
           name="companyName"
           placeholder="Firma (z. B. Muster GmbH)"
-          className="rounded border border-white/10 bg-[#0b0b0b] px-3 py-2 text-xs text-white"
+          className="rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white"
           required
         />
         <input
           name="ownerName"
           placeholder="Owner Name"
-          className="rounded border border-white/10 bg-[#0b0b0b] px-3 py-2 text-xs text-white"
+          className="rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white"
           required
         />
         <input
           name="ownerEmail"
           type="email"
           placeholder="owner@firma.de"
-          className="rounded border border-white/10 bg-[#0b0b0b] px-3 py-2 text-xs text-white"
+          className="rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white"
           required
         />
         <button
           type="submit"
-          className="rounded border border-amber-300/35 bg-amber-300/15 px-3 py-2 text-xs font-semibold text-amber-200 hover:bg-amber-300/20 disabled:opacity-60"
+          className="rounded-2xl border border-amber-300/35 bg-amber-300/15 px-3 py-2 text-xs font-semibold text-amber-200 hover:bg-amber-300/20 disabled:opacity-60"
           disabled={isPending}
         >
           Firma hinzufügen
@@ -147,12 +147,12 @@ export function SuperAdminInlinePanel({
       </form>
 
       {resultMsg && (
-        <p className="mb-4 rounded-lg border border-white/10 bg-[#111] px-3 py-2 text-[11px] text-white/75">
+        <p className="mb-4 rounded-2xl border border-white/10 bg-slate-900 px-3 py-2 text-[11px] text-white/75">
           {resultMsg}
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#111]">
+      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-900">
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-white/10 text-white/50">
@@ -179,7 +179,7 @@ export function SuperAdminInlinePanel({
                     <Building2 className="h-3.5 w-3.5 text-white/35" />
                     <div>
                       <p className="text-white/85">{c.name}</p>
-                      <p className="font-mono text-[10px] text-white/35">{c.slug}</p>
+                      <p className="text-[10px] text-white/35">{c.slug}</p>
                     </div>
                   </div>
                 </td>
@@ -196,7 +196,7 @@ export function SuperAdminInlinePanel({
                         });
                       })
                     }
-                    className="rounded border border-white/10 bg-[#0b0b0b] px-2 py-1 text-white"
+                    className="rounded-2xl border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                     disabled={isPending}
                   >
                     <option value="STARTER">STARTER</option>
@@ -217,7 +217,7 @@ export function SuperAdminInlinePanel({
                         });
                       })
                     }
-                    className="rounded border border-white/10 bg-[#0b0b0b] px-2 py-1 text-white"
+                    className="rounded-2xl border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                     disabled={isPending}
                   >
                     <option value="MONTHLY">MONTHLY</option>
@@ -244,7 +244,7 @@ export function SuperAdminInlinePanel({
                           });
                         })
                       }
-                      className="rounded border border-white/10 bg-white/5 px-2 py-1 text-white/80 hover:bg-white/10"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-2 py-1 text-white/80 hover:bg-white/10"
                       disabled={isPending}
                     >
                       {c.isActive ? "Deaktivieren" : "Aktivieren"}
@@ -260,7 +260,7 @@ export function SuperAdminInlinePanel({
                           await deleteCompanyBySuperAdmin(c.id);
                         });
                       }}
-                      className="rounded border border-red-400/25 bg-red-500/10 px-2 py-1 text-red-300 hover:bg-red-500/20"
+                      className="rounded-2xl border border-red-400/25 bg-red-500/10 px-2 py-1 text-red-300 hover:bg-red-500/20"
                       disabled={isPending}
                     >
                       Löschen

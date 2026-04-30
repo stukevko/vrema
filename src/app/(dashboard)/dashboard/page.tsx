@@ -107,7 +107,7 @@ export default async function DashboardPage() {
       )}
 
       {employeeCount === 0 && (
-        <div className="rounded-2xl border border-[#22c55e]/20 bg-[#22c55e]/5 p-5">
+        <div className="rounded-2xl border border-[#22c55e]/20 bg-[#22c55e]/5 p-5 shadow-xl shadow-black/20">
           <div className="flex items-center gap-2 mb-2">
             <ListChecks className="w-4 h-4 text-[#22c55e]" />
             <p className="font-semibold text-sm">Erste Schritte</p>
@@ -130,40 +130,40 @@ export default async function DashboardPage() {
       {/* Team stats (for owners/managers) */}
       {teamStats && (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-white/10 bg-[#111] p-4">
+          <div className="rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-xl shadow-black/20">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-widest text-white/35 font-mono">Command Center</p>
+                <p className="text-xs uppercase tracking-widest text-white/35">Command Center</p>
                 <h2 className="text-sm font-semibold mt-1">Heute im Blick: Live-Status und offene Aufgaben</h2>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Link href="/dashboard/planning" className="rounded-lg border border-white/15 px-3 py-1.5 text-xs hover:bg-white/5">
+                <Link href="/dashboard/planning" className="rounded-2xl border border-white/15 px-4 py-2 text-xs hover:bg-white/5">
                   Wochenplan prüfen
                 </Link>
-                <Link href="/dashboard/reports" className="rounded-lg border border-white/15 px-3 py-1.5 text-xs hover:bg-white/5">
+                <Link href="/dashboard/reports" className="rounded-2xl border border-white/15 px-4 py-2 text-xs hover:bg-white/5">
                   Zeiten prüfen
                 </Link>
-                <Link href="/dashboard/vacation" className="rounded-lg border border-white/15 px-3 py-1.5 text-xs hover:bg-white/5">
+                <Link href="/dashboard/vacation" className="rounded-2xl border border-white/15 px-4 py-2 text-xs hover:bg-white/5">
                   Anträge öffnen
                 </Link>
               </div>
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-3 text-xs">
-              <div className="rounded-xl bg-[#0b0b0b] border border-white/10 px-3 py-2">
+              <div className="rounded-2xl bg-slate-900 border border-white/10 px-3 py-2">
                 <span className="text-white/40">Fehlend heute</span>
-                <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-red-300" : "text-emerald-300"}`}>
+                <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-red-200" : "text-emerald-200"}`}>
                   {teamStats.absentToday > 0 ? `${teamStats.absentToday} kritisch` : "Keine offenen Ausfälle"}
                 </p>
               </div>
-              <div className="rounded-xl bg-[#0b0b0b] border border-white/10 px-3 py-2">
+              <div className="rounded-2xl bg-slate-900 border border-white/10 px-3 py-2">
                 <span className="text-white/40">Zu spät heute</span>
-                <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-amber-300" : "text-emerald-300"}`}>
+                <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-amber-200" : "text-emerald-200"}`}>
                   {teamStats.lateToday > 0 ? `${teamStats.lateToday} Hinweise` : "Alles pünktlich"}
                 </p>
               </div>
-              <div className="rounded-xl bg-[#0b0b0b] border border-white/10 px-3 py-2">
+              <div className="rounded-2xl bg-slate-900 border border-white/10 px-3 py-2">
                 <span className="text-white/40">Unbestätigte Zeiten</span>
-                <p className={`mt-1 font-semibold ${teamStats.pendingCorrections > 0 ? "text-amber-300" : "text-emerald-300"}`}>
+                <p className={`mt-1 font-semibold ${teamStats.pendingCorrections > 0 ? "text-amber-200" : "text-emerald-200"}`}>
                   {teamStats.pendingCorrections > 0 ? `${teamStats.pendingCorrections} offen` : "Keine offenen Korrekturen"}
                 </p>
               </div>
@@ -172,13 +172,13 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[
             { label: "Mitarbeiter gesamt", value: teamStats.totalEmployees, icon: Users, color: "#60a5fa" },
-            { label: "Heute aktiv", value: teamStats.activeToday, icon: Clock, color: "#22c55e" },
+            { label: "Heute aktiv", value: teamStats.activeToday, icon: Clock, color: "#86efac" },
             { label: "Urlaubsanträge", value: teamStats.pendingVacations, icon: CalendarDays, color: "#f59e0b" },
             { label: "Fehlend heute", value: teamStats.absentToday, icon: TriangleAlert, color: "#f87171" },
             { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24" },
             { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc" },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-2xl bg-[#141414] border border-white/5 p-5">
+            <div key={stat.label} className="rounded-2xl bg-slate-900 border border-white/5 p-5 shadow-xl shadow-black/20">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-white/40">{stat.label}</p>
                 <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
@@ -221,10 +221,10 @@ export default async function DashboardPage() {
       </div>
 
       {/* Today summary */}
-      <div className="rounded-2xl bg-[#141414] border border-white/5 p-6">
+      <div className="rounded-2xl bg-slate-900 border border-white/5 p-6 shadow-xl shadow-black/20">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Heute</h2>
-          <span className="text-sm text-[#22c55e] font-mono font-bold">
+          <span className="text-sm text-[#22c55e] tabular-nums font-bold">
             {Math.floor(todayWorkedMins / 60)}h {Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m
           </span>
         </div>
@@ -238,7 +238,7 @@ export default async function DashboardPage() {
                 ? (log.clockOut.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins
                 : null;
               return (
-                <div key={log.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-[#0b0b0b]">
+                <div key={log.id} className="flex items-center justify-between py-2.5 px-3 rounded-2xl bg-slate-950">
                   <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-white/20" : "bg-[#22c55e] animate-pulse"}`} />
                     <span className="text-sm text-white/70">
@@ -250,7 +250,7 @@ export default async function DashboardPage() {
                     </span>
                   </div>
                   {durationMins !== null && (
-                    <span className="text-xs text-white/40 font-mono">
+                    <span className="text-xs text-white/40 tabular-nums">
                       {Math.floor(durationMins / 60)}h {Math.floor(durationMins % 60).toString().padStart(2, "0")}m
                     </span>
                   )}
@@ -263,14 +263,14 @@ export default async function DashboardPage() {
 
       {/* Business plan CTA */}
       {plan === "STARTER" && (
-        <div className="rounded-2xl bg-[#22c55e]/5 border border-[#22c55e]/20 p-5 flex items-center justify-between">
+        <div className="rounded-2xl bg-[#22c55e]/5 border border-[#22c55e]/20 p-5 flex items-center justify-between shadow-xl shadow-black/20">
           <div>
             <p className="font-semibold text-sm">PDF-Export & Lohnbüro-Versand freischalten</p>
             <p className="text-xs text-white/40 mt-1">Upgrade auf Business für vollständige Berichte.</p>
           </div>
           <Link
             href="/dashboard/billing"
-            className="shrink-0 px-4 py-2 rounded-xl bg-[#22c55e] text-black text-sm font-bold hover:bg-[#16a34a] transition-colors"
+            className="shrink-0 px-4 py-2 rounded-2xl bg-[#22c55e] text-black text-sm font-bold hover:bg-[#16a34a] transition-colors"
           >
             Upgrade
           </Link>

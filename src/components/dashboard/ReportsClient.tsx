@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { FileText, Mail, MapPin, Clock, Lock, Download, TriangleAlert, FileSpreadsheet } from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
 import { useState, useTransition } from "react";
 import {
@@ -100,6 +101,13 @@ function formatForDateTimeLocal(iso: string) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function defaultDatevAbrechnungsmonatMMYYYY() {
+  const now = new Date();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const yyyy = now.getFullYear();
+  return `${mm}/${yyyy}`;
+}
+
 function statusLabel(status: LogRow["status"]) {
   if (status === "ON_TIME") return "Pünktlich";
   if (status === "LATE") return "Zu spät";
@@ -128,7 +136,7 @@ function PlanGateButton({
   return (
     <button
       onClick={locked ? onLockedClick : onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-mono font-medium transition-all border ${
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all border ${
         locked
           ? "bg-white/[0.02] border-white/[0.06] text-white/30 cursor-pointer hover:bg-white/[0.05]"
           : "bg-[#22c55e] border-[#22c55e] text-black hover:bg-[#16a34a]"
@@ -154,6 +162,7 @@ export function ReportsClient({
   const { toasts, show, remove } = useToast();
   const [isSaving, startTransition] = useTransition();
   const [showPayrollModal, setShowPayrollModal] = useState(false);
+  const [showDatevModal, setShowDatevModal] = useState(false);
   const [payrollEmail, setPayrollEmail] = useState("");
   const [requestMode, setRequestMode] = useState<"existing" | "new">("existing");
   const [requestLogId, setRequestLogId] = useState("");
@@ -171,6 +180,12 @@ export function ReportsClient({
   const [editReason, setEditReason] = useState("");
 
   const lockedMsg = () => show("Upgrade erforderlich", "info");
+
+  // DATEV-Konfiguration (später aus Company-Settings; aktuell lokal im Client-State)
+  const [beraterNummer, setBeraterNummer] = useState("");
+  const [mandantenNummer, setMandantenNummer] = useState("");
+  const [abrechnungsMonat, setAbrechnungsMonat] = useState(() => defaultDatevAbrechnungsmonatMMYYYY());
+  const [isDatevDownloading, setIsDatevDownloading] = useState(false);
 
   const byUser = logs.reduce<Record<string, LogRow[]>>((acc, log) => {
     if (!acc[log.userId]) acc[log.userId] = [];
@@ -532,6 +547,69 @@ export function ReportsClient({
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
+  const buildDatevCsv = (config: { beraterNummer: string; mandantenNummer: string; abrechnungsMonat: string }) => {
+    // Basis: bestehendes Export-CSV (DETAIL/ABSENCE/SUMMARY inkl. Lohnarten 001/002 + Pausen-Abzug)
+    // Ergänzung: DATEV-Metadaten als zusätzliche Spalten vorne anhängen.
+    const baseCsv = buildCsv();
+    const separator = ";";
+    const [headerLine, ...dataLines] = baseCsv.split("\n");
+
+    const headerPrefix = ["Beraternummer", "Mandantennummer", "Abrechnungsmonat"]
+      .map((v) => toCsvCell(v))
+      .join(separator);
+
+    const prefixValues = [config.beraterNummer, config.mandantenNummer, config.abrechnungsMonat]
+      .map((v) => toCsvCell(v))
+      .join(separator);
+
+    return [
+      `${headerPrefix}${separator}${headerLine}`,
+      ...dataLines
+        .filter((l) => l.trim().length > 0)
+        .map((line) => `${prefixValues}${separator}${line}`),
+    ].join("\n");
+  };
+
+  const exportDatevLohnCsv = () => {
+    const csv = buildDatevCsv({
+      beraterNummer: beraterNummer.trim(),
+      mandantenNummer: mandantenNummer.trim(),
+      abrechnungsMonat: abrechnungsMonat.trim(),
+    });
+
+    const bom = "\uFEFF";
+    const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const safeDatevMonth = abrechnungsMonat.replace(/\//g, "-").replace(/\s+/g, "_").replace(/[^\w\-]/g, "");
+    link.href = url;
+    link.download = `vrema-datev-lohn-${safeDatevMonth || "monat"}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const confirmDatevExport = () => {
+    const m = abrechnungsMonat.trim();
+    if (!m) {
+      show("Bitte einen Abrechnungsmonat angeben.", "error");
+      return;
+    }
+
+    setIsDatevDownloading(true);
+    try {
+      exportDatevLohnCsv();
+      show("DATEV-CSV wurde heruntergeladen.", "success");
+      setShowDatevModal(false);
+    } catch (err: unknown) {
+      show(err instanceof Error ? err.message : "DATEV-Export fehlgeschlagen.", "error");
+    } finally {
+      setIsDatevDownloading(false);
+    }
+  };
+
   const handleEdit = (log: LogRow) => {
     setEditingLog(log);
     setEditClockIn(formatForDateTimeLocal(log.clockIn));
@@ -673,7 +751,7 @@ export function ReportsClient({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">Berichte</h1>
-            <p className="text-white/40 text-sm mt-1 font-mono">{month} · {logs.length} Einträge</p>
+            <p className="text-white/40 text-sm mt-1">{month} · {logs.length} Einträge</p>
           </div>
 
           {/* Action buttons */}
@@ -702,6 +780,21 @@ export function ReportsClient({
               onLockedClick={lockedMsg}
               onClick={exportCsv}
             />
+            <button
+              onClick={plan === "BUSINESS" || plan === "ENTERPRISE" ? () => setShowDatevModal(true) : lockedMsg}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all border ${
+                plan === "BUSINESS" || plan === "ENTERPRISE"
+                  ? "bg-[#2563eb]/20 border-[#2563eb]/40 text-[#bfdbfe] hover:bg-[#2563eb]/25"
+                  : "bg-white/[0.02] border-white/[0.06] text-white/30 cursor-pointer hover:bg-white/[0.05]"
+              }`}
+            >
+              {plan === "BUSINESS" || plan === "ENTERPRISE" ? (
+                <FileText className="w-3.5 h-3.5" />
+              ) : (
+                <Lock className="w-3.5 h-3.5" />
+              )}
+              DATEV Lohn-Export
+            </button>
           </div>
         </div>
 
@@ -709,37 +802,37 @@ export function ReportsClient({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             { label: "Einträge gesamt", value: logs.length.toString(), color: "#60a5fa" },
-            { label: "Gesamtzeit", value: formatMins(totalMinutes), color: "#22c55e" },
-            { label: "Ø pro Eintrag", value: logs.length ? formatMins(totalMinutes / logs.length) : "–", color: "#22c55e" },
+            { label: "Gesamtzeit", value: formatMins(totalMinutes), color: "#86efac" },
+            { label: "Ø pro Eintrag", value: logs.length ? formatMins(totalMinutes / logs.length) : "–", color: "#86efac" },
             { label: "GPS-gestempelt", value: logs.filter((l) => l.latitude).length.toString(), color: "#f59e0b" },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl bg-[#141414] border border-white/5 p-4">
-              <p className="text-[10px] text-white/30 font-mono uppercase tracking-widest mb-1">{s.label}</p>
-              <p className="text-xl font-bold font-mono" style={{ color: s.color }}>{s.value}</p>
+            <div key={s.label} className="rounded-2xl bg-slate-900 border border-white/5 p-5 shadow-xl shadow-black/20">
+              <p className="text-[10px] text-white/30 uppercase tracking-widest mb-1">{s.label}</p>
+              <p className="text-xl font-bold" style={{ color: s.color }}>{s.value}</p>
             </div>
           ))}
         </div>
 
         {isManager && (
-          <div className="rounded-xl border border-white/10 bg-[#111] px-4 py-3 text-xs text-white/60">
-            Status-Legende: <span className="text-emerald-300">Pünktlich</span> ·{" "}
-            <span className="text-amber-300">Zu spät (&gt;15 Min nach Schichtbeginn)</span> ·{" "}
-            <span className="text-red-300">Fehlend (automatisch per Cron)</span> ·{" "}
-            <span className="text-sky-300">Manuell angepasst</span>
+          <div className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-xs text-white/60 shadow-sm">
+            Status-Legende: <span className="text-emerald-200">Pünktlich</span> ·{" "}
+            <span className="text-amber-200">Zu spät (&gt;15 Min nach Schichtbeginn)</span> ·{" "}
+            <span className="text-red-200">Fehlend (automatisch per Cron)</span> ·{" "}
+            <span className="text-sky-200">Manuell angepasst</span>
           </div>
         )}
 
-        <div className="rounded-2xl bg-[#141414] border border-white/5 p-4 space-y-3">
+        <div className="rounded-2xl bg-slate-900 border border-white/5 p-5 space-y-3 shadow-xl shadow-black/20">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Zeitkorrektur-Anträge</h2>
-            <span className="text-[11px] text-white/35 font-mono">
+            <span className="text-[11px] text-white/35">
               {correctionRequests.filter((r) => r.status === "PENDING").length} offen
             </span>
           </div>
 
           {!isManager && (
             <div className="grid gap-2 sm:grid-cols-2">
-              <div className="sm:col-span-2 rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2.5">
+              <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-slate-900 px-4 py-3">
                 <p className="text-[11px] text-white/45 mb-2">Schritt 1: Was willst du korrigieren?</p>
                 <div className="flex flex-wrap gap-3 text-xs">
                   <label className="inline-flex items-center gap-2 cursor-pointer">
@@ -778,7 +871,7 @@ export function ReportsClient({
                     const selected = logs.find((l) => l.id === id);
                     if (selected) prefillFromLog(selected);
                   }}
-                  className="sm:col-span-2 rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2 text-sm"
+                  className="sm:col-span-2 rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm"
                 >
                   <option value="">Bitte Eintrag wählen…</option>
                   {logs.slice(0, 25).map((log) => (
@@ -795,14 +888,14 @@ export function ReportsClient({
                 value={requestClockIn}
                 onChange={(e) => setRequestClockIn(e.target.value)}
                 placeholder="Einstempelzeit"
-                className="rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2 text-sm"
+                className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm"
               />
               <input
                 type="datetime-local"
                 value={requestClockOut}
                 onChange={(e) => setRequestClockOut(e.target.value)}
                 placeholder="Ausstempelzeit (optional)"
-                className="rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2 text-sm"
+                className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm"
               />
               <input
                 type="number"
@@ -811,21 +904,21 @@ export function ReportsClient({
                 value={requestBreakMins}
                 onChange={(e) => setRequestBreakMins(e.target.value)}
                 placeholder="Pause in Minuten (z.B. 30)"
-                className="rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2 text-sm"
+                className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm"
               />
               <input
                 type="text"
                 value={requestReason}
                 onChange={(e) => setRequestReason(e.target.value)}
                 placeholder="Schritt 3: Begründung (Pflicht)"
-                className="rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2 text-sm sm:col-span-2"
+                className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm sm:col-span-2"
               />
               <input
                 type="text"
                 value={requestNote}
                 onChange={(e) => setRequestNote(e.target.value)}
                 placeholder="Notiz (optional)"
-                className="rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2 text-sm sm:col-span-2"
+                className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm sm:col-span-2"
               />
               <div className="sm:col-span-2 flex justify-end">
                 <button
@@ -845,17 +938,17 @@ export function ReportsClient({
               <p className="text-xs text-white/35">Noch keine Anträge vorhanden.</p>
             ) : (
               correctionRequests.map((req) => (
-                <div key={req.id} className="rounded-xl border border-white/10 bg-[#0f0f0f] p-3 text-xs">
+                <div key={req.id} className="rounded-2xl border border-white/10 bg-slate-900 p-4 text-xs shadow-sm">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{req.userName}</span>
                     <span className="text-white/45">{new Date(req.requestedClockIn).toLocaleString("de-DE")}</span>
                     <span
                       className={`rounded-full px-2 py-0.5 ${
                         req.status === "PENDING"
-                          ? "bg-amber-500/20 text-amber-300"
+                          ? "bg-amber-500/15 text-amber-200"
                           : req.status === "APPROVED"
-                            ? "bg-emerald-500/20 text-emerald-300"
-                            : "bg-red-500/20 text-red-300"
+                            ? "bg-emerald-500/15 text-emerald-200"
+                            : "bg-red-500/15 text-red-200"
                       }`}
                     >
                       {req.status}
@@ -871,7 +964,7 @@ export function ReportsClient({
                       <button
                         type="button"
                         onClick={() => decideCorrectionRequest(req.id, "APPROVE")}
-                        className="rounded-lg border border-emerald-400/30 px-2.5 py-1 text-[11px] text-emerald-300 hover:bg-emerald-500/10"
+                        className="rounded-xl border border-emerald-400/30 px-2.5 py-1 text-[11px] text-emerald-200 hover:bg-emerald-500/10"
                         disabled={isSaving}
                       >
                         Freigeben & buchen
@@ -879,7 +972,7 @@ export function ReportsClient({
                       <button
                         type="button"
                         onClick={() => decideCorrectionRequest(req.id, "REJECT")}
-                        className="rounded-lg border border-red-400/30 px-2.5 py-1 text-[11px] text-red-300 hover:bg-red-500/10"
+                        className="rounded-xl border border-red-400/30 px-2.5 py-1 text-[11px] text-red-200 hover:bg-red-500/10"
                         disabled={isSaving}
                       >
                         Ablehnen
@@ -893,7 +986,7 @@ export function ReportsClient({
         </div>
 
         {/* Table */}
-        <div className="rounded-2xl bg-[#141414] border border-white/5 overflow-hidden">
+        <div className="rounded-2xl bg-slate-900 border border-white/5 overflow-hidden shadow-xl shadow-black/20">
           <div className="px-5 py-3 border-b border-white/5 flex items-center gap-2">
             <FileText className="w-4 h-4 text-white/30" />
             <span className="text-sm font-semibold">Work-Logs – {month}</span>
@@ -902,13 +995,13 @@ export function ReportsClient({
           {logs.length === 0 ? (
             <div className="py-16 text-center">
               <Clock className="w-8 h-8 text-white/10 mx-auto mb-3" />
-              <p className="text-sm text-white/20 font-mono">Keine Einträge in diesem Monat.</p>
+              <p className="text-sm text-white/20">Keine Einträge in diesem Monat.</p>
             </div>
           ) : (
             <div className="max-h-[72vh] overflow-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="sticky top-0 z-20 border-b border-white/5 bg-[#141414]">
+                  <tr className="sticky top-0 z-20 border-b border-white/5 bg-slate-900">
                     {[
                       isManager ? "Mitarbeiter" : null,
                       "Datum",
@@ -923,7 +1016,7 @@ export function ReportsClient({
                     ]
                       .filter(Boolean)
                       .map((h) => (
-                        <th key={h!} className="px-5 py-3 text-left text-[10px] text-white/30 font-mono uppercase tracking-widest">
+                        <th key={h!} className="px-5 py-3 text-left text-[10px] text-white/30 uppercase tracking-widest">
                           {h}
                         </th>
                       ))}
@@ -946,33 +1039,33 @@ export function ReportsClient({
                             <span className="text-white/70 font-medium">{log.userName}</span>
                           </td>
                         )}
-                        <td className="px-5 py-3 font-mono text-white/50 text-xs">
+                        <td className="px-5 py-3 tabular-nums text-white/50 text-xs">
                           {clockInDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
                         </td>
-                        <td className="px-5 py-3 font-mono text-[#22c55e]">
+                        <td className="px-5 py-3 tabular-nums text-[#22c55e]">
                           {clockInDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
                         </td>
-                        <td className="px-5 py-3 font-mono text-white/60">
+                        <td className="px-5 py-3 tabular-nums text-white/60">
                           {log.clockOut
                             ? new Date(log.clockOut).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
                             : <span className="text-amber-400 animate-pulse">läuft…</span>}
                         </td>
-                        <td className="px-5 py-3 font-mono text-white/40 text-xs">
+                        <td className="px-5 py-3 tabular-nums text-white/40 text-xs">
                           {log.breakMins > 0 ? `${log.breakMins}min` : "–"}
                         </td>
-                        <td className="px-5 py-3 font-mono font-bold text-white/80">
+                        <td className="px-5 py-3 tabular-nums font-bold text-white/80">
                           {dur !== null ? formatMins(dur) : "–"}
                         </td>
                         <td className="px-5 py-3">
                           <span
                             className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                               log.status === "ABSENT"
-                                ? "bg-red-500/20 text-red-300"
+                                ? "bg-red-500/15 text-red-200"
                                 : log.status === "LATE"
-                                  ? "bg-amber-500/20 text-amber-300"
+                                  ? "bg-amber-500/15 text-amber-200"
                                   : log.status === "MANUAL_ADJUSTED"
-                                    ? "bg-sky-500/20 text-sky-300"
-                                    : "bg-emerald-500/20 text-emerald-300"
+                                    ? "bg-sky-500/15 text-sky-200"
+                                    : "bg-emerald-500/15 text-emerald-200"
                             }`}
                           >
                             {statusLabel(log.status)}
@@ -1002,7 +1095,7 @@ export function ReportsClient({
                                 type="button"
                                 onClick={() => handleEdit(log)}
                                 disabled={isSaving}
-                                className="rounded-lg border border-white/10 px-2.5 py-1 text-[11px] text-white/60 hover:bg-white/5 disabled:opacity-50"
+                                className="rounded-xl border border-white/10 px-2.5 py-1 text-[11px] text-white/60 hover:bg-white/5 disabled:opacity-50"
                               >
                                 Bearbeiten
                               </button>
@@ -1020,7 +1113,7 @@ export function ReportsClient({
                                     type="button"
                                     onClick={() => handleDelete(log)}
                                     disabled={isSaving}
-                                    className="rounded-lg border border-red-400/30 px-2.5 py-1 text-[11px] text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                                    className="rounded-xl border border-red-400/30 px-2.5 py-1 text-[11px] text-red-200 hover:bg-red-500/10 disabled:opacity-50"
                                   >
                                     Löschen
                                   </button>
@@ -1040,16 +1133,16 @@ export function ReportsClient({
 
         {/* Upgrade hint for locked features */}
         {plan === "STARTER" && (
-          <div className="rounded-2xl bg-[#22c55e]/5 border border-[#22c55e]/15 p-5 flex items-center justify-between gap-4">
+          <div className="rounded-2xl bg-[#22c55e]/5 border border-[#22c55e]/15 p-5 flex items-center justify-between gap-4 shadow-xl shadow-black/20">
             <div>
               <p className="font-semibold text-sm">PDF-Export & Lohnbüro-Versand freischalten</p>
-              <p className="text-xs text-white/40 mt-1 font-mono">
+              <p className="text-xs text-white/40 mt-1">
                 $ vrema upgrade --plan business → Monatsberichte auf Knopfdruck
               </p>
             </div>
             <a
               href="/dashboard/billing"
-              className="shrink-0 px-4 py-2 rounded-xl bg-[#22c55e] text-black text-sm font-bold hover:bg-[#16a34a] transition-colors font-mono"
+              className="shrink-0 px-4 py-2 rounded-2xl bg-[#22c55e] text-black text-sm font-bold hover:bg-[#16a34a] transition-colors"
             >
               Upgrade
             </a>
@@ -1060,7 +1153,7 @@ export function ReportsClient({
       <ToastContainer toasts={toasts} remove={remove} />
       {editingLog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4">
-          <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-[#121212] p-5">
+          <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-xl shadow-black/30">
             <h3 className="text-base font-semibold">Zeiteintrag bearbeiten</h3>
             <p className="mt-1 text-xs text-white/45">
               Für Nachvollziehbarkeit wird die Änderung automatisch als Manager-Edit protokolliert.
@@ -1070,13 +1163,13 @@ export function ReportsClient({
                 type="datetime-local"
                 value={editClockIn}
                 onChange={(e) => setEditClockIn(e.target.value)}
-                className="rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
+                className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
               />
               <input
                 type="datetime-local"
                 value={editClockOut}
                 onChange={(e) => setEditClockOut(e.target.value)}
-                className="rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
+                className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
               />
               <input
                 type="number"
@@ -1085,12 +1178,12 @@ export function ReportsClient({
                 value={editBreakMins}
                 onChange={(e) => setEditBreakMins(e.target.value)}
                 placeholder="Pause in Minuten"
-                className="rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
+                className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
               />
               <select
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value as LogRow["status"])}
-                className="rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
+                className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
               >
                 <option value="ON_TIME">Pünktlich</option>
                 <option value="LATE">Zu spät</option>
@@ -1102,21 +1195,21 @@ export function ReportsClient({
                 value={editReason}
                 onChange={(e) => setEditReason(e.target.value)}
                 placeholder="Grund der Änderung (Pflicht)"
-                className="sm:col-span-2 rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
+                className="sm:col-span-2 rounded-2xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
               />
               <input
                 type="text"
                 value={editNote}
                 onChange={(e) => setEditNote(e.target.value)}
                 placeholder="Notiz (optional)"
-                className="sm:col-span-2 rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
+                className="sm:col-span-2 rounded-2xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
               />
             </div>
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setEditingLog(null)}
-                className="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/5"
+                className="rounded-xl border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/5"
               >
                 Abbrechen
               </button>
@@ -1124,7 +1217,7 @@ export function ReportsClient({
                 type="button"
                 onClick={submitEdit}
                 disabled={isSaving}
-                className="rounded-lg bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black hover:bg-[#16a34a] disabled:opacity-60"
+                className="rounded-xl bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black hover:bg-[#16a34a] disabled:opacity-60"
               >
                 {isSaving ? "Speichere..." : "Änderung speichern"}
               </button>
@@ -1134,7 +1227,7 @@ export function ReportsClient({
       )}
       {showPayrollModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#121212] p-5">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-xl shadow-black/30">
             <h3 className="text-base font-semibold">An Lohnbüro senden</h3>
             <p className="mt-1 text-xs text-white/45">Der aktuelle PDF-Report wird als Anhang per E-Mail versendet.</p>
             <label className="mt-4 block text-xs text-white/55">E-Mail Lohnbüro (mehrere mit ; trennen)</label>
@@ -1143,13 +1236,13 @@ export function ReportsClient({
               value={payrollEmail}
               onChange={(e) => setPayrollEmail(e.target.value)}
               placeholder="lohnbuero@beispiel.de; chef@beispiel.de"
-              className="mt-1 w-full rounded-xl border border-white/10 bg-[#0b0b0b] px-3 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
+              className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
             />
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowPayrollModal(false)}
-                className="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/5"
+                className="rounded-xl border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/5"
               >
                 Abbrechen
               </button>
@@ -1157,7 +1250,7 @@ export function ReportsClient({
                 type="button"
                 onClick={confirmSendToPayroll}
                 disabled={isSaving}
-                className="rounded-lg bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black hover:bg-[#16a34a] disabled:opacity-60"
+                className="rounded-xl bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black hover:bg-[#16a34a] disabled:opacity-60"
               >
                 {isSaving ? "Sende..." : "PDF senden"}
               </button>
@@ -1165,6 +1258,63 @@ export function ReportsClient({
           </div>
         </div>
       )}
+
+      <Dialog.Root open={showDatevModal} onOpenChange={setShowDatevModal}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/65 px-4" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-xl shadow-black/30">
+            <Dialog.Title className="text-base font-semibold">DATEV Lohn-Export</Dialog.Title>
+            <p className="mt-1 text-xs text-white/45">
+              Dieser Export generiert ein DATEV-konformes CSV-Format inklusive Lohnarten (001/002) und Pausen-Abzug.
+            </p>
+
+            <label className="mt-4 block text-xs text-white/55">Beraternummer</label>
+            <input
+              type="text"
+              value={beraterNummer}
+              onChange={(e) => setBeraterNummer(e.target.value)}
+              placeholder="z.B. 12345"
+              className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
+            />
+
+            <label className="mt-4 block text-xs text-white/55">Mandantennummer</label>
+            <input
+              type="text"
+              value={mandantenNummer}
+              onChange={(e) => setMandantenNummer(e.target.value)}
+              placeholder="z.B. 67890"
+              className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
+            />
+
+            <label className="mt-4 block text-xs text-white/55">Abrechnungsmonat</label>
+            <input
+              type="text"
+              value={abrechnungsMonat}
+              onChange={(e) => setAbrechnungsMonat(e.target.value)}
+              placeholder="04/2026"
+              className="mt-1 w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white outline-none focus:border-[#22c55e]/50"
+            />
+
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowDatevModal(false)}
+                className="rounded-xl border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/5"
+              >
+                Abbrechen
+              </button>
+              <button
+                type="button"
+                onClick={confirmDatevExport}
+                disabled={isDatevDownloading}
+                className="rounded-xl bg-[#22c55e] px-3 py-2 text-xs font-semibold text-black hover:bg-[#16a34a] disabled:opacity-60"
+              >
+                {isDatevDownloading ? "Generiere..." : "Jetzt generieren & herunterladen"}
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </>
   );
 }

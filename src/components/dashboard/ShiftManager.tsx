@@ -865,7 +865,7 @@ export function ShiftManager({
           </div>
 
           <div className="mt-3 max-h-[70vh] overflow-auto">
-            <div className="min-w-[880px] space-y-3">
+            <div className="min-w-[880px] space-y-4">
               <div className="sticky top-0 z-30 grid grid-cols-[220px_1fr] items-center gap-2 border-b border-white/10 bg-[#0f0f0f] py-1 text-[11px] text-white/45">
                 <div>Mitarbeiter</div>
                 <div className="grid grid-cols-9">
@@ -896,8 +896,8 @@ export function ShiftManager({
                     : (Math.max(0, Math.min(visualEnd, TIMELINE_END_HOUR * 60) - Math.max(visualStart, TIMELINE_START_HOUR * 60)) / TIMELINE_TOTAL_MINUTES) * 100;
                 const initials = (row.member.name ?? row.member.email).slice(0, 2).toUpperCase();
                 return (
-                  <div key={row.member.id} className="grid grid-cols-[220px_1fr] items-center gap-2">
-                    <div className="flex items-center rounded-lg border border-white/10 bg-[#0b0b0b] px-4 py-3.5">
+                  <div key={row.member.id} className="grid grid-cols-[220px_1fr] items-center gap-3">
+                    <div className="flex items-center rounded-2xl border border-white/10 bg-slate-900 px-4 py-4">
                       <span className="inline-flex items-center gap-2 truncate text-sm text-white/80">
                         <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-semibold text-white/80">
                           {initials}
@@ -907,7 +907,7 @@ export function ShiftManager({
                     </div>
                     <div
                       data-timeline-lane
-                      className="relative h-14 rounded-lg border border-white/10 bg-[#0b0b0b]"
+                      className="relative h-16 rounded-2xl border border-white/10 bg-slate-900"
                       onMouseDown={(e) => {
                         if (row.conflict) return;
                         beginTimelineDrag(e.clientX, e.currentTarget as HTMLElement, row.member.id, "create");
@@ -942,7 +942,7 @@ export function ShiftManager({
                       </div>
                       {row.conflict ? (
                         <div
-                          className={`absolute inset-1 rounded-md flex items-center justify-center text-xs font-semibold ${
+                          className={`absolute inset-1 rounded-lg flex items-center justify-center text-xs font-semibold ${
                             row.conflict === "SICK" ? "bg-red-500/20 text-red-200" : "bg-amber-500/20 text-amber-200"
                           }`}
                         >
@@ -950,7 +950,7 @@ export function ShiftManager({
                         </div>
                       ) : widthPct > 0 ? (
                         <div
-                          className={`group absolute top-1.5 bottom-1.5 z-10 rounded-md bg-[#22c55e]/40 border border-[#22c55e]/60 px-2 text-[11px] text-[#dcfce7] flex items-center cursor-grab active:cursor-grabbing ${
+                          className={`group absolute top-1.5 bottom-1.5 z-10 rounded-lg bg-[#22c55e]/40 border border-[#22c55e]/60 px-2 text-[11px] text-[#dcfce7] flex items-center cursor-grab active:cursor-grabbing ${
                             activeDrag?.userId === row.member.id
                               ? "transition-none shadow-lg shadow-black/40"
                               : "transition-[left,width] duration-100 ease-out"

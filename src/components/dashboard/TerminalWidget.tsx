@@ -120,7 +120,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
   })();
 
   return (
-    <div className="rounded-2xl bg-[#141414] border border-white/5 p-6">
+    <div className="rounded-3xl bg-slate-900/80 backdrop-blur-md border border-white/10 p-6 shadow-2xl shadow-black/25">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-semibold text-lg">Terminal</h2>
         {gpsFeatureEnabled && (
@@ -160,7 +160,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
               className="flex flex-col items-center gap-3 mb-8"
             >
               <div className="relative">
-                <div className="w-20 h-20 rounded-full bg-[#22c55e]/10 border-2 border-[#22c55e]/30 flex items-center justify-center">
+                <div className="w-20 h-20 rounded-2xl bg-[#22c55e]/10 border-2 border-[#22c55e]/30 flex items-center justify-center">
                   <Clock className="w-8 h-8 text-[#22c55e]" />
                 </div>
                 <motion.div
@@ -191,7 +191,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
               exit={{ scale: 0.8, opacity: 0 }}
               className="mb-8"
             >
-              <div className="w-20 h-20 rounded-full bg-white/5 border-2 border-white/10 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-2xl bg-white/5 border-2 border-white/10 flex items-center justify-center">
                 <Clock className="w-8 h-8 text-white/30" />
               </div>
             </motion.div>
@@ -203,7 +203,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
           whileTap={{ scale: 0.96 }}
           onClick={activeLog ? handleClockOut : handleClockIn}
           disabled={isPending}
-          className={`w-full py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all ${
+          className={`w-full py-4 rounded-full font-bold text-base flex items-center justify-center gap-2 transition-all ${
             activeLog
               ? "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20"
               : "bg-[#22c55e] text-black hover:bg-[#16a34a]"
@@ -230,7 +230,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
               type="button"
               onClick={handleBreakToggle}
               disabled={isPending}
-              className={`w-full rounded-xl border px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
+              className={`w-full rounded-2xl border px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
                 activeLog.isOnBreak
                   ? "border-[#22c55e]/40 bg-[#22c55e]/15 text-[#86efac] hover:bg-[#22c55e]/20"
                   : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
