@@ -5,12 +5,12 @@ export default function ReportsLoading() {
     <div className="max-w-6xl mx-auto space-y-5 md:space-y-6 animate-pulse">
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <div className="h-7 w-40 rounded-xl bg-slate-800/80" />
-          <div className="h-4 w-56 rounded-xl bg-slate-800/60" />
+          <div className="h-7 w-40 rounded-xl bg-card/80" />
+          <div className="h-4 w-56 rounded-xl bg-card/60" />
         </div>
         <div className="flex gap-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-11 w-32 rounded-2xl bg-slate-800/80" />
+            <div key={i} className="h-11 w-32 rounded-2xl bg-card/80" />
           ))}
         </div>
       </div>

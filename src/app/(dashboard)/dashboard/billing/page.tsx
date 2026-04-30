@@ -43,7 +43,7 @@ export default async function BillingPage({
       )}
 
       {/* Current plan */}
-      <div className="rounded-2xl bg-[#141414] border border-white/5 p-6">
+      <div className="rounded-2xl bg-card border border-border p-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-white/40 mb-1">Aktueller Plan</p>
@@ -78,7 +78,7 @@ export default async function BillingPage({
               className={`rounded-2xl p-4 md:p-6 border transition-all ${
                 isCurrent
                   ? "bg-[#22c55e]/5 border-[#22c55e]/30"
-                  : "bg-[#141414] border-white/5"
+                  : "bg-card border-border"
               }`}
             >
               <div className="flex items-center justify-between mb-4">
@@ -147,7 +147,7 @@ export default async function BillingPage({
         })}
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-[#141414] px-4 py-3 text-xs text-white/55">
+      <div className="rounded-xl border border-border bg-card px-4 py-3 text-xs text-white/55">
         Mit dem Abschluss eines kostenpflichtigen Plans gelten die{" "}
         <Link href="/agb" className="text-white/80 underline underline-offset-2 hover:text-white">
           AGB

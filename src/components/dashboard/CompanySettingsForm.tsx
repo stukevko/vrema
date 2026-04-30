@@ -72,7 +72,7 @@ export function CompanySettingsForm({ company }: Props) {
   };
 
   return (
-    <div className="rounded-2xl bg-[#141414] border border-white/5 p-6">
+    <div className="rounded-2xl bg-card border border-border p-6">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>

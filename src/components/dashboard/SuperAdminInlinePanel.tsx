@@ -121,20 +121,20 @@ export function SuperAdminInlinePanel({
         <input
           name="companyName"
           placeholder="Firma (z. B. Muster GmbH)"
-          className="rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white"
+          className="rounded-2xl border border-border bg-card px-3 py-2 text-xs text-white"
           required
         />
         <input
           name="ownerName"
           placeholder="Owner Name"
-          className="rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white"
+          className="rounded-2xl border border-border bg-card px-3 py-2 text-xs text-white"
           required
         />
         <input
           name="ownerEmail"
           type="email"
           placeholder="owner@firma.de"
-          className="rounded-2xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white"
+          className="rounded-2xl border border-border bg-card px-3 py-2 text-xs text-white"
           required
         />
         <button
@@ -196,7 +196,7 @@ export function SuperAdminInlinePanel({
                         });
                       })
                     }
-                    className="rounded-2xl border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+                    className="rounded-2xl border border-border bg-card px-2 py-1 text-white"
                     disabled={isPending}
                   >
                     <option value="STARTER">STARTER</option>
@@ -217,7 +217,7 @@ export function SuperAdminInlinePanel({
                         });
                       })
                     }
-                    className="rounded-2xl border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+                    className="rounded-2xl border border-border bg-card px-2 py-1 text-white"
                     disabled={isPending}
                   >
                     <option value="MONTHLY">MONTHLY</option>

@@ -39,7 +39,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
 
   if (requests.length === 0) {
     return (
-      <div className="rounded-2xl bg-[#141414] border border-white/5 p-8 text-center">
+      <div className="rounded-2xl bg-card border border-border p-8 text-center">
         <Clock className="w-8 h-8 text-white/20 mx-auto mb-3" />
         <p className="text-sm text-white/30">Keine Urlaubsanträge vorhanden.</p>
       </div>
@@ -54,7 +54,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.05 }}
-          className="rounded-xl bg-[#141414] border border-white/5 p-4"
+          className="rounded-xl bg-card border border-border p-4"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">

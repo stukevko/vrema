@@ -50,7 +50,7 @@ export function InviteForm() {
   };
 
   return (
-    <div className="rounded-2xl bg-[#141414] border border-white/5 overflow-hidden">
+    <div className="rounded-2xl bg-card border border-border overflow-hidden">
       {/* Header */}
       <div className="px-5 py-4 border-b border-white/5 flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl bg-[#22c55e]/10 flex items-center justify-center">

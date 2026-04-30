@@ -217,7 +217,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
+    <div className="min-h-screen bg-background text-white overflow-x-hidden">
       <Script
         id="ld-json-vrema"
         type="application/ld+json"
@@ -230,7 +230,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/[0.08] bg-slate-950/90 backdrop-blur-2xl">
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/[0.08] bg-background/90 backdrop-blur-2xl">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image src="/vremalogo.png" alt="Vrema Logo" width={52} height={52} className="-my-2" />
@@ -251,7 +251,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/auth/register"
-              className="text-sm px-4 py-2 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-all"
+              className="text-sm px-4 py-2 rounded-xl bg-card text-white font-semibold hover:bg-card/80 transition-all"
             >
               Registrieren
             </Link>

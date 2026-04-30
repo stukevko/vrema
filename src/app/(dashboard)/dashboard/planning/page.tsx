@@ -48,7 +48,7 @@ export default async function PlanningPage() {
         <h1 className="text-2xl font-bold">Mein Plan</h1>
         <p className="text-white/40 text-sm mt-1">Hier siehst du deine hinterlegten Soll-Schichten pro Woche.</p>
       </div>
-      <section className="rounded-2xl border border-white/10 bg-[#141414] p-5">
+      <section className="rounded-2xl border border-border bg-card p-5">
         <div className="grid gap-3 md:grid-cols-2">
           {grouped.map((g) => (
             <div key={g.label} className="rounded-xl border border-white/10 bg-[#0f0f0f] px-4 py-3">

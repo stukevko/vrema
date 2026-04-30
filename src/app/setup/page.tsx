@@ -56,7 +56,7 @@ export default async function SetupPage({
 
   return (
     <div className="min-h-screen bg-background text-white px-4 py-10">
-      <div className="mx-auto w-full max-w-xl rounded-2xl border border-white/5 bg-[#141414] p-6 md:p-8">
+      <div className="mx-auto w-full max-w-xl rounded-2xl border border-border bg-card p-6 md:p-8">
         <p className="mb-2 text-xs font-sans uppercase tracking-widest text-primary">Onboarding</p>
         <h1 className="text-2xl font-bold">Kurz einrichten, dann geht es los</h1>
         <p className="mt-2 text-sm text-white/50">

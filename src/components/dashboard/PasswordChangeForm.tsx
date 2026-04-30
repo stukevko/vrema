@@ -46,7 +46,7 @@ export function PasswordChangeForm() {
   ];
 
   return (
-    <div className="rounded-2xl bg-[#141414] border border-white/5 p-6">
+    <div className="rounded-2xl bg-card border border-border p-6">
       <form onSubmit={handleSubmit} className="space-y-4">
         {fields.map((f) => (
           <div key={f.name}>

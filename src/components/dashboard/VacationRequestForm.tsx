@@ -42,7 +42,7 @@ export function VacationRequestForm() {
   };
 
   return (
-    <div className="rounded-2xl bg-[#141414] border border-white/5 p-6">
+    <div className="rounded-2xl bg-card border border-border p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-[#22c55e]/10 flex items-center justify-center">
           <CalendarDays className="w-5 h-5 text-[#22c55e]" />

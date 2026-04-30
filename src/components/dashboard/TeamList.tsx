@@ -38,7 +38,7 @@ export function TeamList({
 
   if (members.length === 0) {
     return (
-      <div className="rounded-2xl bg-[#141414] border border-white/5 p-10 text-center">
+      <div className="rounded-2xl bg-card border border-border p-10 text-center">
         <User className="w-8 h-8 text-white/20 mx-auto mb-3" />
         <p className="text-sm text-white/30">Noch keine Mitarbeiter vorhanden.</p>
       </div>
@@ -46,7 +46,7 @@ export function TeamList({
   }
 
   return (
-    <div className="rounded-2xl bg-[#141414] border border-white/5 overflow-hidden">
+    <div className="rounded-2xl bg-card border border-border overflow-hidden">
       {/* Header row */}
       <div className="grid grid-cols-12 gap-3 px-5 py-3 border-b border-white/5 text-xs text-white/30 font-sans uppercase tracking-widest">
         <span className="col-span-5">Mitarbeiter</span>

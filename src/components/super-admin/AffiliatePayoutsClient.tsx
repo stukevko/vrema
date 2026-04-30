@@ -141,7 +141,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
   };
 
   return (
-    <div className="rounded-2xl bg-[#141414] border border-white/5 overflow-hidden">
+    <div className="rounded-2xl bg-card border border-border overflow-hidden">
       <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
         <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
           <Wallet className="w-4 h-4 text-emerald-400" />
