@@ -1,39 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  --background: 222 47% 4%;
-  --card: 222 47% 7%;
-  --popover: 222 47% 7%;
-  --primary: 150 100% 50%;
-  --secondary: 217 32% 17%;
-  --accent: 217 32% 17%;
-  --border: 217 32% 12%;
-  --ring: 150 100% 50%;
+  --background: 210 20% 98%;
+  --card: 0 0% 100%;
+  --popover: 0 0% 100%;
+  --primary: 142 70% 45%;
+  --secondary: 210 20% 96%;
+  --accent: 210 20% 96%;
+  --border: 210 15% 90%;
+  --ring: 142 70% 45%;
   --radius: 1.25rem;
-  --foreground: 210 40% 98%;
-  --muted: 215 20% 65%;
-  --muted-foreground: 215 20% 65%;
+  --foreground: 222 20% 15%;
+  --muted: 215 20% 45%;
+  --muted-foreground: 215 20% 45%;
 }
 
 .dark {
-  --background: 222 47% 4%;
-  --card: 222 47% 7%;
-  --popover: 222 47% 7%;
-  --primary: 150 100% 50%;
-  --secondary: 217 32% 17%;
-  --accent: 217 32% 17%;
-  --border: 217 32% 12%;
-  --ring: 150 100% 50%;
+  --background: 210 20% 98%;
+  --card: 0 0% 100%;
+  --popover: 0 0% 100%;
+  --primary: 142 70% 45%;
+  --secondary: 210 20% 96%;
+  --accent: 210 20% 96%;
+  --border: 210 15% 90%;
+  --ring: 142 70% 45%;
   --radius: 1.25rem;
-  --foreground: 210 40% 98%;
-  --muted: 215 20% 65%;
-  --muted-foreground: 215 20% 65%;
+  --foreground: 222 20% 15%;
+  --muted: 215 20% 45%;
+  --muted-foreground: 215 20% 45%;
 }
 
 @theme {
   --color-background: hsl(var(--background));
-  --color-card: hsl(var(--card));
-  --color-popover: hsl(var(--popover));
+  --color-card: hsl(var(--card) / 0.75);
+  --color-popover: hsl(var(--popover) / 0.82);
   --color-primary: hsl(var(--primary));
   --color-secondary: hsl(var(--secondary));
   --color-accent: hsl(var(--accent));
@@ -58,12 +58,21 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+.lucide {
+  stroke-width: 1.5;
+}
+
 button[class]:not([class*="rounded-full"]):not([class*="rounded-2xl"]):not([class*="rounded-3xl"]) {
   border-radius: 0.75rem;
 }
 
 button[class] {
   min-height: 44px;
+}
+
+button[class*="bg-primary"] {
+  background-image: linear-gradient(to bottom, hsl(var(--primary) / 0.96), hsl(var(--primary) / 0.88));
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.2);
 }
 
 input[class],

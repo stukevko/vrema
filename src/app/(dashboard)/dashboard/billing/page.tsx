@@ -29,10 +29,10 @@ export default async function BillingPage({
   const currentPlan = company.plan;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Abonnement & Billing</h1>
-        <p className="text-white/40 text-sm mt-1">Verwalte dein Abo und deine Zahlungsmethoden.</p>
+    <div className="max-w-5xl mx-auto space-y-8 text-slate-900">
+      <div className="rounded-3xl bg-card border border-white backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <h1 className="text-2xl font-semibold tracking-tight">Abonnement & Billing</h1>
+        <p className="text-muted-foreground text-sm mt-1">Verwalte dein Abo und deine Zahlungsmethoden.</p>
       </div>
 
       {params.success && (
@@ -43,13 +43,13 @@ export default async function BillingPage({
       )}
 
       {/* Current plan */}
-      <div className="rounded-2xl bg-card border border-border p-6">
+      <div className="rounded-3xl bg-card border border-white backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-white/40 mb-1">Aktueller Plan</p>
+            <p className="text-xs text-muted-foreground mb-1">Aktueller Plan</p>
             <p className="text-2xl font-bold capitalize">{currentPlan}</p>
             {company.subEndsAt && (
-              <p className="text-xs text-white/40 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Läuft bis: {new Date(company.subEndsAt).toLocaleDateString("de-DE")}
               </p>
             )}
@@ -69,16 +69,16 @@ export default async function BillingPage({
       </div>
 
       {/* Plan cards */}
-      <div className="grid md:grid-cols-3 gap-3 md:gap-4">
+      <div className="grid md:grid-cols-3 gap-4">
         {(Object.entries(PLANS) as [keyof typeof PLANS, (typeof PLANS)[keyof typeof PLANS]][]).map(([key, plan]) => {
           const isCurrent = currentPlan === key;
           return (
             <div
               key={key}
-              className={`rounded-2xl p-4 md:p-6 border transition-all ${
+              className={`rounded-3xl p-8 border backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all ${
                 isCurrent
                   ? "bg-primary/5 border-primary/30"
-                  : "bg-card border-border"
+                  : "bg-card border-white"
               }`}
             >
               <div className="flex items-center justify-between mb-4">
@@ -93,20 +93,20 @@ export default async function BillingPage({
               {isCurrent ? (
                 <a
                   href="/dashboard"
-                  className="mb-1 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-bold text-black hover:bg-primary/90 transition-colors"
+                  className="mb-1 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-bold text-black ring-1 ring-inset ring-white/20 hover:bg-primary/90 transition-colors"
                 >
                   Zum Dashboard gehen
                 </a>
               ) : (
                 <p className="text-2xl md:text-3xl font-bold mb-1">
                   {plan.monthlyPrice === null ? "Auf Anfrage" : `${plan.monthlyPrice}€`}
-                  {plan.monthlyPrice !== null && <span className="text-sm font-normal text-white/40">/mo</span>}
+                  {plan.monthlyPrice !== null && <span className="text-sm font-normal text-muted-foreground">/mo</span>}
                 </p>
               )}
 
               <ul className="mt-4 mb-6 space-y-2">
                 {plan.features.slice(0, 4).map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-xs text-white/60">
+                  <li key={f} className="flex items-center gap-2 text-xs text-slate-700">
                     <Check className="w-3.5 h-3.5 text-[#22c55e] shrink-0" />
                     {f}
                   </li>
@@ -118,7 +118,7 @@ export default async function BillingPage({
                   <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "monthly")}>
                     <button
                       type="submit"
-                      className="w-full py-2.5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-2.5 rounded-xl bg-primary text-black text-sm font-bold ring-1 ring-inset ring-white/20 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
                     >
                       <Zap className="w-4 h-4" />
                       Monatlich upgraden
@@ -147,17 +147,17 @@ export default async function BillingPage({
         })}
       </div>
 
-      <div className="rounded-xl border border-border bg-card px-4 py-3 text-xs text-white/55">
+      <div className="rounded-2xl border border-border bg-card px-4 py-3 text-xs text-muted-foreground">
         Mit dem Abschluss eines kostenpflichtigen Plans gelten die{" "}
-        <Link href="/agb" className="text-white/80 underline underline-offset-2 hover:text-white">
+        <Link href="/agb" className="text-slate-700 underline underline-offset-2 hover:text-slate-900">
           AGB
         </Link>{" "}
         , die{" "}
-        <Link href="/datenschutz" className="text-white/80 underline underline-offset-2 hover:text-white">
+        <Link href="/datenschutz" className="text-slate-700 underline underline-offset-2 hover:text-slate-900">
           Datenschutzhinweise
         </Link>{" "}
         und bei Bedarf die{" "}
-        <Link href="/avv" className="text-white/80 underline underline-offset-2 hover:text-white">
+        <Link href="/avv" className="text-slate-700 underline underline-offset-2 hover:text-slate-900">
           AVV
         </Link>
         .

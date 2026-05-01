@@ -33,12 +33,12 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background text-white flex">
+    <div className="min-h-screen bg-background text-slate-900 flex">
       <DashboardSidebar
         role={session.user.role ?? "EMPLOYEE"}
         plan={session.user.plan ?? "STARTER"}
       />
-      <div className="flex-1 flex flex-col min-w-0 bg-background">
+      <div className="flex-1 flex flex-col min-w-0 bg-background/70">
         <DashboardTopbar user={session.user} />
         <main className="flex-1 px-4 py-4 pb-24 md:p-6 md:pb-6 overflow-auto">{children}</main>
       </div>

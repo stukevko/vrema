@@ -39,9 +39,9 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
 
   if (requests.length === 0) {
     return (
-      <div className="rounded-2xl bg-card border border-border p-8 text-center">
-        <Clock className="w-8 h-8 text-white/20 mx-auto mb-3" />
-        <p className="text-sm text-white/30">Keine Urlaubsanträge vorhanden.</p>
+      <div className="rounded-3xl bg-card border border-white backdrop-blur-xl p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <Clock className="w-8 h-8 text-slate-400 mx-auto mb-3" />
+        <p className="text-sm text-muted-foreground">Keine Urlaubsanträge vorhanden.</p>
       </div>
     );
   }
@@ -54,22 +54,22 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.05 }}
-          className="rounded-xl bg-card border border-border p-4"
+          className="rounded-2xl bg-card border border-white backdrop-blur-xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)]"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               {req.userName && (
                 <p className="text-sm font-semibold mb-1">{req.userName}</p>
               )}
-              <p className="text-sm text-white/70">
+              <p className="text-sm text-slate-700">
                 {new Date(req.startDate).toLocaleDateString("de-DE")} –{" "}
                 {new Date(req.endDate).toLocaleDateString("de-DE")}
               </p>
-              <p className="text-xs text-white/40 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {req.days} Tage · {req.absenceType === "SICK" ? "Krank" : "Urlaub"}
               </p>
               {req.reason && (
-                <p className={`text-xs mt-1 truncate ${req.absenceType === "SICK" ? "text-red-300" : "text-white/30"}`}>
+                <p className={`text-xs mt-1 truncate ${req.absenceType === "SICK" ? "text-red-700" : "text-muted-foreground"}`}>
                   {req.reason}
                 </p>
               )}

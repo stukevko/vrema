@@ -90,14 +90,14 @@ export default async function DashboardPage() {
   }, 0);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-5 md:space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 text-slate-900">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">
+      <div className="rounded-3xl border border-white bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <h1 className="text-2xl font-semibold tracking-tight">
           Guten {new Date().getHours() < 12 ? "Morgen" : new Date().getHours() < 18 ? "Tag" : "Abend"},{" "}
           {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
         </h1>
-        <p className="text-white/40 text-sm mt-1">
+        <p className="text-muted-foreground text-sm mt-1">
           {new Date().toLocaleDateString("de-DE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </p>
       </div>
@@ -107,19 +107,19 @@ export default async function DashboardPage() {
       )}
 
       {employeeCount === 0 && (
-        <div className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="rounded-3xl border border-white bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
           <div className="flex items-center gap-2 mb-2">
-            <ListChecks className="w-4 h-4 text-[#22c55e]" />
+            <ListChecks className="w-4 h-4 text-primary" />
             <p className="font-semibold text-sm">Erste Schritte</p>
           </div>
-          <ol className="list-decimal pl-5 text-sm text-white/70 space-y-1">
+          <ol className="list-decimal pl-5 text-sm text-slate-700 space-y-1">
             <li>
-              <Link href="/dashboard/team" className="text-[#22c55e] hover:underline">
+              <Link href="/dashboard/team" className="text-primary hover:underline">
                 Mitarbeiter anlegen
               </Link>
             </li>
             <li>
-              <a href="#terminal-widget" className="text-[#22c55e] hover:underline">
+              <a href="#terminal-widget" className="text-primary hover:underline">
                 Terminal testen
               </a>
             </li>
@@ -130,39 +130,39 @@ export default async function DashboardPage() {
       {/* Team stats (for owners/managers) */}
       {teamStats && (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-white/5 bg-card p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+          <div className="rounded-3xl border border-white bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-widest text-white/35">Command Center</p>
-                <h2 className="text-sm font-semibold mt-1">Heute im Blick: Live-Status und offene Aufgaben</h2>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">Command Center</p>
+                <h2 className="text-sm font-semibold tracking-tight mt-1">Heute im Blick: Live-Status und offene Aufgaben</h2>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Link href="/dashboard/planning" className="rounded-2xl border border-border px-4 py-2 text-xs md:hover:bg-card/70 transition-all active:scale-95">
+                <Link href="/dashboard/planning" className="rounded-2xl border border-border px-4 py-2 text-xs text-slate-700 md:hover:bg-card/70 transition-all active:scale-95">
                   Wochenplan prüfen
                 </Link>
-                <Link href="/dashboard/reports" className="rounded-2xl border border-border px-4 py-2 text-xs md:hover:bg-card/70 transition-all active:scale-95">
+                <Link href="/dashboard/reports" className="rounded-2xl border border-border px-4 py-2 text-xs text-slate-700 md:hover:bg-card/70 transition-all active:scale-95">
                   Zeiten prüfen
                 </Link>
-                <Link href="/dashboard/vacation" className="rounded-2xl border border-border px-4 py-2 text-xs md:hover:bg-card/70 transition-all active:scale-95">
+                <Link href="/dashboard/vacation" className="rounded-2xl border border-border px-4 py-2 text-xs text-slate-700 md:hover:bg-card/70 transition-all active:scale-95">
                   Anträge öffnen
                 </Link>
               </div>
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-3 text-xs">
-              <div className="rounded-2xl bg-card border border-white/5 px-3 py-2">
-                <span className="text-white/40">Fehlend heute</span>
+              <div className="rounded-2xl bg-card border border-border px-3 py-2">
+                <span className="text-muted-foreground">Fehlend heute</span>
                 <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-red-200" : "text-emerald-200"}`}>
                   {teamStats.absentToday > 0 ? `${teamStats.absentToday} kritisch` : "Keine offenen Ausfälle"}
                 </p>
               </div>
-              <div className="rounded-2xl bg-card border border-white/5 px-3 py-2">
-                <span className="text-white/40">Zu spät heute</span>
+              <div className="rounded-2xl bg-card border border-border px-3 py-2">
+                <span className="text-muted-foreground">Zu spät heute</span>
                 <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-amber-200" : "text-emerald-200"}`}>
                   {teamStats.lateToday > 0 ? `${teamStats.lateToday} Hinweise` : "Alles pünktlich"}
                 </p>
               </div>
-              <div className="rounded-2xl bg-card border border-white/5 px-3 py-2">
-                <span className="text-white/40">Unbestätigte Zeiten</span>
+              <div className="rounded-2xl bg-card border border-border px-3 py-2">
+                <span className="text-muted-foreground">Unbestätigte Zeiten</span>
                 <p className={`mt-1 font-semibold ${teamStats.pendingCorrections > 0 ? "text-amber-200" : "text-emerald-200"}`}>
                   {teamStats.pendingCorrections > 0 ? `${teamStats.pendingCorrections} offen` : "Keine offenen Korrekturen"}
                 </p>
@@ -178,9 +178,9 @@ export default async function DashboardPage() {
             { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24" },
             { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc" },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-2xl bg-card border border-white/5 p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all md:hover:bg-card/70">
+            <div key={stat.label} className="rounded-3xl bg-card border border-white backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all md:hover:bg-card/80">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-white/40">{stat.label}</p>
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
                 <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
               </div>
               <p className="text-3xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
@@ -221,20 +221,20 @@ export default async function DashboardPage() {
       </div>
 
       {/* Today summary */}
-      <div className="rounded-2xl bg-card border border-white/5 p-5 md:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all md:hover:bg-card/70">
+      <div className="rounded-3xl bg-card border border-white backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all md:hover:bg-card/80">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Heute</h2>
-          <span className="text-sm text-[#22c55e] tabular-nums font-bold">
+          <span className="text-sm text-primary tabular-nums font-bold">
             {Math.floor(todayWorkedMins / 60)}h {Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m
           </span>
         </div>
 
         {todayLogs.length === 0 ? (
           <div className="py-6 text-center">
-            <p className="text-sm text-white/30">Alles ruhig hier. Genieße die Pause! ☕</p>
+            <p className="text-sm text-muted-foreground">Alles ruhig hier. Genieße die Pause! ☕</p>
             <Link
               href="#terminal-widget"
-              className="mt-3 inline-flex items-center rounded-2xl border border-border px-4 py-2 text-sm text-white/75 transition-all active:scale-95 md:hover:bg-card/70"
+              className="mt-3 inline-flex items-center rounded-2xl border border-border px-4 py-2 text-sm text-slate-700 transition-all active:scale-95 md:hover:bg-card/80"
             >
               Jetzt einstempeln
             </Link>
@@ -249,7 +249,7 @@ export default async function DashboardPage() {
                 <div key={log.id} className="flex items-center justify-between py-2.5 px-3 rounded-2xl bg-background">
                   <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-white/20" : "bg-primary animate-pulse"}`} />
-                    <span className="text-sm text-white/70">
+                    <span className="text-sm text-slate-700">
                       {new Date(log.clockIn).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
                       {" — "}
                       {log.clockOut
@@ -258,7 +258,7 @@ export default async function DashboardPage() {
                     </span>
                   </div>
                   {durationMins !== null && (
-                    <span className="text-xs text-white/40 tabular-nums">
+                    <span className="text-xs text-muted-foreground tabular-nums">
                       {Math.floor(durationMins / 60)}h {Math.floor(durationMins % 60).toString().padStart(2, "0")}m
                     </span>
                   )}
@@ -271,14 +271,14 @@ export default async function DashboardPage() {
 
       {/* Business plan CTA */}
       {plan === "STARTER" && (
-        <div className="rounded-2xl bg-card border border-white/5 p-5 flex items-center justify-between shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="rounded-3xl bg-card border border-white backdrop-blur-xl p-8 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
           <div>
             <p className="font-semibold text-sm">PDF-Export & Lohnbüro-Versand freischalten</p>
-            <p className="text-xs text-white/40 mt-1">Upgrade auf Business für vollständige Berichte.</p>
+            <p className="text-xs text-muted-foreground mt-1">Upgrade auf Business für vollständige Berichte.</p>
           </div>
           <Link
             href="/dashboard/billing"
-            className="shrink-0 px-4 py-2 rounded-2xl bg-primary text-black text-sm font-bold md:hover:bg-primary/90 transition-all active:scale-95"
+            className="shrink-0 px-4 py-2 rounded-2xl bg-primary text-black text-sm font-bold ring-1 ring-inset ring-white/20 md:hover:bg-primary/90 transition-all active:scale-95"
           >
             Upgrade
           </Link>
