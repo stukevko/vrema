@@ -42,7 +42,7 @@ export function VacationRequestForm() {
   };
 
   return (
-    <div className="rounded-3xl bg-card border border-white/5 backdrop-blur-xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+    <div className="rounded-3xl bg-card border border-border backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <CalendarDays className="w-5 h-5 text-primary" />
@@ -53,14 +53,14 @@ export function VacationRequestForm() {
         <button
           type="button"
           onClick={() => setMode("vacation")}
-          className={`rounded-md px-3 py-1.5 ${mode === "vacation" ? "bg-card text-white" : "text-muted-foreground hover:text-white/80"}`}
+          className={`rounded-md px-3 py-1.5 ${mode === "vacation" ? "bg-card text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           Urlaub
         </button>
         <button
           type="button"
           onClick={() => setMode("sick")}
-          className={`rounded-md px-3 py-1.5 ${mode === "sick" ? "bg-red-500/20 text-red-100" : "text-muted-foreground hover:text-white/80"}`}
+          className={`rounded-md px-3 py-1.5 ${mode === "sick" ? "bg-red-500/20 text-red-700" : "text-muted-foreground hover:text-foreground"}`}
         >
           Krank melden
         </button>
@@ -73,7 +73,7 @@ export function VacationRequestForm() {
             type="date"
             name="startDate"
             required
-            className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/50 transition-colors"
+            className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
         <div>
@@ -82,7 +82,7 @@ export function VacationRequestForm() {
             type="date"
             name="endDate"
             required
-            className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/50 transition-colors"
+            className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
         <div>
@@ -93,7 +93,7 @@ export function VacationRequestForm() {
             name="reason"
             rows={3}
             placeholder={mode === "vacation" ? "z.B. Familienurlaub" : "z.B. krank mit Attest"}
-            className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/50 transition-colors resize-none"
+            className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/50 transition-colors resize-none"
           />
         </div>
         {mode === "sick" && (

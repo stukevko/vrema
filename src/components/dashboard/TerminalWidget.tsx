@@ -120,7 +120,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
   })();
 
   return (
-    <div className="rounded-3xl bg-card/90 backdrop-blur-md border border-border p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+    <div className="rounded-3xl bg-card/90 backdrop-blur-md border border-border p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-semibold text-lg">Terminal</h2>
         {gpsFeatureEnabled && (
@@ -241,7 +241,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
               className={`w-full rounded-2xl border px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
                 activeLog.isOnBreak
                   ? "border-primary/40 bg-primary/15 text-primary hover:bg-primary/20"
-                  : "border-border bg-card text-white/80 hover:bg-card/80"
+                  : "border-border bg-card text-foreground hover:bg-card/80"
               }`}
             >
               <span className="inline-flex items-center gap-1">
@@ -255,7 +255,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
         {error && (
           <div className="mt-3 space-y-1 text-center">
             <p className="text-xs text-red-400">{error}</p>
-            {errorHint(error) && <p className="text-[11px] text-white/45">{errorHint(error)}</p>}
+            {errorHint(error) && <p className="text-[11px] text-foreground/45">{errorHint(error)}</p>}
           </div>
         )}
       </div>

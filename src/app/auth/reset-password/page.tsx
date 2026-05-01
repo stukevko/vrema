@@ -54,7 +54,7 @@ function ResetPasswordForm() {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-card border border-white/5 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
           <h1 className="text-xl font-bold mb-1">Neues Passwort setzen</h1>
           <p className="text-muted-foreground text-sm mb-6">Wähle ein sicheres Passwort mit mindestens 8 Zeichen.</p>
 
@@ -99,7 +99,7 @@ function ResetPasswordForm() {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-white/5 text-center">
+          <div className="mt-6 pt-6 border-t border-border text-center">
             <Link href="/auth/login" className="text-sm text-primary hover:underline">
               Zurück zum Login
             </Link>

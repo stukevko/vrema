@@ -72,7 +72,7 @@ export function CompanySettingsForm({ company }: Props) {
   };
 
   return (
-    <div className="rounded-2xl bg-card backdrop-blur-xl border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-6">
+    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-6">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
@@ -84,7 +84,7 @@ export function CompanySettingsForm({ company }: Props) {
               type="text"
               defaultValue={company.name}
               required
-              className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
+              className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
             />
           </div>
           <div>
@@ -94,7 +94,7 @@ export function CompanySettingsForm({ company }: Props) {
             <input
               value={company.slug}
               readOnly
-              className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-muted-foreground text-sm font-sans cursor-not-allowed"
+              className="w-full px-3 py-2.5 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-muted-foreground text-sm font-sans cursor-not-allowed"
             />
           </div>
         </div>
@@ -105,7 +105,7 @@ export function CompanySettingsForm({ company }: Props) {
           <select
             value={shiftCycleWeeks}
             onChange={(e) => setShiftCycleWeeks(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
+            className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
           >
             <option value="1">1 Woche (Standard)</option>
             <option value="2">2 Wochen</option>
@@ -129,7 +129,7 @@ export function CompanySettingsForm({ company }: Props) {
               min={0.05}
               max={50}
               step={0.05}
-              className="w-full px-3 py-2.5 pr-12 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
+              className="w-full px-3 py-2.5 pr-12 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-sans">km</span>
           </div>
@@ -138,7 +138,7 @@ export function CompanySettingsForm({ company }: Props) {
           </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <div className="rounded-xl border border-border bg-white p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest block">
               Standort auf Karte markieren
@@ -178,7 +178,7 @@ export function CompanySettingsForm({ company }: Props) {
               value={geoLatitude}
               onChange={(e) => setGeoLatitude(e.target.value)}
               placeholder="49.3170"
-            className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
+            className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
             />
           </div>
           <div>
@@ -192,7 +192,7 @@ export function CompanySettingsForm({ company }: Props) {
               value={geoLongitude}
               onChange={(e) => setGeoLongitude(e.target.value)}
               placeholder="8.4370"
-            className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors"
+            className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
             />
           </div>
         </div>
@@ -201,9 +201,9 @@ export function CompanySettingsForm({ company }: Props) {
           <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
             Aktueller Plan
           </label>
-          <div className="px-3 py-2.5 rounded-xl bg-card border border-border flex items-center justify-between">
+          <div className="px-3 py-2.5 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex items-center justify-between">
             <span className="text-sm font-sans text-primary font-bold">{company.plan}</span>
-            <a href="/dashboard/billing" className="text-xs text-muted-foreground hover:text-white transition-colors font-sans">
+            <a href="/dashboard/billing" className="text-xs text-muted-foreground hover:text-foreground transition-colors font-sans">
               Upgrade →
             </a>
           </div>

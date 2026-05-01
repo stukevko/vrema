@@ -94,11 +94,11 @@ export function PartnerDashboardClient({
           </button>
         </div>
 
-        <div className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
           <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Dein Ref-Link</p>
           <div className="flex flex-wrap items-center gap-2">
             <code className="rounded-2xl border border-border bg-background px-2 py-1.5 text-xs text-slate-900 break-all">{refUrl}</code>
-            <button onClick={() => void copy(refUrl)} className="inline-flex items-center gap-1 rounded-2xl border border-border bg-card px-2.5 py-1.5 text-xs text-slate-900 hover:bg-card/70">
+            <button onClick={() => void copy(refUrl)} className="inline-flex items-center gap-1 rounded-2xl border border-border bg-white px-2.5 py-1.5 text-xs text-slate-900 hover:bg-card/70">
               <Copy className="w-3 h-3" />
               Link kopieren
             </button>
@@ -115,13 +115,13 @@ export function PartnerDashboardClient({
             <p className="text-xs text-slate-900/45">Verfügbares Guthaben</p>
             <p className="text-lg font-semibold text-emerald-200 tabular-nums">{formatCents(availableCents, "eur")}</p>
           </div>
-          <div className="rounded-2xl border border-white/5 bg-card p-4">
+          <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-xs text-slate-900/45">Ausgezahlt</p>
             <p className="text-lg font-semibold text-slate-900/85 tabular-nums">{formatCents(paidCents, "eur")}</p>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-base font-semibold">Deine Erfolgs-Statistik</h2>
@@ -129,20 +129,20 @@ export function PartnerDashboardClient({
             </div>
             <button
               type="button"
-              className="rounded-2xl border border-border bg-card px-4 py-2 text-sm text-slate-900 hover:bg-card/70"
+              className="rounded-2xl border border-border bg-white px-4 py-2 text-sm text-slate-900 hover:bg-card/70"
               onClick={() => window.alert("Hier findest du bald Logos, Screenshots und Texte für WhatsApp/Instagram.")}
             >
               Werbemittel-Kit
             </button>
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/5 bg-background p-4">
+            <div className="rounded-2xl border border-border bg-background p-4">
               <p className="text-xs text-slate-900/45">Starter-Abschlüsse</p>
               <p className="mt-1 text-sm text-slate-900 tabular-nums">
                 {starterDeals.length} (insg. {formatCents(starterTotalCents, "eur")})
               </p>
             </div>
-            <div className="rounded-2xl border border-white/5 bg-background p-4">
+            <div className="rounded-2xl border border-border bg-background p-4">
               <p className="text-xs text-slate-900/45">Business-Abschlüsse</p>
               <p className="mt-1 text-sm text-slate-900 tabular-nums">
                 {businessDeals.length} (insg. {formatCents(businessTotalCents, "eur")})
@@ -163,7 +163,7 @@ export function PartnerDashboardClient({
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/5 bg-card overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
           <div className="px-4 py-3 border-b border-border">
             <h2 className="font-semibold">Letzte Abschlüsse</h2>
           </div>
@@ -194,7 +194,7 @@ export function PartnerDashboardClient({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/5 bg-card overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
           <div className="px-4 py-3 border-b border-border">
             <h2 className="font-semibold">Alle Abschlüsse</h2>
           </div>

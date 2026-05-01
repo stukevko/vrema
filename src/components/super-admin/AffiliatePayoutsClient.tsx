@@ -372,7 +372,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
                 Ref-Link für den Partner
               </p>
               <div className="flex flex-wrap items-center gap-2">
-                <code className="text-[11px] text-white/80 break-all bg-card px-2 py-1.5 rounded-lg border border-border">
+                <code className="text-[11px] text-white/80 break-all bg-white px-2 py-1.5 rounded-lg border border-border">
                   {lastCreated.refUrl}
                 </code>
                 <button
@@ -386,7 +386,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
                 <button
                   type="button"
                   onClick={() => void copyText(lastCreated.code)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-[11px] text-white/60 hover:bg-card/80"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-white px-2.5 py-1.5 text-[11px] text-white/60 hover:bg-card/80"
                 >
                   Code: {lastCreated.code}
                 </button>

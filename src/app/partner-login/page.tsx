@@ -43,7 +43,7 @@ export default function PartnerLoginPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-card border border-white/5 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
           <h1 className="text-xl font-bold mb-1">Partner Login</h1>
           <p className="text-muted-foreground text-sm mb-8">Melde dich mit deinem Partnerzugang an.</p>
 

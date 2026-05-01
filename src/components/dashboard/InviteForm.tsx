@@ -50,9 +50,9 @@ export function InviteForm() {
   };
 
   return (
-    <div className="rounded-2xl bg-card backdrop-blur-xl border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden">
+    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-white/5 flex items-center gap-3">
+      <div className="px-5 py-4 border-b border-border flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
           <UserPlus className="w-4 h-4 text-[#22c55e]" />
         </div>
@@ -72,10 +72,10 @@ export function InviteForm() {
             >
               <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
                 <p className="text-xs text-primary font-sans mb-3">✓ {result.name} wurde angelegt</p>
-                <div className="rounded-lg bg-card border border-white/5 p-3 font-sans text-xs space-y-1.5">
+                <div className="rounded-lg bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-3 font-sans text-xs space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-muted-foreground">email:</span>
-                    <span className="text-white truncate">{result.email}</span>
+                    <span className="text-foreground truncate">{result.email}</span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-muted-foreground">passwort:</span>
@@ -127,7 +127,7 @@ export function InviteForm() {
                     type={f.type}
                     required
                     placeholder={f.placeholder}
-                    className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 transition-colors font-sans"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 transition-colors font-sans"
                   />
                 </div>
               ))}
@@ -138,7 +138,7 @@ export function InviteForm() {
                   <select
                     name="role"
                     defaultValue="EMPLOYEE"
-                    className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans appearance-none"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans appearance-none"
                   >
                     <option value="EMPLOYEE">Mitarbeiter</option>
                     <option value="MANAGER">Manager</option>
@@ -152,7 +152,7 @@ export function InviteForm() {
                     defaultValue={40}
                     min={1}
                     max={60}
-                    className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans"
                   />
                 </div>
               </div>

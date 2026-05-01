@@ -55,11 +55,11 @@ export default async function SetupPage({
   const paymentState = (params.payment as "required" | "ok" | "cancel" | "error" | undefined) ?? null;
 
   return (
-    <div className="min-h-screen bg-background text-white px-4 py-10">
-      <div className="mx-auto w-full max-w-xl rounded-2xl border border-white/5 bg-card backdrop-blur-xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+    <div className="min-h-screen bg-background text-foreground px-4 py-10">
+      <div className="mx-auto w-full max-w-xl rounded-2xl border border-border bg-card backdrop-blur-xl p-6 md:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
         <p className="mb-2 text-xs font-sans uppercase tracking-widest text-primary">Onboarding</p>
         <h1 className="text-2xl font-bold">Kurz einrichten, dann geht es los</h1>
-        <p className="mt-2 text-sm text-white/50">
+        <p className="mt-2 text-sm text-muted-foreground">
           Wir bringen dich direkt ins Dashboard. Billing bleibt als optionaler Menupunkt bestehen.
         </p>
 
@@ -107,7 +107,7 @@ export default async function SetupPage({
               required
               defaultValue={company?.name ?? ""}
               placeholder="Musterfirma GmbH"
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-white placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors"
             />
           </div>
 
@@ -119,7 +119,7 @@ export default async function SetupPage({
               min={1}
               step={1}
               placeholder="z. B. 8"
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-white placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors"
             />
             <p className="mt-1 text-[11px] text-muted-foreground">Diese Angabe hilft bei der Einordnung deines Setups.</p>
           </div>

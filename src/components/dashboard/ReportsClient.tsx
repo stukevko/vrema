@@ -138,7 +138,7 @@ function PlanGateButton({
       onClick={locked ? onLockedClick : onClick}
       className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all active:scale-95 border ${
         locked
-          ? "bg-card backdrop-blur-xl border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-muted-foreground cursor-pointer md:hover:bg-card/70"
+          ? "bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-muted-foreground cursor-pointer md:hover:bg-card/70"
           : "bg-primary border-primary text-black md:hover:bg-primary/90"
       }`}
     >
@@ -784,8 +784,8 @@ export function ReportsClient({
               onClick={plan === "BUSINESS" || plan === "ENTERPRISE" ? () => setShowDatevModal(true) : lockedMsg}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 border ${
                 plan === "BUSINESS" || plan === "ENTERPRISE"
-                  ? "bg-secondary/70 border border-border text-white/85 md:hover:bg-secondary/80"
-                  : "bg-card backdrop-blur-xl border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-muted-foreground cursor-pointer md:hover:bg-card/70"
+                  ? "bg-secondary/70 border border-border text-foreground/85 md:hover:bg-secondary/80"
+                  : "bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-muted-foreground cursor-pointer md:hover:bg-card/70"
               }`}
             >
               {plan === "BUSINESS" || plan === "ENTERPRISE" ? (
@@ -806,7 +806,7 @@ export function ReportsClient({
             { label: "Ø pro Eintrag", value: logs.length ? formatMins(totalMinutes / logs.length) : "–", color: "#86efac" },
             { label: "GPS-gestempelt", value: logs.filter((l) => l.latitude).length.toString(), color: "#f59e0b" },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl bg-card border border-white/5 p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all md:hover:bg-card/70">
+            <div key={s.label} className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all md:hover:bg-card/70">
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{s.label}</p>
               <p className="text-xl font-bold" style={{ color: s.color }}>{s.value}</p>
             </div>
@@ -814,7 +814,7 @@ export function ReportsClient({
         </div>
 
         {isManager && (
-          <div className="rounded-2xl border border-white/5 bg-card px-4 py-3 text-xs text-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+          <div className="rounded-2xl border border-border bg-white px-4 py-3 text-xs text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
             Status-Legende: <span className="text-emerald-200">Pünktlich</span> ·{" "}
             <span className="text-amber-200">Zu spät (&gt;15 Min nach Schichtbeginn)</span> ·{" "}
             <span className="text-red-200">Fehlend (automatisch per Cron)</span> ·{" "}
@@ -822,7 +822,7 @@ export function ReportsClient({
           </div>
         )}
 
-        <div className="rounded-2xl bg-card border border-white/5 p-4 md:p-5 space-y-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-4 md:p-5 space-y-3 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Zeitkorrektur-Anträge</h2>
             <span className="text-[11px] text-muted-foreground">
@@ -832,8 +832,8 @@ export function ReportsClient({
 
           {!isManager && (
             <div className="grid gap-2 sm:grid-cols-2">
-              <div className="sm:col-span-2 rounded-2xl border border-white/5 bg-card px-4 py-3">
-                <p className="text-[11px] text-white/45 mb-2">Schritt 1: Was willst du korrigieren?</p>
+              <div className="sm:col-span-2 rounded-2xl border border-border bg-white px-4 py-3">
+                <p className="text-[11px] text-foreground/45 mb-2">Schritt 1: Was willst du korrigieren?</p>
                 <div className="flex flex-wrap gap-3 text-xs">
                   <label className="inline-flex items-center gap-2 cursor-pointer">
                     <input
@@ -871,7 +871,7 @@ export function ReportsClient({
                     const selected = logs.find((l) => l.id === id);
                     if (selected) prefillFromLog(selected);
                   }}
-                  className="sm:col-span-2 rounded-2xl border border-white/5 bg-card px-4 py-2 text-sm"
+                  className="sm:col-span-2 rounded-2xl border border-border bg-white px-4 py-2 text-sm"
                 >
                   <option value="">Bitte Eintrag wählen…</option>
                   {logs.slice(0, 25).map((log) => (
@@ -881,21 +881,21 @@ export function ReportsClient({
                   ))}
                 </select>
               )}
-              <label className="text-[11px] text-white/45">{requestMode === "existing" ? "Schritt 2: Neue Einstempelzeit" : "Schritt 2: Einstempelzeit"}</label>
-              <label className="text-[11px] text-white/45">{requestMode === "existing" ? "Neue Ausstempelzeit (optional)" : "Ausstempelzeit (optional)"}</label>
+              <label className="text-[11px] text-foreground/45">{requestMode === "existing" ? "Schritt 2: Neue Einstempelzeit" : "Schritt 2: Einstempelzeit"}</label>
+              <label className="text-[11px] text-foreground/45">{requestMode === "existing" ? "Neue Ausstempelzeit (optional)" : "Ausstempelzeit (optional)"}</label>
               <input
                 type="datetime-local"
                 value={requestClockIn}
                 onChange={(e) => setRequestClockIn(e.target.value)}
                 placeholder="Einstempelzeit"
-                className="rounded-2xl border border-white/5 bg-card px-4 py-2 text-sm"
+                className="rounded-2xl border border-border bg-white px-4 py-2 text-sm"
               />
               <input
                 type="datetime-local"
                 value={requestClockOut}
                 onChange={(e) => setRequestClockOut(e.target.value)}
                 placeholder="Ausstempelzeit (optional)"
-                className="rounded-2xl border border-white/5 bg-card px-4 py-2 text-sm"
+                className="rounded-2xl border border-border bg-white px-4 py-2 text-sm"
               />
               <input
                 type="number"
@@ -904,21 +904,21 @@ export function ReportsClient({
                 value={requestBreakMins}
                 onChange={(e) => setRequestBreakMins(e.target.value)}
                 placeholder="Pause in Minuten (z.B. 30)"
-                className="rounded-2xl border border-white/5 bg-card px-4 py-2 text-sm"
+                className="rounded-2xl border border-border bg-white px-4 py-2 text-sm"
               />
               <input
                 type="text"
                 value={requestReason}
                 onChange={(e) => setRequestReason(e.target.value)}
                 placeholder="Schritt 3: Begründung (Pflicht)"
-                className="rounded-2xl border border-white/5 bg-card px-4 py-2 text-sm sm:col-span-2"
+                className="rounded-2xl border border-border bg-white px-4 py-2 text-sm sm:col-span-2"
               />
               <input
                 type="text"
                 value={requestNote}
                 onChange={(e) => setRequestNote(e.target.value)}
                 placeholder="Notiz (optional)"
-                className="rounded-2xl border border-white/5 bg-card px-4 py-2 text-sm sm:col-span-2"
+                className="rounded-2xl border border-border bg-white px-4 py-2 text-sm sm:col-span-2"
               />
               <div className="sm:col-span-2 flex justify-end">
                 <button
@@ -938,10 +938,10 @@ export function ReportsClient({
               <p className="text-xs text-muted-foreground">Alles ruhig hier. Genieße die Pause! ☕</p>
             ) : (
               correctionRequests.map((req) => (
-                <div key={req.id} className="rounded-2xl border border-white/5 bg-card p-4 text-xs shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+                <div key={req.id} className="rounded-2xl border border-border bg-card p-4 text-xs shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{req.userName}</span>
-                    <span className="text-white/45">{new Date(req.requestedClockIn).toLocaleString("de-DE")}</span>
+                    <span className="text-foreground/45">{new Date(req.requestedClockIn).toLocaleString("de-DE")}</span>
                     <span
                       className={`rounded-full px-2 py-0.5 ${
                         req.status === "PENDING"
@@ -954,10 +954,10 @@ export function ReportsClient({
                       {req.status}
                     </span>
                   </div>
-                  <p className="mt-1 text-white/80">Grund: {req.reason}</p>
+                  <p className="mt-1 text-foreground">Grund: {req.reason}</p>
                   {req.requestedNote && <p className="mt-1 text-muted-foreground">Notiz: {req.requestedNote}</p>}
                   {req.status !== "PENDING" && req.reviewerName && (
-                    <p className="mt-1 text-white/45">Bearbeitet von: {req.reviewerName}</p>
+                    <p className="mt-1 text-foreground/45">Bearbeitet von: {req.reviewerName}</p>
                   )}
                   {isManager && req.status === "PENDING" && (
                     <div className="mt-2 flex gap-2">
@@ -986,7 +986,7 @@ export function ReportsClient({
         </div>
 
         {/* Table */}
-        <div className="rounded-2xl bg-card border border-white/5 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
           <div className="px-4 md:px-5 py-3 bg-card/80 flex items-center gap-2">
             <FileText className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-semibold">Work-Logs – {month}</span>
@@ -994,11 +994,11 @@ export function ReportsClient({
 
           {logs.length === 0 ? (
             <div className="py-16 text-center">
-              <Clock className="w-8 h-8 text-white/10 mx-auto mb-3" />
+              <Clock className="w-8 h-8 text-foreground/10 mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">Alles ruhig hier. Genieße die Pause! ☕</p>
               <a
                 href="/dashboard#terminal-widget"
-                className="mt-4 inline-flex min-h-[44px] items-center rounded-2xl border border-border px-4 py-2 text-sm text-white/80 transition-all active:scale-95 md:hover:bg-card/70"
+                className="mt-4 inline-flex min-h-[44px] items-center rounded-2xl border border-border px-4 py-2 text-sm text-foreground transition-all active:scale-95 md:hover:bg-card/70"
               >
                 Erste Zeit erfassen
               </a>
@@ -1042,7 +1042,7 @@ export function ReportsClient({
                       >
                         {isManager && (
                           <td className="px-5 py-4">
-                            <span className="text-white/80 font-medium">{log.userName}</span>
+                            <span className="text-foreground font-medium">{log.userName}</span>
                           </td>
                         )}
                         <td className="px-5 py-4 tabular-nums text-muted-foreground text-xs">
@@ -1051,7 +1051,7 @@ export function ReportsClient({
                         <td className="px-5 py-4 tabular-nums text-[#22c55e]">
                           {clockInDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
                         </td>
-                        <td className="px-5 py-4 tabular-nums text-white/80">
+                        <td className="px-5 py-4 tabular-nums text-foreground">
                           {log.clockOut
                             ? new Date(log.clockOut).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
                             : <span className="text-amber-400 animate-pulse">läuft…</span>}
@@ -1059,7 +1059,7 @@ export function ReportsClient({
                         <td className="px-5 py-4 tabular-nums text-muted-foreground text-xs">
                           {log.breakMins > 0 ? `${log.breakMins}min` : "–"}
                         </td>
-                        <td className="px-5 py-4 tabular-nums font-bold text-white">
+                        <td className="px-5 py-4 tabular-nums font-bold text-foreground">
                           {dur !== null ? formatMins(dur) : "–"}
                         </td>
                         <td className="px-5 py-4">
@@ -1083,7 +1083,7 @@ export function ReportsClient({
                               <MapPin className="w-3.5 h-3.5 text-[#22c55e]" />
                             </span>
                           ) : (
-                            <span className="text-white/10">–</span>
+                            <span className="text-foreground/10">–</span>
                           )}
                         </td>
                         <td className="px-5 py-4 text-muted-foreground text-xs max-w-[120px] truncate">
@@ -1101,7 +1101,7 @@ export function ReportsClient({
                                 type="button"
                                 onClick={() => handleEdit(log)}
                                 disabled={isSaving}
-                                className="rounded-xl border border-border px-2.5 py-1 text-[11px] text-white/80 md:hover:bg-card/70 transition-all active:scale-95 disabled:opacity-50"
+                                className="rounded-xl border border-border px-2.5 py-1 text-[11px] text-foreground md:hover:bg-card/70 transition-all active:scale-95 disabled:opacity-50"
                               >
                                 Bearbeiten
                               </button>
@@ -1139,7 +1139,7 @@ export function ReportsClient({
 
         {/* Upgrade hint for locked features */}
         {plan === "STARTER" && (
-          <div className="rounded-2xl bg-card border border-white/5 p-5 flex items-center justify-between gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+          <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-5 flex items-center justify-between gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
             <div>
               <p className="font-semibold text-sm">PDF-Export & Lohnbüro-Versand freischalten</p>
               <p className="text-xs text-muted-foreground mt-1">
@@ -1158,10 +1158,10 @@ export function ReportsClient({
 
       <ToastContainer toasts={toasts} remove={remove} />
       {editingLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4">
-          <div className="w-full max-w-xl rounded-2xl border border-white/5 bg-card p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 px-4">
+          <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
             <h3 className="text-base font-semibold">Zeiteintrag bearbeiten</h3>
-            <p className="mt-1 text-xs text-white/45">
+            <p className="mt-1 text-xs text-foreground/45">
               Für Nachvollziehbarkeit wird die Änderung automatisch als Manager-Edit protokolliert.
             </p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -1169,13 +1169,13 @@ export function ReportsClient({
                 type="datetime-local"
                 value={editClockIn}
                 onChange={(e) => setEditClockIn(e.target.value)}
-                className="rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-white outline-none focus:border-primary/50"
+                className="rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
               />
               <input
                 type="datetime-local"
                 value={editClockOut}
                 onChange={(e) => setEditClockOut(e.target.value)}
-                className="rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-white outline-none focus:border-primary/50"
+                className="rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
               />
               <input
                 type="number"
@@ -1184,12 +1184,12 @@ export function ReportsClient({
                 value={editBreakMins}
                 onChange={(e) => setEditBreakMins(e.target.value)}
                 placeholder="Pause in Minuten"
-                className="rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-white outline-none focus:border-primary/50"
+                className="rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
               />
               <select
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value as LogRow["status"])}
-                className="rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-white outline-none focus:border-primary/50"
+                className="rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
               >
                 <option value="ON_TIME">Pünktlich</option>
                 <option value="LATE">Zu spät</option>
@@ -1201,21 +1201,21 @@ export function ReportsClient({
                 value={editReason}
                 onChange={(e) => setEditReason(e.target.value)}
                 placeholder="Grund der Änderung (Pflicht)"
-                className="sm:col-span-2 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-white outline-none focus:border-primary/50"
+                className="sm:col-span-2 rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
               />
               <input
                 type="text"
                 value={editNote}
                 onChange={(e) => setEditNote(e.target.value)}
                 placeholder="Notiz (optional)"
-                className="sm:col-span-2 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-white outline-none focus:border-primary/50"
+                className="sm:col-span-2 rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
               />
             </div>
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setEditingLog(null)}
-                className="rounded-xl border border-border px-3 py-2 text-xs text-white/80 md:hover:bg-card/70 transition-all active:scale-95"
+                className="rounded-xl border border-border px-3 py-2 text-xs text-foreground md:hover:bg-card/70 transition-all active:scale-95"
               >
                 Abbrechen
               </button>
@@ -1232,23 +1232,23 @@ export function ReportsClient({
         </div>
       )}
       {showPayrollModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/5 bg-card p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
             <h3 className="text-base font-semibold">An Lohnbüro senden</h3>
-            <p className="mt-1 text-xs text-white/45">Der aktuelle PDF-Report wird als Anhang per E-Mail versendet.</p>
+            <p className="mt-1 text-xs text-foreground/45">Der aktuelle PDF-Report wird als Anhang per E-Mail versendet.</p>
             <label className="mt-4 block text-xs text-muted-foreground">E-Mail Lohnbüro (mehrere mit ; trennen)</label>
             <input
               type="text"
               value={payrollEmail}
               onChange={(e) => setPayrollEmail(e.target.value)}
               placeholder="lohnbuero@beispiel.de; chef@beispiel.de"
-              className="mt-1 w-full rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-white outline-none focus:border-primary/50"
+              className="mt-1 w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
             />
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowPayrollModal(false)}
-                className="rounded-xl border border-border px-3 py-2 text-xs text-white/80 md:hover:bg-card/70 transition-all active:scale-95"
+                className="rounded-xl border border-border px-3 py-2 text-xs text-foreground md:hover:bg-card/70 transition-all active:scale-95"
               >
                 Abbrechen
               </button>
@@ -1267,10 +1267,10 @@ export function ReportsClient({
 
       <Dialog.Root open={showDatevModal} onOpenChange={setShowDatevModal}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-background/80 px-4" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/5 bg-card p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-white/70 px-4" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
             <Dialog.Title className="text-base font-semibold">DATEV Lohn-Export</Dialog.Title>
-            <p className="mt-1 text-xs text-white/45">
+            <p className="mt-1 text-xs text-foreground/45">
               Dieser Export generiert ein DATEV-konformes CSV-Format inklusive Lohnarten (001/002) und Pausen-Abzug.
             </p>
 
@@ -1280,7 +1280,7 @@ export function ReportsClient({
               value={beraterNummer}
               onChange={(e) => setBeraterNummer(e.target.value)}
               placeholder="z.B. 12345"
-              className="mt-1 w-full rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-white outline-none focus:border-primary/50"
+              className="mt-1 w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
             />
 
             <label className="mt-4 block text-xs text-muted-foreground">Mandantennummer</label>
@@ -1289,7 +1289,7 @@ export function ReportsClient({
               value={mandantenNummer}
               onChange={(e) => setMandantenNummer(e.target.value)}
               placeholder="z.B. 67890"
-              className="mt-1 w-full rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-white outline-none focus:border-primary/50"
+              className="mt-1 w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
             />
 
             <label className="mt-4 block text-xs text-muted-foreground">Abrechnungsmonat</label>
@@ -1298,14 +1298,14 @@ export function ReportsClient({
               value={abrechnungsMonat}
               onChange={(e) => setAbrechnungsMonat(e.target.value)}
               placeholder="04/2026"
-              className="mt-1 w-full rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-white outline-none focus:border-primary/50"
+              className="mt-1 w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
             />
 
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowDatevModal(false)}
-                className="rounded-xl border border-border px-3 py-2 text-xs text-white/80 md:hover:bg-card/70 transition-all active:scale-95"
+                className="rounded-xl border border-border px-3 py-2 text-xs text-foreground md:hover:bg-card/70 transition-all active:scale-95"
               >
                 Abbrechen
               </button>

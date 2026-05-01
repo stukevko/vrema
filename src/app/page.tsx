@@ -65,7 +65,7 @@ function Cursor({ show = true }: { show?: boolean }) {
 // ─── Terminal window component ────────────────────────────────────────────────
 function TerminalWindow({ title = "vrema — zsh", children }: { title?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-3xl overflow-hidden border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] bg-card/90 backdrop-blur-md">
+    <div className="rounded-3xl overflow-hidden border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] bg-card/90 backdrop-blur-md">
       <div className="flex items-center gap-2 px-4 py-3 bg-card border-b border-border">
         <span className="w-3 h-3 rounded-full bg-red-400" />
         <span className="w-3 h-3 rounded-full bg-yellow-400" />
@@ -217,7 +217,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-white overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <Script
         id="ld-json-vrema"
         type="application/ld+json"
@@ -230,7 +230,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/[0.08] bg-background/90 backdrop-blur-2xl">
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-border bg-white/70 backdrop-blur-2xl">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image src="/vremalogo.png" alt="Vrema Logo" width={52} height={52} className="-my-2" />
@@ -241,17 +241,17 @@ export default function LandingPage() {
           </div>
 
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-            <a href="#features" className="hover:text-white transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-white transition-colors">Preise</a>
+            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
+            <a href="#pricing" className="hover:text-foreground transition-colors">Preise</a>
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/auth/login" className="text-sm text-muted-foreground hover:text-white transition-colors px-3 py-1.5 rounded-xl hover:bg-card">
+            <Link href="/auth/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-xl hover:bg-card">
               Anmelden
             </Link>
             <Link
               href="/auth/register"
-              className="text-sm px-4 py-2 rounded-xl bg-card border border-white/5 text-white font-semibold hover:bg-card/70 transition-all"
+              className="text-sm px-4 py-2 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-foreground font-semibold hover:bg-card/70 transition-all"
             >
               Registrieren
             </Link>
@@ -283,7 +283,7 @@ export default function LandingPage() {
 
               <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-md">
                 Stempeluhr, Auswertungen und GPS-Tracking in einer Anwendung.{" "}
-                <span className="text-white/70">Gebaut für Handwerker, Dienstleister & Teams.</span>
+                <span className="text-muted-foreground">Gebaut für Handwerker, Dienstleister & Teams.</span>
               </p>
 
               <div className="flex items-center gap-4 flex-wrap">
@@ -296,7 +296,7 @@ export default function LandingPage() {
                 </Link>
                 <a
                   href="#pricing"
-                  className="flex items-center gap-2 px-7 py-3.5 rounded-2xl border border-border text-white/70 font-medium hover:text-white hover:border-border transition-all"
+                  className="flex items-center gap-2 px-7 py-3.5 rounded-2xl border border-border text-muted-foreground font-medium hover:text-foreground hover:border-border transition-all"
                 >
                   Pläne ansehen
                 </a>
@@ -310,7 +310,7 @@ export default function LandingPage() {
                 ].map((seal) => (
                   <div
                     key={seal.label}
-                    className="rounded-2xl border border-white/5 bg-card/50 px-3 py-2 backdrop-blur-sm"
+                    className="rounded-2xl border border-border bg-card/50 px-3 py-2 backdrop-blur-sm"
                   >
                     <p className="text-[11px] font-semibold text-muted-foreground">{seal.label}</p>
                     <p className="mt-0.5 text-[10px] text-muted-foreground">{seal.text}</p>
@@ -345,7 +345,7 @@ export default function LandingPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className={
-                          isCmd ? "text-white" :
+                          isCmd ? "text-foreground" :
                           isSuccess ? "text-[#22c55e]" :
                           isInfo ? "text-[#60a5fa]" :
                           "text-muted-foreground"
@@ -356,7 +356,7 @@ export default function LandingPage() {
                     );
                   })}
                   {!done && (
-                    <div className={inProgress.startsWith("$") ? "text-white" : inProgress.startsWith("✓") ? "text-[#22c55e]" : "text-[#60a5fa]"}>
+                    <div className={inProgress.startsWith("$") ? "text-foreground" : inProgress.startsWith("✓") ? "text-[#22c55e]" : "text-[#60a5fa]"}>
                       {inProgress}
                       <Cursor show={true} />
                     </div>
@@ -377,7 +377,7 @@ export default function LandingPage() {
                   { label: "Team aktiv", value: "8 / 12", color: "#60a5fa" },
                   { label: "Offene Anträge", value: "2 Urlaub", color: "#f59e0b" },
                 ].map((badge) => (
-                  <div key={badge.label} className="rounded-2xl bg-card border border-white/5 px-4 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+                  <div key={badge.label} className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{badge.label}</p>
                     <p className="font-bold text-sm tabular-nums" style={{ color: badge.color }}>{badge.value}</p>
                   </div>
@@ -389,7 +389,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── STATS BAR ───────────────────────────────────────────────────────── */}
-      <section className="py-10 px-6 border-y border-white/[0.06]">
+      <section className="py-10 px-6 border-y border-border">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
           {STATS.map((s) => <AnimatedStat key={s.label} {...s} />)}
         </div>
@@ -420,7 +420,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className="group relative rounded-3xl bg-card border border-white/5 p-7 hover:border-emerald-300/20 transition-all overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+                className="group relative rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-7 hover:border-emerald-300/20 transition-all overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)]"
               >
                 {/* hover glow */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(ellipse_at_0%_0%,rgba(34,197,94,0.04),transparent_60%)]" />
@@ -432,7 +432,7 @@ export default function LandingPage() {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 group-hover:border-[#22c55e]/20 transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-border flex items-center justify-center shrink-0 group-hover:border-[#22c55e]/20 transition-colors">
                       <feature.icon className="w-5 h-5 text-muted-foreground group-hover:text-[#22c55e] transition-colors" />
                     </div>
                     <div>
@@ -448,7 +448,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PHILOSOPHY ──────────────────────────────────────────────────────── */}
-      <section className="py-24 px-6 border-t border-white/[0.06]">
+      <section className="py-24 px-6 border-t border-border">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -473,7 +473,7 @@ export default function LandingPage() {
                   { num: "02", title: "Transparent & Fair", desc: "Feste Preise, klare Meilensteine, keine versteckten Kosten." },
                   { num: "03", title: "Lokale Verwurzelung", desc: "Speyer, Rhein-Neckar, Pfalz. Ein Handschlag zählt mehr als jedes SLA." },
                 ].map((item) => (
-                  <div key={item.num} className="flex gap-4 p-5 rounded-2xl bg-card border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+                  <div key={item.num} className="flex gap-4 p-5 rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
                     <span className="text-[#22c55e] text-sm font-bold shrink-0 mt-0.5">{item.num}</span>
                     <div>
                       <p className="font-semibold text-sm mb-1">{item.title}</p>
@@ -502,7 +502,7 @@ export default function LandingPage() {
                   </div>
                   <div className="grid grid-cols-3 gap-3 mt-4">
                     {[{ v: "10+", l: "Jahre" }, { v: "Full", l: "Stack" }, { v: "5★", l: "Feedback" }].map((s) => (
-                      <div key={s.l} className="text-center p-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                      <div key={s.l} className="text-center p-2 rounded-xl bg-white/[0.03] border border-border">
                         <p className="text-[#22c55e] font-bold text-lg">{s.v}</p>
                         <p className="text-muted-foreground text-xs">{s.l}</p>
                       </div>
@@ -524,7 +524,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ─────────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-24 px-6 border-t border-white/[0.06]">
+      <section id="pricing" className="py-24 px-6 border-t border-border">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -535,38 +535,38 @@ export default function LandingPage() {
             <p className="text-xs text-[#22c55e] uppercase tracking-widest mb-4">03 / Preise</p>
             <h2 className="text-4xl md:text-5xl font-black mb-4">Starten.</h2>
             <p className="text-muted-foreground">Kostenlos testen. Keine Kreditkarte. Keine Verpflichtungen.</p>
-            <p className="mt-2 text-sm text-white/70">
+            <p className="mt-2 text-sm text-muted-foreground">
               Egal ob 5 oder 50 Mitarbeiter - ein Preis. Keine versteckten Kosten pro Nutzer.
             </p>
           </motion.div>
 
           <div className="mb-10 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/5 bg-card p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
               <div className="flex items-center gap-2 text-emerald-200">
                 <ShieldCheck className="h-4 w-4" />
                 <p className="text-sm font-semibold">DATEV-Ready</p>
               </div>
-              <p className="mt-1 text-sm text-white/70">Exportformate für Ihr Lohnbüro optimiert.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Exportformate für Ihr Lohnbüro optimiert.</p>
             </div>
-            <div className="rounded-2xl border border-white/5 bg-card p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
               <div className="flex items-center gap-2 text-emerald-200">
                 <Scale className="h-4 w-4" />
                 <p className="text-sm font-semibold">Revisionssicher</p>
               </div>
-              <p className="mt-1 text-sm text-white/70">Vollständiger Audit-Trail nach GoBD-Standards.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Vollständiger Audit-Trail nach GoBD-Standards.</p>
             </div>
-            <div className="rounded-2xl border border-white/5 bg-card p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
               <div className="flex items-center gap-2 text-emerald-200">
                 <Server className="h-4 w-4" />
                 <p className="text-sm font-semibold">Hosted in Germany</p>
               </div>
-              <p className="mt-1 text-sm text-white/70">100% DSGVO-konform & sicher.</p>
+              <p className="mt-1 text-sm text-muted-foreground">100% DSGVO-konform & sicher.</p>
             </div>
           </div>
 
           {/* Toggle */}
           <div className="flex items-center gap-4 mb-10">
-            <span className={`text-sm transition-colors ${!yearly ? "text-white" : "text-muted-foreground"}`}>monatlich</span>
+            <span className={`text-sm transition-colors ${!yearly ? "text-foreground" : "text-muted-foreground"}`}>monatlich</span>
             <button
               onClick={() => setYearly(!yearly)}
               className={`relative w-12 h-6 rounded-full transition-colors ${yearly ? "bg-primary" : "bg-card"}`}
@@ -578,7 +578,7 @@ export default function LandingPage() {
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               />
             </button>
-            <span className={`text-sm transition-colors ${yearly ? "text-white" : "text-muted-foreground"}`}>
+            <span className={`text-sm transition-colors ${yearly ? "text-foreground" : "text-muted-foreground"}`}>
               jährlich
               <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">-2 Monate</span>
             </span>
@@ -595,7 +595,7 @@ export default function LandingPage() {
                 className={`relative rounded-3xl p-8 border transition-all shadow-2xl shadow-black/20 ${
                   plan.highlight
                     ? "bg-card border-primary/30 shadow-[0_0_40px_rgba(34,197,94,0.07)]"
-                    : "bg-card border-white/5 hover:border-white/15"
+                    : "bg-card border-border hover:border-white/15"
                 }`}
               >
                 {"badge" in plan && plan.badge && (
@@ -642,7 +642,7 @@ export default function LandingPage() {
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
                       <Check className="w-3.5 h-3.5 text-[#22c55e] shrink-0" />
-                      <span className="text-white/70">{f}</span>
+                      <span className="text-muted-foreground">{f}</span>
                     </li>
                   ))}
                   {plan.missing.map((f) => (
@@ -662,7 +662,7 @@ export default function LandingPage() {
                   className={`block w-full text-center py-3 rounded-2xl font-bold text-sm transition-all ${
                     plan.highlight
                       ? "bg-primary text-black hover:bg-primary/90"
-                      : "bg-card border border-white/5 text-white/70 hover:bg-card/70"
+                      : "bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-muted-foreground hover:bg-card/70"
                   }`}
                 >
                   {plan.key === "ENTERPRISE" ? "$ kontakt --plan enterprise" : `$ start --plan ${plan.key.toLowerCase()}`}
@@ -685,7 +685,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ─────────────────────────────────────────────────────────────── */}
-      <section className="py-24 px-6 border-t border-white/[0.06]">
+      <section className="py-24 px-6 border-t border-border">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
@@ -711,7 +711,7 @@ export default function LandingPage() {
                   </Link>
                   <a
                     href="#pricing"
-                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-border text-white/70 font-medium hover:text-white hover:border-border transition-all"
+                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-border text-muted-foreground font-medium hover:text-foreground hover:border-border transition-all"
                   >
                     Pläne & Preise
                     <ChevronRight className="w-4 h-4" />
@@ -723,10 +723,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-16 px-6 border-t border-white/[0.06]">
-        <div className="max-w-4xl mx-auto rounded-3xl border border-emerald-300/20 bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+      <section className="py-16 px-6 border-t border-border">
+        <div className="max-w-4xl mx-auto rounded-3xl border border-emerald-300/20 bg-card p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
           <h3 className="text-2xl font-bold">Werde VREMA-Partner</h3>
-          <p className="mt-2 text-white/70">
+          <p className="mt-2 text-muted-foreground">
             Du kennst Betriebe, die eine moderne Zeiterfassung brauchen? Empfiehl VREMA und erhalte bis zu 15€ pro
             Abschluss. Ohne Haken, direkt in dein Dashboard.
           </p>
@@ -743,7 +743,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ──────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-white/[0.06] py-10 px-6">
+      <footer className="border-t border-border py-10 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <Image src="/vremalogo.png" alt="Vrema Logo" width={46} height={46} className="opacity-60 -my-2" />
@@ -756,30 +756,30 @@ export default function LandingPage() {
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
             <button
               onClick={() => setModal("impressum")}
-              className="hover:text-white transition-colors cursor-pointer"
+              className="hover:text-foreground transition-colors cursor-pointer"
             >
               Impressum
             </button>
             <button
               onClick={() => setModal("datenschutz")}
-              className="hover:text-white transition-colors cursor-pointer"
+              className="hover:text-foreground transition-colors cursor-pointer"
             >
               Datenschutz
             </button>
-            <Link href="/widerruf" className="hover:text-white transition-colors">
+            <Link href="/widerruf" className="hover:text-foreground transition-colors">
               Widerruf
             </Link>
-            <Link href="/cookies" className="hover:text-white transition-colors">
+            <Link href="/cookies" className="hover:text-foreground transition-colors">
               Cookies
             </Link>
-            <Link href="/agb" className="hover:text-white transition-colors">
+            <Link href="/agb" className="hover:text-foreground transition-colors">
               AGB
             </Link>
-            <Link href="/avv" className="hover:text-white transition-colors">
+            <Link href="/avv" className="hover:text-foreground transition-colors">
               AVV
             </Link>
-            <a href="#pricing" className="hover:text-white transition-colors">Preise</a>
-            <Link href="/partner" className="hover:text-white transition-colors">
+            <a href="#pricing" className="hover:text-foreground transition-colors">Preise</a>
+            <Link href="/partner" className="hover:text-foreground transition-colors">
               Partner werden
             </Link>
           </div>
@@ -797,7 +797,7 @@ export default function LandingPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setModal(null)}
-            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-white/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
           >
             <motion.div
               initial={{ opacity: 0, y: 40, scale: 0.96 }}
@@ -807,7 +807,7 @@ export default function LandingPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-lg"
             >
-              <div className="rounded-3xl overflow-hidden border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] bg-card">
+              <div className="rounded-3xl overflow-hidden border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] bg-card">
                 {/* Title bar */}
                 <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
                   <div className="flex items-center gap-2">
@@ -823,7 +823,7 @@ export default function LandingPage() {
                   </span>
                   <button
                     onClick={() => setModal(null)}
-                    className="text-muted-foreground hover:text-white transition-colors font-sans text-sm px-1"
+                    className="text-muted-foreground hover:text-foreground transition-colors font-sans text-sm px-1"
                   >
                     ✕
                   </button>
@@ -846,10 +846,10 @@ export default function LandingPage() {
                       ].map(([key, val]) => (
                         <div key={key} className="flex gap-3">
                           <span className="text-muted-foreground shrink-0 w-24 text-right">{key}:</span>
-                          <span className="text-white/70">{val}</span>
+                          <span className="text-muted-foreground">{val}</span>
                         </div>
                       ))}
-                      <div className="pt-3 border-t border-white/5 text-muted-foreground text-xs leading-relaxed">
+                      <div className="pt-3 border-t border-border text-muted-foreground text-xs leading-relaxed">
                         # Trotz sorgfältiger Kontrolle keine Haftung für externe Links.
                         <br />
                         # Für verlinkte Seiten sind deren Betreiber verantwortlich.
@@ -875,10 +875,10 @@ export default function LandingPage() {
                       ].map(([key, val]) => (
                         <div key={key} className="flex gap-3">
                           <span className="text-muted-foreground shrink-0 w-32 text-right text-xs leading-5">{key}:</span>
-                          <span className="text-white/70 text-xs leading-5">{val}</span>
+                          <span className="text-muted-foreground text-xs leading-5">{val}</span>
                         </div>
                       ))}
-                      <div className="pt-3 border-t border-white/5 text-muted-foreground text-xs">
+                      <div className="pt-3 border-t border-border text-muted-foreground text-xs">
                         # Datenübertragbarkeit & Einschränkung der Verarbeitung auf Anfrage.
                       </div>
                       <div className="pt-3 text-xs">

@@ -45,15 +45,15 @@ export function SuperAdminInlinePanel({
   const [resultMsg, setResultMsg] = useState<string | null>(null);
 
   return (
-    <section id="super-admin" className="rounded-3xl border border-white/5 bg-card p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+    <section id="super-admin" className="rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
       <div className="mb-4 flex items-center gap-2">
         <Shield className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">Super Admin Modus</h2>
       </div>
 
-      <p className="mb-4 text-[11px] leading-relaxed text-white/45">
-        Hier legst du <span className="text-white/80">Kundenfirmen</span> an.{" "}
-        <span className="text-white/80">Empfehlungspartner (Affiliate)</span> mit Ref-Link erstellst du auf der Seite{" "}
+      <p className="mb-4 text-[11px] leading-relaxed text-foreground/45">
+        Hier legst du <span className="text-foreground">Kundenfirmen</span> an.{" "}
+        <span className="text-foreground">Empfehlungspartner (Affiliate)</span> mit Ref-Link erstellst du auf der Seite{" "}
         <Link href="/dashboard/partners" className="text-primary underline underline-offset-2 hover:text-primary/90">
           /dashboard/partners
         </Link>{" "}
@@ -67,16 +67,16 @@ export function SuperAdminInlinePanel({
           { label: "Logs 24h", value: `${monitoring.logsLast24h}`, tone: "text-violet-300" },
           { label: "Offene Clock-ins", value: `${monitoring.openWorkLogs}`, tone: "text-amber-300" },
         ].map((m) => (
-          <div key={m.label} className="rounded-2xl border border-white/5 bg-card px-3 py-2">
+          <div key={m.label} className="rounded-2xl border border-border bg-white px-3 py-2">
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{m.label}</p>
             <p className={`mt-1 text-sm font-semibold ${m.tone}`}>{m.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="mb-4 rounded-2xl border border-white/5 bg-card px-3 py-2 text-[11px] text-white/80">
-        Monitoring: neue User (7d) <span className="text-white">{monitoring.newUsersLast7d}</span> · offene Tokens{" "}
-        <span className="text-white">{monitoring.verificationTokensOpen}</span> · abgelaufene Tokens{" "}
+      <div className="mb-4 rounded-2xl border border-border bg-white px-3 py-2 text-[11px] text-foreground">
+        Monitoring: neue User (7d) <span className="text-foreground">{monitoring.newUsersLast7d}</span> · offene Tokens{" "}
+        <span className="text-foreground">{monitoring.verificationTokensOpen}</span> · abgelaufene Tokens{" "}
         <span className={monitoring.staleVerificationTokens > 0 ? "text-amber-300" : "text-emerald-300"}>
           {monitoring.staleVerificationTokens}
         </span>{" "}
@@ -91,7 +91,7 @@ export function SuperAdminInlinePanel({
       </div>
 
       <form
-        className="mb-4 grid gap-2 rounded-2xl border border-white/5 bg-card p-4 md:grid-cols-4"
+        className="mb-4 grid gap-2 rounded-2xl border border-border bg-card p-4 md:grid-cols-4"
         onSubmit={(e) => {
           e.preventDefault();
           const form = e.currentTarget;
@@ -121,20 +121,20 @@ export function SuperAdminInlinePanel({
         <input
           name="companyName"
           placeholder="Firma (z. B. Muster GmbH)"
-          className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-white"
+          className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-foreground"
           required
         />
         <input
           name="ownerName"
           placeholder="Owner Name"
-          className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-white"
+          className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-foreground"
           required
         />
         <input
           name="ownerEmail"
           type="email"
           placeholder="owner@firma.de"
-          className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-white"
+          className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-foreground"
           required
         />
         <button
@@ -147,12 +147,12 @@ export function SuperAdminInlinePanel({
       </form>
 
       {resultMsg && (
-        <p className="mb-4 rounded-2xl border border-white/5 bg-card px-3 py-2 text-[11px] text-white/80">
+        <p className="mb-4 rounded-2xl border border-border bg-white px-3 py-2 text-[11px] text-foreground">
           {resultMsg}
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-2xl border border-white/5 bg-card">
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border text-muted-foreground">
@@ -173,12 +173,12 @@ export function SuperAdminInlinePanel({
               </tr>
             )}
             {companies.map((c) => (
-              <tr key={c.id} className="border-b border-white/[0.06] last:border-0">
+              <tr key={c.id} className="border-b border-border last:border-0">
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                     <div>
-                      <p className="text-white/85">{c.name}</p>
+                      <p className="text-foreground/85">{c.name}</p>
                       <p className="text-[10px] text-muted-foreground">{c.slug}</p>
                     </div>
                   </div>
@@ -196,7 +196,7 @@ export function SuperAdminInlinePanel({
                         });
                       })
                     }
-                    className="rounded-2xl border border-border bg-background px-2 py-1 text-white"
+                    className="rounded-2xl border border-border bg-background px-2 py-1 text-foreground"
                     disabled={isPending}
                   >
                     <option value="STARTER">STARTER</option>
@@ -217,7 +217,7 @@ export function SuperAdminInlinePanel({
                         });
                       })
                     }
-                    className="rounded-2xl border border-border bg-background px-2 py-1 text-white"
+                    className="rounded-2xl border border-border bg-background px-2 py-1 text-foreground"
                     disabled={isPending}
                   >
                     <option value="MONTHLY">MONTHLY</option>
@@ -227,7 +227,7 @@ export function SuperAdminInlinePanel({
                 <td className="px-3 py-2">
                   <span className={c.isActive ? "text-[#22c55e]" : "text-red-300"}>{c.isActive ? "Aktiv" : "Inaktiv"}</span>
                 </td>
-                <td className="px-3 py-2 text-white/80">
+                <td className="px-3 py-2 text-foreground">
                   {c.activeUserCount}/{c.userCount}
                 </td>
                 <td className="px-3 py-2">
@@ -244,7 +244,7 @@ export function SuperAdminInlinePanel({
                           });
                         })
                       }
-                      className="rounded-2xl border border-border bg-card px-2 py-1 text-white hover:bg-card/80"
+                      className="rounded-2xl border border-border bg-white px-2 py-1 text-foreground hover:bg-card/80"
                       disabled={isPending}
                     >
                       {c.isActive ? "Deaktivieren" : "Aktivieren"}
