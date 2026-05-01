@@ -404,11 +404,11 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="mb-16"
           >
-            <p className="text-xs text-[#22c55e] uppercase tracking-widest mb-4">01 / Features</p>
+            <p className="text-xs text-primary uppercase tracking-widest mb-4">01 / Features</p>
             <h2 className="text-4xl md:text-5xl font-black leading-tight">
               Alles, was du brauchst.
               <br />
-              <span className="text-muted-foreground">Nichts, was du nicht brauchst.</span>
+              <span className="text-foreground/70">Nichts, was du nicht brauchst.</span>
             </h2>
           </motion.div>
 
@@ -420,24 +420,24 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className="group relative rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-7 hover:border-emerald-300/20 transition-all overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)]"
+                className="group relative rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-7 hover:border-primary/30 transition-all overflow-hidden"
               >
                 {/* hover glow */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(ellipse_at_0%_0%,rgba(34,197,94,0.04),transparent_60%)]" />
 
                 <div className="relative z-10">
                   {/* Terminal command badge */}
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-300/10 border border-emerald-300/20 text-emerald-200 text-[10px] mb-4">
-                    <span className="opacity-50">$</span> {feature.cmd}
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] mb-4 font-medium">
+                    <span className="opacity-70">$</span> {feature.cmd}
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-border flex items-center justify-center shrink-0 group-hover:border-[#22c55e]/20 transition-colors">
-                      <feature.icon className="w-5 h-5 text-muted-foreground group-hover:text-[#22c55e] transition-colors" />
+                    <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center shrink-0 group-hover:border-primary/30 transition-colors">
+                      <feature.icon className="w-5 h-5 text-foreground/75 group-hover:text-primary transition-colors" />
                     </div>
                     <div>
                       <h3 className="font-bold text-sm mb-1.5">{feature.title}</h3>
-                      <p className="text-muted-foreground text-sm leading-relaxed">{feature.desc}</p>
+                      <p className="text-foreground/75 text-sm leading-relaxed">{feature.desc}</p>
                     </div>
                   </div>
                 </div>
