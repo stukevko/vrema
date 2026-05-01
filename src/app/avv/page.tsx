@@ -8,29 +8,29 @@ export const metadata: Metadata = {
 
 export default function AvvPage() {
   return (
-    <main className="min-h-screen bg-background px-6 py-16 text-foreground">
+    <main className="min-h-screen bg-background px-6 py-16 text-slate-900">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-xs text-foreground/75">
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-xs text-slate-600">
           <span>Vrema by KevkoStudio</span>
-          <Link href="/" className="rounded-md border border-border px-3 py-1.5 text-foreground hover:bg-card/80">
+          <Link href="/" className="rounded-md border border-border px-3 py-1.5 text-slate-900 hover:bg-card/80">
             Zurück zur Startseite
           </Link>
         </div>
 
-        <div className="space-y-5 rounded-2xl border border-border bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+        <div className="space-y-5 rounded-2xl border border-border bg-card p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <h1 className="text-3xl font-bold">Auftragsverarbeitungsvertrag (AVV)</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-slate-600">
             Vorlage für B2B-Kunden von Vrema. Diese Seite dient als schnell nutzbare Standardversion.
           </p>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground/80">
-            <h2 className="mb-2 font-semibold text-foreground">1. Parteien</h2>
+          <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
+            <h2 className="mb-2 font-semibold text-slate-900">1. Parteien</h2>
             <p>Verantwortlicher: Kunde (Unternehmen, das Vrema nutzt).</p>
             <p>Auftragsverarbeiter: Kevin Konkin - KevkoStudio, Kolbstr. 5, 67346 Speyer, kontakt@kevko.studio.</p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground/80">
-            <h2 className="mb-2 font-semibold text-foreground">2. Gegenstand und Dauer</h2>
+          <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
+            <h2 className="mb-2 font-semibold text-slate-900">2. Gegenstand und Dauer</h2>
             <p>
               Gegenstand ist die Verarbeitung personenbezogener Daten zur Bereitstellung der SaaS-Anwendung Vrema
               (Zeiterfassung, Berichte, Teamverwaltung, Abrechnung).
@@ -38,8 +38,8 @@ export default function AvvPage() {
             <p>Die Dauer entspricht der Laufzeit des Hauptvertrags (Abo).</p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground/80">
-            <h2 className="mb-2 font-semibold text-foreground">3. Art der Daten und Kategorien Betroffener</h2>
+          <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
+            <h2 className="mb-2 font-semibold text-slate-900">3. Art der Daten und Kategorien Betroffener</h2>
             <p>
               Datenarten: Stammdaten, Kontaktdaten, Arbeitszeitdaten, ggf. Standortdaten bei aktivierter Geofunktion,
               technische Metadaten.
@@ -47,31 +47,31 @@ export default function AvvPage() {
             <p>Betroffene: Mitarbeiter, Teamleiter, Kundenadministratoren.</p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground/80">
-            <h2 className="mb-2 font-semibold text-foreground">4. Technische und organisatorische Massnahmen (TOM)</h2>
+          <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
+            <h2 className="mb-2 font-semibold text-slate-900">4. Technische und organisatorische Massnahmen (TOM)</h2>
             <p>
               Zugriffsschutz über Authentifizierung und Rollenmodell, Transportverschlüsselung, Protokollierung,
               Backup- und Restore-Prozesse, Berechtigungstrennung, regelmäßige Sicherheitsupdates.
             </p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground/80">
-            <h2 className="mb-2 font-semibold text-foreground">5. Unterauftragsverarbeiter</h2>
+          <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
+            <h2 className="mb-2 font-semibold text-slate-900">5. Unterauftragsverarbeiter</h2>
             <p>Je nach Nutzung können unter anderem folgende Anbieter eingesetzt werden:</p>
             <p>- Hosting/Infrastrukturanbieter</p>
             <p>- Stripe (Zahlungsabwicklung)</p>
             <p>- Resend (transaktionale E-Mails)</p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground/80">
-            <h2 className="mb-2 font-semibold text-foreground">6. Weisungen, Unterstützung und Löschung</h2>
+          <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
+            <h2 className="mb-2 font-semibold text-slate-900">6. Weisungen, Unterstützung und Löschung</h2>
             <p>
               Verarbeitung erfolgt nur auf dokumentierte Weisung des Verantwortlichen. Der Auftragsverarbeiter unterstützt
               bei Betroffenenrechten und löscht Daten nach Vertragsende oder gem. gesetzlichen Fristen.
             </p>
           </section>
 
-          <section className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4 text-sm text-foreground/90">
+          <section className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4 text-sm text-slate-800">
             <h2 className="mb-2 font-semibold text-emerald-300">Schnellstart für Kunden</h2>
             <p>
               Diese AVV-Version kann vom Kunden als Standard-AVV genutzt werden. Für individuelle Anforderungen:

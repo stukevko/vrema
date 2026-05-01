@@ -233,7 +233,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-border bg-white/70 backdrop-blur-2xl">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Image src="/vremalogo.png" alt="Vrema Logo" width={52} height={52} className="-my-2" />
+            <Image src="/vremalogo.png" alt="Vrema Logo" width={44} height={44} className="-my-2" />
             <div>
               <span className="font-bold text-base tracking-tight">Vrema</span>
               <span className="ml-2 text-[10px] text-muted-foreground uppercase tracking-widest">by KevkoStudio</span>
@@ -746,7 +746,7 @@ export default function LandingPage() {
       <footer className="border-t border-border py-10 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <Image src="/vremalogo.png" alt="Vrema Logo" width={46} height={46} className="opacity-60 -my-2" />
+            <Image src="/vremalogo.png" alt="Vrema Logo" width={40} height={40} className="opacity-60 -my-2" />
             <div>
               <span className="font-bold text-sm">Vrema</span>
               <span className="ml-1.5 text-[10px] text-muted-foreground">by KevkoStudio</span>

@@ -460,7 +460,7 @@ export function ShiftManager({
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
       <h2 className="text-lg font-semibold">Arbeitsplan (Soll-Zeiten)</h2>
-      <p className="mt-1 text-xs text-muted">Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.</p>
+      <p className="mt-1 text-xs text-muted-foreground">Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.</p>
       {shiftCycleWeeks > 1 && (
         <div className="mt-3 inline-flex rounded-lg border border-border bg-background p-1 text-xs">
           {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
@@ -471,7 +471,7 @@ export function ShiftManager({
                 type="button"
                 onClick={() => setSelectedWeekIndex(week)}
                 className={`rounded-md px-3 py-1.5 ${
-                  selectedWeekIndex === week ? "bg-white/10 text-foreground" : "text-muted-foreground hover:text-foreground"
+                  selectedWeekIndex === week ? "bg-slate-100 text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Woche {week}
@@ -484,21 +484,21 @@ export function ShiftManager({
         <button
           type="button"
           onClick={() => setViewMode("timeline")}
-          className={`rounded-md px-3 py-1.5 ${viewMode === "timeline" ? "bg-white/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`rounded-md px-3 py-1.5 ${viewMode === "timeline" ? "bg-slate-100 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           Team-Timeline
         </button>
         <button
           type="button"
           onClick={() => setViewMode("simple")}
-          className={`rounded-md px-3 py-1.5 ${viewMode === "simple" ? "bg-white/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`rounded-md px-3 py-1.5 ${viewMode === "simple" ? "bg-slate-100 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           Einfach-Planer
         </button>
         <button
           type="button"
           onClick={() => setViewMode("matrix")}
-          className={`rounded-md px-3 py-1.5 ${viewMode === "matrix" ? "bg-white/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`rounded-md px-3 py-1.5 ${viewMode === "matrix" ? "bg-slate-100 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           Wochenmatrix
         </button>
@@ -557,7 +557,7 @@ export function ShiftManager({
         </button>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <p className="text-[11px] text-muted">Tipp: Zeit oben einstellen und Tage direkt antippen. Erneuter Klick mit gleicher Zeit löscht den Tag.</p>
+        <p className="text-[11px] text-muted-foreground">Tipp: Zeit oben einstellen und Tage direkt antippen. Erneuter Klick mit gleicher Zeit löscht den Tag.</p>
         {selectedUserVacationDays.size > 0 && (
           <p className="text-[11px] text-amber-300">
             Abwesenheit: {Array.from(selectedUserVacationDays).map((d) => DAY_LABELS[d]).join(", ")}
@@ -567,11 +567,11 @@ export function ShiftManager({
       </div>
       <div className="mt-3 grid gap-2 md:grid-cols-2">
         <div className="rounded-xl border border-border bg-background px-3 py-2">
-          <p className="text-[10px] uppercase tracking-widest text-muted">Schritt 1</p>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 1</p>
           <p className="text-sm text-foreground">Zeit oben wählen (oder Früh/Standard/Spät klicken).</p>
         </div>
         <div className="rounded-xl border border-border bg-background px-3 py-2">
-          <p className="text-[10px] uppercase tracking-widest text-muted">Schritt 2</p>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 2</p>
           <p className="text-sm text-foreground">Tage antippen. Jeder Klick speichert sofort.</p>
         </div>
       </div>
@@ -646,7 +646,7 @@ export function ShiftManager({
           </button>
         ))}
       </div>
-      <p className="mt-2 text-[11px] text-muted">
+      <p className="mt-2 text-[11px] text-muted-foreground">
         Grün = Schicht, Orange = Urlaub, Rot = Krank. Klick setzt die oben gewählte Zeit direkt für den Tag.
       </p>
 
@@ -663,13 +663,13 @@ export function ShiftManager({
       </div>
       {showDetails && (
       <div className="mt-3 rounded-xl border border-border bg-background">
-        <div className="grid grid-cols-3 border-b border-border px-3 py-2 text-[11px] uppercase tracking-widest text-muted">
+        <div className="grid grid-cols-3 border-b border-border px-3 py-2 text-[11px] uppercase tracking-widest text-muted-foreground">
           <span>Tag</span>
           <span>Start</span>
           <span>Ende</span>
         </div>
         {userShifts.length === 0 ? (
-          <p className="px-3 py-3 text-xs text-muted">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
+          <p className="px-3 py-3 text-xs text-muted-foreground">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
         ) : (
           userShifts.map((s, idx) => (
             <div key={s.id} className={`grid grid-cols-3 items-center px-3 py-2 text-sm ${idx % 2 === 0 ? "bg-white/[0.01]" : ""}`}>
@@ -734,13 +734,13 @@ export function ShiftManager({
                 {showOnlyGaps ? "Nur Lücken: AN" : "Nur Lücken zeigen"}
               </button>
             </div>
-            <p className="mt-2 text-[11px] text-muted">
+            <p className="mt-2 text-[11px] text-muted-foreground">
               Quick-Entry: Zeit wählen, dann Zellen anklicken. Klick mit gleicher Zeit löscht. Urlaubszellen sind blockiert.
             </p>
           </div>
           <table className="w-full min-w-[760px] text-sm">
             <thead>
-              <tr className="border-b border-border text-muted">
+              <tr className="border-b border-border text-muted-foreground">
                 <th className="px-3 py-2 text-left">Mitarbeiter</th>
                 {MATRIX_DAYS.map((dayOfWeek) => (
                   <th key={dayOfWeek} className="px-2 py-2 text-center text-xs font-sans uppercase tracking-wider">
@@ -770,7 +770,7 @@ export function ShiftManager({
                               ? "border-amber-400/35 bg-amber-500/15 text-amber-100 cursor-not-allowed"
                               : shift
                               ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
-                              : "border-border bg-background text-foreground/45 hover:bg-card/80"
+                              : "border-border bg-background text-muted-foreground hover:bg-card/80"
                           }`}
                           title={
                             conflictType === "SICK"
@@ -803,7 +803,7 @@ export function ShiftManager({
               </tr>
             </tbody>
           </table>
-          <p className="px-3 py-2 text-[11px] text-muted">
+          <p className="px-3 py-2 text-[11px] text-muted-foreground">
             Grau = frei, Grün = Schicht, Orange = Urlaub, Rot = Krank (gesperrt).
           </p>
         </div>
@@ -812,7 +812,7 @@ export function ShiftManager({
       {viewMode === "timeline" && (
         <div className="mt-4 rounded-xl border border-border bg-background p-3">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <p className="text-xs text-muted">Fokusmodus: Planung zuerst, Kennzahlen optional.</p>
+            <p className="text-xs text-muted-foreground">Fokusmodus: Planung zuerst, Kennzahlen optional.</p>
             <button
               type="button"
               onClick={() => setShowPlannerInfo((v) => !v)}
@@ -852,7 +852,7 @@ export function ShiftManager({
               className="rounded-lg border border-border bg-white px-3 py-2 text-sm"
               title="Benötigte Mitarbeiter pro Zeitfenster"
             />
-            <p className="flex items-center text-[11px] text-muted leading-snug">
+            <p className="flex items-center text-[11px] text-muted-foreground leading-snug">
               15-Minuten-Raster · Stunden-Hilfslinien · Balken ziehen oder anklicken zum Bearbeiten
             </p>
           </div>
@@ -866,7 +866,7 @@ export function ShiftManager({
 
           <div className="mt-3 max-h-[70vh] overflow-auto">
             <div className="min-w-[880px] space-y-4">
-              <div className="sticky top-0 z-30 grid grid-cols-[220px_1fr] items-center gap-2 border-b border-border bg-background py-1 text-[11px] text-muted">
+              <div className="sticky top-0 z-30 grid grid-cols-[220px_1fr] items-center gap-2 border-b border-border bg-background py-1 text-[11px] text-muted-foreground">
                 <div>Mitarbeiter</div>
                 <div className="grid grid-cols-9">
                   {Array.from({ length: 9 }).map((_, idx) => {
@@ -899,7 +899,7 @@ export function ShiftManager({
                   <div key={row.member.id} className="grid grid-cols-[220px_1fr] items-center gap-3">
                     <div className="flex items-center rounded-2xl border border-border bg-white px-4 py-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
                       <span className="inline-flex items-center gap-2 truncate text-sm text-foreground">
-                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-semibold text-foreground">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-foreground">
                           {initials}
                         </span>
                         <span className="truncate text-[15px] font-medium">{row.member.name ?? row.member.email}</span>
@@ -1018,7 +1018,7 @@ export function ShiftManager({
             <p className="mt-1 text-xs text-muted-foreground">{DAY_LABELS[timelineDay]} · {shiftEdit.label}</p>
             <div className="mt-4 grid gap-3">
               <div>
-                <label className="text-[10px] uppercase tracking-wide text-muted">Start</label>
+                <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Start</label>
                 <input
                   type="time"
                   step={900}
@@ -1028,7 +1028,7 @@ export function ShiftManager({
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-wide text-muted">Ende</label>
+                <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Ende</label>
                 <input
                   type="time"
                   step={900}

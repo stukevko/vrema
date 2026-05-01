@@ -146,7 +146,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
         className="w-full max-w-md"
       >
         <div className="flex flex-col items-center gap-3 mb-8">
-          <Image src="/vremalogo.png" alt="Vrema Logo" width={96} height={96} className="-mb-2" />
+          <Image src="/vremalogo.png" alt="Vrema Logo" width={80} height={80} className="-mb-2" />
           <div className="text-center">
             <span className="font-bold text-xl tracking-tight">Vrema</span>
             <span className="block text-[10px] text-muted-foreground font-sans uppercase tracking-widest">by KevkoStudio</span>
