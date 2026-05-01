@@ -47,14 +47,14 @@ export function SuperAdminInlinePanel({
   return (
     <section id="super-admin" className="rounded-3xl border border-white/5 bg-card p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
       <div className="mb-4 flex items-center gap-2">
-        <Shield className="h-4 w-4 text-amber-300" />
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-amber-200/90">Super Admin Modus</h2>
+        <Shield className="h-4 w-4 text-primary" />
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">Super Admin Modus</h2>
       </div>
 
       <p className="mb-4 text-[11px] leading-relaxed text-white/45">
         Hier legst du <span className="text-white/65">Kundenfirmen</span> an.{" "}
         <span className="text-white/65">Empfehlungspartner (Affiliate)</span> mit Ref-Link erstellst du auf der Seite{" "}
-        <Link href="/dashboard/partners" className="text-amber-200/95 underline underline-offset-2 hover:text-amber-100">
+        <Link href="/dashboard/partners" className="text-primary underline underline-offset-2 hover:text-primary/90">
           /dashboard/partners
         </Link>{" "}
         unter „Affiliate & Auszahlungen“.
@@ -121,25 +121,25 @@ export function SuperAdminInlinePanel({
         <input
           name="companyName"
           placeholder="Firma (z. B. Muster GmbH)"
-          className="rounded-2xl border border-border bg-card px-3 py-2 text-xs text-white"
+          className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-white"
           required
         />
         <input
           name="ownerName"
           placeholder="Owner Name"
-          className="rounded-2xl border border-border bg-card px-3 py-2 text-xs text-white"
+          className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-white"
           required
         />
         <input
           name="ownerEmail"
           type="email"
           placeholder="owner@firma.de"
-          className="rounded-2xl border border-border bg-card px-3 py-2 text-xs text-white"
+          className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-white"
           required
         />
         <button
           type="submit"
-          className="rounded-2xl border border-amber-300/35 bg-amber-300/15 px-3 py-2 text-xs font-semibold text-amber-200 hover:bg-amber-300/20 disabled:opacity-60"
+          className="rounded-2xl border border-primary/35 bg-primary px-3 py-2 text-xs font-semibold text-black hover:bg-primary/90 disabled:opacity-60"
           disabled={isPending}
         >
           Firma hinzufügen
@@ -155,7 +155,7 @@ export function SuperAdminInlinePanel({
       <div className="overflow-x-auto rounded-2xl border border-white/5 bg-card">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-white/10 text-white/50">
+            <tr className="border-b border-border text-muted-foreground">
               <th className="px-3 py-2 text-left">Firma</th>
               <th className="px-3 py-2 text-left">Plan</th>
               <th className="px-3 py-2 text-left">Intervall</th>
@@ -196,7 +196,7 @@ export function SuperAdminInlinePanel({
                         });
                       })
                     }
-                    className="rounded-2xl border border-border bg-card px-2 py-1 text-white"
+                    className="rounded-2xl border border-border bg-background px-2 py-1 text-white"
                     disabled={isPending}
                   >
                     <option value="STARTER">STARTER</option>
@@ -217,7 +217,7 @@ export function SuperAdminInlinePanel({
                         });
                       })
                     }
-                    className="rounded-2xl border border-border bg-card px-2 py-1 text-white"
+                    className="rounded-2xl border border-border bg-background px-2 py-1 text-white"
                     disabled={isPending}
                   >
                     <option value="MONTHLY">MONTHLY</option>
@@ -244,7 +244,7 @@ export function SuperAdminInlinePanel({
                           });
                         })
                       }
-                      className="rounded-2xl border border-white/10 bg-white/5 px-2 py-1 text-white/80 hover:bg-white/10"
+                      className="rounded-2xl border border-border bg-card px-2 py-1 text-white/80 hover:bg-card/80"
                       disabled={isPending}
                     >
                       {c.isActive ? "Deaktivieren" : "Aktivieren"}

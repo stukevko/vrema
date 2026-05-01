@@ -7,8 +7,8 @@ export const metadata: Metadata = {
 
 export default function DatenschutzPage() {
   return (
-    <main className="min-h-screen bg-[#080808] px-6 py-20 text-white">
-      <div className="mx-auto max-w-3xl space-y-8 rounded-2xl border border-white/10 bg-[#0f0f0f] p-8">
+    <main className="min-h-screen bg-background px-6 py-20 text-white">
+      <div className="mx-auto max-w-3xl space-y-8 rounded-2xl border border-border bg-card p-8">
         <h1 className="text-3xl font-bold">Datenschutz</h1>
         <p className="text-sm text-white/65">
           Diese Hinweise beschreiben die Verarbeitung personenbezogener Daten bei der Nutzung von Vrema.

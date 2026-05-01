@@ -111,13 +111,13 @@ function LoginForm() {
           <p className="text-white/40 text-sm mb-8">Melde dich bei deinem Konto an.</p>
 
           {registered && (
-            <p className="mb-4 rounded-lg border border-[#22c55e]/20 bg-[#22c55e]/10 px-3 py-2 text-xs text-[#86efac]">
+            <p className="mb-4 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
               Check dein Postfach! Wir haben dir einen Bestätigungslink geschickt.
             </p>
           )}
 
           {verified && (
-            <p className="mb-4 rounded-lg border border-[#22c55e]/20 bg-[#22c55e]/10 px-3 py-2 text-xs text-[#86efac]">
+            <p className="mb-4 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
               E-Mail erfolgreich bestätigt. Du kannst dich jetzt anmelden.
             </p>
           )}
@@ -188,7 +188,7 @@ function LoginForm() {
               type="button"
               onClick={handlePasskeyLogin}
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-semibold flex items-center justify-center gap-2 hover:bg-white/10 transition-colors disabled:opacity-60"
+              className="w-full py-3 rounded-xl bg-card border border-border text-white font-semibold flex items-center justify-center gap-2 hover:bg-card/80 transition-colors disabled:opacity-60"
             >
               <Fingerprint className="w-4 h-4" />
               Mit Passkey anmelden

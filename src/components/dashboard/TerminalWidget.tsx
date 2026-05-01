@@ -120,7 +120,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
   })();
 
   return (
-    <div className="rounded-3xl bg-card/90 backdrop-blur-md border border-white/10 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+    <div className="rounded-3xl bg-card/90 backdrop-blur-md border border-border p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-semibold text-lg">Terminal</h2>
         {gpsFeatureEnabled && (
@@ -199,7 +199,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
               exit={{ scale: 0.8, opacity: 0 }}
               className="mb-8"
             >
-              <div className="w-20 h-20 rounded-2xl bg-white/5 border-2 border-white/10 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-2xl bg-card border-2 border-border flex items-center justify-center">
                 <Clock className="w-8 h-8 text-white/30" />
               </div>
             </motion.div>
@@ -241,7 +241,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
               className={`w-full rounded-2xl border px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
                 activeLog.isOnBreak
                   ? "border-primary/40 bg-primary/15 text-primary hover:bg-primary/20"
-                  : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                  : "border-border bg-card text-white/70 hover:bg-card/80"
               }`}
             >
               <span className="inline-flex items-center gap-1">

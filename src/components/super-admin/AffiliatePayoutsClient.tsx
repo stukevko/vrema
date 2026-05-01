@@ -243,7 +243,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
                 type="button"
                 onClick={toggleAll}
                 disabled={availableIds.length === 0 || isPending}
-                className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/60 hover:bg-white/5 disabled:opacity-40"
+                className="text-xs px-3 py-1.5 rounded-lg border border-border text-white/60 hover:bg-card/80 disabled:opacity-40"
               >
                 {allSelected ? "Keine" : "Alle auszahlbar"}
               </button>
@@ -386,7 +386,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
                 <button
                   type="button"
                   onClick={() => void copyText(lastCreated.code)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-[11px] text-white/60 hover:bg-white/10"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-[11px] text-white/60 hover:bg-card/80"
                 >
                   Code: {lastCreated.code}
                 </button>

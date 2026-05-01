@@ -24,7 +24,7 @@ interface VacationListProps {
 
 const STATUS_STYLES = {
   PENDING: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  APPROVED: "bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20",
+  APPROVED: "bg-primary/10 text-primary border-primary/20",
   REJECTED: "bg-red-500/10 text-red-400 border-red-500/20",
 };
 
@@ -83,9 +83,9 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                   <button
                     disabled={isPending}
                     onClick={() => startTransition(async () => { await approveVacation(req.id); })}
-                    className="w-7 h-7 rounded-lg bg-[#22c55e]/10 hover:bg-[#22c55e]/20 flex items-center justify-center transition-colors"
+                    className="w-7 h-7 rounded-lg bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors"
                   >
-                    <Check className="w-3.5 h-3.5 text-[#22c55e]" />
+                    <Check className="w-3.5 h-3.5 text-primary" />
                   </button>
                   <button
                     disabled={isPending}

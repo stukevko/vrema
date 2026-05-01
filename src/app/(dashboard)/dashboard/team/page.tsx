@@ -27,7 +27,7 @@ export default async function TeamPage() {
             {active} aktiv{inactive > 0 ? ` · ${inactive} deaktiviert` : ""}
           </p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/20">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20">
           <Users className="w-4 h-4 text-[#22c55e]" />
           <span className="text-sm font-bold text-[#22c55e]">{members.length}</span>
         </div>

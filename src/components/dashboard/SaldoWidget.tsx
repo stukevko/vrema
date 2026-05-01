@@ -47,7 +47,7 @@ export function SaldoWidget({
 
       <div className="flex items-center gap-4 mb-6">
         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-          isZero ? "bg-white/5" : isPositive ? "bg-[#22c55e]/10" : "bg-red-500/10"
+          isZero ? "bg-card" : isPositive ? "bg-primary/10" : "bg-red-500/10"
         }`}>
           {isZero ? (
             <Minus className="w-6 h-6 text-white/40" />
@@ -75,12 +75,12 @@ export function SaldoWidget({
           <span>Gearbeitet: {worked}h</span>
           <span>Soll: {expected}h</span>
         </div>
-        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+        <div className="h-2 bg-card rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(percentage, 100)}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className={`h-full rounded-full ${isPositive ? "bg-[#22c55e]" : "bg-red-500"}`}
+            className={`h-full rounded-full ${isPositive ? "bg-primary" : "bg-red-500"}`}
           />
         </div>
         <p className="text-xs text-white/30 text-right">{percentage.toFixed(0)}% der Sollzeit</p>

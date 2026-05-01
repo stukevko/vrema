@@ -8,28 +8,28 @@ export const metadata: Metadata = {
 
 export default function AvvPage() {
   return (
-    <main className="min-h-screen bg-[#080808] px-6 py-16 text-white">
+    <main className="min-h-screen bg-background px-6 py-16 text-white">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-xs text-white/70">
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-xs text-white/70">
           <span>Vrema by KevkoStudio</span>
-          <Link href="/" className="rounded-md border border-white/15 px-3 py-1.5 text-white/85 hover:bg-white/10">
+          <Link href="/" className="rounded-md border border-border px-3 py-1.5 text-white/85 hover:bg-card/80">
             Zurück zur Startseite
           </Link>
         </div>
 
-        <div className="space-y-5 rounded-2xl border border-white/10 bg-gradient-to-b from-[#121212] to-[#0c0c0c] p-8 shadow-[0_0_40px_rgba(34,197,94,0.06)]">
+        <div className="space-y-5 rounded-2xl border border-border bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <h1 className="text-3xl font-bold">Auftragsverarbeitungsvertrag (AVV)</h1>
           <p className="text-sm text-white/65">
             Vorlage für B2B-Kunden von Vrema. Diese Seite dient als schnell nutzbare Standardversion.
           </p>
 
-          <section className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/75">
+          <section className="rounded-xl border border-border bg-background p-4 text-sm text-white/75">
             <h2 className="mb-2 font-semibold text-white">1. Parteien</h2>
             <p>Verantwortlicher: Kunde (Unternehmen, das Vrema nutzt).</p>
             <p>Auftragsverarbeiter: Kevin Konkin - KevkoStudio, Kolbstr. 5, 67346 Speyer, kontakt@kevko.studio.</p>
           </section>
 
-          <section className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/75">
+          <section className="rounded-xl border border-border bg-background p-4 text-sm text-white/75">
             <h2 className="mb-2 font-semibold text-white">2. Gegenstand und Dauer</h2>
             <p>
               Gegenstand ist die Verarbeitung personenbezogener Daten zur Bereitstellung der SaaS-Anwendung Vrema
@@ -38,7 +38,7 @@ export default function AvvPage() {
             <p>Die Dauer entspricht der Laufzeit des Hauptvertrags (Abo).</p>
           </section>
 
-          <section className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/75">
+          <section className="rounded-xl border border-border bg-background p-4 text-sm text-white/75">
             <h2 className="mb-2 font-semibold text-white">3. Art der Daten und Kategorien Betroffener</h2>
             <p>
               Datenarten: Stammdaten, Kontaktdaten, Arbeitszeitdaten, ggf. Standortdaten bei aktivierter Geofunktion,
@@ -47,7 +47,7 @@ export default function AvvPage() {
             <p>Betroffene: Mitarbeiter, Teamleiter, Kundenadministratoren.</p>
           </section>
 
-          <section className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/75">
+          <section className="rounded-xl border border-border bg-background p-4 text-sm text-white/75">
             <h2 className="mb-2 font-semibold text-white">4. Technische und organisatorische Massnahmen (TOM)</h2>
             <p>
               Zugriffsschutz über Authentifizierung und Rollenmodell, Transportverschlüsselung, Protokollierung,
@@ -55,7 +55,7 @@ export default function AvvPage() {
             </p>
           </section>
 
-          <section className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/75">
+          <section className="rounded-xl border border-border bg-background p-4 text-sm text-white/75">
             <h2 className="mb-2 font-semibold text-white">5. Unterauftragsverarbeiter</h2>
             <p>Je nach Nutzung können unter anderem folgende Anbieter eingesetzt werden:</p>
             <p>- Hosting/Infrastrukturanbieter</p>
@@ -63,7 +63,7 @@ export default function AvvPage() {
             <p>- Resend (transaktionale E-Mails)</p>
           </section>
 
-          <section className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/75">
+          <section className="rounded-xl border border-border bg-background p-4 text-sm text-white/75">
             <h2 className="mb-2 font-semibold text-white">6. Weisungen, Unterstützung und Löschung</h2>
             <p>
               Verarbeitung erfolgt nur auf dokumentierte Weisung des Verantwortlichen. Der Auftragsverarbeiter unterstützt

@@ -77,7 +77,7 @@ export default function TerminalPage() {
 
   return (
     <div className="min-h-screen bg-background text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-card p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
         <p className="text-center text-xs font-sans uppercase tracking-widest text-white/40 mb-2">
           Vrema Terminal
         </p>
@@ -87,7 +87,7 @@ export default function TerminalPage() {
             feedbackState === "success" && "border-primary/30 bg-primary/10 text-primary",
             feedbackState === "warning" && "border-amber-500/30 bg-amber-500/10 text-amber-300",
             feedbackState === "error" && "border-red-500/30 bg-red-500/10 text-red-300",
-            feedbackState === "idle" && "border-white/10 bg-background text-white/80"
+            feedbackState === "idle" && "border-border bg-background text-white/80"
           )}
         >
           {message}
@@ -96,7 +96,7 @@ export default function TerminalPage() {
           <p className="mb-4 -mt-2 text-center text-xs text-white/45">{guidance}</p>
         )}
 
-        <div className="mb-5 rounded-2xl bg-background border border-white/10 py-5 text-center">
+        <div className="mb-5 rounded-2xl bg-background border border-border py-5 text-center">
           <p className="font-sans text-3xl tracking-[0.5em] pl-[0.5em]">{pin.replace(/./g, "•") || "----"}</p>
         </div>
 
@@ -110,7 +110,7 @@ export default function TerminalPage() {
                 key === "ok" &&
                   "bg-primary text-black hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)]",
                 key === "clear" && "bg-red-500/15 text-red-300 hover:bg-red-500/25",
-                key !== "ok" && key !== "clear" && "bg-white/5 text-white hover:bg-white/10"
+                key !== "ok" && key !== "clear" && "bg-card text-white hover:bg-card/80"
               )}
             >
               {key === "clear" ? "C" : key === "ok" ? "OK" : key}

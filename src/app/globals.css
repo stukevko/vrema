@@ -12,6 +12,7 @@
   --radius: 1.25rem;
   --foreground: 210 40% 98%;
   --muted: 215 20% 65%;
+  --muted-foreground: 215 20% 65%;
 }
 
 .dark {
@@ -26,6 +27,7 @@
   --radius: 1.25rem;
   --foreground: 210 40% 98%;
   --muted: 215 20% 65%;
+  --muted-foreground: 215 20% 65%;
 }
 
 @theme {
@@ -39,6 +41,7 @@
   --color-ring: hsl(var(--ring));
   --color-foreground: hsl(var(--foreground));
   --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
 }
 
 * {

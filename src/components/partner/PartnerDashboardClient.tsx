@@ -39,9 +39,9 @@ function statusLabel(status: Row["status"]) {
 }
 
 function statusBadgeClass(status: Row["status"]) {
-  if (status === "PENDING") return "border-amber-300/35 bg-amber-400/10 text-slate-300";
+  if (status === "PENDING") return "border-amber-300/35 bg-amber-400/10 text-muted-foreground";
   if (status === "AVAILABLE") return "border-emerald-300/35 bg-emerald-400/10 text-emerald-300";
-  if (status === "PAID") return "border-slate-500/40 bg-slate-500/15 text-slate-300";
+  if (status === "PAID") return "border-border bg-card text-muted-foreground";
   return "border-red-400/35 bg-red-500/10 text-red-200";
 }
 

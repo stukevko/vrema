@@ -8,20 +8,20 @@ export const metadata: Metadata = {
 
 export default function WiderrufPage() {
   return (
-    <main className="min-h-screen bg-[#080808] px-6 py-16 text-white">
+    <main className="min-h-screen bg-background px-6 py-16 text-white">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-xs text-white/70">
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-xs text-white/70">
           <span>Vrema by KevkoStudio</span>
-          <Link href="/" className="rounded-md border border-white/15 px-3 py-1.5 text-white/85 hover:bg-white/10">
+          <Link href="/" className="rounded-md border border-border px-3 py-1.5 text-white/85 hover:bg-card/80">
             Zurück zur Startseite
           </Link>
         </div>
 
-        <div className="space-y-5 rounded-2xl border border-white/10 bg-gradient-to-b from-[#121212] to-[#0c0c0c] p-8 shadow-[0_0_40px_rgba(34,197,94,0.06)]">
+        <div className="space-y-5 rounded-2xl border border-border bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <h1 className="text-3xl font-bold">Widerrufsbelehrung</h1>
           <p className="text-sm text-white/60">Kurz und transparent für Vrema als B2B-Produkt.</p>
 
-          <section className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/75">
+          <section className="rounded-xl border border-border bg-background p-4 text-sm text-white/75">
             <h2 className="mb-2 font-semibold text-white">Hinweis zur Zielgruppe</h2>
           <p>
             Vrema richtet sich primär an Unternehmen und Gewerbetreibende (B2B). Für rein gewerbliche Verträge besteht grundsätzlich
@@ -30,7 +30,7 @@ export default function WiderrufPage() {
           <p>Verträge werden daher im Regelfall ausschließlich mit Unternehmern im Sinne des BGB geschlossen.</p>
           </section>
 
-          <section className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/75">
+          <section className="rounded-xl border border-border bg-background p-4 text-sm text-white/75">
             <h2 className="mb-2 font-semibold text-white">Falls ausnahmsweise Verbraucher buchen</h2>
           <p>
             Sollte ein Vertrag mit einem Verbraucher geschlossen werden, gilt das gesetzliche Widerrufsrecht gemäß den jeweils

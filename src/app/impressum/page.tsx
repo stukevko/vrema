@@ -7,8 +7,8 @@ export const metadata: Metadata = {
 
 export default function ImpressumPage() {
   return (
-    <main className="min-h-screen bg-[#080808] px-6 py-20 text-white">
-      <div className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-white/10 bg-[#0f0f0f] p-8">
+    <main className="min-h-screen bg-background px-6 py-20 text-white">
+      <div className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-border bg-card p-8">
         <h1 className="text-3xl font-bold">Impressum</h1>
         <p className="text-sm text-white/60">Angaben gemäß Paragraph 5 DDG</p>
 

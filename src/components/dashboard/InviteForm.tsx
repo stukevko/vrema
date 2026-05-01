@@ -53,7 +53,7 @@ export function InviteForm() {
     <div className="rounded-2xl bg-card border border-border overflow-hidden">
       {/* Header */}
       <div className="px-5 py-4 border-b border-white/5 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-[#22c55e]/10 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
           <UserPlus className="w-4 h-4 text-[#22c55e]" />
         </div>
         <h2 className="font-semibold text-sm">Mitarbeiter einladen</h2>
@@ -70,7 +70,7 @@ export function InviteForm() {
               exit={{ opacity: 0 }}
               className="space-y-4"
             >
-              <div className="rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 p-4">
+              <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
                 <p className="text-xs text-primary font-sans mb-3">✓ {result.name} wurde angelegt</p>
                 <div className="rounded-lg bg-card border border-white/5 p-3 font-sans text-xs space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
@@ -98,7 +98,7 @@ export function InviteForm() {
                 </button>
                 <button
                   onClick={() => setResult(null)}
-                  className="flex-1 py-2.5 rounded-xl bg-[#22c55e] text-black text-sm font-bold hover:bg-[#16a34a] transition-colors"
+                  className="flex-1 py-2.5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 transition-colors"
                 >
                   Weiteren einladen
                 </button>

@@ -59,7 +59,7 @@ function Cursor({ show = true }: { show?: boolean }) {
     const t = setInterval(() => setVis((v) => !v), 530);
     return () => clearInterval(t);
   }, [show]);
-  return <span className={`inline-block w-2 h-4 bg-[#22c55e] ml-0.5 align-middle ${vis ? "opacity-100" : "opacity-0"}`} />;
+  return <span className={`inline-block w-2 h-4 bg-primary ml-0.5 align-middle ${vis ? "opacity-100" : "opacity-0"}`} />;
 }
 
 // ─── Terminal window component ────────────────────────────────────────────────
@@ -67,9 +67,9 @@ function TerminalWindow({ title = "vrema — zsh", children }: { title?: string;
   return (
     <div className="rounded-3xl overflow-hidden border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] bg-card/90 backdrop-blur-md">
       <div className="flex items-center gap-2 px-4 py-3 bg-card border-b border-border">
-        <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-        <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
-        <span className="w-3 h-3 rounded-full bg-[#28c840]" />
+        <span className="w-3 h-3 rounded-full bg-red-400" />
+        <span className="w-3 h-3 rounded-full bg-yellow-400" />
+        <span className="w-3 h-3 rounded-full bg-emerald-400" />
         <span className="ml-3 text-xs text-white/35 tracking-wider">{title}</span>
       </div>
       <div className="p-5 font-sans text-sm leading-relaxed">{children}</div>
@@ -246,7 +246,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/auth/login" className="text-sm text-white/50 hover:text-white transition-colors px-3 py-1.5 rounded-xl hover:bg-white/5">
+            <Link href="/auth/login" className="text-sm text-white/50 hover:text-white transition-colors px-3 py-1.5 rounded-xl hover:bg-card">
               Anmelden
             </Link>
             <Link
@@ -289,14 +289,14 @@ export default function LandingPage() {
               <div className="flex items-center gap-4 flex-wrap">
                 <Link
                   href="/auth/register"
-                  className="group flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-[#22c55e] text-black font-bold hover:bg-[#16a34a] transition-all hover:scale-105 active:scale-95 shadow-xl shadow-[#22c55e]/20"
+                  className="group flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-primary text-black font-bold hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary/20"
                 >
                   Kostenlos starten
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <a
                   href="#pricing"
-                  className="flex items-center gap-2 px-7 py-3.5 rounded-2xl border border-white/10 text-white/60 font-medium hover:text-white hover:border-white/20 transition-all"
+                  className="flex items-center gap-2 px-7 py-3.5 rounded-2xl border border-border text-white/60 font-medium hover:text-white hover:border-border transition-all"
                 >
                   Pläne ansehen
                 </a>
@@ -312,8 +312,8 @@ export default function LandingPage() {
                     key={seal.label}
                     className="rounded-2xl border border-white/5 bg-card/50 px-3 py-2 backdrop-blur-sm"
                   >
-                    <p className="text-[11px] font-semibold text-slate-300">{seal.label}</p>
-                    <p className="mt-0.5 text-[10px] text-slate-400">{seal.text}</p>
+                    <p className="text-[11px] font-semibold text-muted-foreground">{seal.label}</p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">{seal.text}</p>
                   </div>
                 ))}
               </div>
@@ -508,7 +508,7 @@ export default function LandingPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="mt-4 p-3 rounded-lg bg-[#22c55e]/5 border border-[#22c55e]/10">
+                  <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
                     <p className="text-[#22c55e]/80 text-sm">
                       &gt; "Problemlösung durch Handschlagqualität."
                     </p>
@@ -569,7 +569,7 @@ export default function LandingPage() {
             <span className={`text-sm transition-colors ${!yearly ? "text-white" : "text-white/30"}`}>monatlich</span>
             <button
               onClick={() => setYearly(!yearly)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${yearly ? "bg-[#22c55e]" : "bg-white/10"}`}
+              className={`relative w-12 h-6 rounded-full transition-colors ${yearly ? "bg-primary" : "bg-card"}`}
             >
               <motion.div
                 layout
@@ -580,7 +580,7 @@ export default function LandingPage() {
             </button>
             <span className={`text-sm transition-colors ${yearly ? "text-white" : "text-white/30"}`}>
               jährlich
-              <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-[#22c55e]/15 text-[#22c55e] font-bold">-2 Monate</span>
+              <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">-2 Monate</span>
             </span>
           </div>
 
@@ -661,7 +661,7 @@ export default function LandingPage() {
                   }
                   className={`block w-full text-center py-3 rounded-2xl font-bold text-sm transition-all ${
                     plan.highlight
-                      ? "bg-[#22c55e] text-black hover:bg-[#16a34a]"
+                      ? "bg-primary text-black hover:bg-primary/90"
                       : "bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white border border-white/[0.08]"
                   }`}
                 >
@@ -704,14 +704,14 @@ export default function LandingPage() {
                 <div className="flex items-center justify-center gap-4 pt-2 flex-wrap">
                   <Link
                     href="/auth/register"
-                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-[#22c55e] text-black font-bold hover:bg-[#16a34a] transition-all hover:scale-105 active:scale-95"
+                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-primary text-black font-bold hover:bg-primary/90 transition-all hover:scale-105 active:scale-95"
                   >
                     <Zap className="w-4 h-4" />
                     Jetzt registrieren
                   </Link>
                   <a
                     href="#pricing"
-                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-white/10 text-white/60 font-medium hover:text-white hover:border-white/20 transition-all"
+                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-border text-white/60 font-medium hover:text-white hover:border-border transition-all"
                   >
                     Pläne & Preise
                     <ChevronRight className="w-4 h-4" />
@@ -733,7 +733,7 @@ export default function LandingPage() {
           <div className="mt-5">
             <Link
               href="/partner-login"
-              className="inline-flex items-center gap-2 rounded-2xl bg-[#22c55e] px-6 py-3 font-bold text-black hover:bg-[#16a34a] transition-colors"
+              className="inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-black hover:bg-primary/90 transition-colors"
             >
               Jetzt Partner werden
               <ArrowRight className="h-4 w-4" />
@@ -813,10 +813,10 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setModal(null)}
-                      className="w-3 h-3 rounded-full bg-[#ff5f57] hover:brightness-110 transition-all"
+                      className="w-3 h-3 rounded-full bg-red-400 hover:brightness-110 transition-all"
                     />
-                    <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
-                    <span className="w-3 h-3 rounded-full bg-[#28c840]" />
+                    <span className="w-3 h-3 rounded-full bg-yellow-400" />
+                    <span className="w-3 h-3 rounded-full bg-emerald-400" />
                   </div>
                   <span className="text-xs text-white/30 font-sans tracking-wider">
                     vrema — {modal === "impressum" ? "impressum.txt" : "datenschutz.txt"}

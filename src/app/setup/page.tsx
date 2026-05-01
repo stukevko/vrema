@@ -85,7 +85,7 @@ export default async function SetupPage({
           <form action={createCardSetupSession} className="mt-4">
             <button
               type="submit"
-              className="w-full rounded-xl border border-[#22c55e]/30 bg-[#22c55e]/15 px-4 py-3 text-sm font-bold text-[#86efac] hover:bg-[#22c55e]/20"
+              className="w-full rounded-xl border border-primary/30 bg-primary/15 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/20"
             >
               Karte hinterlegen (0,00 EUR Verifikation)
             </button>
@@ -127,7 +127,7 @@ export default async function SetupPage({
           <button
             type="submit"
             disabled={requireCard && !company?.paymentMethodVerifiedAt}
-            className="w-full rounded-xl bg-[#22c55e] px-4 py-3 text-sm font-bold text-black transition-colors hover:bg-[#16a34a] disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-bold text-black transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Weiter zum Dashboard
           </button>

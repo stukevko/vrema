@@ -49,7 +49,7 @@ export function PasskeySecurityForm() {
         type="button"
         onClick={handleRegisterPasskey}
         disabled={isPending}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors disabled:opacity-60"
+        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-card hover:bg-card/80 border border-border text-sm font-medium transition-colors disabled:opacity-60"
       >
         {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Fingerprint className="w-4 h-4" />}
         Neuen Passkey registrieren

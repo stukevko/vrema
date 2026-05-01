@@ -73,7 +73,7 @@ export function TeamList({
             >
               {/* Avatar + name */}
               <div className="col-span-5 flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/[0.08] flex items-center justify-center text-sm font-bold text-white/60 shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-card border border-border flex items-center justify-center text-sm font-bold text-white/60 shrink-0">
                   {(member.name ?? member.email)[0].toUpperCase()}
                 </div>
                 <div className="min-w-0">
@@ -107,7 +107,7 @@ export function TeamList({
                       "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
                       member.isActive
                         ? "bg-red-500/10 hover:bg-red-500/20 text-red-400"
-                        : "bg-[#22c55e]/10 hover:bg-[#22c55e]/20 text-[#22c55e]"
+                        : "bg-primary/10 hover:bg-primary/20 text-primary"
                     )}
                   >
                     {member.isActive

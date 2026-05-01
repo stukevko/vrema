@@ -36,7 +36,7 @@ export default async function BillingPage({
       </div>
 
       {params.success && (
-        <div className="rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/30 p-4 flex items-center gap-3">
+        <div className="rounded-xl bg-primary/10 border border-primary/30 p-4 flex items-center gap-3">
           <Check className="w-5 h-5 text-[#22c55e]" />
           <p className="text-sm text-[#22c55e] font-medium">Zahlung erfolgreich! Dein Plan wurde aktualisiert.</p>
         </div>
@@ -58,7 +58,7 @@ export default async function BillingPage({
             <form action={createBillingPortalSession}>
               <button
                 type="submit"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card hover:bg-card/80 border border-border text-sm font-medium transition-colors"
               >
                 <CreditCard className="w-4 h-4" />
                 Zahlungsportal
@@ -77,14 +77,14 @@ export default async function BillingPage({
               key={key}
               className={`rounded-2xl p-4 md:p-6 border transition-all ${
                 isCurrent
-                  ? "bg-[#22c55e]/5 border-[#22c55e]/30"
+                  ? "bg-primary/5 border-primary/30"
                   : "bg-card border-border"
               }`}
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold">{plan.name}</h3>
                 {isCurrent && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#22c55e]/20 text-[#22c55e] font-semibold">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary font-semibold">
                     Aktiv
                   </span>
                 )}
@@ -93,7 +93,7 @@ export default async function BillingPage({
               {isCurrent ? (
                 <a
                   href="/dashboard"
-                  className="mb-1 inline-flex w-full items-center justify-center rounded-xl bg-[#22c55e] px-4 py-3 text-sm font-bold text-black hover:bg-[#16a34a] transition-colors"
+                  className="mb-1 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-bold text-black hover:bg-primary/90 transition-colors"
                 >
                   Zum Dashboard gehen
                 </a>
@@ -118,7 +118,7 @@ export default async function BillingPage({
                   <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "monthly")}>
                     <button
                       type="submit"
-                      className="w-full py-2.5 rounded-xl bg-[#22c55e] text-black text-sm font-bold hover:bg-[#16a34a] transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-2.5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
                     >
                       <Zap className="w-4 h-4" />
                       Monatlich upgraden
@@ -127,7 +127,7 @@ export default async function BillingPage({
                   <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "yearly")}>
                     <button
                       type="submit"
-                      className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-medium hover:bg-white/10 transition-colors"
+                      className="w-full py-2.5 rounded-xl bg-card border border-border text-sm font-medium hover:bg-card/80 transition-colors"
                     >
                       Jährlich (2 Monate gratis)
                     </button>
@@ -137,7 +137,7 @@ export default async function BillingPage({
               {key === "ENTERPRISE" && !isCurrent && (
                 <a
                   href="mailto:kontakt@kevko.studio?subject=Enterprise%20Anfrage%20Vrema"
-                  className="block w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-center hover:bg-white/10 transition-colors"
+                  className="block w-full py-2.5 rounded-xl bg-card border border-border text-sm font-medium text-center hover:bg-card/80 transition-colors"
                 >
                   Kontakt aufnehmen
                 </a>

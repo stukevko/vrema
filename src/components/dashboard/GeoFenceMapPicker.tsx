@@ -28,7 +28,7 @@ function MapClickHandler({ onChange }: { onChange: Props["onChange"] }) {
 
 export default function GeoFenceMapPicker({ latitude, longitude, radiusMeters, onChange }: Props) {
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10">
+    <div className="overflow-hidden rounded-xl border border-border">
       <MapContainer
         center={[latitude, longitude]}
         zoom={16}
