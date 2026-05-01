@@ -39,10 +39,10 @@ function statusLabel(status: Row["status"]) {
 }
 
 function statusBadgeClass(status: Row["status"]) {
-  if (status === "PENDING") return "border-amber-300/35 bg-amber-400/10 text-muted-foreground";
-  if (status === "AVAILABLE") return "border-emerald-300/35 bg-emerald-400/10 text-emerald-300";
-  if (status === "PAID") return "border-border bg-card text-muted-foreground";
-  return "border-red-400/35 bg-red-500/10 text-red-200";
+  if (status === "PENDING") return "bg-amber-50 text-amber-700";
+  if (status === "AVAILABLE") return "bg-emerald-50 text-emerald-700";
+  if (status === "PAID") return "bg-slate-100 text-slate-700";
+  return "bg-red-50 text-red-700";
 }
 
 export function PartnerDashboardClient({
@@ -79,98 +79,98 @@ export function PartnerDashboardClient({
   const totalSuccessCents = starterTotalCents + businessTotalCents;
 
   return (
-    <div className="min-h-screen bg-background text-slate-900 p-6">
+    <div className="min-h-screen bg-background text-foreground p-6 premium-enter">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold">Partner Dashboard</h1>
-            <p className="text-sm text-slate-900/45">Willkommen, {name}. Hier siehst du deine Abschluesse und Provisionen.</p>
+            <h1 className="text-3xl font-bold tracking-tight">Partner Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Willkommen, {name}. Hier siehst du deine Abschluesse und Provisionen.</p>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/partner-login" })}
-            className="rounded-2xl border border-border px-3 py-2 text-sm text-slate-700 hover:bg-card/70"
+            className="rounded-2xl border border-border px-3 py-2 text-sm text-foreground hover:bg-slate-50"
           >
             Abmelden
           </button>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="rounded-2xl premium-card p-5">
           <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Dein Ref-Link</p>
           <div className="flex flex-wrap items-center gap-2">
-            <code className="rounded-2xl border border-border bg-background px-2 py-1.5 text-xs text-slate-900 break-all">{refUrl}</code>
-            <button onClick={() => void copy(refUrl)} className="inline-flex items-center gap-1 rounded-2xl border border-border bg-white px-2.5 py-1.5 text-xs text-slate-900 hover:bg-card/70">
+            <code className="rounded-2xl border border-border bg-white px-2 py-1.5 text-xs text-foreground break-all">{refUrl}</code>
+            <button onClick={() => void copy(refUrl)} className="inline-flex items-center gap-1 rounded-2xl border border-border bg-white px-2.5 py-1.5 text-xs text-foreground hover:bg-slate-50">
               <Copy className="w-3 h-3" />
               Link kopieren
             </button>
-            <span className="text-[11px] text-slate-900/45">Code: {code}</span>
+            <span className="text-[11px] text-muted-foreground">Code: {code}</span>
           </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-3">
-          <div className="rounded-2xl border border-amber-300/20 bg-amber-400/5 p-4">
-            <p className="text-xs text-slate-900/45">Ausstehend</p>
-            <p className="text-lg font-semibold text-amber-200 tabular-nums">{formatCents(pendingCents, "eur")}</p>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs text-muted-foreground">Ausstehend</p>
+            <p className="text-lg font-semibold text-amber-700 tabular-nums">{formatCents(pendingCents, "eur")}</p>
           </div>
-          <div className="rounded-2xl border border-emerald-300/20 bg-emerald-500/5 p-4">
-            <p className="text-xs text-slate-900/45">Verfügbares Guthaben</p>
-            <p className="text-lg font-semibold text-emerald-200 tabular-nums">{formatCents(availableCents, "eur")}</p>
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <p className="text-xs text-muted-foreground">Verfügbares Guthaben</p>
+            <p className="text-lg font-semibold text-emerald-700 tabular-nums">{formatCents(availableCents, "eur")}</p>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs text-slate-900/45">Ausgezahlt</p>
-            <p className="text-lg font-semibold text-slate-900/85 tabular-nums">{formatCents(paidCents, "eur")}</p>
+            <p className="text-xs text-muted-foreground">Ausgezahlt</p>
+            <p className="text-lg font-semibold text-foreground tabular-nums">{formatCents(paidCents, "eur")}</p>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="rounded-2xl premium-card p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-base font-semibold">Deine Erfolgs-Statistik</h2>
-              <p className="text-xs text-slate-900/45">Einmalige Provision pro direktem Abschluss (ohne Testphase).</p>
+              <p className="text-xs text-muted-foreground">Einmalige Provision pro direktem Abschluss (ohne Testphase).</p>
             </div>
             <button
               type="button"
-              className="rounded-2xl border border-border bg-white px-4 py-2 text-sm text-slate-900 hover:bg-card/70"
+              className="rounded-2xl border border-border bg-white px-4 py-2 text-sm text-foreground hover:bg-slate-50"
               onClick={() => window.alert("Hier findest du bald Logos, Screenshots und Texte für WhatsApp/Instagram.")}
             >
               Werbemittel-Kit
             </button>
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <p className="text-xs text-slate-900/45">Starter-Abschlüsse</p>
-              <p className="mt-1 text-sm text-slate-900 tabular-nums">
+            <div className="rounded-2xl border border-border bg-white p-4">
+              <p className="text-xs text-muted-foreground">Starter-Abschlüsse</p>
+              <p className="mt-1 text-sm text-foreground tabular-nums">
                 {starterDeals.length} (insg. {formatCents(starterTotalCents, "eur")})
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <p className="text-xs text-slate-900/45">Business-Abschlüsse</p>
-              <p className="mt-1 text-sm text-slate-900 tabular-nums">
+            <div className="rounded-2xl border border-border bg-white p-4">
+              <p className="text-xs text-muted-foreground">Business-Abschlüsse</p>
+              <p className="mt-1 text-sm text-foreground tabular-nums">
                 {businessDeals.length} (insg. {formatCents(businessTotalCents, "eur")})
               </p>
             </div>
-            <div className="rounded-2xl border border-emerald-300/25 bg-emerald-500/10 p-4">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
               <p className="text-xs text-muted-foreground">Gesamtguthaben</p>
-              <p className="mt-1 text-sm font-semibold text-emerald-200 tabular-nums">{formatCents(totalSuccessCents, "eur")}</p>
+              <p className="mt-1 text-sm font-semibold text-emerald-700 tabular-nums">{formatCents(totalSuccessCents, "eur")}</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/5 p-5">
-          <p className="text-sm font-semibold text-emerald-100">Verdienst-Struktur</p>
-          <p className="mt-1 text-sm text-emerald-100/85 leading-relaxed">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+          <p className="text-sm font-semibold text-emerald-700">Verdienst-Struktur</p>
+          <p className="mt-1 text-sm text-emerald-700/85 leading-relaxed">
             5€ für jeden Starter-Abschluss, 15€ für jeden Business-Abschluss. Auszahlung erfolgt nach Bestätigung des
             Kunden-Abos. Es zählt nur ein direkter Abschluss - eine 14-Tage-Testphase zählt nicht.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="rounded-2xl premium-card overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
             <h2 className="font-semibold">Letzte Abschlüsse</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-card/80 text-slate-900/45">
+                <tr className="border-b border-border bg-card/80 text-muted-foreground">
                   {["Plan", "Deine Provision"].map((h) => (
                     <th key={h} className="px-4 py-2 text-left text-xs font-medium">{h}</th>
                   ))}
@@ -183,9 +183,9 @@ export function PartnerDashboardClient({
                   </tr>
                 ) : (
                   recentDeals.map((row) => (
-                    <tr key={row.id} className="border-b border-border active:bg-background/70 md:hover:bg-card/70 transition-colors">
-                      <td className="px-4 py-4 text-slate-700">{planLabel(row.plan)}</td>
-                      <td className="px-4 py-4 text-emerald-200 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
+                    <tr key={row.id} className="border-b border-border active:bg-background/70 md:hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-4 text-foreground/80">{planLabel(row.plan)}</td>
+                      <td className="px-4 py-4 text-emerald-700 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
                     </tr>
                   ))
                 )}
@@ -194,14 +194,14 @@ export function PartnerDashboardClient({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="rounded-2xl premium-card overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
             <h2 className="font-semibold">Alle Abschlüsse</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-card/80 text-slate-900/45">
+                <tr className="border-b border-border bg-card/80 text-muted-foreground">
                   {["Firma", "Plan", "Provision", "Status", "Abschluss", "Ausgezahlt am"].map((h) => (
                     <th key={h} className="px-4 py-2 text-left text-xs font-medium">{h}</th>
                   ))}
@@ -214,10 +214,10 @@ export function PartnerDashboardClient({
                   </tr>
                 ) : (
                   rows.map((row) => (
-                    <tr key={row.id} className="border-b border-border active:bg-background/70 md:hover:bg-card/70 transition-colors">
+                    <tr key={row.id} className="border-b border-border active:bg-background/70 md:hover:bg-slate-50 transition-colors">
                       <td className="px-4 py-4">{row.companyName}</td>
-                      <td className="px-4 py-4 text-slate-700">{planLabel(row.plan)}</td>
-                      <td className="px-4 py-4 text-emerald-200 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
+                      <td className="px-4 py-4 text-foreground/80">{planLabel(row.plan)}</td>
+                      <td className="px-4 py-4 text-emerald-700 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
                       <td className="px-4 py-4">
                         <span
                           className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${statusBadgeClass(row.status)}`}

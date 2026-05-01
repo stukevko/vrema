@@ -29,9 +29,9 @@ export default async function BillingPage({
   const currentPlan = company.plan;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 text-foreground">
-      <div className="rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-        <h1 className="text-2xl font-semibold tracking-tight">Abonnement & Billing</h1>
+    <div className="max-w-5xl mx-auto space-y-8 text-foreground premium-enter">
+      <div className="rounded-3xl premium-card backdrop-blur-xl p-8">
+        <h1 className="text-3xl font-bold tracking-tight">Abonnement & Billing</h1>
         <p className="text-muted-foreground text-sm mt-1">Verwalte dein Abo und deine Zahlungsmethoden.</p>
       </div>
 
@@ -43,7 +43,7 @@ export default async function BillingPage({
       )}
 
       {/* Current plan */}
-      <div className="rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+      <div className="rounded-3xl premium-card backdrop-blur-xl p-8">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Aktueller Plan</p>
@@ -58,7 +58,7 @@ export default async function BillingPage({
             <form action={createBillingPortalSession}>
               <button
                 type="submit"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card hover:bg-card/80 border border-border text-sm font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-border text-sm font-medium transition-colors"
               >
                 <CreditCard className="w-4 h-4" />
                 Zahlungsportal
@@ -75,10 +75,10 @@ export default async function BillingPage({
           return (
             <div
               key={key}
-              className={`rounded-3xl p-8 border backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all ${
+              className={`rounded-3xl p-8 border backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all hover:-translate-y-0.5 ${
                 isCurrent
                   ? "bg-primary/5 border-primary/30"
-                  : "bg-card border-white"
+                  : "bg-card border-border"
               }`}
             >
               <div className="flex items-center justify-between mb-4">
@@ -127,7 +127,7 @@ export default async function BillingPage({
                   <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "yearly")}>
                     <button
                       type="submit"
-                      className="w-full py-2.5 rounded-xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-sm font-medium hover:bg-card/80 transition-colors"
+                      className="w-full py-2.5 rounded-xl bg-white border border-border text-sm font-medium hover:bg-slate-50 transition-colors"
                     >
                       Jährlich (2 Monate gratis)
                     </button>
@@ -137,7 +137,7 @@ export default async function BillingPage({
               {key === "ENTERPRISE" && !isCurrent && (
                 <a
                   href="mailto:kontakt@kevko.studio?subject=Enterprise%20Anfrage%20Vrema"
-                  className="block w-full py-2.5 rounded-xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-sm font-medium text-center hover:bg-card/80 transition-colors"
+                  className="block w-full py-2.5 rounded-xl bg-white border border-border text-sm font-medium text-center hover:bg-slate-50 transition-colors"
                 >
                   Kontakt aufnehmen
                 </a>

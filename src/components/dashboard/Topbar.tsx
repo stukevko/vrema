@@ -81,7 +81,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
               </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-red-300 md:hover:bg-red-500/10 transition-all active:scale-95"
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-red-600 md:hover:bg-red-50 transition-all active:scale-95"
               >
                 <LogOut className="w-4 h-4" />
                 Abmelden

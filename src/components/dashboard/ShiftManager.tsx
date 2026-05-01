@@ -639,7 +639,7 @@ export function ShiftManager({
                 : "frei"}
             </span>
             {recentDayAction?.dayOfWeek === idx && (
-              <span className={`mt-1 block text-[10px] ${recentDayAction.action === "saved" ? "text-primary" : "text-red-200"}`}>
+              <span className={`mt-1 block text-[10px] ${recentDayAction.action === "saved" ? "text-primary" : "text-red-700"}`}>
                 {recentDayAction.action === "saved" ? "Gespeichert" : "Gelöscht"}
               </span>
             )}
@@ -858,7 +858,7 @@ export function ShiftManager({
           </div>
           <div className="mt-2 flex justify-end">
             {firstCriticalSlot ? (
-              <span className="inline-flex items-center rounded-full border border-red-400/35 bg-red-500/15 px-2.5 py-1 text-[11px] text-red-200">
+              <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] text-red-700">
                 Erste Lücke ab {firstCriticalSlot}
               </span>
             ) : null}
@@ -943,7 +943,7 @@ export function ShiftManager({
                       {row.conflict ? (
                         <div
                           className={`absolute inset-1 rounded-lg flex items-center justify-center text-xs font-semibold ${
-                            row.conflict === "SICK" ? "bg-red-500/20 text-red-200" : "bg-amber-500/20 text-amber-200"
+                            row.conflict === "SICK" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"
                           }`}
                         >
                           {row.conflict === "SICK" ? "Krank (gesperrt)" : "Urlaub (gesperrt)"}
@@ -1091,7 +1091,7 @@ export function ShiftManager({
                     }
                   });
                 }}
-                className="rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-2 text-sm text-red-200 hover:bg-red-500/20 disabled:opacity-50"
+                className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 hover:bg-red-100 disabled:opacity-50"
               >
                 Löschen
               </button>

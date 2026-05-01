@@ -64,19 +64,19 @@ export default async function SetupPage({
         </p>
 
         {requireCard && (
-          <div className="mt-5 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-xs text-amber-200">
+          <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
             Echtheits-Check aktiv: Vor Dashboard-Zugang muss eine gültige Karte hinterlegt werden.
           </div>
         )}
 
         {paymentState === "cancel" && (
-          <p className="mt-4 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+          <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
             Kartenprüfung abgebrochen. Bitte erneut starten.
           </p>
         )}
 
         {paymentState === "error" && (
-          <p className="mt-4 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+          <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
             Stripe-Setup konnte nicht gestartet werden. Bitte ENV/Stripe-Konfiguration prüfen.
           </p>
         )}
@@ -93,7 +93,7 @@ export default async function SetupPage({
         )}
 
         {requireCard && company?.paymentMethodVerifiedAt && (
-          <p className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-xs text-emerald-300">
+          <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-700">
             Karte verifiziert. Du kannst das Setup abschliessen.
           </p>
         )}
