@@ -102,13 +102,13 @@ function LoginForm() {
           <Image src="/vremalogo.png" alt="Vrema Logo" width={96} height={96} className="-mb-2" />
           <div className="text-center">
             <span className="font-bold text-xl tracking-tight">Vrema</span>
-            <span className="block text-[10px] text-white/25 font-sans uppercase tracking-widest">by KevkoStudio</span>
+            <span className="block text-[10px] text-muted-foreground font-sans uppercase tracking-widest">by KevkoStudio</span>
           </div>
         </div>
 
         <div className="rounded-2xl bg-card border border-white/5 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <h1 className="text-xl font-bold mb-1">Willkommen zurück</h1>
-          <p className="text-white/40 text-sm mb-8">Melde dich bei deinem Konto an.</p>
+          <p className="text-muted-foreground text-sm mb-8">Melde dich bei deinem Konto an.</p>
 
           {registered && (
             <p className="mb-4 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
@@ -130,9 +130,9 @@ function LoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-xs text-white/50 mb-1.5 block">E-Mail</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">E-Mail</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="email"
                   name="email"
@@ -140,20 +140,20 @@ function LoginForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@firma.de"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
             <div>
-              <label className="text-xs text-white/50 mb-1.5 block">Passwort</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Passwort</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="password"
                   name="password"
                   required
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -188,7 +188,7 @@ function LoginForm() {
               type="button"
               onClick={handlePasskeyLogin}
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-card border border-border text-white font-semibold flex items-center justify-center gap-2 hover:bg-card/80 transition-colors disabled:opacity-60"
+              className="w-full py-3 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-slate-900 font-semibold flex items-center justify-center gap-2 hover:bg-card/80 transition-colors disabled:opacity-60"
             >
               <Fingerprint className="w-4 h-4" />
               Mit Passkey anmelden
@@ -196,12 +196,12 @@ function LoginForm() {
           </form>
 
           <div className="mt-6 pt-6 border-t border-white/5 text-center">
-            <p className="text-xs text-white/40 mb-3">
+            <p className="text-xs text-muted-foreground mb-3">
               <Link href="/auth/forgot-password" className="text-primary hover:underline">
                 Passwort vergessen?
               </Link>
             </p>
-            <p className="text-sm text-white/40">
+            <p className="text-sm text-muted-foreground">
               Noch kein Konto?{" "}
               <Link href="/auth/register" className="text-primary hover:underline">
                 Kostenlos registrieren

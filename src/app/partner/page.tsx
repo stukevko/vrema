@@ -13,13 +13,13 @@ const PARTNER_MAILTO = `mailto:kontakt@kevko.studio?subject=${encodeURIComponent
 
 export default function PartnerPage() {
   return (
-    <main className="min-h-screen bg-background px-6 py-16 text-white">
+    <main className="min-h-screen bg-background px-6 py-16 text-slate-900">
       <div className="mx-auto max-w-lg">
-        <div className="mb-6 flex items-center justify-between rounded-2xl border border-white/5 bg-card px-4 py-3 text-xs text-white/70 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
-          <span className="font-sans text-white/50">vrema — partner</span>
+        <div className="mb-6 flex items-center justify-between rounded-2xl border border-white/5 bg-card px-4 py-3 text-xs text-slate-700 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+          <span className="font-sans text-muted-foreground">vrema — partner</span>
           <Link
             href="/"
-            className="rounded-xl border border-border px-3 py-1.5 text-white/85 hover:bg-card/70"
+            className="rounded-xl border border-border px-3 py-1.5 text-slate-900/85 hover:bg-card/70"
           >
             Zurück zur Startseite
           </Link>
@@ -28,7 +28,7 @@ export default function PartnerPage() {
         <div className="space-y-8 rounded-2xl border border-white/5 bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <h1 className="text-2xl font-bold tracking-tight">Partner werden</h1>
 
-          <div className="space-y-4 text-base leading-relaxed text-white/80">
+          <div className="space-y-4 text-base leading-relaxed text-slate-900">
             <p>Empfehlen Sie VREMA.</p>
             <p>Erhalten Sie 15 € pro Business-Kunden.</p>
             <p>Werden Sie Teil der VREMA-Erfolgsgeschichte.</p>
@@ -41,7 +41,7 @@ export default function PartnerPage() {
             Jetzt Partner anfragen
           </a>
 
-          <p className="text-center text-xs text-white/35 font-sans">
+          <p className="text-center text-xs text-muted-foreground font-sans">
             Kein Login — Sie erhalten Ihren persönlichen Empfehlungslink per E-Mail.
           </p>
         </div>

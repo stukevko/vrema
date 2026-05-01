@@ -70,7 +70,7 @@ function TerminalWindow({ title = "vrema — zsh", children }: { title?: string;
         <span className="w-3 h-3 rounded-full bg-red-400" />
         <span className="w-3 h-3 rounded-full bg-yellow-400" />
         <span className="w-3 h-3 rounded-full bg-emerald-400" />
-        <span className="ml-3 text-xs text-white/35 tracking-wider">{title}</span>
+        <span className="ml-3 text-xs text-muted-foreground tracking-wider">{title}</span>
       </div>
       <div className="p-5 font-sans text-sm leading-relaxed">{children}</div>
     </div>
@@ -138,7 +138,7 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
       className="text-center"
     >
       <p className="text-2xl md:text-3xl font-bold text-emerald-300">{value}</p>
-      <p className="text-xs text-white/40 mt-1 uppercase tracking-widest">{label}</p>
+      <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest">{label}</p>
     </motion.div>
   );
 }
@@ -217,7 +217,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-white overflow-x-hidden">
+    <div className="min-h-screen bg-background text-slate-900 overflow-x-hidden">
       <Script
         id="ld-json-vrema"
         type="application/ld+json"
@@ -236,22 +236,22 @@ export default function LandingPage() {
             <Image src="/vremalogo.png" alt="Vrema Logo" width={52} height={52} className="-my-2" />
             <div>
               <span className="font-bold text-base tracking-tight">Vrema</span>
-              <span className="ml-2 text-[10px] text-white/30 uppercase tracking-widest">by KevkoStudio</span>
+              <span className="ml-2 text-[10px] text-muted-foreground uppercase tracking-widest">by KevkoStudio</span>
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-8 text-sm text-white/50">
-            <a href="#features" className="hover:text-white transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-white transition-colors">Preise</a>
+          <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+            <a href="#features" className="hover:text-slate-900 transition-colors">Features</a>
+            <a href="#pricing" className="hover:text-slate-900 transition-colors">Preise</a>
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/auth/login" className="text-sm text-white/50 hover:text-white transition-colors px-3 py-1.5 rounded-xl hover:bg-card">
+            <Link href="/auth/login" className="text-sm text-muted-foreground hover:text-slate-900 transition-colors px-3 py-1.5 rounded-xl hover:bg-card">
               Anmelden
             </Link>
             <Link
               href="/auth/register"
-              className="text-sm px-4 py-2 rounded-xl bg-card text-white font-semibold hover:bg-card/80 transition-all"
+              className="text-sm px-4 py-2 rounded-xl bg-card text-slate-900 font-semibold hover:bg-card/80 transition-all"
             >
               Registrieren
             </Link>
@@ -281,9 +281,9 @@ export default function LandingPage() {
                 <span className="text-[#22c55e]">Präzise. Einfach.</span>
               </h1>
 
-              <p className="text-lg text-white/50 leading-relaxed mb-10 max-w-md">
+              <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-md">
                 Stempeluhr, Auswertungen und GPS-Tracking in einer Anwendung.{" "}
-                <span className="text-white/70">Gebaut für Handwerker, Dienstleister & Teams.</span>
+                <span className="text-slate-700">Gebaut für Handwerker, Dienstleister & Teams.</span>
               </p>
 
               <div className="flex items-center gap-4 flex-wrap">
@@ -296,7 +296,7 @@ export default function LandingPage() {
                 </Link>
                 <a
                   href="#pricing"
-                  className="flex items-center gap-2 px-7 py-3.5 rounded-2xl border border-border text-white/60 font-medium hover:text-white hover:border-border transition-all"
+                  className="flex items-center gap-2 px-7 py-3.5 rounded-2xl border border-border text-slate-700 font-medium hover:text-slate-900 hover:border-border transition-all"
                 >
                   Pläne ansehen
                 </a>
@@ -318,7 +318,7 @@ export default function LandingPage() {
                 ))}
               </div>
 
-              <div className="flex items-center gap-6 mt-8 text-xs text-white/25 uppercase tracking-widest">
+              <div className="flex items-center gap-6 mt-8 text-xs text-muted-foreground uppercase tracking-widest">
                 <span>DSGVO-konform</span>
                 <span className="w-1 h-1 rounded-full bg-white/20" />
                 <span>Made in Germany</span>
@@ -345,10 +345,10 @@ export default function LandingPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className={
-                          isCmd ? "text-white/90" :
+                          isCmd ? "text-slate-900" :
                           isSuccess ? "text-[#22c55e]" :
                           isInfo ? "text-[#60a5fa]" :
-                          "text-white/40"
+                          "text-muted-foreground"
                         }
                       >
                         {line}
@@ -356,13 +356,13 @@ export default function LandingPage() {
                     );
                   })}
                   {!done && (
-                    <div className={inProgress.startsWith("$") ? "text-white/90" : inProgress.startsWith("✓") ? "text-[#22c55e]" : "text-[#60a5fa]"}>
+                    <div className={inProgress.startsWith("$") ? "text-slate-900" : inProgress.startsWith("✓") ? "text-[#22c55e]" : "text-[#60a5fa]"}>
                       {inProgress}
                       <Cursor show={true} />
                     </div>
                   )}
                   {done && (
-                    <div className="text-white/30 flex items-center gap-1 mt-2">
+                    <div className="text-muted-foreground flex items-center gap-1 mt-2">
                       $<Cursor show={true} />
                     </div>
                   )}
@@ -378,7 +378,7 @@ export default function LandingPage() {
                   { label: "Offene Anträge", value: "2 Urlaub", color: "#f59e0b" },
                 ].map((badge) => (
                   <div key={badge.label} className="rounded-2xl bg-card border border-white/5 px-4 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
-                    <p className="text-[10px] text-white/30 uppercase tracking-widest mb-1">{badge.label}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{badge.label}</p>
                     <p className="font-bold text-sm tabular-nums" style={{ color: badge.color }}>{badge.value}</p>
                   </div>
                 ))}
@@ -408,7 +408,7 @@ export default function LandingPage() {
             <h2 className="text-4xl md:text-5xl font-black leading-tight">
               Alles, was du brauchst.
               <br />
-              <span className="text-white/30">Nichts, was du nicht brauchst.</span>
+              <span className="text-muted-foreground">Nichts, was du nicht brauchst.</span>
             </h2>
           </motion.div>
 
@@ -433,11 +433,11 @@ export default function LandingPage() {
 
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 group-hover:border-[#22c55e]/20 transition-colors">
-                      <feature.icon className="w-5 h-5 text-white/50 group-hover:text-[#22c55e] transition-colors" />
+                      <feature.icon className="w-5 h-5 text-muted-foreground group-hover:text-[#22c55e] transition-colors" />
                     </div>
                     <div>
                       <h3 className="font-bold text-sm mb-1.5">{feature.title}</h3>
-                      <p className="text-white/40 text-sm leading-relaxed">{feature.desc}</p>
+                      <p className="text-muted-foreground text-sm leading-relaxed">{feature.desc}</p>
                     </div>
                   </div>
                 </div>
@@ -460,9 +460,9 @@ export default function LandingPage() {
               <h2 className="text-4xl md:text-5xl font-black leading-tight mb-6">
                 Kein Großkonzern.
                 <br />
-                <span className="text-white/30">Dafür 100% Verlässlichkeit.</span>
+                <span className="text-muted-foreground">Dafür 100% Verlässlichkeit.</span>
               </h2>
-              <p className="text-white/50 leading-relaxed mb-8">
+              <p className="text-muted-foreground leading-relaxed mb-8">
                 Vrema ist ein Produkt von KevkoStudio — inhaber-geführt, lokal verwurzelt, technisch exzellent.
                 Du erreichst direkt denjenigen, der deinen Code schreibt.
               </p>
@@ -477,7 +477,7 @@ export default function LandingPage() {
                     <span className="text-[#22c55e] text-sm font-bold shrink-0 mt-0.5">{item.num}</span>
                     <div>
                       <p className="font-semibold text-sm mb-1">{item.title}</p>
-                      <p className="text-white/40 text-sm">{item.desc}</p>
+                      <p className="text-muted-foreground text-sm">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -492,19 +492,19 @@ export default function LandingPage() {
             >
               <TerminalWindow title="whoami — KevkoStudio">
                 <div className="space-y-4">
-                  <div className="text-white/40">
-                    <span className="text-white/20">$</span> whoami --verbose
+                  <div className="text-muted-foreground">
+                    <span className="text-muted-foreground">$</span> whoami --verbose
                   </div>
                   <div className="border-l-2 border-[#22c55e]/30 pl-4 space-y-2">
                     <p className="text-[#22c55e]">Kevin Konkin</p>
-                    <p className="text-white/50 text-xs">Gründer & Entwickler, KevkoStudio</p>
-                    <p className="text-white/30 text-xs">Kolbstr. 5 · 67346 Speyer · Deutschland</p>
+                    <p className="text-muted-foreground text-xs">Gründer & Entwickler, KevkoStudio</p>
+                    <p className="text-muted-foreground text-xs">Kolbstr. 5 · 67346 Speyer · Deutschland</p>
                   </div>
                   <div className="grid grid-cols-3 gap-3 mt-4">
                     {[{ v: "10+", l: "Jahre" }, { v: "Full", l: "Stack" }, { v: "5★", l: "Feedback" }].map((s) => (
                       <div key={s.l} className="text-center p-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                         <p className="text-[#22c55e] font-bold text-lg">{s.v}</p>
-                        <p className="text-white/30 text-xs">{s.l}</p>
+                        <p className="text-muted-foreground text-xs">{s.l}</p>
                       </div>
                     ))}
                   </div>
@@ -513,7 +513,7 @@ export default function LandingPage() {
                       &gt; "Problemlösung durch Handschlagqualität."
                     </p>
                   </div>
-                  <div className="text-white/20 flex items-center gap-1">
+                  <div className="text-muted-foreground flex items-center gap-1">
                     $<Cursor show={true} />
                   </div>
                 </div>
@@ -534,8 +534,8 @@ export default function LandingPage() {
           >
             <p className="text-xs text-[#22c55e] uppercase tracking-widest mb-4">03 / Preise</p>
             <h2 className="text-4xl md:text-5xl font-black mb-4">Starten.</h2>
-            <p className="text-white/40">Kostenlos testen. Keine Kreditkarte. Keine Verpflichtungen.</p>
-            <p className="mt-2 text-sm text-white/60">
+            <p className="text-muted-foreground">Kostenlos testen. Keine Kreditkarte. Keine Verpflichtungen.</p>
+            <p className="mt-2 text-sm text-slate-700">
               Egal ob 5 oder 50 Mitarbeiter - ein Preis. Keine versteckten Kosten pro Nutzer.
             </p>
           </motion.div>
@@ -546,27 +546,27 @@ export default function LandingPage() {
                 <ShieldCheck className="h-4 w-4" />
                 <p className="text-sm font-semibold">DATEV-Ready</p>
               </div>
-              <p className="mt-1 text-sm text-white/65">Exportformate für Ihr Lohnbüro optimiert.</p>
+              <p className="mt-1 text-sm text-slate-700">Exportformate für Ihr Lohnbüro optimiert.</p>
             </div>
             <div className="rounded-2xl border border-white/5 bg-card p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
               <div className="flex items-center gap-2 text-emerald-200">
                 <Scale className="h-4 w-4" />
                 <p className="text-sm font-semibold">Revisionssicher</p>
               </div>
-              <p className="mt-1 text-sm text-white/65">Vollständiger Audit-Trail nach GoBD-Standards.</p>
+              <p className="mt-1 text-sm text-slate-700">Vollständiger Audit-Trail nach GoBD-Standards.</p>
             </div>
             <div className="rounded-2xl border border-white/5 bg-card p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
               <div className="flex items-center gap-2 text-emerald-200">
                 <Server className="h-4 w-4" />
                 <p className="text-sm font-semibold">Hosted in Germany</p>
               </div>
-              <p className="mt-1 text-sm text-white/65">100% DSGVO-konform & sicher.</p>
+              <p className="mt-1 text-sm text-slate-700">100% DSGVO-konform & sicher.</p>
             </div>
           </div>
 
           {/* Toggle */}
           <div className="flex items-center gap-4 mb-10">
-            <span className={`text-sm transition-colors ${!yearly ? "text-white" : "text-white/30"}`}>monatlich</span>
+            <span className={`text-sm transition-colors ${!yearly ? "text-slate-900" : "text-muted-foreground"}`}>monatlich</span>
             <button
               onClick={() => setYearly(!yearly)}
               className={`relative w-12 h-6 rounded-full transition-colors ${yearly ? "bg-primary" : "bg-card"}`}
@@ -578,7 +578,7 @@ export default function LandingPage() {
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               />
             </button>
-            <span className={`text-sm transition-colors ${yearly ? "text-white" : "text-white/30"}`}>
+            <span className={`text-sm transition-colors ${yearly ? "text-slate-900" : "text-muted-foreground"}`}>
               jährlich
               <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">-2 Monate</span>
             </span>
@@ -605,7 +605,7 @@ export default function LandingPage() {
                 )}
 
                 {/* Plan header as terminal comment */}
-                <div className="text-xs text-white/20 mb-4"># {plan.name.toLowerCase()}.plan</div>
+                <div className="text-xs text-muted-foreground mb-4"># {plan.name.toLowerCase()}.plan</div>
 
                 <h3 className="font-black text-xl mb-4">{plan.name}</h3>
 
@@ -613,7 +613,7 @@ export default function LandingPage() {
                   {plan.monthlyPrice === null ? (
                     <div className="mb-6">
                       <p className="text-3xl font-black">Auf Anfrage</p>
-                      <p className="text-white/30 text-xs mt-1">individuell</p>
+                      <p className="text-muted-foreground text-xs mt-1">individuell</p>
                     </div>
                   ) : (
                     <motion.div
@@ -627,10 +627,10 @@ export default function LandingPage() {
                         <span className="text-4xl font-black">
                           {yearly ? plan.yearlyPrice : plan.monthlyPrice}€
                         </span>
-                        <span className="text-white/30 text-sm mb-1.5">/mo</span>
+                        <span className="text-muted-foreground text-sm mb-1.5">/mo</span>
                       </div>
                       {yearly && (
-                        <p className="text-white/30 text-xs mt-1">
+                        <p className="text-muted-foreground text-xs mt-1">
                           = {(plan.yearlyPrice! * 12)}€/Jahr · spare {((plan.monthlyPrice! - plan.yearlyPrice!) * 12)}€
                         </p>
                       )}
@@ -642,12 +642,12 @@ export default function LandingPage() {
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
                       <Check className="w-3.5 h-3.5 text-[#22c55e] shrink-0" />
-                      <span className="text-white/70">{f}</span>
+                      <span className="text-slate-700">{f}</span>
                     </li>
                   ))}
                   {plan.missing.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm opacity-25">
-                      <span className="w-3.5 h-3.5 shrink-0 text-center text-white/30 text-xs">—</span>
+                      <span className="w-3.5 h-3.5 shrink-0 text-center text-muted-foreground text-xs">—</span>
                       <span>{f}</span>
                     </li>
                   ))}
@@ -662,7 +662,7 @@ export default function LandingPage() {
                   className={`block w-full text-center py-3 rounded-2xl font-bold text-sm transition-all ${
                     plan.highlight
                       ? "bg-primary text-black hover:bg-primary/90"
-                      : "bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white border border-white/[0.08]"
+                      : "bg-white/[0.04] text-slate-700 hover:bg-white/[0.08] hover:text-slate-900 border border-white/[0.08]"
                   }`}
                 >
                   {plan.key === "ENTERPRISE" ? "$ kontakt --plan enterprise" : `$ start --plan ${plan.key.toLowerCase()}`}
@@ -671,15 +671,15 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <p className="mt-10 text-center text-sm text-white/40">
+          <p className="mt-10 text-center text-sm text-muted-foreground">
             <Link
               href="/partner"
               className="text-[#22c55e]/90 hover:text-[#22c55e] underline underline-offset-2 text-xs"
             >
               Partner werden
             </Link>
-            <span className="text-white/25 mx-2">·</span>
-            <span className="text-white/35">Schreib uns kurz — kein Login, nur Link teilen.</span>
+            <span className="text-muted-foreground mx-2">·</span>
+            <span className="text-muted-foreground">Schreib uns kurz — kein Login, nur Link teilen.</span>
           </p>
         </div>
       </section>
@@ -698,7 +698,7 @@ export default function LandingPage() {
                 <h2 className="text-3xl md:text-4xl font-black">
                   System-Transformation starten.
                 </h2>
-                <p className="text-white/40 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Kostenlos testen. Keine Kreditkarte. Keine Verpflichtungen.
                 </p>
                 <div className="flex items-center justify-center gap-4 pt-2 flex-wrap">
@@ -711,7 +711,7 @@ export default function LandingPage() {
                   </Link>
                   <a
                     href="#pricing"
-                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-border text-white/60 font-medium hover:text-white hover:border-border transition-all"
+                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-border text-slate-700 font-medium hover:text-slate-900 hover:border-border transition-all"
                   >
                     Pläne & Preise
                     <ChevronRight className="w-4 h-4" />
@@ -726,7 +726,7 @@ export default function LandingPage() {
       <section className="py-16 px-6 border-t border-white/[0.06]">
         <div className="max-w-4xl mx-auto rounded-3xl border border-emerald-300/20 bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <h3 className="text-2xl font-bold">Werde VREMA-Partner</h3>
-          <p className="mt-2 text-white/70">
+          <p className="mt-2 text-slate-700">
             Du kennst Betriebe, die eine moderne Zeiterfassung brauchen? Empfiehl VREMA und erhalte bis zu 15€ pro
             Abschluss. Ohne Haken, direkt in dein Dashboard.
           </p>
@@ -749,42 +749,42 @@ export default function LandingPage() {
             <Image src="/vremalogo.png" alt="Vrema Logo" width={46} height={46} className="opacity-60 -my-2" />
             <div>
               <span className="font-bold text-sm">Vrema</span>
-              <span className="ml-1.5 text-[10px] text-white/25">by KevkoStudio</span>
+              <span className="ml-1.5 text-[10px] text-muted-foreground">by KevkoStudio</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-6 text-xs text-white/30">
+          <div className="flex items-center gap-6 text-xs text-muted-foreground">
             <button
               onClick={() => setModal("impressum")}
-              className="hover:text-white transition-colors cursor-pointer"
+              className="hover:text-slate-900 transition-colors cursor-pointer"
             >
               Impressum
             </button>
             <button
               onClick={() => setModal("datenschutz")}
-              className="hover:text-white transition-colors cursor-pointer"
+              className="hover:text-slate-900 transition-colors cursor-pointer"
             >
               Datenschutz
             </button>
-            <Link href="/widerruf" className="hover:text-white transition-colors">
+            <Link href="/widerruf" className="hover:text-slate-900 transition-colors">
               Widerruf
             </Link>
-            <Link href="/cookies" className="hover:text-white transition-colors">
+            <Link href="/cookies" className="hover:text-slate-900 transition-colors">
               Cookies
             </Link>
-            <Link href="/agb" className="hover:text-white transition-colors">
+            <Link href="/agb" className="hover:text-slate-900 transition-colors">
               AGB
             </Link>
-            <Link href="/avv" className="hover:text-white transition-colors">
+            <Link href="/avv" className="hover:text-slate-900 transition-colors">
               AVV
             </Link>
-            <a href="#pricing" className="hover:text-white transition-colors">Preise</a>
-            <Link href="/partner" className="hover:text-white transition-colors">
+            <a href="#pricing" className="hover:text-slate-900 transition-colors">Preise</a>
+            <Link href="/partner" className="hover:text-slate-900 transition-colors">
               Partner werden
             </Link>
           </div>
 
-          <p className="text-xs text-white/20">© 2026 Vrema by KevkoStudio</p>
+          <p className="text-xs text-muted-foreground">© 2026 Vrema by KevkoStudio</p>
         </div>
       </footer>
 
@@ -818,12 +818,12 @@ export default function LandingPage() {
                     <span className="w-3 h-3 rounded-full bg-yellow-400" />
                     <span className="w-3 h-3 rounded-full bg-emerald-400" />
                   </div>
-                  <span className="text-xs text-white/30 font-sans tracking-wider">
+                  <span className="text-xs text-muted-foreground font-sans tracking-wider">
                     vrema — {modal === "impressum" ? "impressum.txt" : "datenschutz.txt"}
                   </span>
                   <button
                     onClick={() => setModal(null)}
-                    className="text-white/20 hover:text-white transition-colors font-sans text-sm px-1"
+                    className="text-muted-foreground hover:text-slate-900 transition-colors font-sans text-sm px-1"
                   >
                     ✕
                   </button>
@@ -845,11 +845,11 @@ export default function LandingPage() {
                         ["§ 55 RStV", "Kevin Konkin, Kolbstr. 5, 67346 Speyer"],
                       ].map(([key, val]) => (
                         <div key={key} className="flex gap-3">
-                          <span className="text-white/25 shrink-0 w-24 text-right">{key}:</span>
-                          <span className="text-white/70">{val}</span>
+                          <span className="text-muted-foreground shrink-0 w-24 text-right">{key}:</span>
+                          <span className="text-slate-700">{val}</span>
                         </div>
                       ))}
-                      <div className="pt-3 border-t border-white/5 text-white/25 text-xs leading-relaxed">
+                      <div className="pt-3 border-t border-white/5 text-muted-foreground text-xs leading-relaxed">
                         # Trotz sorgfältiger Kontrolle keine Haftung für externe Links.
                         <br />
                         # Für verlinkte Seiten sind deren Betreiber verantwortlich.
@@ -874,11 +874,11 @@ export default function LandingPage() {
                         ["Anfragen", "kontakt@kevko.studio"],
                       ].map(([key, val]) => (
                         <div key={key} className="flex gap-3">
-                          <span className="text-white/25 shrink-0 w-32 text-right text-xs leading-5">{key}:</span>
-                          <span className="text-white/70 text-xs leading-5">{val}</span>
+                          <span className="text-muted-foreground shrink-0 w-32 text-right text-xs leading-5">{key}:</span>
+                          <span className="text-slate-700 text-xs leading-5">{val}</span>
                         </div>
                       ))}
-                      <div className="pt-3 border-t border-white/5 text-white/25 text-xs">
+                      <div className="pt-3 border-t border-white/5 text-muted-foreground text-xs">
                         # Datenübertragbarkeit & Einschränkung der Verarbeitung auf Anfrage.
                       </div>
                       <div className="pt-3 text-xs">
@@ -889,7 +889,7 @@ export default function LandingPage() {
                     </>
                   )}
 
-                  <div className="pt-2 flex items-center gap-1 text-white/20">
+                  <div className="pt-2 flex items-center gap-1 text-muted-foreground">
                     <span>$</span>
                     <Cursor show />
                   </div>
@@ -897,8 +897,8 @@ export default function LandingPage() {
               </div>
 
               {/* Click outside hint */}
-              <p className="text-center text-xs text-white/20 font-sans mt-3">
-                Klick außerhalb oder <span className="text-white/40">✕</span> zum Schließen
+              <p className="text-center text-xs text-muted-foreground font-sans mt-3">
+                Klick außerhalb oder <span className="text-muted-foreground">✕</span> zum Schließen
               </p>
             </motion.div>
           </motion.div>

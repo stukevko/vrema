@@ -34,7 +34,7 @@ export function SaldoWidget({
     return (
       <div className="rounded-3xl bg-card border border-white/5 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
         <h2 className="font-semibold text-lg mb-3">Stunden-Saldo</h2>
-        <p className="text-sm text-white/40">
+        <p className="text-sm text-muted-foreground">
           Noch keine erfassten Zeiten. Nutze das Terminal, um zu starten.
         </p>
       </div>
@@ -50,7 +50,7 @@ export function SaldoWidget({
           isZero ? "bg-card" : isPositive ? "bg-primary/10" : "bg-red-500/10"
         }`}>
           {isZero ? (
-            <Minus className="w-6 h-6 text-white/40" />
+            <Minus className="w-6 h-6 text-muted-foreground" />
           ) : isPositive ? (
             <TrendingUp className="w-6 h-6 text-[#22c55e]" />
           ) : (
@@ -59,11 +59,11 @@ export function SaldoWidget({
         </div>
         <div>
           <p className={`text-3xl font-bold tabular-nums ${
-            isZero ? "text-white/60" : isPositive ? "text-[#22c55e]" : "text-red-400"
+            isZero ? "text-slate-700" : isPositive ? "text-[#22c55e]" : "text-red-400"
           }`}>
             {isPositive && "+"}{isZero ? "0h 00m" : formatMinutes(saldoMinutes)}
           </p>
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-muted-foreground">
             {isPositive ? "Überstunden" : isZero ? "Ausgeglichen" : "Minusstunden"}
           </p>
         </div>
@@ -71,7 +71,7 @@ export function SaldoWidget({
 
       {/* Progress bar */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs text-white/40">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>Gearbeitet: {worked}h</span>
           <span>Soll: {expected}h</span>
         </div>
@@ -83,7 +83,7 @@ export function SaldoWidget({
             className={`h-full rounded-full ${isPositive ? "bg-primary" : "bg-red-500"}`}
           />
         </div>
-        <p className="text-xs text-white/30 text-right">{percentage.toFixed(0)}% der Sollzeit</p>
+        <p className="text-xs text-muted-foreground text-right">{percentage.toFixed(0)}% der Sollzeit</p>
       </div>
     </div>
   );

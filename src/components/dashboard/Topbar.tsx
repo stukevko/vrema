@@ -41,7 +41,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
             Super Admin
           </span>
         )}
-        <button className="relative w-11 h-11 rounded-2xl bg-card border border-border md:hover:bg-card/70 flex items-center justify-center transition-all active:scale-95">
+        <button className="relative w-11 h-11 rounded-2xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:hover:bg-card/70 flex items-center justify-center transition-all active:scale-95">
           <Bell className="w-4 h-4 text-slate-700" />
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
         </button>

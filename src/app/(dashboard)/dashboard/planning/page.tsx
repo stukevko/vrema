@@ -54,7 +54,7 @@ export default async function PlanningPage() {
             <div key={g.label} className="rounded-xl border border-border bg-background px-4 py-3">
               <p className="text-xs uppercase tracking-widest text-muted">{g.label}</p>
               {g.rows.length === 0 ? (
-                <p className="mt-1 text-sm text-white/35">Frei</p>
+                <p className="mt-1 text-sm text-muted-foreground">Frei</p>
               ) : (
                 <div className="mt-2 space-y-1">
                   {g.rows.map((r) => (

@@ -50,7 +50,7 @@ export function InviteForm() {
   };
 
   return (
-    <div className="rounded-2xl bg-card border border-border overflow-hidden">
+    <div className="rounded-2xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden">
       {/* Header */}
       <div className="px-5 py-4 border-b border-white/5 flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -74,18 +74,18 @@ export function InviteForm() {
                 <p className="text-xs text-primary font-sans mb-3">✓ {result.name} wurde angelegt</p>
                 <div className="rounded-lg bg-card border border-white/5 p-3 font-sans text-xs space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-white/30">email:</span>
-                    <span className="text-white/70 truncate">{result.email}</span>
+                    <span className="text-muted-foreground">email:</span>
+                    <span className="text-slate-700 truncate">{result.email}</span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-white/30">passwort:</span>
+                    <span className="text-muted-foreground">passwort:</span>
                     <span className="text-[#22c55e] font-bold tracking-wider">{result.tempPassword}</span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-white/30">terminal pin:</span>
+                    <span className="text-muted-foreground">terminal pin:</span>
                     <span className="text-amber-300 font-bold tracking-wider">{result.terminalPin}</span>
                   </div>
-                  <p className="text-white/20 text-[10px] pt-1">Bitte beim ersten Login ändern.</p>
+                  <p className="text-muted-foreground text-[10px] pt-1">Bitte beim ersten Login ändern.</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -119,7 +119,7 @@ export function InviteForm() {
                 { name: "email", label: "E-Mail", type: "email", placeholder: "max@firma.de" },
               ].map((f) => (
                 <div key={f.name}>
-                  <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1 block">
+                  <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1 block">
                     {f.label}
                   </label>
                   <input
@@ -127,32 +127,32 @@ export function InviteForm() {
                     type={f.type}
                     required
                     placeholder={f.placeholder}
-                    className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/40 transition-colors font-sans"
+                    className="w-full px-3 py-2.5 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 transition-colors font-sans"
                   />
                 </div>
               ))}
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1 block">Rolle</label>
+                  <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1 block">Rolle</label>
                   <select
                     name="role"
                     defaultValue="EMPLOYEE"
-                    className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans appearance-none"
+                    className="w-full px-3 py-2.5 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-slate-900 text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans appearance-none"
                   >
                     <option value="EMPLOYEE">Mitarbeiter</option>
                     <option value="MANAGER">Manager</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] text-white/40 font-sans uppercase tracking-widest mb-1 block">Std/Woche</label>
+                  <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1 block">Std/Woche</label>
                   <input
                     name="weeklyHours"
                     type="number"
                     defaultValue={40}
                     min={1}
                     max={60}
-                    className="w-full px-3 py-2.5 rounded-xl bg-card border border-border text-white text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans"
+                    className="w-full px-3 py-2.5 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-slate-900 text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans"
                   />
                 </div>
               </div>

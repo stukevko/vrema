@@ -149,19 +149,19 @@ export default async function DashboardPage() {
               </div>
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-3 text-xs">
-              <div className="rounded-2xl bg-card border border-border px-3 py-2">
+              <div className="rounded-2xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] px-3 py-2">
                 <span className="text-muted-foreground">Fehlend heute</span>
                 <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-red-200" : "text-emerald-200"}`}>
                   {teamStats.absentToday > 0 ? `${teamStats.absentToday} kritisch` : "Keine offenen Ausfälle"}
                 </p>
               </div>
-              <div className="rounded-2xl bg-card border border-border px-3 py-2">
+              <div className="rounded-2xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] px-3 py-2">
                 <span className="text-muted-foreground">Zu spät heute</span>
                 <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-amber-200" : "text-emerald-200"}`}>
                   {teamStats.lateToday > 0 ? `${teamStats.lateToday} Hinweise` : "Alles pünktlich"}
                 </p>
               </div>
-              <div className="rounded-2xl bg-card border border-border px-3 py-2">
+              <div className="rounded-2xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] px-3 py-2">
                 <span className="text-muted-foreground">Unbestätigte Zeiten</span>
                 <p className={`mt-1 font-semibold ${teamStats.pendingCorrections > 0 ? "text-amber-200" : "text-emerald-200"}`}>
                   {teamStats.pendingCorrections > 0 ? `${teamStats.pendingCorrections} offen` : "Keine offenen Korrekturen"}

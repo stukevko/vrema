@@ -125,7 +125,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
         <h2 className="font-semibold text-lg">Terminal</h2>
         {gpsFeatureEnabled && (
           <label
-            className={`flex items-center gap-2 text-xs text-white/50 select-none ${
+            className={`flex items-center gap-2 text-xs text-muted-foreground select-none ${
               gpsRequired ? "cursor-not-allowed opacity-90" : "cursor-pointer"
             }`}
           >
@@ -173,7 +173,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
                 <p className="text-3xl font-mono font-bold text-primary">
                   {formatDuration(workedMs)}
                 </p>
-                <p className="text-xs text-white/40 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {activeLog.isOnBreak ? (
                     "Pause aktiv"
                   ) : (
@@ -200,7 +200,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
               className="mb-8"
             >
               <div className="w-20 h-20 rounded-2xl bg-card border-2 border-border flex items-center justify-center">
-                <Clock className="w-8 h-8 text-white/30" />
+                <Clock className="w-8 h-8 text-muted-foreground" />
               </div>
             </motion.div>
           )}
@@ -241,7 +241,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
               className={`w-full rounded-2xl border px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
                 activeLog.isOnBreak
                   ? "border-primary/40 bg-primary/15 text-primary hover:bg-primary/20"
-                  : "border-border bg-card text-white/70 hover:bg-card/80"
+                  : "border-border bg-card text-slate-700 hover:bg-card/80"
               }`}
             >
               <span className="inline-flex items-center gap-1">
@@ -255,7 +255,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
         {error && (
           <div className="mt-3 space-y-1 text-center">
             <p className="text-xs text-red-400">{error}</p>
-            {errorHint(error) && <p className="text-[11px] text-white/45">{errorHint(error)}</p>}
+            {errorHint(error) && <p className="text-[11px] text-slate-900/45">{errorHint(error)}</p>}
           </div>
         )}
       </div>

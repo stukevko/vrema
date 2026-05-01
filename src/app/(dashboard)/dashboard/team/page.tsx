@@ -23,7 +23,7 @@ export default async function TeamPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Team</h1>
-          <p className="text-white/40 text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             {active} aktiv{inactive > 0 ? ` · ${inactive} deaktiviert` : ""}
           </p>
         </div>

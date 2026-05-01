@@ -149,22 +149,22 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
           <Image src="/vremalogo.png" alt="Vrema Logo" width={96} height={96} className="-mb-2" />
           <div className="text-center">
             <span className="font-bold text-xl tracking-tight">Vrema</span>
-            <span className="block text-[10px] text-white/25 font-sans uppercase tracking-widest">by KevkoStudio</span>
+            <span className="block text-[10px] text-muted-foreground font-sans uppercase tracking-widest">by KevkoStudio</span>
           </div>
         </div>
 
         <div className="rounded-2xl bg-card border border-white/5 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <h1 className="text-xl font-bold mb-1">Konto erstellen</h1>
-          <p className="text-white/40 text-sm mb-2">14 Tage kostenlos testen. Kartenprüfung im Onboarding.</p>
+          <p className="text-muted-foreground text-sm mb-2">14 Tage kostenlos testen. Kartenprüfung im Onboarding.</p>
           {resolvedCode ? (
-            <p className="text-xs text-white/50 mb-2 leading-relaxed">
+            <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
               Empfohlen durch unseren Partner
               {resolvedName ? (
                 <>
                   : <span className="text-emerald-400/95 font-medium">{resolvedName}</span>
                 </>
               ) : null}
-              <span className="block text-[10px] text-white/35 font-sans mt-1">{resolvedCode}</span>
+              <span className="block text-[10px] text-muted-foreground font-sans mt-1">{resolvedCode}</span>
             </p>
           ) : null}
           {plan !== "STARTER" && (
@@ -175,55 +175,55 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
 
           <form onSubmit={handleSubmit} className="space-y-4 mt-6">
             <div>
-              <label className="text-xs text-white/50 mb-1.5 block">Dein Name</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Dein Name</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
                   name="name"
                   required
                   placeholder="Max Mustermann"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
             <div>
-              <label className="text-xs text-white/50 mb-1.5 block">Firmenname</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Firmenname</label>
               <div className="relative">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
                   name="companyName"
                   required
                   placeholder="Musterfirma GmbH"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
             <div>
-              <label className="text-xs text-white/50 mb-1.5 block">E-Mail</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">E-Mail</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="email"
                   name="email"
                   required
                   placeholder="name@firma.de"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
             <div>
-              <label className="text-xs text-white/50 mb-1.5 block">Passwort</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Passwort</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="password"
                   name="password"
                   required
                   minLength={8}
                   placeholder="Mindestens 8 Zeichen"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -245,7 +245,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
           </form>
 
           <div className="mt-6 pt-6 border-t border-white/5 text-center">
-            <p className="text-sm text-white/40">
+            <p className="text-sm text-muted-foreground">
               Bereits registriert?{" "}
               <Link href="/auth/login" className="text-primary hover:underline">
                 Anmelden

@@ -127,7 +127,7 @@ export default async function BillingPage({
                   <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "yearly")}>
                     <button
                       type="submit"
-                      className="w-full py-2.5 rounded-xl bg-card border border-border text-sm font-medium hover:bg-card/80 transition-colors"
+                      className="w-full py-2.5 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-sm font-medium hover:bg-card/80 transition-colors"
                     >
                       Jährlich (2 Monate gratis)
                     </button>
@@ -137,7 +137,7 @@ export default async function BillingPage({
               {key === "ENTERPRISE" && !isCurrent && (
                 <a
                   href="mailto:kontakt@kevko.studio?subject=Enterprise%20Anfrage%20Vrema"
-                  className="block w-full py-2.5 rounded-xl bg-card border border-border text-sm font-medium text-center hover:bg-card/80 transition-colors"
+                  className="block w-full py-2.5 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-sm font-medium text-center hover:bg-card/80 transition-colors"
                 >
                   Kontakt aufnehmen
                 </a>
