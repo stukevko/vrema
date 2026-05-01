@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FileText, Mail, MapPin, Clock, Lock, Download, TriangleAlert, FileSpreadsheet } from "lucide-react";
+import { FileText, Mail, MapPin, Clock, Lock, Download, TriangleAlert, FileSpreadsheet, Sparkles } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   createWorkLogCorrectionRequest,
   decideWorkLogCorrectionRequest,
@@ -13,6 +14,8 @@ import {
 } from "@/lib/actions/worklogs";
 import { sendPayrollReportEmail } from "@/lib/actions/emails";
 import { minutesToDecimalHours, workedMinutes } from "@/lib/time/payroll";
+import { getMockReportAnalysis } from "@/lib/ai/mock";
+import type { AIReportAnalysisPayload } from "@/lib/ai/types";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -38,6 +41,7 @@ interface Props {
   logs: LogRow[];
   totalMinutes: number;
   month: string;
+  monthKey: string;
   plan: string;
   isManager: boolean;
   companyName: string;
@@ -152,6 +156,7 @@ export function ReportsClient({
   logs,
   totalMinutes,
   month,
+  monthKey,
   plan,
   isManager,
   companyName,
@@ -159,8 +164,12 @@ export function ReportsClient({
   absences,
   correctionRequests,
 }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { toasts, show, remove } = useToast();
   const [isSaving, startTransition] = useTransition();
+  const [isRoutePending, startRouteTransition] = useTransition();
   const [showPayrollModal, setShowPayrollModal] = useState(false);
   const [showDatevModal, setShowDatevModal] = useState(false);
   const [payrollEmail, setPayrollEmail] = useState("");
@@ -186,7 +195,22 @@ export function ReportsClient({
   const [mandantenNummer, setMandantenNummer] = useState("");
   const [abrechnungsMonat, setAbrechnungsMonat] = useState(() => defaultDatevAbrechnungsmonatMMYYYY());
   const [isDatevDownloading, setIsDatevDownloading] = useState(false);
+  const [isAIAnalyzing, setIsAIAnalyzing] = useState(false);
+  const [aiAnalysis, setAIAnalysis] = useState<AIReportAnalysisPayload | null>(null);
   const hasBusinessAccess = plan === "BUSINESS" || plan === "ENTERPRISE";
+  const totalHoursDecimal = minutesToDecimalHours(totalMinutes, 2);
+  const productiveDays = new Set(logs.map((log) => new Date(log.clockIn).toDateString())).size;
+  const avgHoursPerDay = productiveDays > 0 ? minutesToDecimalHours(totalMinutes / productiveDays, 2) : "0.00";
+  const indicativeCosts = Number.parseFloat(totalHoursDecimal) * 29;
+  const monthOptions = useMemo(() => {
+    const base = new Date();
+    return Array.from({ length: 12 }, (_, index) => {
+      const d = new Date(base.getFullYear(), base.getMonth() - index, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+      return { key, label: label.charAt(0).toUpperCase() + label.slice(1) };
+    });
+  }, []);
 
   const byUser = logs.reduce<Record<string, LogRow[]>>((acc, log) => {
     if (!acc[log.userId]) acc[log.userId] = [];
@@ -526,10 +550,10 @@ export function ReportsClient({
           attachmentMimeType: "application/pdf",
           attachmentLabel: "PDF-Report",
         });
-        show(`PDF-Report erfolgreich an ${recipientEmail} gesendet.`, "success");
+        show(`PDF-Report wurde erfolgreich an ${recipientEmail} versendet.`, "success");
         setShowPayrollModal(false);
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Hoppla, da hat das WLAN kurz Schluckauf gehabt. Versuch's nochmal! 🔄", "error");
+        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
       }
     });
   };
@@ -605,7 +629,7 @@ export function ReportsClient({
       show("DATEV-CSV wurde heruntergeladen.", "success");
       setShowDatevModal(false);
     } catch (err: unknown) {
-      show(err instanceof Error ? err.message : "Hoppla, da hat das WLAN kurz Schluckauf gehabt. Versuch's nochmal! 🔄", "error");
+      show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
     } finally {
       setIsDatevDownloading(false);
     }
@@ -640,7 +664,7 @@ export function ReportsClient({
         show("Eintrag aktualisiert und protokolliert.", "success");
         setEditingLog(null);
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Hoppla, da hat das WLAN kurz Schluckauf gehabt. Versuch's nochmal! 🔄", "error");
+        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
       }
     });
   };
@@ -669,7 +693,7 @@ export function ReportsClient({
         });
         show("ABSENT-Eintrag korrigiert.", "success");
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Hoppla, da hat das WLAN kurz Schluckauf gehabt. Versuch's nochmal! 🔄", "error");
+        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
       }
     });
   };
@@ -685,7 +709,7 @@ export function ReportsClient({
         await deleteWorkLogByManager(log.id, reason.trim());
         show("Eintrag gelöscht.", "success");
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Hoppla, da hat das WLAN kurz Schluckauf gehabt. Versuch's nochmal! 🔄", "error");
+        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
       }
     });
   };
@@ -722,7 +746,7 @@ export function ReportsClient({
         setRequestReason("");
         setRequestNote("");
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Hoppla, da hat das WLAN kurz Schluckauf gehabt. Versuch's nochmal! 🔄", "error");
+        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
       }
     });
   };
@@ -740,13 +764,37 @@ export function ReportsClient({
         await decideWorkLogCorrectionRequest({ requestId, decision, reviewerNote });
         show(decision === "APPROVE" ? "Antrag freigegeben und gebucht." : "Antrag abgelehnt.", "success");
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Hoppla, da hat das WLAN kurz Schluckauf gehabt. Versuch's nochmal! 🔄", "error");
+        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
       }
     });
   };
 
+  const runAIAnalysis = async () => {
+    if (isAIAnalyzing) return;
+    setIsAIAnalyzing(true);
+    try {
+      const analysis = await getMockReportAnalysis({
+        month,
+        totalMinutes,
+        totalEntries: logs.length,
+        gpsEntries: logs.filter((l) => l.latitude).length,
+      });
+      setAIAnalysis(analysis);
+      show("KI-Analyse erfolgreich erstellt.", "success");
+    } catch (err: unknown) {
+      show(err instanceof Error ? err.message : "Die KI-Analyse konnte nicht erstellt werden. Bitte erneut versuchen.", "error");
+    } finally {
+      setIsAIAnalyzing(false);
+    }
+  };
+
   return (
     <>
+      <div
+        className={`fixed top-16 left-0 right-0 z-40 h-0.5 bg-primary/70 origin-left transition-transform duration-300 ${
+          isRoutePending ? "scale-x-100" : "scale-x-0"
+        }`}
+      />
       <div className="max-w-6xl mx-auto space-y-5 md:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -756,7 +804,36 @@ export function ReportsClient({
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <select
+              value={monthKey}
+              onChange={(e) => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.set("month", e.target.value);
+                startRouteTransition(() => {
+                  router.push(`${pathname}?${params.toString()}`);
+                });
+              }}
+              className="rounded-2xl border border-border bg-white px-3 py-2 text-sm text-foreground"
+            >
+              {monthOptions.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={runAIAnalysis}
+              disabled={isAIAnalyzing}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-medium border transition-all active:scale-95 ${
+                isAIAnalyzing
+                  ? "border-violet-200 bg-violet-50/80 text-violet-700 shadow-[0_0_24px_rgba(139,92,246,0.22)] animate-pulse"
+                  : "border-violet-200 bg-white text-violet-700 md:hover:bg-violet-50"
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              {isAIAnalyzing ? "KI analysiert..." : "KI-Analyse"}
+            </button>
             <button
               onClick={hasBusinessAccess ? exportPdf : lockedMsg}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 ${
@@ -803,19 +880,59 @@ export function ReportsClient({
         </div>
 
         {/* Summary cards */}
-        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
+        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
           {[
-            { label: "Einträge gesamt", value: logs.length.toString(), color: "#60a5fa" },
-            { label: "Gesamtzeit", value: formatMins(totalMinutes), color: "#86efac" },
-            { label: "Ø pro Eintrag", value: logs.length ? formatMins(totalMinutes / logs.length) : "–", color: "#86efac" },
-            { label: "GPS-gestempelt", value: logs.filter((l) => l.latitude).length.toString(), color: "#f59e0b" },
+            { label: "Gesamtstunden", value: `${totalHoursDecimal} h`, tone: "text-foreground", note: "Zusammenfassung der monatlichen Arbeitszeiten" },
+            { label: "Personalkosten (indikativ)", value: `${new Intl.NumberFormat("de-DE").format(Math.round(indicativeCosts))} €`, tone: "text-foreground", note: "Kalkulationsbasis: 29 €/h" },
+            { label: "Ø Stunden pro Arbeitstag", value: `${avgHoursPerDay} h`, tone: "text-muted-foreground", note: `${productiveDays} Arbeitstage erfasst` },
+            { label: "GPS-validierte Einträge", value: logs.filter((l) => l.latitude).length.toString(), tone: "text-muted-foreground", note: "Standortdaten vorhanden" },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 transition-all md:hover:bg-slate-50">
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+            >
               <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-2">{s.label}</p>
-              <p className="text-4xl font-extrabold tracking-tight text-foreground tabular-nums">{s.value}</p>
-            </div>
+              <p className={`text-4xl font-extrabold tracking-tight tabular-nums ${s.tone}`}>{s.value}</p>
+              <p className="mt-2 text-xs text-muted-foreground">{s.note}</p>
+            </motion.div>
           ))}
         </div>
+
+        {(isAIAnalyzing || aiAnalysis) && (
+          <div className="rounded-2xl border border-violet-100 bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
+                <Sparkles className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">VREMA AI</p>
+                <h3 className="text-sm font-semibold">Smart-Report-Analyse</h3>
+              </div>
+            </div>
+
+            {isAIAnalyzing ? (
+              <div className="space-y-2">
+                <div className="h-4 rounded-full bg-violet-100/80 animate-pulse" />
+                <div className="h-4 rounded-full bg-violet-100/80 animate-pulse w-11/12" />
+                <div className="h-4 rounded-full bg-violet-100/80 animate-pulse w-9/12" />
+              </div>
+            ) : aiAnalysis ? (
+              <div className="space-y-3">
+                <p className="text-sm text-foreground leading-relaxed">{aiAnalysis.summary}</p>
+                <ul className="space-y-2">
+                  {aiAnalysis.highlights.map((item) => (
+                    <li key={item} className="text-sm text-muted-foreground leading-relaxed">
+                      ✨ {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        )}
 
         {isManager && (
           <div className="rounded-2xl border border-border bg-white px-4 py-3 text-xs text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
@@ -837,7 +954,7 @@ export function ReportsClient({
           {!isManager && (
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="sm:col-span-2 rounded-2xl border border-border bg-white px-4 py-3">
-                <p className="text-[11px] text-foreground/45 mb-2">Schritt 1: Was willst du korrigieren?</p>
+                <p className="text-[11px] text-muted-foreground mb-2">Schritt 1: Korrekturmodus wählen</p>
                 <div className="flex flex-wrap gap-3 text-xs">
                   <label className="inline-flex items-center gap-2 cursor-pointer">
                     <input
@@ -885,8 +1002,8 @@ export function ReportsClient({
                   ))}
                 </select>
               )}
-              <label className="text-[11px] text-foreground/45">{requestMode === "existing" ? "Schritt 2: Neue Einstempelzeit" : "Schritt 2: Einstempelzeit"}</label>
-              <label className="text-[11px] text-foreground/45">{requestMode === "existing" ? "Neue Ausstempelzeit (optional)" : "Ausstempelzeit (optional)"}</label>
+              <label className="text-[11px] text-muted-foreground">{requestMode === "existing" ? "Schritt 2: Neue Einstempelzeit" : "Schritt 2: Einstempelzeit"}</label>
+              <label className="text-[11px] text-muted-foreground">{requestMode === "existing" ? "Neue Ausstempelzeit (optional)" : "Ausstempelzeit (optional)"}</label>
               <input
                 type="datetime-local"
                 value={requestClockIn}
@@ -939,13 +1056,13 @@ export function ReportsClient({
 
           <div className="space-y-2">
             {correctionRequests.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Alles ruhig hier. Genieße die Pause! ☕</p>
+              <p className="text-xs text-muted-foreground">Aktuell liegen keine Korrekturanträge vor.</p>
             ) : (
               correctionRequests.map((req) => (
                 <div key={req.id} className="rounded-2xl border border-border bg-card p-4 text-xs shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{req.userName}</span>
-                    <span className="text-foreground/45">{new Date(req.requestedClockIn).toLocaleString("de-DE")}</span>
+                    <span className="text-muted-foreground">{new Date(req.requestedClockIn).toLocaleString("de-DE")}</span>
                     <span
                       className={`rounded-full px-2 py-0.5 ${
                         req.status === "PENDING"
@@ -961,7 +1078,7 @@ export function ReportsClient({
                   <p className="mt-1 text-foreground">Grund: {req.reason}</p>
                   {req.requestedNote && <p className="mt-1 text-muted-foreground">Notiz: {req.requestedNote}</p>}
                   {req.status !== "PENDING" && req.reviewerName && (
-                    <p className="mt-1 text-foreground/45">Bearbeitet von: {req.reviewerName}</p>
+                    <p className="mt-1 text-muted-foreground">Bearbeitet von: {req.reviewerName}</p>
                   )}
                   {isManager && req.status === "PENDING" && (
                     <div className="mt-2 flex gap-2">
@@ -999,7 +1116,7 @@ export function ReportsClient({
           {logs.length === 0 ? (
             <div className="py-16 text-center">
               <Clock className="w-8 h-8 text-foreground/10 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">Alles ruhig hier. Genieße die Pause! ☕</p>
+              <p className="text-sm text-muted-foreground">Für den gewählten Zeitraum wurden noch keine Arbeitszeiten erfasst.</p>
               <a
                 href="/dashboard#terminal-widget"
                 className="mt-4 inline-flex min-h-[44px] items-center rounded-2xl border border-border px-4 py-2 text-sm text-foreground transition-all active:scale-95 md:hover:bg-card/70"
@@ -1052,13 +1169,13 @@ export function ReportsClient({
                         <td className="px-5 py-4 tabular-nums text-muted-foreground text-xs">
                           {clockInDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
                         </td>
-                        <td className="px-5 py-4 tabular-nums text-[#22c55e]">
+                        <td className="px-5 py-4 tabular-nums text-foreground">
                           {clockInDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
                         </td>
                         <td className="px-5 py-4 tabular-nums text-foreground">
                           {log.clockOut
                             ? new Date(log.clockOut).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
-                            : <span className="text-amber-400 animate-pulse">läuft…</span>}
+                            : <span className="text-amber-700 animate-pulse">offen</span>}
                         </td>
                         <td className="px-5 py-4 tabular-nums text-muted-foreground text-xs">
                           {log.breakMins > 0 ? `${log.breakMins}min` : "–"}
@@ -1084,7 +1201,7 @@ export function ReportsClient({
                         <td className="px-5 py-4">
                           {log.latitude ? (
                             <span title={`${log.latitude?.toFixed(4)}, ${log.longitude?.toFixed(4)}`}>
-                              <MapPin className="w-3.5 h-3.5 text-[#22c55e]" />
+                              <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
                             </span>
                           ) : (
                             <span className="text-foreground/10">–</span>
@@ -1093,7 +1210,7 @@ export function ReportsClient({
                         <td className="px-5 py-4 text-muted-foreground text-xs max-w-[120px] truncate">
                           <span className="inline-flex items-center gap-1.5">
                             {log.isOutOfRange && (
-                              <TriangleAlert className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                              <TriangleAlert className="w-3.5 h-3.5 text-red-600 shrink-0" />
                             )}
                             {log.note ?? "–"}
                           </span>
@@ -1147,7 +1264,7 @@ export function ReportsClient({
             <div>
               <p className="font-semibold text-sm">PDF-Export & Lohnbüro-Versand freischalten</p>
               <p className="text-xs text-muted-foreground mt-1">
-                $ vrema upgrade --plan business → Monatsberichte auf Knopfdruck
+                Upgrade auf Business für erweiterte Export- und Versandfunktionen.
               </p>
             </div>
             <a
@@ -1165,7 +1282,7 @@ export function ReportsClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 px-4">
           <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <h3 className="text-base font-semibold">Zeiteintrag bearbeiten</h3>
-            <p className="mt-1 text-xs text-foreground/45">
+            <p className="mt-1 text-xs text-muted-foreground">
               Für Nachvollziehbarkeit wird die Änderung automatisch als Manager-Edit protokolliert.
             </p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -1239,7 +1356,7 @@ export function ReportsClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 px-4">
           <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <h3 className="text-base font-semibold">An Lohnbüro senden</h3>
-            <p className="mt-1 text-xs text-foreground/45">Der aktuelle PDF-Report wird als Anhang per E-Mail versendet.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Der aktuelle PDF-Report wird als Anhang per E-Mail versendet.</p>
             <label className="mt-4 block text-xs text-muted-foreground">E-Mail Lohnbüro (mehrere mit ; trennen)</label>
             <input
               type="text"
@@ -1274,7 +1391,7 @@ export function ReportsClient({
           <Dialog.Overlay className="fixed inset-0 z-50 bg-white/70 px-4" />
           <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <Dialog.Title className="text-base font-semibold">DATEV Lohn-Export</Dialog.Title>
-            <p className="mt-1 text-xs text-foreground/45">
+            <p className="mt-1 text-xs text-muted-foreground">
               Dieser Export generiert ein DATEV-konformes CSV-Format inklusive Lohnarten (001/002) und Pausen-Abzug.
             </p>
 

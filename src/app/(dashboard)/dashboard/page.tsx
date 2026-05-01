@@ -10,6 +10,7 @@ import Link from "next/link";
 import { CorrectionRequestStatus, EntryStatus, UserRole, VacationStatus } from "@prisma/client";
 import { getSuperAdminMonitoring, getSuperAdminOverview } from "@/lib/actions/super-admin";
 import { SuperAdminInlinePanel } from "@/components/dashboard/SuperAdminInlinePanel";
+import { AIInsights } from "@/components/dashboard/AIInsights";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -221,6 +222,7 @@ export default async function DashboardPage() {
           saldoMinutes={saldo.saldoMinutes}
           hasWorkLogs={Boolean(hasAnyWorkLog)}
         />
+        <AIInsights />
       </div>
 
       {/* Today summary */}

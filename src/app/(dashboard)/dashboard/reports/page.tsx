@@ -7,7 +7,11 @@ import { VacationStatus } from "@prisma/client";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
 import { sumWorkedMinutes } from "@/lib/time/payroll";
 
-export default async function ReportsPage() {
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams?: { month?: string };
+}) {
   const session = await auth();
   if (!session?.user?.companyId) redirect("/auth/login");
 
@@ -21,8 +25,10 @@ export default async function ReportsPage() {
   const companyName = company?.name ?? "Vrema";
 
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth(); // 0-based
+  const monthParam = searchParams?.month;
+  const monthMatch = monthParam?.match(/^(\d{4})-(\d{2})$/);
+  const year = monthMatch ? Number.parseInt(monthMatch[1], 10) : now.getFullYear();
+  const month = monthMatch ? Number.parseInt(monthMatch[2], 10) - 1 : now.getMonth(); // 0-based
 
   const start = new Date(year, month, 1);
   const end = new Date(year, month + 1, 0, 23, 59, 59);
@@ -120,7 +126,8 @@ export default async function ReportsPage() {
         isOutOfRange: l.isOutOfRange,
       }))}
       totalMinutes={totalMinutes}
-      month={`${now.toLocaleString("de-DE", { month: "long" })} ${year}`}
+      month={`${start.toLocaleString("de-DE", { month: "long" })} ${year}`}
+      monthKey={`${year}-${String(month + 1).padStart(2, "0")}`}
       plan={plan}
       isManager={isManager}
       companyName={companyName}

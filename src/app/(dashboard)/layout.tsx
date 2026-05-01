@@ -40,7 +40,12 @@ export default async function DashboardLayout({
       />
       <div className="flex-1 flex flex-col min-w-0 bg-background">
         <DashboardTopbar user={session.user} />
-        <main className="flex-1 px-4 py-4 pb-24 md:p-6 md:pb-6 overflow-auto">{children}</main>
+        <main className="flex-1 px-4 py-4 pb-24 md:p-6 md:pb-6 overflow-auto">
+          {children}
+          <footer className="mt-8 mb-2 text-center text-xs text-muted-foreground">
+            VREMA – Intelligente Zeiterfassung
+          </footer>
+        </main>
       </div>
       <DashboardMobileBottomNav role={session.user.role ?? "EMPLOYEE"} />
     </div>

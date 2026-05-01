@@ -7,14 +7,13 @@ import Image from "next/image";
 import Script from "next/script";
 import {
   Clock,
-  Terminal,
   MapPin,
   FileText,
   Shield,
   ShieldCheck,
   Scale,
   Server,
-  Wifi,
+  Sparkles,
   ChevronRight,
   Check,
   ArrowRight,
@@ -67,9 +66,9 @@ function TerminalWindow({ title = "vrema — zsh", children }: { title?: string;
   return (
     <div className="rounded-3xl overflow-hidden glass-panel">
       <div className="flex items-center gap-2 px-4 py-3 bg-card border-b border-border">
-        <span className="w-3 h-3 rounded-full bg-red-400" />
-        <span className="w-3 h-3 rounded-full bg-yellow-400" />
-        <span className="w-3 h-3 rounded-full bg-emerald-400" />
+        <span className="w-2.5 h-2.5 rounded-full bg-red-400/90" />
+        <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/90" />
+        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/90" />
         <span className="ml-3 text-xs text-muted-foreground tracking-wider">{title}</span>
       </div>
       <div className="p-5 font-sans text-sm leading-relaxed">{children}</div>
@@ -224,11 +223,6 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Ambient background glow */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[radial-gradient(ellipse,rgba(34,197,94,0.06)_0%,transparent_70%)]" />
-      </div>
-
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-border glass-nav">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -260,7 +254,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ────────────────────────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-16 px-6">
+      <section className="relative pt-32 pb-16 px-6 border-b border-slate-100">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
 
@@ -270,28 +264,26 @@ export default function LandingPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7 }}
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-300/25 bg-emerald-300/10 text-emerald-700 text-xs mb-8">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
-                Ein Produkt von KevkoStudio
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 text-xs mb-8">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                VREMA - Intelligente Zeiterfassung
               </div>
 
-              <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-[1.05] mb-6">
-                Zeiterfassung.
-                <br />
-                <span className="text-primary">Präzise. Einfach.</span>
+              <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-6 text-slate-900">
+                VREMA: Die intelligente Infrastruktur fuer Ihre Personalzeitwirtschaft.
               </h1>
 
-              <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-md">
-                Stempeluhr, Auswertungen und GPS-Tracking in einer Anwendung.{" "}
-                <span className="text-muted-foreground">Gebaut für Handwerker, Dienstleister & Teams.</span>
+              <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-xl">
+                Digitale Zeiterfassung, Auswertung und Compliance in einer konsistenten Plattform fuer Unternehmen mit
+                professionellen Prozessen.
               </p>
 
               <div className="flex items-center gap-4 flex-wrap">
                 <Link
                   href="/auth/register"
-                  className="group flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-primary text-black font-bold hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary/20"
+                  className="group flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-primary text-black font-bold ring-1 ring-inset ring-white/20 transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)] active:scale-95"
                 >
-                  Kostenlos starten
+                  Jetzt starten
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <a
@@ -310,7 +302,7 @@ export default function LandingPage() {
                 ].map((seal) => (
                   <div
                     key={seal.label}
-                    className="rounded-2xl glass-panel px-3 py-2"
+                    className="rounded-2xl bg-white border border-slate-100 px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
                   >
                     <p className="text-[11px] font-semibold text-muted-foreground">{seal.label}</p>
                     <p className="mt-0.5 text-[10px] text-muted-foreground">{seal.text}</p>
@@ -320,9 +312,9 @@ export default function LandingPage() {
 
               <div className="flex items-center gap-6 mt-8 text-xs text-muted-foreground uppercase tracking-widest">
                 <span>DSGVO-konform</span>
-                <span className="w-1 h-1 rounded-full bg-white/20" />
+                <span className="w-1 h-1 rounded-full bg-slate-300" />
                 <span>Made in Germany</span>
-                <span className="w-1 h-1 rounded-full bg-white/20" />
+                <span className="w-1 h-1 rounded-full bg-slate-300" />
                 <span>Kein Outsourcing</span>
               </div>
             </motion.div>
@@ -396,7 +388,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FEATURES ────────────────────────────────────────────────────────── */}
-      <section id="features" className="py-24 px-6">
+      <section id="features" className="py-24 px-6 border-b border-slate-100">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -404,11 +396,11 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="mb-16"
           >
-            <p className="text-xs text-primary uppercase tracking-widest mb-4">01 / Features</p>
-            <h2 className="text-4xl md:text-5xl font-black leading-tight">
-              Alles, was du brauchst.
+            <p className="text-xs text-muted-foreground uppercase tracking-widest mb-4">01 / Features</p>
+            <h2 className="text-4xl md:text-5xl font-bold leading-tight text-slate-900">
+              Modulare Funktionen fuer
               <br />
-              <span className="text-foreground/70">Nichts, was du nicht brauchst.</span>
+              <span className="text-muted-foreground">eine verlaessliche Zeitwirtschaft.</span>
             </h2>
           </motion.div>
 
@@ -420,29 +412,45 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className="group relative rounded-3xl glass-panel p-7 hover:border-primary/30 transition-all overflow-hidden"
+                className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-7 transition-all md:hover:bg-slate-50/70"
               >
-                {/* hover glow */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(ellipse_at_0%_0%,rgba(34,197,94,0.04),transparent_60%)]" />
-
-                <div className="relative z-10">
-                  {/* Terminal command badge */}
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] mb-4 font-medium">
-                    <span className="opacity-70">$</span> {feature.cmd}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shrink-0">
+                    <feature.icon className="w-5 h-5 text-slate-700" />
                   </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center shrink-0 group-hover:border-primary/30 transition-colors">
-                      <feature.icon className="w-5 h-5 text-foreground/75 group-hover:text-primary transition-colors" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm mb-1.5">{feature.title}</h3>
-                      <p className="text-foreground/75 text-sm leading-relaxed">{feature.desc}</p>
-                    </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">{feature.cmd}</p>
+                    <h3 className="font-semibold text-sm mb-1.5 text-slate-900">{feature.title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{feature.desc}</p>
                   </div>
                 </div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── AI TEASER ───────────────────────────────────────────────────────── */}
+      <section className="py-20 px-6 border-b border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative rounded-2xl p-[1px] bg-gradient-to-r from-violet-300/40 via-sky-300/30 to-emerald-300/40">
+            <div className="rounded-2xl bg-white border border-slate-100 p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">02 / Core Intelligence</p>
+                  <h3 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
+                    KI-gestuetzte Analyse fuer operative Entscheidungen.
+                  </h3>
+                  <p className="mt-3 text-sm text-muted-foreground max-w-3xl">
+                    VREMA AI erkennt Muster in Arbeitszeiten, weist auf Auffaelligkeiten hin und unterstuetzt eine
+                    praezise Steuerung Ihrer Teams.
+                  </p>
+                </div>
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -748,8 +756,8 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <Image src="/vremalogo.png" alt="Vrema Logo" width={40} height={40} className="opacity-60 -my-2" />
             <div>
-              <span className="font-bold text-sm">Vrema</span>
-              <span className="ml-1.5 text-[10px] text-muted-foreground">by KevkoStudio</span>
+              <span className="font-bold text-sm">VREMA</span>
+              <span className="ml-1.5 text-[10px] text-muted-foreground">Intelligente Zeiterfassung</span>
             </div>
           </div>
 
@@ -784,7 +792,7 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <p className="text-xs text-muted-foreground">© 2026 Vrema by KevkoStudio</p>
+          <p className="text-xs text-muted-foreground">© 2026 VREMA – Intelligente Zeiterfassung</p>
         </div>
       </footer>
 
@@ -813,20 +821,16 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setModal(null)}
-                      className="w-3 h-3 rounded-full bg-red-400 hover:brightness-110 transition-all"
+                      aria-label="Fenster schließen"
+                      className="w-2.5 h-2.5 rounded-full bg-red-400/90 hover:brightness-110 transition-all"
                     />
-                    <span className="w-3 h-3 rounded-full bg-yellow-400" />
-                    <span className="w-3 h-3 rounded-full bg-emerald-400" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/90" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/90" />
                   </div>
                   <span className="text-xs text-muted-foreground font-sans tracking-wider">
                     vrema — {modal === "impressum" ? "impressum.txt" : "datenschutz.txt"}
                   </span>
-                  <button
-                    onClick={() => setModal(null)}
-                    className="text-muted-foreground hover:text-foreground transition-colors font-sans text-sm px-1"
-                  >
-                    ✕
-                  </button>
+                  <span className="w-6" aria-hidden />
                 </div>
 
                 {/* Content */}
@@ -898,7 +902,7 @@ export default function LandingPage() {
 
               {/* Click outside hint */}
               <p className="text-center text-xs text-muted-foreground font-sans mt-3">
-                Klick außerhalb oder <span className="text-muted-foreground">✕</span> zum Schließen
+                Klick außerhalb oder auf den roten Punkt zum Schließen
               </p>
             </motion.div>
           </motion.div>

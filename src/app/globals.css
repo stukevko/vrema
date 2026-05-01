@@ -2,12 +2,12 @@
 
 :root {
   --background: 0 0% 100%;
-  --card: 0 0% 99%;
-  --popover: 0 0% 99%;
+  --card: 0 0% 100%;
+  --popover: 0 0% 100%;
   --primary: 150 100% 35%;
-  --secondary: 214 20% 96%;
-  --accent: 214 20% 96%;
-  --border: 214 32% 94%;
+  --secondary: 210 20% 97%;
+  --accent: 210 20% 97%;
+  --border: 210 40% 96%;
   --ring: 150 100% 35%;
   --radius: 1.25rem;
   --foreground: 222 47% 11%;
@@ -17,12 +17,12 @@
 
 .dark {
   --background: 0 0% 100%;
-  --card: 0 0% 99%;
-  --popover: 0 0% 99%;
+  --card: 0 0% 100%;
+  --popover: 0 0% 100%;
   --primary: 150 100% 35%;
-  --secondary: 214 20% 96%;
-  --accent: 214 20% 96%;
-  --border: 214 32% 94%;
+  --secondary: 210 20% 97%;
+  --accent: 210 20% 97%;
+  --border: 210 40% 96%;
   --ring: 150 100% 35%;
   --radius: 1.25rem;
   --foreground: 222 47% 11%;
@@ -53,9 +53,7 @@ html {
 }
 
 body {
-  background:
-    radial-gradient(1200px 600px at 50% -200px, hsl(var(--primary) / 0.08), transparent 60%),
-    hsl(var(--background));
+  background: hsl(var(--background));
   color: hsl(var(--foreground));
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
@@ -95,7 +93,7 @@ body {
 }
 
 .glass-panel {
-  background: linear-gradient(180deg, hsl(0 0% 100% / 0.88), hsl(0 0% 100% / 0.72));
+  background: linear-gradient(180deg, hsl(0 0% 100% / 0.95), hsl(0 0% 100% / 0.9));
   backdrop-filter: blur(18px);
   border: 1px solid hsl(var(--border));
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
@@ -150,14 +148,15 @@ textarea[class]:focus {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(148, 163, 184, 0.5);
 }
 
-/* Date input dark mode fix */
+/* Date input indicator for neutral light mode */
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1) opacity(0.4);
+  filter: none;
+  opacity: 0.55;
 }

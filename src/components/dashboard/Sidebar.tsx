@@ -63,14 +63,16 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
       <div className="h-16 flex items-center gap-3 px-6 border-b border-border">
         <Image src="/vremalogo.png" alt="Vrema" width={40} height={40} className="shrink-0 -my-2" />
         <div>
-          <span className="font-bold text-base tracking-tight">Vrema</span>
-          <span className="block text-[9px] text-muted-foreground uppercase tracking-widest -mt-0.5">by KevkoStudio</span>
+          <span className="font-bold text-base tracking-tight">VREMA</span>
+          <span className="block text-[9px] text-muted-foreground uppercase tracking-widest -mt-0.5">
+            Intelligente Zeiterfassung
+          </span>
         </div>
       </div>
 
       {/* Plan badge */}
       <div className="px-5 pt-5">
-        <div className="px-3 py-1.5 rounded-2xl bg-primary/10 border border-border text-primary text-xs font-semibold capitalize">
+        <div className="px-3 py-1.5 rounded-2xl bg-slate-50 border border-border text-slate-700 text-xs font-semibold capitalize">
           {plan} Plan
         </div>
       </div>
@@ -86,7 +88,7 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
               className={clsx(
                 "flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all active:scale-95",
                 isActive
-                  ? "bg-primary/10 text-primary backdrop-blur-sm"
+                  ? "bg-slate-100 text-slate-900 backdrop-blur-sm"
                   : "text-muted-foreground md:hover:text-foreground md:hover:bg-card/70"
               )}
             >
