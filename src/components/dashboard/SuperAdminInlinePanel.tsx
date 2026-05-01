@@ -62,10 +62,10 @@ export function SuperAdminInlinePanel({
 
       <div className="mb-4 grid gap-3 md:grid-cols-4">
         {[
-          { label: "Firmen", value: `${monitoring.activeCompanies}/${monitoring.totalCompanies}`, tone: "text-sky-300" },
-          { label: "User", value: `${monitoring.activeUsers}/${monitoring.totalUsers}`, tone: "text-emerald-300" },
-          { label: "Logs 24h", value: `${monitoring.logsLast24h}`, tone: "text-violet-300" },
-          { label: "Offene Clock-ins", value: `${monitoring.openWorkLogs}`, tone: "text-amber-300" },
+          { label: "Firmen", value: `${monitoring.activeCompanies}/${monitoring.totalCompanies}`, tone: "text-sky-700" },
+          { label: "User", value: `${monitoring.activeUsers}/${monitoring.totalUsers}`, tone: "text-emerald-700" },
+          { label: "Logs 24h", value: `${monitoring.logsLast24h}`, tone: "text-violet-700" },
+          { label: "Offene Clock-ins", value: `${monitoring.openWorkLogs}`, tone: "text-amber-700" },
         ].map((m) => (
           <div key={m.label} className="rounded-2xl border border-border bg-white px-3 py-2">
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{m.label}</p>
@@ -77,15 +77,15 @@ export function SuperAdminInlinePanel({
       <div className="mb-4 rounded-2xl border border-border bg-white px-3 py-2 text-[11px] text-foreground">
         Monitoring: neue User (7d) <span className="text-foreground">{monitoring.newUsersLast7d}</span> · offene Tokens{" "}
         <span className="text-foreground">{monitoring.verificationTokensOpen}</span> · abgelaufene Tokens{" "}
-        <span className={monitoring.staleVerificationTokens > 0 ? "text-amber-300" : "text-emerald-300"}>
+        <span className={monitoring.staleVerificationTokens > 0 ? "text-amber-700" : "text-emerald-700"}>
           {monitoring.staleVerificationTokens}
         </span>{" "}
         · abgelaufene Sessions{" "}
-        <span className={monitoring.expiredSessions > 0 ? "text-amber-300" : "text-emerald-300"}>
+        <span className={monitoring.expiredSessions > 0 ? "text-amber-700" : "text-emerald-700"}>
           {monitoring.expiredSessions}
         </span>{" "}
         · Retention-Cron{" "}
-        <span className={monitoring.retentionCronConfigured ? "text-emerald-300" : "text-red-300"}>
+        <span className={monitoring.retentionCronConfigured ? "text-emerald-700" : "text-red-700"}>
           {monitoring.retentionCronConfigured ? "konfiguriert" : "nicht gesetzt"}
         </span>
       </div>
@@ -225,7 +225,7 @@ export function SuperAdminInlinePanel({
                   </select>
                 </td>
                 <td className="px-3 py-2">
-                  <span className={c.isActive ? "text-[#22c55e]" : "text-red-300"}>{c.isActive ? "Aktiv" : "Inaktiv"}</span>
+                  <span className={c.isActive ? "text-emerald-700" : "text-red-700"}>{c.isActive ? "Aktiv" : "Inaktiv"}</span>
                 </td>
                 <td className="px-3 py-2 text-foreground">
                   {c.activeUserCount}/{c.userCount}
@@ -260,7 +260,7 @@ export function SuperAdminInlinePanel({
                           await deleteCompanyBySuperAdmin(c.id);
                         });
                       }}
-                      className="rounded-2xl border border-red-400/25 bg-red-500/10 px-2 py-1 text-red-300 hover:bg-red-500/20"
+                      className="rounded-2xl border border-red-200 bg-red-50 px-2 py-1 text-red-700 hover:bg-red-100"
                       disabled={isPending}
                     >
                       Löschen
