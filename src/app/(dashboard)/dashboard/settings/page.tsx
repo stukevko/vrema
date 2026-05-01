@@ -30,7 +30,7 @@ export default async function SettingsPage() {
         <section className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <div className="flex items-center gap-2 mb-4">
             <Building2 className="w-4 h-4 text-muted-foreground" />
-            <h2 className="font-semibold text-sm text-slate-700 uppercase tracking-widest font-sans">Firmendaten</h2>
+            <h2 className="font-semibold text-sm text-white/80 uppercase tracking-widest font-sans">Firmendaten</h2>
           </div>
           <CompanySettingsForm company={company} />
         </section>
@@ -40,7 +40,7 @@ export default async function SettingsPage() {
       <section className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
         <div className="flex items-center gap-2 mb-4">
           <Lock className="w-4 h-4 text-muted-foreground" />
-          <h2 className="font-semibold text-sm text-slate-700 uppercase tracking-widest font-sans">Passwort ändern</h2>
+          <h2 className="font-semibold text-sm text-white/80 uppercase tracking-widest font-sans">Passwort ändern</h2>
         </div>
         <PasswordChangeForm />
       </section>
@@ -48,7 +48,7 @@ export default async function SettingsPage() {
       <section className="rounded-2xl border border-white/5 bg-card p-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
         <div className="flex items-center gap-2 mb-4">
           <Fingerprint className="w-4 h-4 text-muted-foreground" />
-          <h2 className="font-semibold text-sm text-slate-700 uppercase tracking-widest font-sans">Sicherheit</h2>
+          <h2 className="font-semibold text-sm text-white/80 uppercase tracking-widest font-sans">Sicherheit</h2>
         </div>
         <PasskeySecurityForm />
       </section>

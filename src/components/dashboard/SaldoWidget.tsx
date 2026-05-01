@@ -59,7 +59,7 @@ export function SaldoWidget({
         </div>
         <div>
           <p className={`text-3xl font-bold tabular-nums ${
-            isZero ? "text-slate-700" : isPositive ? "text-[#22c55e]" : "text-red-400"
+            isZero ? "text-white/80" : isPositive ? "text-[#22c55e]" : "text-red-400"
           }`}>
             {isPositive && "+"}{isZero ? "0h 00m" : formatMinutes(saldoMinutes)}
           </p>

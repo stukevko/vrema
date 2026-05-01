@@ -58,13 +58,13 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden md:flex w-60 flex-col bg-white/50 backdrop-blur-xl border-r border-border sticky top-0 h-screen shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+    <aside className="hidden md:flex w-60 flex-col bg-background/80 backdrop-blur-xl border-r border-white/5 sticky top-0 h-screen shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
       {/* Logo */}
-      <div className="h-16 flex items-center gap-3 px-5 border-b border-border">
+      <div className="h-16 flex items-center gap-3 px-5 border-b border-white/5">
         <Image src="/vremalogo.png" alt="Vrema" width={48} height={48} className="shrink-0 -my-2" />
         <div>
           <span className="font-bold text-base tracking-tight">Vrema</span>
-          <span className="block text-[9px] text-slate-500 uppercase tracking-widest -mt-0.5">by KevkoStudio</span>
+          <span className="block text-[9px] text-white/25 uppercase tracking-widest -mt-0.5">by KevkoStudio</span>
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
                 "flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all active:scale-95",
                 isActive
                   ? "bg-primary/10 text-primary backdrop-blur-sm"
-                  : "text-slate-600 md:hover:text-slate-900 md:hover:bg-card/70"
+                  : "text-white/50 md:hover:text-white md:hover:bg-card/70"
               )}
             >
               <item.icon className="w-4 h-4" />
@@ -98,10 +98,10 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
       </nav>
 
       {/* Logout */}
-      <div className="p-3 border-t border-border">
+      <div className="p-3 border-t border-white/5">
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium text-slate-600 md:hover:text-red-500 md:hover:bg-red-100 transition-all active:scale-95"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium text-white/50 md:hover:text-red-400 md:hover:bg-red-400/5 transition-all active:scale-95"
         >
           <LogOut className="w-4 h-4" />
           Abmelden
@@ -116,8 +116,8 @@ export function DashboardMobileBottomNav({ role }: { role?: string }) {
   const items = MOBILE_NAV_ITEMS.filter((item) => !(item.href === "/dashboard/billing" && role === "EMPLOYEE"));
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-white/70 backdrop-blur-xl px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 rounded-t-3xl shadow-[0_-12px_24px_rgba(0,0,0,0.08)]">
-      <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-slate-300/70" />
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-white/5 bg-background/80 backdrop-blur-xl px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 rounded-t-3xl shadow-[0_-12px_24px_rgba(0,0,0,0.25)]">
+      <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/20" />
       <div className="grid grid-cols-4 gap-1">
         {items.map((item) => {
           const isActive =
@@ -130,7 +130,7 @@ export function DashboardMobileBottomNav({ role }: { role?: string }) {
               href={item.href}
               className={clsx(
                 "flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium transition-all active:scale-95",
-                isActive ? "text-primary bg-primary/10 backdrop-blur-sm" : "text-slate-500"
+                isActive ? "text-primary bg-primary/10 backdrop-blur-sm" : "text-white/50"
               )}
             >
               <item.icon className="h-4 w-4" />

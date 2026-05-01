@@ -46,7 +46,7 @@ export function PasswordChangeForm() {
   ];
 
   return (
-    <div className="rounded-2xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-6">
+    <div className="rounded-2xl bg-card backdrop-blur-xl border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-6">
       <form onSubmit={handleSubmit} className="space-y-4">
         {fields.map((f) => (
           <div key={f.name}>
@@ -61,12 +61,12 @@ export function PasswordChangeForm() {
                 required
                 minLength={f.name !== "currentPassword" ? 8 : 1}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 transition-colors"
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-card backdrop-blur-xl border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-white text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 transition-colors"
               />
               <button
                 type="button"
                 onClick={f.toggle}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-slate-900/50 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white/50 transition-colors"
               >
                 {f.show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>

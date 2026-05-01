@@ -33,16 +33,16 @@ export function DashboardTopbar({ user }: TopbarProps) {
     : user.email?.[0]?.toUpperCase() ?? "?";
 
   return (
-    <header className="h-16 border-b border-border flex items-center justify-between px-4 md:px-6 bg-white/70 backdrop-blur-md sticky top-0 z-50">
+    <header className="h-16 border-b border-white/5 flex items-center justify-between px-4 md:px-6 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
       <div />
       <div className="flex items-center gap-3">
         {user.role === "SUPER_ADMIN" && (
-          <span className="rounded-full border border-amber-300/40 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-700">
+          <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-200">
             Super Admin
           </span>
         )}
-        <button className="relative w-11 h-11 rounded-2xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:hover:bg-card/70 flex items-center justify-center transition-all active:scale-95">
-          <Bell className="w-4 h-4 text-slate-700" />
+        <button className="relative w-11 h-11 rounded-2xl bg-card border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] md:hover:bg-card/70 flex items-center justify-center transition-all active:scale-95">
+          <Bell className="w-4 h-4 text-white/60" />
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
         </button>
         <div className="relative" ref={dropdownRef}>
@@ -53,7 +53,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
             <div className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center text-xs font-bold text-primary">
               {initials}
             </div>
-            <ChevronDown className="w-4 h-4 text-slate-600" />
+            <ChevronDown className="w-4 h-4 text-white/50" />
           </button>
 
           {open && (
@@ -66,7 +66,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
               <Link
                 href="/dashboard/settings"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-700 md:hover:bg-card/70 transition-all active:scale-95"
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/80 md:hover:bg-card/70 transition-all active:scale-95"
               >
                 <UserCircle2 className="w-4 h-4" />
                 Profil
@@ -74,7 +74,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
               <Link
                 href="/dashboard/settings"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-700 md:hover:bg-card/70 transition-all active:scale-95"
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/80 md:hover:bg-card/70 transition-all active:scale-95"
               >
                 <Settings className="w-4 h-4" />
                 Einstellungen

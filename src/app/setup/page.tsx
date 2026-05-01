@@ -56,7 +56,7 @@ export default async function SetupPage({
 
   return (
     <div className="min-h-screen bg-background text-white px-4 py-10">
-      <div className="mx-auto w-full max-w-xl rounded-2xl border border-border bg-card p-6 md:p-8">
+      <div className="mx-auto w-full max-w-xl rounded-2xl border border-white/5 bg-card backdrop-blur-xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
         <p className="mb-2 text-xs font-sans uppercase tracking-widest text-primary">Onboarding</p>
         <h1 className="text-2xl font-bold">Kurz einrichten, dann geht es los</h1>
         <p className="mt-2 text-sm text-white/50">
@@ -100,34 +100,34 @@ export default async function SetupPage({
 
         <form action={finishSetup} className="mt-8 space-y-4">
           <div>
-            <label className="mb-1.5 block text-xs text-white/50">Wie heisst deine Firma?</label>
+            <label className="mb-1.5 block text-xs text-muted-foreground">Wie heisst deine Firma?</label>
             <input
               name="companyName"
               type="text"
               required
               defaultValue={company?.name ?? ""}
               placeholder="Musterfirma GmbH"
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-white placeholder:text-white/20 focus:border-primary/50 focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-white placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs text-white/50">Wie viele Mitarbeiter habt ihr?</label>
+            <label className="mb-1.5 block text-xs text-muted-foreground">Wie viele Mitarbeiter habt ihr?</label>
             <input
               name="employeeCount"
               type="number"
               min={1}
               step={1}
               placeholder="z. B. 8"
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-white placeholder:text-white/20 focus:border-primary/50 focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-white placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors"
             />
-            <p className="mt-1 text-[11px] text-white/30">Diese Angabe hilft bei der Einordnung deines Setups.</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Diese Angabe hilft bei der Einordnung deines Setups.</p>
           </div>
 
           <button
             type="submit"
             disabled={requireCard && !company?.paymentMethodVerifiedAt}
-            className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-bold text-black transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-bold text-black ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Weiter zum Dashboard
           </button>

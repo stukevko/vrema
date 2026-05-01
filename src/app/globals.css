@@ -1,39 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  --background: 210 20% 98%;
-  --card: 0 0% 100%;
-  --popover: 0 0% 100%;
-  --primary: 142 70% 45%;
-  --secondary: 210 20% 96%;
-  --accent: 210 20% 96%;
-  --border: 210 15% 90%;
-  --ring: 142 70% 45%;
+  --background: 222 47% 4%;
+  --card: 222 47% 7%;
+  --popover: 222 47% 7%;
+  --primary: 150 100% 50%;
+  --secondary: 217 32% 17%;
+  --accent: 217 32% 17%;
+  --border: 0 0% 100% / 0.05;
+  --ring: 150 100% 50%;
   --radius: 1.25rem;
-  --foreground: 222 20% 15%;
-  --muted: 215 20% 45%;
-  --muted-foreground: 215 20% 45%;
+  --foreground: 210 40% 98%;
+  --muted: 215 20% 65%;
+  --muted-foreground: 215 20% 65%;
 }
 
 .dark {
-  --background: 210 20% 98%;
-  --card: 0 0% 100%;
-  --popover: 0 0% 100%;
-  --primary: 142 70% 45%;
-  --secondary: 210 20% 96%;
-  --accent: 210 20% 96%;
-  --border: 210 15% 90%;
-  --ring: 142 70% 45%;
+  --background: 222 47% 4%;
+  --card: 222 47% 7%;
+  --popover: 222 47% 7%;
+  --primary: 150 100% 50%;
+  --secondary: 217 32% 17%;
+  --accent: 217 32% 17%;
+  --border: 0 0% 100% / 0.05;
+  --ring: 150 100% 50%;
   --radius: 1.25rem;
-  --foreground: 222 20% 15%;
-  --muted: 215 20% 45%;
-  --muted-foreground: 215 20% 45%;
+  --foreground: 210 40% 98%;
+  --muted: 215 20% 65%;
+  --muted-foreground: 215 20% 65%;
 }
 
 @theme {
   --color-background: hsl(var(--background));
-  --color-card: hsl(var(--card) / 0.75);
-  --color-popover: hsl(var(--popover) / 0.82);
+  --color-card: hsl(var(--card));
+  --color-popover: hsl(var(--popover));
   --color-primary: hsl(var(--primary));
   --color-secondary: hsl(var(--secondary));
   --color-accent: hsl(var(--accent));
@@ -79,6 +79,8 @@ input[class],
 select[class],
 textarea[class] {
   border-radius: 0.75rem;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
   border-color: hsl(var(--border));
 }
 

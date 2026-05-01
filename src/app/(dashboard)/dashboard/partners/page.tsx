@@ -14,7 +14,7 @@ export default async function PartnerAdminPage() {
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Vertriebspartner</h1>
-        <p className="text-sm text-slate-900/45 mt-1">
+        <p className="text-sm text-white/45 mt-1">
           Partner anlegen, Abschluesse verfolgen und Auszahlungen als erledigt markieren.
         </p>
       </div>

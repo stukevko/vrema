@@ -217,7 +217,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-slate-900 overflow-x-hidden">
+    <div className="min-h-screen bg-background text-white overflow-x-hidden">
       <Script
         id="ld-json-vrema"
         type="application/ld+json"
@@ -241,17 +241,17 @@ export default function LandingPage() {
           </div>
 
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-            <a href="#features" className="hover:text-slate-900 transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-slate-900 transition-colors">Preise</a>
+            <a href="#features" className="hover:text-white transition-colors">Features</a>
+            <a href="#pricing" className="hover:text-white transition-colors">Preise</a>
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/auth/login" className="text-sm text-muted-foreground hover:text-slate-900 transition-colors px-3 py-1.5 rounded-xl hover:bg-card">
+            <Link href="/auth/login" className="text-sm text-muted-foreground hover:text-white transition-colors px-3 py-1.5 rounded-xl hover:bg-card">
               Anmelden
             </Link>
             <Link
               href="/auth/register"
-              className="text-sm px-4 py-2 rounded-xl bg-card text-slate-900 font-semibold hover:bg-card/80 transition-all"
+              className="text-sm px-4 py-2 rounded-xl bg-card border border-white/5 text-white font-semibold hover:bg-card/70 transition-all"
             >
               Registrieren
             </Link>
@@ -283,7 +283,7 @@ export default function LandingPage() {
 
               <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-md">
                 Stempeluhr, Auswertungen und GPS-Tracking in einer Anwendung.{" "}
-                <span className="text-slate-700">Gebaut für Handwerker, Dienstleister & Teams.</span>
+                <span className="text-white/70">Gebaut für Handwerker, Dienstleister & Teams.</span>
               </p>
 
               <div className="flex items-center gap-4 flex-wrap">
@@ -296,7 +296,7 @@ export default function LandingPage() {
                 </Link>
                 <a
                   href="#pricing"
-                  className="flex items-center gap-2 px-7 py-3.5 rounded-2xl border border-border text-slate-700 font-medium hover:text-slate-900 hover:border-border transition-all"
+                  className="flex items-center gap-2 px-7 py-3.5 rounded-2xl border border-border text-white/70 font-medium hover:text-white hover:border-border transition-all"
                 >
                   Pläne ansehen
                 </a>
@@ -345,7 +345,7 @@ export default function LandingPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className={
-                          isCmd ? "text-slate-900" :
+                          isCmd ? "text-white" :
                           isSuccess ? "text-[#22c55e]" :
                           isInfo ? "text-[#60a5fa]" :
                           "text-muted-foreground"
@@ -356,7 +356,7 @@ export default function LandingPage() {
                     );
                   })}
                   {!done && (
-                    <div className={inProgress.startsWith("$") ? "text-slate-900" : inProgress.startsWith("✓") ? "text-[#22c55e]" : "text-[#60a5fa]"}>
+                    <div className={inProgress.startsWith("$") ? "text-white" : inProgress.startsWith("✓") ? "text-[#22c55e]" : "text-[#60a5fa]"}>
                       {inProgress}
                       <Cursor show={true} />
                     </div>
@@ -535,7 +535,7 @@ export default function LandingPage() {
             <p className="text-xs text-[#22c55e] uppercase tracking-widest mb-4">03 / Preise</p>
             <h2 className="text-4xl md:text-5xl font-black mb-4">Starten.</h2>
             <p className="text-muted-foreground">Kostenlos testen. Keine Kreditkarte. Keine Verpflichtungen.</p>
-            <p className="mt-2 text-sm text-slate-700">
+            <p className="mt-2 text-sm text-white/70">
               Egal ob 5 oder 50 Mitarbeiter - ein Preis. Keine versteckten Kosten pro Nutzer.
             </p>
           </motion.div>
@@ -546,27 +546,27 @@ export default function LandingPage() {
                 <ShieldCheck className="h-4 w-4" />
                 <p className="text-sm font-semibold">DATEV-Ready</p>
               </div>
-              <p className="mt-1 text-sm text-slate-700">Exportformate für Ihr Lohnbüro optimiert.</p>
+              <p className="mt-1 text-sm text-white/70">Exportformate für Ihr Lohnbüro optimiert.</p>
             </div>
             <div className="rounded-2xl border border-white/5 bg-card p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
               <div className="flex items-center gap-2 text-emerald-200">
                 <Scale className="h-4 w-4" />
                 <p className="text-sm font-semibold">Revisionssicher</p>
               </div>
-              <p className="mt-1 text-sm text-slate-700">Vollständiger Audit-Trail nach GoBD-Standards.</p>
+              <p className="mt-1 text-sm text-white/70">Vollständiger Audit-Trail nach GoBD-Standards.</p>
             </div>
             <div className="rounded-2xl border border-white/5 bg-card p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
               <div className="flex items-center gap-2 text-emerald-200">
                 <Server className="h-4 w-4" />
                 <p className="text-sm font-semibold">Hosted in Germany</p>
               </div>
-              <p className="mt-1 text-sm text-slate-700">100% DSGVO-konform & sicher.</p>
+              <p className="mt-1 text-sm text-white/70">100% DSGVO-konform & sicher.</p>
             </div>
           </div>
 
           {/* Toggle */}
           <div className="flex items-center gap-4 mb-10">
-            <span className={`text-sm transition-colors ${!yearly ? "text-slate-900" : "text-muted-foreground"}`}>monatlich</span>
+            <span className={`text-sm transition-colors ${!yearly ? "text-white" : "text-muted-foreground"}`}>monatlich</span>
             <button
               onClick={() => setYearly(!yearly)}
               className={`relative w-12 h-6 rounded-full transition-colors ${yearly ? "bg-primary" : "bg-card"}`}
@@ -578,7 +578,7 @@ export default function LandingPage() {
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               />
             </button>
-            <span className={`text-sm transition-colors ${yearly ? "text-slate-900" : "text-muted-foreground"}`}>
+            <span className={`text-sm transition-colors ${yearly ? "text-white" : "text-muted-foreground"}`}>
               jährlich
               <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">-2 Monate</span>
             </span>
@@ -642,7 +642,7 @@ export default function LandingPage() {
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
                       <Check className="w-3.5 h-3.5 text-[#22c55e] shrink-0" />
-                      <span className="text-slate-700">{f}</span>
+                      <span className="text-white/70">{f}</span>
                     </li>
                   ))}
                   {plan.missing.map((f) => (
@@ -662,7 +662,7 @@ export default function LandingPage() {
                   className={`block w-full text-center py-3 rounded-2xl font-bold text-sm transition-all ${
                     plan.highlight
                       ? "bg-primary text-black hover:bg-primary/90"
-                      : "bg-white/[0.04] text-slate-700 hover:bg-white/[0.08] hover:text-slate-900 border border-white/[0.08]"
+                      : "bg-card border border-white/5 text-white/70 hover:bg-card/70"
                   }`}
                 >
                   {plan.key === "ENTERPRISE" ? "$ kontakt --plan enterprise" : `$ start --plan ${plan.key.toLowerCase()}`}
@@ -711,7 +711,7 @@ export default function LandingPage() {
                   </Link>
                   <a
                     href="#pricing"
-                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-border text-slate-700 font-medium hover:text-slate-900 hover:border-border transition-all"
+                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-border text-white/70 font-medium hover:text-white hover:border-border transition-all"
                   >
                     Pläne & Preise
                     <ChevronRight className="w-4 h-4" />
@@ -726,7 +726,7 @@ export default function LandingPage() {
       <section className="py-16 px-6 border-t border-white/[0.06]">
         <div className="max-w-4xl mx-auto rounded-3xl border border-emerald-300/20 bg-card p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
           <h3 className="text-2xl font-bold">Werde VREMA-Partner</h3>
-          <p className="mt-2 text-slate-700">
+          <p className="mt-2 text-white/70">
             Du kennst Betriebe, die eine moderne Zeiterfassung brauchen? Empfiehl VREMA und erhalte bis zu 15€ pro
             Abschluss. Ohne Haken, direkt in dein Dashboard.
           </p>
@@ -756,30 +756,30 @@ export default function LandingPage() {
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
             <button
               onClick={() => setModal("impressum")}
-              className="hover:text-slate-900 transition-colors cursor-pointer"
+              className="hover:text-white transition-colors cursor-pointer"
             >
               Impressum
             </button>
             <button
               onClick={() => setModal("datenschutz")}
-              className="hover:text-slate-900 transition-colors cursor-pointer"
+              className="hover:text-white transition-colors cursor-pointer"
             >
               Datenschutz
             </button>
-            <Link href="/widerruf" className="hover:text-slate-900 transition-colors">
+            <Link href="/widerruf" className="hover:text-white transition-colors">
               Widerruf
             </Link>
-            <Link href="/cookies" className="hover:text-slate-900 transition-colors">
+            <Link href="/cookies" className="hover:text-white transition-colors">
               Cookies
             </Link>
-            <Link href="/agb" className="hover:text-slate-900 transition-colors">
+            <Link href="/agb" className="hover:text-white transition-colors">
               AGB
             </Link>
-            <Link href="/avv" className="hover:text-slate-900 transition-colors">
+            <Link href="/avv" className="hover:text-white transition-colors">
               AVV
             </Link>
-            <a href="#pricing" className="hover:text-slate-900 transition-colors">Preise</a>
-            <Link href="/partner" className="hover:text-slate-900 transition-colors">
+            <a href="#pricing" className="hover:text-white transition-colors">Preise</a>
+            <Link href="/partner" className="hover:text-white transition-colors">
               Partner werden
             </Link>
           </div>
@@ -823,7 +823,7 @@ export default function LandingPage() {
                   </span>
                   <button
                     onClick={() => setModal(null)}
-                    className="text-muted-foreground hover:text-slate-900 transition-colors font-sans text-sm px-1"
+                    className="text-muted-foreground hover:text-white transition-colors font-sans text-sm px-1"
                   >
                     ✕
                   </button>
@@ -846,7 +846,7 @@ export default function LandingPage() {
                       ].map(([key, val]) => (
                         <div key={key} className="flex gap-3">
                           <span className="text-muted-foreground shrink-0 w-24 text-right">{key}:</span>
-                          <span className="text-slate-700">{val}</span>
+                          <span className="text-white/70">{val}</span>
                         </div>
                       ))}
                       <div className="pt-3 border-t border-white/5 text-muted-foreground text-xs leading-relaxed">
@@ -875,7 +875,7 @@ export default function LandingPage() {
                       ].map(([key, val]) => (
                         <div key={key} className="flex gap-3">
                           <span className="text-muted-foreground shrink-0 w-32 text-right text-xs leading-5">{key}:</span>
-                          <span className="text-slate-700 text-xs leading-5">{val}</span>
+                          <span className="text-white/70 text-xs leading-5">{val}</span>
                         </div>
                       ))}
                       <div className="pt-3 border-t border-white/5 text-muted-foreground text-xs">

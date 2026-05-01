@@ -38,7 +38,7 @@ export function TeamList({
 
   if (members.length === 0) {
     return (
-      <div className="rounded-2xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-10 text-center">
+      <div className="rounded-2xl bg-card backdrop-blur-xl border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-10 text-center">
         <User className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
         <p className="text-sm text-muted-foreground">Noch keine Mitarbeiter vorhanden.</p>
       </div>
@@ -46,7 +46,7 @@ export function TeamList({
   }
 
   return (
-    <div className="rounded-2xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden">
+    <div className="rounded-2xl bg-card backdrop-blur-xl border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden">
       {/* Header row */}
       <div className="grid grid-cols-12 gap-3 px-5 py-3 border-b border-white/5 text-xs text-muted-foreground font-sans uppercase tracking-widest">
         <span className="col-span-5">Mitarbeiter</span>
@@ -73,7 +73,7 @@ export function TeamList({
             >
               {/* Avatar + name */}
               <div className="col-span-5 flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex items-center justify-center text-sm font-bold text-slate-700 shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-card backdrop-blur-xl border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-center text-sm font-bold text-white/80 shrink-0">
                   {(member.name ?? member.email)[0].toUpperCase()}
                 </div>
                 <div className="min-w-0">
@@ -93,7 +93,7 @@ export function TeamList({
 
               {/* Weekly hours */}
               <div className="col-span-2 text-right">
-                <span className="text-sm font-sans text-slate-700">{member.weeklyHours}h</span>
+                <span className="text-sm font-sans text-white/80">{member.weeklyHours}h</span>
               </div>
 
               {/* Actions */}
