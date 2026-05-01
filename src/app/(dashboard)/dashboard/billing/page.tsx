@@ -30,7 +30,7 @@ export default async function BillingPage({
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 text-foreground premium-enter">
-      <div className="rounded-3xl premium-card backdrop-blur-xl p-8">
+      <div className="rounded-3xl glass-panel p-8">
         <h1 className="text-3xl font-bold tracking-tight">Abonnement & Billing</h1>
         <p className="text-muted-foreground text-sm mt-1">Verwalte dein Abo und deine Zahlungsmethoden.</p>
       </div>
@@ -43,7 +43,7 @@ export default async function BillingPage({
       )}
 
       {/* Current plan */}
-      <div className="rounded-3xl premium-card backdrop-blur-xl p-8">
+      <div className="rounded-3xl glass-panel p-8">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Aktueller Plan</p>

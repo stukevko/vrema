@@ -58,7 +58,7 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden md:flex w-64 lg:w-72 flex-col bg-white/70 backdrop-blur-md border-r border-border sticky top-0 h-screen shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+    <aside className="hidden md:flex w-64 lg:w-72 flex-col glass-nav sticky top-0 h-screen">
       {/* Logo */}
       <div className="h-16 flex items-center gap-3 px-6 border-b border-border">
         <Image src="/vremalogo.png" alt="Vrema" width={40} height={40} className="shrink-0 -my-2" />

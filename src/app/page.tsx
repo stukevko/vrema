@@ -65,7 +65,7 @@ function Cursor({ show = true }: { show?: boolean }) {
 // ─── Terminal window component ────────────────────────────────────────────────
 function TerminalWindow({ title = "vrema — zsh", children }: { title?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-3xl overflow-hidden border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] bg-card/90 backdrop-blur-md">
+    <div className="rounded-3xl overflow-hidden glass-panel">
       <div className="flex items-center gap-2 px-4 py-3 bg-card border-b border-border">
         <span className="w-3 h-3 rounded-full bg-red-400" />
         <span className="w-3 h-3 rounded-full bg-yellow-400" />
@@ -230,7 +230,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-border bg-white/70 backdrop-blur-2xl">
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-border glass-nav">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image src="/vremalogo.png" alt="Vrema Logo" width={44} height={44} className="-my-2" />
@@ -310,7 +310,7 @@ export default function LandingPage() {
                 ].map((seal) => (
                   <div
                     key={seal.label}
-                    className="rounded-2xl border border-border bg-card/50 px-3 py-2 backdrop-blur-sm"
+                    className="rounded-2xl glass-panel px-3 py-2"
                   >
                     <p className="text-[11px] font-semibold text-muted-foreground">{seal.label}</p>
                     <p className="mt-0.5 text-[10px] text-muted-foreground">{seal.text}</p>
@@ -377,7 +377,7 @@ export default function LandingPage() {
                   { label: "Team aktiv", value: "8 / 12", color: "#60a5fa" },
                   { label: "Offene Anträge", value: "2 Urlaub", color: "#f59e0b" },
                 ].map((badge) => (
-                  <div key={badge.label} className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+                  <div key={badge.label} className="rounded-2xl glass-panel px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{badge.label}</p>
                     <p className="font-bold text-sm tabular-nums" style={{ color: badge.color }}>{badge.value}</p>
                   </div>
@@ -420,7 +420,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className="group relative rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-7 hover:border-primary/30 transition-all overflow-hidden"
+                className="group relative rounded-3xl glass-panel p-7 hover:border-primary/30 transition-all overflow-hidden"
               >
                 {/* hover glow */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(ellipse_at_0%_0%,rgba(34,197,94,0.04),transparent_60%)]" />
@@ -541,21 +541,21 @@ export default function LandingPage() {
           </motion.div>
 
           <div className="mb-10 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+            <div className="rounded-2xl glass-panel p-4">
               <div className="flex items-center gap-2 text-emerald-700">
                 <ShieldCheck className="h-4 w-4" />
                 <p className="text-sm font-semibold">DATEV-Ready</p>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">Exportformate für Ihr Lohnbüro optimiert.</p>
             </div>
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+            <div className="rounded-2xl glass-panel p-4">
               <div className="flex items-center gap-2 text-emerald-700">
                 <Scale className="h-4 w-4" />
                 <p className="text-sm font-semibold">Revisionssicher</p>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">Vollständiger Audit-Trail nach GoBD-Standards.</p>
             </div>
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+            <div className="rounded-2xl glass-panel p-4">
               <div className="flex items-center gap-2 text-emerald-700">
                 <Server className="h-4 w-4" />
                 <p className="text-sm font-semibold">Hosted in Germany</p>
@@ -724,7 +724,7 @@ export default function LandingPage() {
       </section>
 
       <section className="py-16 px-6 border-t border-border">
-        <div className="max-w-4xl mx-auto rounded-3xl border border-emerald-300/20 bg-card p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="max-w-4xl mx-auto rounded-3xl glass-panel p-8">
           <h3 className="text-2xl font-bold">Werde VREMA-Partner</h3>
           <p className="mt-2 text-muted-foreground">
             Du kennst Betriebe, die eine moderne Zeiterfassung brauchen? Empfiehl VREMA und erhalte bis zu 15€ pro
@@ -807,7 +807,7 @@ export default function LandingPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-lg"
             >
-              <div className="rounded-3xl overflow-hidden border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] bg-card">
+              <div className="rounded-3xl overflow-hidden glass-panel">
                 {/* Title bar */}
                 <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
                   <div className="flex items-center gap-2">

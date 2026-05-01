@@ -92,7 +92,7 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 text-foreground">
       {/* Header */}
-      <div className="rounded-3xl border border-border bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+      <div className="rounded-3xl glass-panel p-8">
         <h1 className="text-3xl font-bold tracking-tight">
           Guten {new Date().getHours() < 12 ? "Morgen" : new Date().getHours() < 18 ? "Tag" : "Abend"},{" "}
           {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
@@ -107,7 +107,7 @@ export default async function DashboardPage() {
       )}
 
       {employeeCount === 0 && (
-        <div className="rounded-3xl border border-border bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="rounded-3xl glass-panel p-8">
           <div className="flex items-center gap-2 mb-2">
             <ListChecks className="w-4 h-4 text-primary" />
             <p className="font-semibold text-sm">Noch kein Team angelegt</p>
@@ -133,7 +133,7 @@ export default async function DashboardPage() {
       {/* Team stats (for owners/managers) */}
       {teamStats && (
         <div className="space-y-4">
-          <div className="rounded-3xl border border-border bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+          <div className="rounded-3xl glass-panel p-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">Command Center</p>
@@ -181,7 +181,7 @@ export default async function DashboardPage() {
             { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24" },
             { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc" },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-3xl bg-card border border-border backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all md:hover:bg-card/80">
+            <div key={stat.label} className="rounded-3xl glass-panel p-8 transition-all md:hover:bg-card/80">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-muted-foreground">{stat.label}</p>
                 <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
@@ -224,7 +224,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Today summary */}
-      <div className="rounded-3xl bg-card border border-border backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all md:hover:bg-card/80">
+      <div className="rounded-3xl glass-panel p-8 transition-all md:hover:bg-card/80">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Heute</h2>
           <span className="text-sm text-primary tabular-nums font-bold">
