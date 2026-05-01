@@ -45,7 +45,7 @@ export function SuperAdminInlinePanel({
   const [resultMsg, setResultMsg] = useState<string | null>(null);
 
   return (
-    <section id="super-admin" className="rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+    <section id="super-admin" className="rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
       <div className="mb-4 flex items-center gap-2">
         <Shield className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">Super Admin Modus</h2>

@@ -17,11 +17,11 @@ export default function ReportsLoading() {
 
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-24 rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.05)]" />
+          <div key={i} className="h-24 rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)]" />
         ))}
       </div>
 
-      <div className="h-96 rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.05)]" />
+      <div className="h-96 rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)]" />
     </div>
   );
 }

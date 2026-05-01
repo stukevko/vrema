@@ -41,7 +41,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
             Super Admin
           </span>
         )}
-        <button className="relative w-11 h-11 rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:hover:bg-card/70 flex items-center justify-center transition-all active:scale-95">
+        <button className="relative w-11 h-11 rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] md:hover:bg-card/70 flex items-center justify-center transition-all active:scale-95">
           <Bell className="w-4 h-4 text-muted-foreground" />
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
         </button>
@@ -57,7 +57,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
           </button>
 
           {open && (
-            <div className="absolute right-0 top-12 w-52 rounded-2xl border border-border bg-card p-1 shadow-[0_20px_50px_rgba(0,0,0,0.05)] z-30">
+            <div className="absolute right-0 top-12 w-52 rounded-2xl border border-border bg-card p-1 shadow-[0_20px_50px_rgba(0,0,0,0.04)] z-30">
               <div className="px-3 py-2 border-b border-border mb-1">
                 <p className="text-sm font-semibold truncate">{user.name ?? "Profil"}</p>
                 <p className="text-xs text-muted-foreground truncate">{user.email ?? ""}</p>

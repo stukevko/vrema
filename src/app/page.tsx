@@ -65,7 +65,7 @@ function Cursor({ show = true }: { show?: boolean }) {
 // ─── Terminal window component ────────────────────────────────────────────────
 function TerminalWindow({ title = "vrema — zsh", children }: { title?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-3xl overflow-hidden border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] bg-card/90 backdrop-blur-md">
+    <div className="rounded-3xl overflow-hidden border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] bg-card/90 backdrop-blur-md">
       <div className="flex items-center gap-2 px-4 py-3 bg-card border-b border-border">
         <span className="w-3 h-3 rounded-full bg-red-400" />
         <span className="w-3 h-3 rounded-full bg-yellow-400" />
@@ -137,7 +137,7 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
       transition={{ duration: 0.5 }}
       className="text-center"
     >
-      <p className="text-2xl md:text-3xl font-bold text-emerald-300">{value}</p>
+      <p className="text-2xl md:text-3xl font-bold text-primary">{value}</p>
       <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest">{label}</p>
     </motion.div>
   );
@@ -251,7 +251,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/auth/register"
-              className="text-sm px-4 py-2 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-foreground font-semibold hover:bg-card/70 transition-all"
+              className="text-sm px-4 py-2 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-foreground font-semibold hover:bg-card/70 transition-all"
             >
               Registrieren
             </Link>
@@ -270,7 +270,7 @@ export default function LandingPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7 }}
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-300/25 bg-emerald-300/10 text-emerald-200 text-xs mb-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-300/25 bg-emerald-300/10 text-emerald-700 text-xs mb-8">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
                 Ein Produkt von KevkoStudio
               </div>
@@ -278,7 +278,7 @@ export default function LandingPage() {
               <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-[1.05] mb-6">
                 Zeiterfassung.
                 <br />
-                <span className="text-[#22c55e]">Präzise. Einfach.</span>
+                <span className="text-primary">Präzise. Einfach.</span>
               </h1>
 
               <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-md">
@@ -346,7 +346,7 @@ export default function LandingPage() {
                         animate={{ opacity: 1 }}
                         className={
                           isCmd ? "text-foreground" :
-                          isSuccess ? "text-[#22c55e]" :
+                          isSuccess ? "text-primary" :
                           isInfo ? "text-[#60a5fa]" :
                           "text-muted-foreground"
                         }
@@ -356,7 +356,7 @@ export default function LandingPage() {
                     );
                   })}
                   {!done && (
-                    <div className={inProgress.startsWith("$") ? "text-foreground" : inProgress.startsWith("✓") ? "text-[#22c55e]" : "text-[#60a5fa]"}>
+                    <div className={inProgress.startsWith("$") ? "text-foreground" : inProgress.startsWith("✓") ? "text-primary" : "text-[#60a5fa]"}>
                       {inProgress}
                       <Cursor show={true} />
                     </div>
@@ -377,7 +377,7 @@ export default function LandingPage() {
                   { label: "Team aktiv", value: "8 / 12", color: "#60a5fa" },
                   { label: "Offene Anträge", value: "2 Urlaub", color: "#f59e0b" },
                 ].map((badge) => (
-                  <div key={badge.label} className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+                  <div key={badge.label} className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{badge.label}</p>
                     <p className="font-bold text-sm tabular-nums" style={{ color: badge.color }}>{badge.value}</p>
                   </div>
@@ -420,7 +420,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className="group relative rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-7 hover:border-primary/30 transition-all overflow-hidden"
+                className="group relative rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-7 hover:border-primary/30 transition-all overflow-hidden"
               >
                 {/* hover glow */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(ellipse_at_0%_0%,rgba(34,197,94,0.04),transparent_60%)]" />
@@ -456,7 +456,7 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-            <p className="text-xs text-[#22c55e] uppercase tracking-widest mb-4">02 / Philosophie</p>
+            <p className="text-xs text-primary uppercase tracking-widest mb-4">02 / Philosophie</p>
               <h2 className="text-4xl md:text-5xl font-black leading-tight mb-6">
                 Kein Großkonzern.
                 <br />
@@ -473,8 +473,8 @@ export default function LandingPage() {
                   { num: "02", title: "Transparent & Fair", desc: "Feste Preise, klare Meilensteine, keine versteckten Kosten." },
                   { num: "03", title: "Lokale Verwurzelung", desc: "Speyer, Rhein-Neckar, Pfalz. Ein Handschlag zählt mehr als jedes SLA." },
                 ].map((item) => (
-                  <div key={item.num} className="flex gap-4 p-5 rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
-                    <span className="text-[#22c55e] text-sm font-bold shrink-0 mt-0.5">{item.num}</span>
+                  <div key={item.num} className="flex gap-4 p-5 rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+                    <span className="text-primary text-sm font-bold shrink-0 mt-0.5">{item.num}</span>
                     <div>
                       <p className="font-semibold text-sm mb-1">{item.title}</p>
                       <p className="text-muted-foreground text-sm">{item.desc}</p>
@@ -496,20 +496,20 @@ export default function LandingPage() {
                     <span className="text-muted-foreground">$</span> whoami --verbose
                   </div>
                   <div className="border-l-2 border-[#22c55e]/30 pl-4 space-y-2">
-                    <p className="text-[#22c55e]">Kevin Konkin</p>
+                    <p className="text-primary">Kevin Konkin</p>
                     <p className="text-muted-foreground text-xs">Gründer & Entwickler, KevkoStudio</p>
                     <p className="text-muted-foreground text-xs">Kolbstr. 5 · 67346 Speyer · Deutschland</p>
                   </div>
                   <div className="grid grid-cols-3 gap-3 mt-4">
                     {[{ v: "10+", l: "Jahre" }, { v: "Full", l: "Stack" }, { v: "5★", l: "Feedback" }].map((s) => (
                       <div key={s.l} className="text-center p-2 rounded-xl bg-white/[0.03] border border-border">
-                        <p className="text-[#22c55e] font-bold text-lg">{s.v}</p>
+                        <p className="text-primary font-bold text-lg">{s.v}</p>
                         <p className="text-muted-foreground text-xs">{s.l}</p>
                       </div>
                     ))}
                   </div>
                   <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
-                    <p className="text-[#22c55e]/80 text-sm">
+                    <p className="text-primary/80 text-sm">
                       &gt; "Problemlösung durch Handschlagqualität."
                     </p>
                   </div>
@@ -532,7 +532,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="mb-12"
           >
-            <p className="text-xs text-[#22c55e] uppercase tracking-widest mb-4">03 / Preise</p>
+            <p className="text-xs text-primary uppercase tracking-widest mb-4">03 / Preise</p>
             <h2 className="text-4xl md:text-5xl font-black mb-4">Starten.</h2>
             <p className="text-muted-foreground">Kostenlos testen. Keine Kreditkarte. Keine Verpflichtungen.</p>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -541,22 +541,22 @@ export default function LandingPage() {
           </motion.div>
 
           <div className="mb-10 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
-              <div className="flex items-center gap-2 text-emerald-200">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+              <div className="flex items-center gap-2 text-emerald-700">
                 <ShieldCheck className="h-4 w-4" />
                 <p className="text-sm font-semibold">DATEV-Ready</p>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">Exportformate für Ihr Lohnbüro optimiert.</p>
             </div>
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
-              <div className="flex items-center gap-2 text-emerald-200">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+              <div className="flex items-center gap-2 text-emerald-700">
                 <Scale className="h-4 w-4" />
                 <p className="text-sm font-semibold">Revisionssicher</p>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">Vollständiger Audit-Trail nach GoBD-Standards.</p>
             </div>
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
-              <div className="flex items-center gap-2 text-emerald-200">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+              <div className="flex items-center gap-2 text-emerald-700">
                 <Server className="h-4 w-4" />
                 <p className="text-sm font-semibold">Hosted in Germany</p>
               </div>
@@ -641,7 +641,7 @@ export default function LandingPage() {
                 <ul className="space-y-2.5 mb-8">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
-                      <Check className="w-3.5 h-3.5 text-[#22c55e] shrink-0" />
+                      <Check className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span className="text-muted-foreground">{f}</span>
                     </li>
                   ))}
@@ -662,7 +662,7 @@ export default function LandingPage() {
                   className={`block w-full text-center py-3 rounded-2xl font-bold text-sm transition-all ${
                     plan.highlight
                       ? "bg-primary text-black hover:bg-primary/90"
-                      : "bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-muted-foreground hover:bg-card/70"
+                      : "bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-muted-foreground hover:bg-card/70"
                   }`}
                 >
                   {plan.key === "ENTERPRISE" ? "$ kontakt --plan enterprise" : `$ start --plan ${plan.key.toLowerCase()}`}
@@ -674,7 +674,7 @@ export default function LandingPage() {
           <p className="mt-10 text-center text-sm text-muted-foreground">
             <Link
               href="/partner"
-              className="text-[#22c55e]/90 hover:text-[#22c55e] underline underline-offset-2 text-xs"
+              className="text-primary/90 hover:text-primary underline underline-offset-2 text-xs"
             >
               Partner werden
             </Link>
@@ -694,7 +694,7 @@ export default function LandingPage() {
           >
             <TerminalWindow title="vrema — System-Transformation starten">
               <div className="py-8 text-center space-y-6">
-                <p className="text-xs text-[#22c55e] uppercase tracking-widest">03 / Starten</p>
+                <p className="text-xs text-primary uppercase tracking-widest">03 / Starten</p>
                 <h2 className="text-3xl md:text-4xl font-black">
                   System-Transformation starten.
                 </h2>
@@ -724,7 +724,7 @@ export default function LandingPage() {
       </section>
 
       <section className="py-16 px-6 border-t border-border">
-        <div className="max-w-4xl mx-auto rounded-3xl border border-emerald-300/20 bg-card p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="max-w-4xl mx-auto rounded-3xl border border-emerald-300/20 bg-card p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <h3 className="text-2xl font-bold">Werde VREMA-Partner</h3>
           <p className="mt-2 text-muted-foreground">
             Du kennst Betriebe, die eine moderne Zeiterfassung brauchen? Empfiehl VREMA und erhalte bis zu 15€ pro
@@ -807,7 +807,7 @@ export default function LandingPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-lg"
             >
-              <div className="rounded-3xl overflow-hidden border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] bg-card">
+              <div className="rounded-3xl overflow-hidden border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] bg-card">
                 {/* Title bar */}
                 <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
                   <div className="flex items-center gap-2">
@@ -833,7 +833,7 @@ export default function LandingPage() {
                 <div className="p-6 font-sans text-sm space-y-4">
                   {modal === "impressum" ? (
                     <>
-                      <div className="text-[#22c55e] text-xs uppercase tracking-widest mb-2">
+                      <div className="text-primary text-xs uppercase tracking-widest mb-2">
                         # impressum — Angaben gemäß § 5 TMG
                       </div>
                       {[
@@ -855,14 +855,14 @@ export default function LandingPage() {
                         # Für verlinkte Seiten sind deren Betreiber verantwortlich.
                       </div>
                       <div className="pt-3 text-xs">
-                        <Link href="/impressum" className="text-[#22c55e] hover:underline">
+                        <Link href="/impressum" className="text-primary hover:underline">
                           Vollständige Seite öffnen
                         </Link>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="text-[#22c55e] text-xs uppercase tracking-widest mb-2">
+                      <div className="text-primary text-xs uppercase tracking-widest mb-2">
                         # datenschutz — DSGVO-Erklärung
                       </div>
                       {[
@@ -882,7 +882,7 @@ export default function LandingPage() {
                         # Datenübertragbarkeit & Einschränkung der Verarbeitung auf Anfrage.
                       </div>
                       <div className="pt-3 text-xs">
-                        <Link href="/datenschutz" className="text-[#22c55e] hover:underline">
+                        <Link href="/datenschutz" className="text-primary hover:underline">
                           Vollständige Seite öffnen
                         </Link>
                       </div>

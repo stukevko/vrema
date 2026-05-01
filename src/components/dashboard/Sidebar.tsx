@@ -58,9 +58,9 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden md:flex w-60 flex-col bg-white/70 backdrop-blur-xl border-r border-border sticky top-0 h-screen shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+    <aside className="hidden md:flex w-64 lg:w-72 flex-col bg-white/70 backdrop-blur-md border-r border-border sticky top-0 h-screen shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
       {/* Logo */}
-      <div className="h-16 flex items-center gap-3 px-5 border-b border-border">
+      <div className="h-16 flex items-center gap-3 px-6 border-b border-border">
         <Image src="/vremalogo.png" alt="Vrema" width={48} height={48} className="shrink-0 -my-2" />
         <div>
           <span className="font-bold text-base tracking-tight">Vrema</span>
@@ -69,14 +69,14 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
       </div>
 
       {/* Plan badge */}
-      <div className="px-4 pt-4">
+      <div className="px-5 pt-5">
         <div className="px-3 py-1.5 rounded-2xl bg-primary/10 border border-border text-primary text-xs font-semibold capitalize">
           {plan} Plan
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-4 py-5 space-y-2">
         {visibleItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
@@ -84,7 +84,7 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
               key={item.href}
               href={item.href}
               className={clsx(
-                "flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all active:scale-95",
+                "flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all active:scale-95",
                 isActive
                   ? "bg-primary/10 text-primary backdrop-blur-sm"
                   : "text-muted-foreground md:hover:text-foreground md:hover:bg-card/70"
@@ -98,10 +98,10 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
       </nav>
 
       {/* Logout */}
-      <div className="p-3 border-t border-border">
+      <div className="p-4 border-t border-border">
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium text-muted-foreground md:hover:text-red-400 md:hover:bg-red-400/5 transition-all active:scale-95"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-muted-foreground md:hover:text-red-500 md:hover:bg-red-100 transition-all active:scale-95"
         >
           <LogOut className="w-4 h-4" />
           Abmelden

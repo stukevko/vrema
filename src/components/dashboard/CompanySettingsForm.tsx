@@ -72,7 +72,7 @@ export function CompanySettingsForm({ company }: Props) {
   };
 
   return (
-    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-6">
+    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
@@ -94,7 +94,7 @@ export function CompanySettingsForm({ company }: Props) {
             <input
               value={company.slug}
               readOnly
-              className="w-full px-3 py-2.5 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-muted-foreground text-sm font-sans cursor-not-allowed"
+              className="w-full px-3 py-2.5 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-muted-foreground text-sm font-sans cursor-not-allowed"
             />
           </div>
         </div>
@@ -201,7 +201,7 @@ export function CompanySettingsForm({ company }: Props) {
           <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
             Aktueller Plan
           </label>
-          <div className="px-3 py-2.5 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex items-center justify-between">
+          <div className="px-3 py-2.5 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] flex items-center justify-between">
             <span className="text-sm font-sans text-primary font-bold">{company.plan}</span>
             <a href="/dashboard/billing" className="text-xs text-muted-foreground hover:text-foreground transition-colors font-sans">
               Upgrade →

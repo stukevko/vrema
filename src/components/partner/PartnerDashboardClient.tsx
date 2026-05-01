@@ -94,7 +94,7 @@ export function PartnerDashboardClient({
           </button>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Dein Ref-Link</p>
           <div className="flex flex-wrap items-center gap-2">
             <code className="rounded-2xl border border-border bg-background px-2 py-1.5 text-xs text-slate-900 break-all">{refUrl}</code>
@@ -121,7 +121,7 @@ export function PartnerDashboardClient({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-base font-semibold">Deine Erfolgs-Statistik</h2>
@@ -163,7 +163,7 @@ export function PartnerDashboardClient({
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <div className="px-4 py-3 border-b border-border">
             <h2 className="font-semibold">Letzte Abschlüsse</h2>
           </div>
@@ -194,7 +194,7 @@ export function PartnerDashboardClient({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <div className="px-4 py-3 border-b border-border">
             <h2 className="font-semibold">Alle Abschlüsse</h2>
           </div>

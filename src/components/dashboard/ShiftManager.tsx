@@ -458,7 +458,7 @@ export function ShiftManager({
   };
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+    <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
       <h2 className="text-lg font-semibold">Arbeitsplan (Soll-Zeiten)</h2>
       <p className="mt-1 text-xs text-muted">Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.</p>
       {shiftCycleWeeks > 1 && (
@@ -897,7 +897,7 @@ export function ShiftManager({
                 const initials = (row.member.name ?? row.member.email).slice(0, 2).toUpperCase();
                 return (
                   <div key={row.member.id} className="grid grid-cols-[220px_1fr] items-center gap-3">
-                    <div className="flex items-center rounded-2xl border border-border bg-white px-4 py-4 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+                    <div className="flex items-center rounded-2xl border border-border bg-white px-4 py-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
                       <span className="inline-flex items-center gap-2 truncate text-sm text-foreground">
                         <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-semibold text-foreground">
                           {initials}
@@ -907,7 +907,7 @@ export function ShiftManager({
                     </div>
                     <div
                       data-timeline-lane
-                      className="relative h-16 rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.05)]"
+                      className="relative h-16 rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
                       onMouseDown={(e) => {
                         if (row.conflict) return;
                         beginTimelineDrag(e.clientX, e.currentTarget as HTMLElement, row.member.id, "create");
@@ -1013,7 +1013,7 @@ export function ShiftManager({
             if (e.target === e.currentTarget) setShiftEdit(null);
           }}
         >
-          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <h3 className="text-sm font-semibold text-foreground">Schicht bearbeiten</h3>
             <p className="mt-1 text-xs text-muted-foreground">{DAY_LABELS[timelineDay]} · {shiftEdit.label}</p>
             <div className="mt-4 grid gap-3">

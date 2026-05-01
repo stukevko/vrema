@@ -106,7 +106,7 @@ function LoginForm() {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <h1 className="text-xl font-bold mb-1">Willkommen zurück</h1>
           <p className="text-muted-foreground text-sm mb-8">Melde dich bei deinem Konto an.</p>
 
@@ -188,7 +188,7 @@ function LoginForm() {
               type="button"
               onClick={handlePasskeyLogin}
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-slate-900 font-semibold flex items-center justify-center gap-2 hover:bg-card/80 transition-colors disabled:opacity-60"
+              className="w-full py-3 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-slate-900 font-semibold flex items-center justify-center gap-2 hover:bg-card/80 transition-colors disabled:opacity-60"
             >
               <Fingerprint className="w-4 h-4" />
               Mit Passkey anmelden

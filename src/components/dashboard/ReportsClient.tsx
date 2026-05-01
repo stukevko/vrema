@@ -138,8 +138,8 @@ function PlanGateButton({
       onClick={locked ? onLockedClick : onClick}
       className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all active:scale-95 border ${
         locked
-          ? "bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-muted-foreground cursor-pointer md:hover:bg-card/70"
-          : "bg-primary border-primary text-black md:hover:bg-primary/90"
+          ? "bg-card border-border text-muted-foreground cursor-pointer md:hover:bg-slate-50"
+          : "bg-white border-border text-foreground md:hover:bg-slate-50"
       }`}
     >
       {locked ? <Lock className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
@@ -186,6 +186,7 @@ export function ReportsClient({
   const [mandantenNummer, setMandantenNummer] = useState("");
   const [abrechnungsMonat, setAbrechnungsMonat] = useState(() => defaultDatevAbrechnungsmonatMMYYYY());
   const [isDatevDownloading, setIsDatevDownloading] = useState(false);
+  const hasBusinessAccess = plan === "BUSINESS" || plan === "ENTERPRISE";
 
   const byUser = logs.reduce<Record<string, LogRow[]>>((acc, log) => {
     if (!acc[log.userId]) acc[log.userId] = [];
@@ -750,23 +751,26 @@ export function ReportsClient({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Berichte</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Berichte</h1>
             <p className="text-muted-foreground text-sm mt-1">{month} · {logs.length} Einträge</p>
           </div>
 
           {/* Action buttons */}
           <div className="flex items-center gap-2 flex-wrap">
-            <PlanGateButton
-              icon={Download}
-              label="$ export --pdf"
-              plan={plan}
-              requiredPlan="BUSINESS"
-              onLockedClick={lockedMsg}
-              onClick={exportPdf}
-            />
+            <button
+              onClick={hasBusinessAccess ? exportPdf : lockedMsg}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 ${
+                hasBusinessAccess
+                  ? "bg-primary text-black ring-1 ring-inset ring-white/20 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
+                  : "bg-card border border-border text-muted-foreground md:hover:bg-slate-50"
+              }`}
+            >
+              {hasBusinessAccess ? <Download className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+              PDF exportieren
+            </button>
             <PlanGateButton
               icon={Mail}
-              label="$ send --lohnbuero"
+              label="An Lohnbüro senden"
               plan={plan}
               requiredPlan="BUSINESS"
               onLockedClick={lockedMsg}
@@ -774,21 +778,21 @@ export function ReportsClient({
             />
             <PlanGateButton
               icon={FileSpreadsheet}
-              label="$ export --csv"
+              label="CSV exportieren"
               plan={plan}
               requiredPlan="BUSINESS"
               onLockedClick={lockedMsg}
               onClick={exportCsv}
             />
             <button
-              onClick={plan === "BUSINESS" || plan === "ENTERPRISE" ? () => setShowDatevModal(true) : lockedMsg}
+              onClick={hasBusinessAccess ? () => setShowDatevModal(true) : lockedMsg}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 border ${
-                plan === "BUSINESS" || plan === "ENTERPRISE"
-                  ? "bg-secondary/70 border border-border text-foreground/85 md:hover:bg-secondary/80"
-                  : "bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-muted-foreground cursor-pointer md:hover:bg-card/70"
+                hasBusinessAccess
+                  ? "bg-white border-border text-foreground md:hover:bg-slate-50"
+                  : "bg-card border border-border text-muted-foreground cursor-pointer md:hover:bg-slate-50"
               }`}
             >
-              {plan === "BUSINESS" || plan === "ENTERPRISE" ? (
+              {hasBusinessAccess ? (
                 <FileText className="w-3.5 h-3.5" />
               ) : (
                 <Lock className="w-3.5 h-3.5" />
@@ -806,25 +810,25 @@ export function ReportsClient({
             { label: "Ø pro Eintrag", value: logs.length ? formatMins(totalMinutes / logs.length) : "–", color: "#86efac" },
             { label: "GPS-gestempelt", value: logs.filter((l) => l.latitude).length.toString(), color: "#f59e0b" },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all md:hover:bg-card/70">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{s.label}</p>
-              <p className="text-xl font-bold" style={{ color: s.color }}>{s.value}</p>
+            <div key={s.label} className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 transition-all md:hover:bg-slate-50">
+              <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-2">{s.label}</p>
+              <p className="text-4xl font-extrabold tracking-tight text-foreground tabular-nums">{s.value}</p>
             </div>
           ))}
         </div>
 
         {isManager && (
-          <div className="rounded-2xl border border-border bg-white px-4 py-3 text-xs text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
-            Status-Legende: <span className="text-emerald-200">Pünktlich</span> ·{" "}
-            <span className="text-amber-200">Zu spät (&gt;15 Min nach Schichtbeginn)</span> ·{" "}
-            <span className="text-red-200">Fehlend (automatisch per Cron)</span> ·{" "}
-            <span className="text-sky-200">Manuell angepasst</span>
+          <div className="rounded-2xl border border-border bg-white px-4 py-3 text-xs text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+            Status-Legende: <span className="text-emerald-700">Pünktlich</span> ·{" "}
+            <span className="text-amber-700">Zu spät (&gt;15 Min nach Schichtbeginn)</span> ·{" "}
+            <span className="text-red-700">Fehlend (automatisch per Cron)</span> ·{" "}
+            <span className="text-sky-700">Manuell angepasst</span>
           </div>
         )}
 
-        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-4 md:p-5 space-y-3 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-4 md:p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Zeitkorrektur-Anträge</h2>
+            <h2 className="text-xl font-bold tracking-wide">Zeitkorrektur-Anträge</h2>
             <span className="text-[11px] text-muted-foreground">
               {correctionRequests.filter((r) => r.status === "PENDING").length} offen
             </span>
@@ -938,17 +942,17 @@ export function ReportsClient({
               <p className="text-xs text-muted-foreground">Alles ruhig hier. Genieße die Pause! ☕</p>
             ) : (
               correctionRequests.map((req) => (
-                <div key={req.id} className="rounded-2xl border border-border bg-card p-4 text-xs shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+                <div key={req.id} className="rounded-2xl border border-border bg-card p-4 text-xs shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{req.userName}</span>
                     <span className="text-foreground/45">{new Date(req.requestedClockIn).toLocaleString("de-DE")}</span>
                     <span
                       className={`rounded-full px-2 py-0.5 ${
                         req.status === "PENDING"
-                          ? "bg-amber-500/15 text-amber-200"
+                          ? "bg-amber-50 text-amber-700"
                           : req.status === "APPROVED"
-                            ? "bg-emerald-500/15 text-emerald-200"
-                            : "bg-red-500/15 text-red-200"
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-red-50 text-red-700"
                       }`}
                     >
                       {req.status}
@@ -964,7 +968,7 @@ export function ReportsClient({
                       <button
                         type="button"
                         onClick={() => decideCorrectionRequest(req.id, "APPROVE")}
-                        className="rounded-xl border border-emerald-400/30 px-2.5 py-1 text-[11px] text-emerald-200 md:hover:bg-emerald-500/10 transition-all active:scale-95"
+                        className="rounded-xl border border-emerald-200 px-2.5 py-1 text-[11px] text-emerald-700 md:hover:bg-emerald-50 transition-all active:scale-95"
                         disabled={isSaving}
                       >
                         Freigeben & buchen
@@ -972,7 +976,7 @@ export function ReportsClient({
                       <button
                         type="button"
                         onClick={() => decideCorrectionRequest(req.id, "REJECT")}
-                        className="rounded-xl border border-red-400/30 px-2.5 py-1 text-[11px] text-red-200 md:hover:bg-red-500/10 transition-all active:scale-95"
+                        className="rounded-xl border border-red-200 px-2.5 py-1 text-[11px] text-red-700 md:hover:bg-red-50 transition-all active:scale-95"
                         disabled={isSaving}
                       >
                         Ablehnen
@@ -986,10 +990,10 @@ export function ReportsClient({
         </div>
 
         {/* Table */}
-        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden">
           <div className="px-4 md:px-5 py-3 bg-card/80 flex items-center gap-2">
             <FileText className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-semibold">Work-Logs – {month}</span>
+            <span className="text-xl font-bold tracking-wide">Work-Logs – {month}</span>
           </div>
 
           {logs.length === 0 ? (
@@ -1038,7 +1042,7 @@ export function ReportsClient({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: i * 0.025 }}
-                        className="border-b border-border md:hover:bg-card/70 active:bg-background/70 transition-colors"
+                        className="even:bg-slate-50/50 hover:bg-slate-50 transition-colors"
                       >
                         {isManager && (
                           <td className="px-5 py-4">
@@ -1066,12 +1070,12 @@ export function ReportsClient({
                           <span
                             className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                               log.status === "ABSENT"
-                                ? "bg-red-500/15 text-red-200"
+                                ? "bg-red-50 text-red-700"
                                 : log.status === "LATE"
-                                  ? "bg-amber-500/15 text-amber-200"
+                                  ? "bg-amber-50 text-amber-700"
                                   : log.status === "MANUAL_ADJUSTED"
-                                    ? "bg-sky-500/15 text-sky-200"
-                                    : "bg-emerald-500/15 text-emerald-200"
+                                    ? "bg-sky-50 text-sky-700"
+                                    : "bg-emerald-50 text-emerald-700"
                             }`}
                           >
                             {statusLabel(log.status)}
@@ -1111,7 +1115,7 @@ export function ReportsClient({
                                     type="button"
                                     onClick={() => handleAbsentOverride(log)}
                                     disabled={isSaving}
-                                    className="rounded-xl border border-amber-300/30 px-2.5 py-1 text-[11px] text-amber-200 md:hover:bg-amber-300/10 transition-all active:scale-95 disabled:opacity-50"
+                                    className="rounded-xl border border-amber-200 px-2.5 py-1 text-[11px] text-amber-700 md:hover:bg-amber-50 transition-all active:scale-95 disabled:opacity-50"
                                   >
                                     Korrigieren
                                   </button>
@@ -1119,7 +1123,7 @@ export function ReportsClient({
                                     type="button"
                                     onClick={() => handleDelete(log)}
                                     disabled={isSaving}
-                                    className="rounded-xl border border-red-400/30 px-2.5 py-1 text-[11px] text-red-200 md:hover:bg-red-500/10 transition-all active:scale-95 disabled:opacity-50"
+                                    className="rounded-xl border border-red-200 px-2.5 py-1 text-[11px] text-red-700 md:hover:bg-red-50 transition-all active:scale-95 disabled:opacity-50"
                                   >
                                     Löschen
                                   </button>
@@ -1139,7 +1143,7 @@ export function ReportsClient({
 
         {/* Upgrade hint for locked features */}
         {plan === "STARTER" && (
-          <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-5 flex items-center justify-between gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+          <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-5 flex items-center justify-between gap-4">
             <div>
               <p className="font-semibold text-sm">PDF-Export & Lohnbüro-Versand freischalten</p>
               <p className="text-xs text-muted-foreground mt-1">
@@ -1159,7 +1163,7 @@ export function ReportsClient({
       <ToastContainer toasts={toasts} remove={remove} />
       {editingLog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 px-4">
-          <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+          <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <h3 className="text-base font-semibold">Zeiteintrag bearbeiten</h3>
             <p className="mt-1 text-xs text-foreground/45">
               Für Nachvollziehbarkeit wird die Änderung automatisch als Manager-Edit protokolliert.
@@ -1233,7 +1237,7 @@ export function ReportsClient({
       )}
       {showPayrollModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <h3 className="text-base font-semibold">An Lohnbüro senden</h3>
             <p className="mt-1 text-xs text-foreground/45">Der aktuelle PDF-Report wird als Anhang per E-Mail versendet.</p>
             <label className="mt-4 block text-xs text-muted-foreground">E-Mail Lohnbüro (mehrere mit ; trennen)</label>
@@ -1268,7 +1272,7 @@ export function ReportsClient({
       <Dialog.Root open={showDatevModal} onOpenChange={setShowDatevModal}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-white/70 px-4" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <Dialog.Title className="text-base font-semibold">DATEV Lohn-Export</Dialog.Title>
             <p className="mt-1 text-xs text-foreground/45">
               Dieser Export generiert ein DATEV-konformes CSV-Format inklusive Lohnarten (001/002) und Pausen-Abzug.

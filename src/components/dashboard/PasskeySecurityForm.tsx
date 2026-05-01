@@ -29,7 +29,7 @@ export function PasskeySecurityForm() {
   };
 
   return (
-    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-6 space-y-4">
+    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 space-y-4">
       <p className="text-sm text-foreground">
         Registriere einen Passkey (Face ID, Touch ID oder Windows Hello) für eine schnelle und sichere Anmeldung.
       </p>

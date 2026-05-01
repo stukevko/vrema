@@ -46,7 +46,7 @@ export function PasswordChangeForm() {
   ];
 
   return (
-    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-6">
+    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6">
       <form onSubmit={handleSubmit} className="space-y-4">
         {fields.map((f) => (
           <div key={f.name}>
@@ -61,7 +61,7 @@ export function PasswordChangeForm() {
                 required
                 minLength={f.name !== "currentPassword" ? 8 : 1}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 transition-colors"
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 transition-colors"
               />
               <button
                 type="button"

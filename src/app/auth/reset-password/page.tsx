@@ -54,7 +54,7 @@ function ResetPasswordForm() {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <h1 className="text-xl font-bold mb-1">Neues Passwort setzen</h1>
           <p className="text-muted-foreground text-sm mb-6">Wähle ein sicheres Passwort mit mindestens 8 Zeichen.</p>
 

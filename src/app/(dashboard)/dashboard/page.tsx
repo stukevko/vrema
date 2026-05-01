@@ -92,8 +92,8 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 text-foreground">
       {/* Header */}
-      <div className="rounded-3xl border border-border bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
-        <h1 className="text-2xl font-semibold tracking-tight">
+      <div className="rounded-3xl border border-border bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <h1 className="text-3xl font-bold tracking-tight">
           Guten {new Date().getHours() < 12 ? "Morgen" : new Date().getHours() < 18 ? "Tag" : "Abend"},{" "}
           {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
         </h1>
@@ -107,11 +107,14 @@ export default async function DashboardPage() {
       )}
 
       {employeeCount === 0 && (
-        <div className="rounded-3xl border border-border bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="rounded-3xl border border-border bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <div className="flex items-center gap-2 mb-2">
             <ListChecks className="w-4 h-4 text-primary" />
-            <p className="font-semibold text-sm">Erste Schritte</p>
+            <p className="font-semibold text-sm">Noch kein Team angelegt</p>
           </div>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Starte mit einem klaren Setup und aktiviere danach direkt das Terminal fuer den ersten Testlauf.
+          </p>
           <ol className="list-decimal pl-5 text-sm text-foreground space-y-1">
             <li>
               <Link href="/dashboard/team" className="text-primary hover:underline">
@@ -130,7 +133,7 @@ export default async function DashboardPage() {
       {/* Team stats (for owners/managers) */}
       {teamStats && (
         <div className="space-y-4">
-          <div className="rounded-3xl border border-border bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+          <div className="rounded-3xl border border-border bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">Command Center</p>
@@ -149,21 +152,21 @@ export default async function DashboardPage() {
               </div>
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-3 text-xs">
-              <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] px-3 py-2">
+              <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] px-3 py-2">
                 <span className="text-muted-foreground">Fehlend heute</span>
-                <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-red-200" : "text-emerald-200"}`}>
+                <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-red-700" : "text-emerald-700"}`}>
                   {teamStats.absentToday > 0 ? `${teamStats.absentToday} kritisch` : "Keine offenen Ausfälle"}
                 </p>
               </div>
-              <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] px-3 py-2">
+              <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] px-3 py-2">
                 <span className="text-muted-foreground">Zu spät heute</span>
-                <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-amber-200" : "text-emerald-200"}`}>
+                <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-amber-700" : "text-emerald-700"}`}>
                   {teamStats.lateToday > 0 ? `${teamStats.lateToday} Hinweise` : "Alles pünktlich"}
                 </p>
               </div>
-              <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] px-3 py-2">
+              <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] px-3 py-2">
                 <span className="text-muted-foreground">Unbestätigte Zeiten</span>
-                <p className={`mt-1 font-semibold ${teamStats.pendingCorrections > 0 ? "text-amber-200" : "text-emerald-200"}`}>
+                <p className={`mt-1 font-semibold ${teamStats.pendingCorrections > 0 ? "text-amber-700" : "text-emerald-700"}`}>
                   {teamStats.pendingCorrections > 0 ? `${teamStats.pendingCorrections} offen` : "Keine offenen Korrekturen"}
                 </p>
               </div>
@@ -178,7 +181,7 @@ export default async function DashboardPage() {
             { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24" },
             { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc" },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all md:hover:bg-card/80">
+            <div key={stat.label} className="rounded-3xl bg-card border border-border backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all md:hover:bg-card/80">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-muted-foreground">{stat.label}</p>
                 <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
@@ -221,7 +224,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Today summary */}
-      <div className="rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all md:hover:bg-card/80">
+      <div className="rounded-3xl bg-card border border-border backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all md:hover:bg-card/80">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Heute</h2>
           <span className="text-sm text-primary tabular-nums font-bold">
@@ -231,7 +234,7 @@ export default async function DashboardPage() {
 
         {todayLogs.length === 0 ? (
           <div className="py-6 text-center">
-            <p className="text-sm text-muted-foreground">Alles ruhig hier. Genieße die Pause! ☕</p>
+            <p className="text-sm text-muted-foreground">Noch kein Zeiteintrag heute - starte jetzt den ersten Eintrag.</p>
             <Link
               href="#terminal-widget"
               className="mt-3 inline-flex items-center rounded-2xl border border-border px-4 py-2 text-sm text-foreground transition-all active:scale-95 md:hover:bg-card/80"
@@ -271,7 +274,7 @@ export default async function DashboardPage() {
 
       {/* Business plan CTA */}
       {plan === "STARTER" && (
-        <div className="rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] backdrop-blur-xl p-8 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="rounded-3xl bg-card border border-border backdrop-blur-xl p-8 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <div>
             <p className="font-semibold text-sm">PDF-Export & Lohnbüro-Versand freischalten</p>
             <p className="text-xs text-muted-foreground mt-1">Upgrade auf Business für vollständige Berichte.</p>

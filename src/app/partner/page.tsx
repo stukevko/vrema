@@ -15,7 +15,7 @@ export default function PartnerPage() {
   return (
     <main className="min-h-screen bg-background px-6 py-16 text-slate-900">
       <div className="mx-auto max-w-lg">
-        <div className="mb-6 flex items-center justify-between rounded-2xl border border-border bg-white px-4 py-3 text-xs text-slate-700 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="mb-6 flex items-center justify-between rounded-2xl border border-border bg-white px-4 py-3 text-xs text-slate-700 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <span className="font-sans text-muted-foreground">vrema — partner</span>
           <Link
             href="/"
@@ -25,7 +25,7 @@ export default function PartnerPage() {
           </Link>
         </div>
 
-        <div className="space-y-8 rounded-2xl border border-border bg-card p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="space-y-8 rounded-2xl border border-border bg-card p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <h1 className="text-2xl font-bold tracking-tight">Partner werden</h1>
 
           <div className="space-y-4 text-base leading-relaxed text-slate-900">

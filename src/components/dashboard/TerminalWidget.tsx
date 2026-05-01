@@ -120,7 +120,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
   })();
 
   return (
-    <div className="rounded-3xl bg-card/90 backdrop-blur-md border border-border p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+    <div className="rounded-3xl bg-card/90 backdrop-blur-md border border-border p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-semibold text-lg">Terminal</h2>
         {gpsFeatureEnabled && (

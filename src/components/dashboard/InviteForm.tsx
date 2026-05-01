@@ -50,7 +50,7 @@ export function InviteForm() {
   };
 
   return (
-    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden">
+    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden">
       {/* Header */}
       <div className="px-5 py-4 border-b border-border flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -72,7 +72,7 @@ export function InviteForm() {
             >
               <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
                 <p className="text-xs text-primary font-sans mb-3">✓ {result.name} wurde angelegt</p>
-                <div className="rounded-lg bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-3 font-sans text-xs space-y-1.5">
+                <div className="rounded-lg bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-3 font-sans text-xs space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-muted-foreground">email:</span>
                     <span className="text-foreground truncate">{result.email}</span>

@@ -17,7 +17,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Settings className="w-6 h-6 text-muted-foreground" />
           Einstellungen
@@ -27,7 +27,7 @@ export default async function SettingsPage() {
 
       {/* Company settings – only for owners */}
       {isOwner && company && (
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <div className="flex items-center gap-2 mb-4">
             <Building2 className="w-4 h-4 text-muted-foreground" />
             <h2 className="font-semibold text-sm text-foreground uppercase tracking-widest font-sans">Firmendaten</h2>
@@ -37,7 +37,7 @@ export default async function SettingsPage() {
       )}
 
       {/* Password change – for all users */}
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
         <div className="flex items-center gap-2 mb-4">
           <Lock className="w-4 h-4 text-muted-foreground" />
           <h2 className="font-semibold text-sm text-foreground uppercase tracking-widest font-sans">Passwort ändern</h2>
@@ -45,7 +45,7 @@ export default async function SettingsPage() {
         <PasswordChangeForm />
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
         <div className="flex items-center gap-2 mb-4">
           <Fingerprint className="w-4 h-4 text-muted-foreground" />
           <h2 className="font-semibold text-sm text-foreground uppercase tracking-widest font-sans">Sicherheit</h2>

@@ -2,32 +2,32 @@
 
 :root {
   --background: 0 0% 100%;
-  --card: 0 0% 98%;
-  --popover: 0 0% 98%;
+  --card: 0 0% 99%;
+  --popover: 0 0% 99%;
   --primary: 150 100% 35%;
   --secondary: 214 20% 96%;
   --accent: 214 20% 96%;
-  --border: 214 32% 91%;
+  --border: 214 32% 94%;
   --ring: 150 100% 35%;
   --radius: 1.25rem;
   --foreground: 222 47% 11%;
   --muted: 214 20% 92%;
-  --muted-foreground: 215 16% 47%;
+  --muted-foreground: 215 16% 38%;
 }
 
 .dark {
   --background: 0 0% 100%;
-  --card: 0 0% 98%;
-  --popover: 0 0% 98%;
+  --card: 0 0% 99%;
+  --popover: 0 0% 99%;
   --primary: 150 100% 35%;
   --secondary: 214 20% 96%;
   --accent: 214 20% 96%;
-  --border: 214 32% 91%;
+  --border: 214 32% 94%;
   --ring: 150 100% 35%;
   --radius: 1.25rem;
   --foreground: 222 47% 11%;
   --muted: 214 20% 92%;
-  --muted-foreground: 215 16% 47%;
+  --muted-foreground: 215 16% 38%;
 }
 
 @theme {
@@ -89,7 +89,7 @@ select[class]:focus,
 textarea[class]:focus {
   outline: none;
   border-color: hsl(var(--ring));
-  box-shadow: 0 0 0 1px hsl(var(--ring) / 0.35);
+  box-shadow: 0 0 0 4px hsl(var(--ring) / 0.2);
 }
 
 /* Custom scrollbar */

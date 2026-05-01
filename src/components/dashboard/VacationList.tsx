@@ -39,7 +39,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
 
   if (requests.length === 0) {
     return (
-      <div className="rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] backdrop-blur-xl p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+      <div className="rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
         <Clock className="w-8 h-8 text-slate-400 mx-auto mb-3" />
         <p className="text-sm text-muted-foreground">Keine Urlaubsanträge vorhanden.</p>
       </div>
@@ -54,7 +54,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.05 }}
-          className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] backdrop-blur-xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)]"
+          className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
