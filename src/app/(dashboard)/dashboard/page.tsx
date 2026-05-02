@@ -253,7 +253,7 @@ export default async function DashboardPage() {
               return (
                 <div key={log.id} className="flex items-center justify-between py-2.5 px-3 rounded-2xl bg-background">
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-white/20" : "bg-primary animate-pulse"}`} />
+                    <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-slate-300" : "bg-primary animate-pulse"}`} />
                     <span className="text-sm text-foreground">
                       {new Date(log.clockIn).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
                       {" — "}

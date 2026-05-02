@@ -51,7 +51,7 @@ export function SuperAdminInlinePanel({
         <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">Super Admin Modus</h2>
       </div>
 
-      <p className="mb-4 text-[11px] leading-relaxed text-foreground/45">
+      <p className="mb-4 text-[11px] leading-relaxed text-muted-foreground">
         Hier legst du <span className="text-foreground">Kundenfirmen</span> an.{" "}
         <span className="text-foreground">Empfehlungspartner (Affiliate)</span> mit Ref-Link erstellst du auf der Seite{" "}
         <Link href="/dashboard/partners" className="text-primary underline underline-offset-2 hover:text-primary/90">

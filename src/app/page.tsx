@@ -542,7 +542,7 @@ export default function LandingPage() {
           >
             <p className="text-xs text-primary uppercase tracking-widest mb-4">03 / Preise</p>
             <h2 className="text-4xl md:text-5xl font-black mb-4">Starten.</h2>
-            <p className="text-muted-foreground">Kostenlos testen. Keine Kreditkarte. Keine Verpflichtungen.</p>
+            <p className="text-muted-foreground">Kostenlos testen. Keine Kosten. Keine Verpflichtungen.</p>
             <p className="mt-2 text-sm text-muted-foreground">
               Egal ob 5 oder 50 Mitarbeiter - ein Preis. Keine versteckten Kosten pro Nutzer.
             </p>
@@ -707,7 +707,7 @@ export default function LandingPage() {
                   System-Transformation starten.
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  Kostenlos testen. Keine Kreditkarte. Keine Verpflichtungen.
+                  Kostenlos testen. Keine Kosten. Keine Verpflichtungen.
                 </p>
                 <div className="flex items-center justify-center gap-4 pt-2 flex-wrap">
                   <Link

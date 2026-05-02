@@ -119,7 +119,7 @@ export function DashboardMobileBottomNav({ role }: { role?: string }) {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-white/70 backdrop-blur-xl px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 rounded-t-3xl shadow-[0_-12px_24px_rgba(0,0,0,0.25)]">
-      <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/20" />
+      <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-slate-300" />
       <div className="grid grid-cols-4 gap-1">
         {items.map((item) => {
           const isActive =

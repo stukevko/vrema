@@ -1115,7 +1115,7 @@ export function ReportsClient({
 
           {logs.length === 0 ? (
             <div className="py-16 text-center">
-              <Clock className="w-8 h-8 text-foreground/10 mx-auto mb-3" />
+              <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">Für den gewählten Zeitraum wurden noch keine Arbeitszeiten erfasst.</p>
               <a
                 href="/dashboard#terminal-widget"
@@ -1204,7 +1204,7 @@ export function ReportsClient({
                               <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
                             </span>
                           ) : (
-                            <span className="text-foreground/10">–</span>
+                            <span className="text-muted-foreground">–</span>
                           )}
                         </td>
                         <td className="px-5 py-4 text-muted-foreground text-xs max-w-[120px] truncate">

@@ -254,8 +254,8 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
 
         {error && (
           <div className="mt-3 space-y-1 text-center">
-            <p className="text-xs text-red-400">{error}</p>
-            {errorHint(error) && <p className="text-[11px] text-foreground/45">{errorHint(error)}</p>}
+            <p className="text-xs text-red-700">{error}</p>
+            {errorHint(error) && <p className="text-[11px] text-muted-foreground">{errorHint(error)}</p>}
           </div>
         )}
       </div>

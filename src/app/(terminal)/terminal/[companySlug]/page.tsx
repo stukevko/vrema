@@ -76,24 +76,24 @@ export default function TerminalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
-        <p className="text-center text-xs font-sans uppercase tracking-widest text-white/40 mb-2">
+        <p className="text-center text-xs font-sans uppercase tracking-widest text-muted-foreground mb-2">
           Vrema Terminal
         </p>
         <div
           className={clsx(
             "mb-5 rounded-2xl border px-4 py-3 text-center font-semibold transition-colors",
             feedbackState === "success" && "border-primary/30 bg-primary/10 text-primary",
-            feedbackState === "warning" && "border-amber-500/30 bg-amber-500/10 text-amber-300",
-            feedbackState === "error" && "border-red-500/30 bg-red-500/10 text-red-300",
-            feedbackState === "idle" && "border-border bg-background text-white/80"
+            feedbackState === "warning" && "border-amber-200 bg-amber-50 text-amber-700",
+            feedbackState === "error" && "border-red-200 bg-red-50 text-red-700",
+            feedbackState === "idle" && "border-border bg-background text-foreground"
           )}
         >
           {message}
         </div>
         {guidance && (
-          <p className="mb-4 -mt-2 text-center text-xs text-white/45">{guidance}</p>
+          <p className="mb-4 -mt-2 text-center text-xs text-muted-foreground">{guidance}</p>
         )}
 
         <div className="mb-5 rounded-2xl bg-background border border-border py-5 text-center">
@@ -109,8 +109,8 @@ export default function TerminalPage() {
                 "h-16 rounded-2xl text-xl font-bold transition-colors",
                 key === "ok" &&
                   "bg-primary text-black hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)]",
-                key === "clear" && "bg-red-500/15 text-red-300 hover:bg-red-500/25",
-                key !== "ok" && key !== "clear" && "bg-card text-white hover:bg-card/80"
+                key === "clear" && "bg-red-50 text-red-700 hover:bg-red-100",
+                key !== "ok" && key !== "clear" && "bg-card text-foreground hover:bg-card/80"
               )}
             >
               {key === "clear" ? "C" : key === "ok" ? "OK" : key}

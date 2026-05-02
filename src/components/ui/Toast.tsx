@@ -15,9 +15,9 @@ interface ToastProps {
 
 const ICONS = { success: CheckCircle, error: XCircle, info: Info };
 const COLORS = {
-  success: "border-[#22c55e]/30 text-[#22c55e]",
-  error: "border-red-500/30 text-red-400",
-  info: "border-blue-400/30 text-blue-400",
+  success: "border-emerald-200 text-emerald-700",
+  error: "border-red-200 text-red-700",
+  info: "border-sky-200 text-sky-700",
 };
 
 export function Toast({ message, type = "info", onClose, duration = 4000 }: ToastProps) {
@@ -33,11 +33,11 @@ export function Toast({ message, type = "info", onClose, duration = 4000 }: Toas
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-      className={`flex items-start gap-3 px-4 py-3 rounded-xl bg-card border border-white/5 font-sans text-sm max-w-sm shadow-[0_8px_30px_rgb(0,0,0,0.12)] ${COLORS[type]}`}
+      className={`flex items-start gap-3 px-4 py-3 rounded-xl bg-white border border-border font-sans text-sm max-w-sm shadow-[0_20px_50px_rgba(0,0,0,0.04)] ${COLORS[type]}`}
     >
       <Icon className="w-4 h-4 mt-0.5 shrink-0" />
-      <span className="text-white/80 flex-1">{message}</span>
-      <button onClick={onClose} className="text-white/30 hover:text-white/70 transition-colors shrink-0">
+      <span className="text-foreground flex-1">{message}</span>
+      <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
         <X className="w-3.5 h-3.5" />
       </button>
     </motion.div>
