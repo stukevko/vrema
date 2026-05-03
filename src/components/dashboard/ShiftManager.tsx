@@ -51,16 +51,16 @@ function snapMinutes(total: number) {
   return Math.round(total / TIMELINE_SNAP_MINUTES) * TIMELINE_SNAP_MINUTES;
 }
 
-/** Unter md (768px): Karten-UI, Bottom-Sheets, keine Tabellen-Planung. */
+/** Bis einschließlich Tablet/Small-Desktop (1023px): nur Einfach-Planer, große Karten, Bottom-Sheet. Ab 1024px: + Timeline. */
 function usePlanningCompactLayout() {
   return useSyncExternalStore(
     (notify) => {
       if (typeof window === "undefined") return () => {};
-      const mq = window.matchMedia("(max-width: 767px)");
+      const mq = window.matchMedia("(max-width: 1023px)");
       mq.addEventListener("change", notify);
       return () => mq.removeEventListener("change", notify);
     },
-    () => (typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false),
+    () => (typeof window !== "undefined" ? window.matchMedia("(max-width: 1023px)").matches : false),
     () => false
   );
 }
@@ -936,7 +936,7 @@ export function ShiftManager({
 
       {simpleAddSheetOpen && viewMode === "simple" && (
         <div
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0 md:hidden"
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0 lg:hidden"
           role="dialog"
           aria-modal="true"
           aria-labelledby="vrema-simple-sheet-title"

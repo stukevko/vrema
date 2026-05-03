@@ -111,14 +111,14 @@ button[class] {
   min-height: 44px;
 }
 
-/* Dashboard & Co.: größere Tap-Ziele am Handy (eine Hand + Alltag). */
-@media (max-width: 767px) {
+/* Dashboard & Co.: größere Tap-Ziele bis Tablet (eine Hand + Alltag). */
+@media (max-width: 1023px) {
   button[class] {
     min-height: 48px;
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   html {
     -webkit-tap-highlight-color: transparent;
   }
@@ -134,7 +134,7 @@ button[class] {
 }
 
 /* Leichtes „Native“-Feedback bei Tap (nur Dashboard-Hauptbereich) */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .native-app-tap button:not(:disabled):active,
   .native-app-tap a[href]:active {
     transform: scale(0.97);
