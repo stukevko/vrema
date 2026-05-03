@@ -124,7 +124,10 @@ export function ShiftManager({
   const [mobileEndPickerCustom, setMobileEndPickerCustom] = useState(false);
   const mobileDayLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mobileDayLongPressFiredRef = useRef(false);
-  /** Ab 1024px: Desktop-Baum (Tabs + Timeline) mounten – darunter kein Timeline-DOM. */
+  /**
+   * Desktop-Baum (Tabs + Timeline) nur bei echtem Desktop: breit **und** feiner Zeiger.
+   * Verhindert u. a. iPhone „Desktop-Website“ / falsche Viewport-Breite → ohne Timeline-DOM auf Touch.
+   */
   const [renderDesktopTree, setRenderDesktopTree] = useState(false);
 
   useEffect(() => {
@@ -132,11 +135,11 @@ export function ShiftManager({
   }, [viewMode]);
 
   useLayoutEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
+    const mq = window.matchMedia("(min-width: 1024px) and (pointer: fine)");
     const sync = () => {
-      const wide = mq.matches;
-      setRenderDesktopTree(wide);
-      if (!wide) {
+      const desktop = mq.matches;
+      setRenderDesktopTree(desktop);
+      if (!desktop) {
         setViewMode("simple");
         setShiftEdit(null);
       }
