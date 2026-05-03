@@ -29,17 +29,19 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
     <aside className="hidden h-screen w-72 shrink-0 flex-col border-r border-border glass-nav md:flex md:w-80">
       <Link
         href="/dashboard"
-        className="group block border-b border-border px-6 py-6 transition-colors md:hover:bg-muted/25"
+        className="group flex flex-col items-center border-b border-border px-4 py-4 text-center transition-colors md:px-5 md:py-4 md:hover:bg-muted/25"
       >
-        <Image
-          src="/vrema_logo.png"
-          alt="VREMA"
-          width={400}
-          height={112}
-          priority
-          className="h-auto w-full max-h-[7.5rem] object-contain object-left md:max-h-[8.25rem]"
-        />
-        <p className="mt-3 text-[10px] font-semibold uppercase leading-relaxed tracking-[0.2em] text-muted-foreground">
+        <span className="flex w-full justify-center">
+          <Image
+            src="/vrema_logo.png"
+            alt="VREMA"
+            width={240}
+            height={68}
+            priority
+            className="h-auto w-auto max-h-9 object-contain md:max-h-10"
+          />
+        </span>
+        <p className="mt-2.5 max-w-[16rem] text-center text-[10px] font-semibold uppercase leading-snug tracking-[0.14em] text-muted-foreground">
           Intelligente Zeiterfassung
         </p>
       </Link>
