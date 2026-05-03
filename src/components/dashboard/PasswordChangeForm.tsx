@@ -46,8 +46,8 @@ export function PasswordChangeForm() {
   ];
 
   return (
-    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:p-6">
+      <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
         {fields.map((f) => (
           <div key={f.name}>
             <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
@@ -61,12 +61,13 @@ export function PasswordChangeForm() {
                 required
                 minLength={f.name !== "currentPassword" ? 8 : 1}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 transition-colors"
+                className="min-h-12 w-full rounded-xl border border-border bg-white py-3 pl-10 pr-12 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary/40 focus:outline-none sm:min-h-0 sm:py-2.5 sm:text-sm"
               />
               <button
                 type="button"
                 onClick={f.toggle}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
+                className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 touch-manipulation items-center justify-center rounded-lg text-muted-foreground transition-colors active:bg-muted/50"
+                aria-label={f.show ? "Passwort verbergen" : "Passwort anzeigen"}
               >
                 {f.show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -88,7 +89,7 @@ export function PasswordChangeForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-card hover:bg-card/80 border border-border text-sm font-medium transition-colors disabled:opacity-60"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium transition-colors hover:bg-card/80 disabled:opacity-60 sm:w-auto sm:py-2.5"
         >
           {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
           Passwort ändern

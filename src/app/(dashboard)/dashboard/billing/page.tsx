@@ -29,9 +29,9 @@ export default async function BillingPage({
   const currentPlan = company.plan;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 text-foreground premium-enter">
-      <div className="rounded-2xl glass-panel p-8">
-        <h1 className="text-3xl font-bold tracking-tight">Abonnement & Billing</h1>
+    <div className="premium-enter mx-auto max-w-5xl space-y-6 px-1 text-foreground sm:space-y-8 sm:px-0">
+      <div className="rounded-2xl glass-panel p-5 sm:p-8">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Abonnement & Billing</h1>
         <p className="text-muted-foreground text-sm mt-1">Verwalten Sie Ihr Abonnement und Ihre Zahlungsmethoden.</p>
       </div>
 

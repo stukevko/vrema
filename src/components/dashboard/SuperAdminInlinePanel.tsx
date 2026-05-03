@@ -45,7 +45,7 @@ export function SuperAdminInlinePanel({
   const [resultMsg, setResultMsg] = useState<string | null>(null);
 
   return (
-    <section id="super-admin" className="rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+    <section id="super-admin" className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
       <div className="mb-4 flex items-center gap-2">
         <Shield className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">Super Admin Modus</h2>
@@ -91,7 +91,7 @@ export function SuperAdminInlinePanel({
       </div>
 
       <form
-        className="mb-4 grid gap-2 rounded-2xl border border-border bg-card p-4 md:grid-cols-4"
+        className="mb-4 grid grid-cols-1 gap-2 rounded-2xl border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
         onSubmit={(e) => {
           e.preventDefault();
           const form = e.currentTarget;
@@ -121,25 +121,25 @@ export function SuperAdminInlinePanel({
         <input
           name="companyName"
           placeholder="Firma (z. B. Muster GmbH)"
-          className="rounded-2xl border border-border bg-white px-3 py-2 text-xs text-foreground"
+          className="min-h-12 rounded-2xl border border-border bg-white px-3 py-2.5 text-sm text-foreground sm:text-xs"
           required
         />
         <input
           name="ownerName"
           placeholder="Owner Name"
-          className="rounded-2xl border border-border bg-white px-3 py-2 text-xs text-foreground"
+          className="min-h-12 rounded-2xl border border-border bg-white px-3 py-2.5 text-sm text-foreground sm:text-xs"
           required
         />
         <input
           name="ownerEmail"
           type="email"
           placeholder="owner@firma.de"
-          className="rounded-2xl border border-border bg-white px-3 py-2 text-xs text-foreground"
+          className="min-h-12 rounded-2xl border border-border bg-white px-3 py-2.5 text-sm text-foreground sm:text-xs"
           required
         />
         <button
           type="submit"
-          className="rounded-2xl border border-primary/35 bg-primary px-3 py-2 text-xs font-semibold text-foreground hover:bg-primary/90 disabled:opacity-60"
+          className="min-h-12 rounded-2xl border border-primary/35 bg-primary px-4 py-3 text-sm font-semibold text-foreground hover:bg-primary/90 disabled:opacity-60 sm:py-2 sm:text-xs lg:col-span-1"
           disabled={isPending}
         >
           Firma hinzufügen

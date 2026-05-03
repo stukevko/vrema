@@ -50,16 +50,16 @@ export function InviteForm() {
   };
 
   return (
-    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-border flex items-center gap-3">
+      <div className="flex items-center gap-3 border-b border-border px-4 py-3 sm:px-5 sm:py-4">
         <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
           <UserPlus className="w-4 h-4 text-[#22c55e]" />
         </div>
         <h2 className="font-semibold text-sm">Mitarbeiter einladen</h2>
       </div>
 
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         <AnimatePresence mode="wait">
           {result ? (
             /* ── Success: show temp credentials ── */
@@ -88,17 +88,19 @@ export function InviteForm() {
                   <p className="text-muted-foreground text-[10px] pt-1">Bitte beim ersten Login ändern.</p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <button
+                  type="button"
                   onClick={copyCredentials}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-card hover:bg-card/70 border border-border text-sm font-sans transition-colors"
+                  className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 font-sans text-sm transition-colors hover:bg-card/70 sm:py-2.5"
                 >
                   {copied ? <CheckCheck className="w-4 h-4 text-[#22c55e]" /> : <Copy className="w-4 h-4" />}
                   {copied ? "Kopiert!" : "Kopieren"}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setResult(null)}
-                  className="flex-1 py-2.5 rounded-xl bg-primary text-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+                  className="min-h-12 flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-foreground transition-colors hover:bg-primary/90 sm:py-2.5"
                 >
                   Weiteren einladen
                 </button>

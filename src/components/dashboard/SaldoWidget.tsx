@@ -32,8 +32,8 @@ export function SaldoWidget({
 
   if (!hasWorkLogs) {
     return (
-      <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-        <h2 className="font-semibold text-lg mb-3">Stunden-Saldo</h2>
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
+        <h2 className="mb-3 text-lg font-semibold">Stunden-Saldo</h2>
         <p className="text-sm text-muted-foreground">
           Noch keine erfassten Zeiten. Nutzen Sie das Terminal, um zu starten.
         </p>
@@ -42,8 +42,8 @@ export function SaldoWidget({
   }
 
   return (
-    <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-      <h2 className="font-semibold text-lg mb-6">Stunden-Saldo</h2>
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
+      <h2 className="mb-6 text-lg font-semibold">Stunden-Saldo</h2>
 
       <div className="flex items-center gap-4 mb-6">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${

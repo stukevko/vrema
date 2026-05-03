@@ -111,6 +111,24 @@ button[class] {
   min-height: 44px;
 }
 
+/* Dashboard & Co.: größere Tap-Ziele am Handy (eine Hand + Alltag). */
+@media (max-width: 1023px) {
+  button[class] {
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 1023px) {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Dashboard-Hauptbereich: sanfteres Scrollen auf iOS */
+.dashboard-touch-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
 button[class*="bg-primary"] {
   background-image: linear-gradient(to bottom, hsl(var(--primary) / 0.96), hsl(var(--primary) / 0.88));
   box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.2);

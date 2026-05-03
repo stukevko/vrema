@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { applyStandardWeek, clearShiftForDay, copyWeekToAllMembers, setShiftForDay } from "@/lib/actions/team";
 
 type Member = {
@@ -49,6 +49,20 @@ function minutesToHHMM(total: number) {
 
 function snapMinutes(total: number) {
   return Math.round(total / TIMELINE_SNAP_MINUTES) * TIMELINE_SNAP_MINUTES;
+}
+
+/** Unter 1024px: Karten-UI statt Desktop-Timeline und breiter Matrix-Tabelle. */
+function usePlanningCompactLayout() {
+  return useSyncExternalStore(
+    (notify) => {
+      if (typeof window === "undefined") return () => {};
+      const mq = window.matchMedia("(max-width: 1023px)");
+      mq.addEventListener("change", notify);
+      return () => mq.removeEventListener("change", notify);
+    },
+    () => (typeof window !== "undefined" ? window.matchMedia("(max-width: 1023px)").matches : false),
+    () => false
+  );
 }
 
 export function ShiftManager({
@@ -100,6 +114,7 @@ export function ShiftManager({
   const [showDetails, setShowDetails] = useState(false);
   const [showOnlyGaps, setShowOnlyGaps] = useState(false);
   const [showPlannerInfo, setShowPlannerInfo] = useState(false);
+  const compact = usePlanningCompactLayout();
 
   const userShifts = useMemo(
     () =>
@@ -488,33 +503,42 @@ export function ShiftManager({
           })}
         </div>
       )}
-      <div className="mt-3 flex max-w-full gap-1 overflow-x-auto rounded-lg border border-border bg-background p-1 text-xs [-webkit-overflow-scrolling:touch]">
+      <div className="mt-3 grid w-full max-w-full grid-cols-3 gap-2 rounded-xl border border-border bg-background p-2 text-xs sm:text-[13px]">
         <button
           type="button"
           onClick={() => setViewMode("simple")}
-          className={`min-h-11 shrink-0 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${viewMode === "simple" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`min-h-12 touch-manipulation rounded-lg px-2 py-2 font-medium sm:min-h-11 ${viewMode === "simple" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground active:bg-muted/50"}`}
         >
-          Einfach-Planer
+          {compact ? "Einfach" : "Einfach-Planer"}
         </button>
         <button
           type="button"
           onClick={() => setViewMode("matrix")}
-          className={`min-h-11 shrink-0 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${viewMode === "matrix" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`min-h-12 touch-manipulation rounded-lg px-2 py-2 font-medium sm:min-h-11 ${viewMode === "matrix" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground active:bg-muted/50"}`}
         >
-          Wochenmatrix
+          {compact ? "Woche" : "Wochenmatrix"}
         </button>
         <button
           type="button"
           onClick={() => setViewMode("timeline")}
-          className={`min-h-11 shrink-0 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${viewMode === "timeline" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`min-h-12 touch-manipulation rounded-lg px-2 py-2 font-medium sm:min-h-11 ${viewMode === "timeline" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground active:bg-muted/50"}`}
         >
-          Team-Timeline
+          {compact ? "Team-Tag" : "Team-Timeline"}
         </button>
       </div>
-      <p className="mt-2 text-[11px] text-muted-foreground lg:hidden">
-        Tipp: Auf dem Handy am besten <strong className="text-foreground">Einfach-Planer</strong> – Zeit wählen, Tag antippen. Timeline
-        funktioniert mit dem Finger ziehen; Matrix zum horizontal Scrollen.
-      </p>
+      {!compact && (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          <strong className="text-foreground">Einfach-Planer</strong>: eine Person, Woche per Tippen.{" "}
+          <strong className="text-foreground">Wochenmatrix</strong>: alle auf einen Blick.{" "}
+          <strong className="text-foreground">Team-Timeline</strong>: Balken ziehen (Desktop).
+        </p>
+      )}
+      {compact && (
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+          <strong className="text-foreground">Team-Tag</strong>: alle Mitarbeitenden für einen Wochentag – ohne Zoomen.{" "}
+          <strong className="text-foreground">Woche</strong>: Karten pro Person. <strong className="text-foreground">Einfach</strong>: eine Person, Tage antippen.
+        </p>
+      )}
       {selectedMember && (
         <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] text-foreground">
           <span>Ausgewählt:</span>
@@ -747,74 +771,135 @@ export function ShiftManager({
               </button>
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              Quick-Entry: Zeit wählen, dann Zellen anklicken. Klick mit gleicher Zeit löscht. Urlaubszellen sind blockiert.
+              {compact
+                ? "Zeit oben wählen, dann Tag antippen – gleiche Zeit erneut tippt zum Löschen."
+                : "Quick-Entry: Zeit wählen, dann Zellen anklicken. Klick mit gleicher Zeit löscht. Urlaubszellen sind blockiert."}
             </p>
           </div>
-          <table className="w-full min-w-[760px] text-sm">
-            <thead>
-              <tr className="border-b border-border text-muted-foreground">
-                <th className="px-3 py-2 text-left">Mitarbeiter</th>
-                {MATRIX_DAYS.map((dayOfWeek) => (
-                  <th key={dayOfWeek} className="px-2 py-2 text-center text-xs font-sans uppercase tracking-wider">
-                    {DAY_LABELS[dayOfWeek]}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {visibleMatrixMembers.map((m) => (
-                <tr key={m.id} className="border-b border-border last:border-0">
-                  <td className="px-3 py-2 text-foreground">{m.name ?? m.email}</td>
+
+          <div className="lg:hidden space-y-4 px-1 py-2">
+            {visibleMatrixMembers.map((m) => (
+              <div key={m.id} className="rounded-2xl border border-border bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+                <p className="truncate text-base font-semibold text-foreground">{m.name ?? m.email}</p>
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {MATRIX_DAYS.map((dayOfWeek) => {
                     const shift = shiftByUserAndDay.get(`${m.id}-${selectedWeekIndex}-${dayOfWeek}`);
                     const conflictType = conflictTypeByCell.get(`${m.id}-${dayOfWeek}`);
                     const isBlocked = Boolean(conflictType);
                     return (
-                      <td key={`${m.id}-${dayOfWeek}`} className="px-2 py-2 text-center">
-                        <button
-                          type="button"
-                          onClick={() => applyMatrixCell(m.id, dayOfWeek)}
-                          disabled={isPending || isBlocked}
-                          className={`min-h-12 w-full touch-manipulation rounded-lg border px-2 py-2 text-[11px] font-sans transition-colors sm:min-h-0 sm:rounded-md sm:py-1.5 ${
-                            conflictType === "SICK"
-                              ? "border-red-400/35 bg-red-500/15 text-red-100 cursor-not-allowed"
-                              : conflictType === "VACATION"
-                              ? "border-amber-400/35 bg-amber-500/15 text-amber-100 cursor-not-allowed"
+                      <button
+                        key={`${m.id}-${dayOfWeek}`}
+                        type="button"
+                        onClick={() => applyMatrixCell(m.id, dayOfWeek)}
+                        disabled={isPending || isBlocked}
+                        className={`flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-xl border px-1 py-2 text-center text-[11px] font-medium leading-tight transition-colors active:scale-[0.99] ${
+                          conflictType === "SICK"
+                            ? "cursor-not-allowed border-red-300/40 bg-red-50 text-red-800"
+                            : conflictType === "VACATION"
+                              ? "cursor-not-allowed border-amber-300/40 bg-amber-50 text-amber-900"
                               : shift
-                              ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
-                              : "border-border bg-background text-muted-foreground hover:bg-card/80"
-                          }`}
-                          title={
-                            conflictType === "SICK"
-                              ? "Krank blockiert"
-                              : conflictType === "VACATION"
-                              ? "Urlaub blockiert"
-                              : "Klicken für Schnellzuweisung / Löschen"
-                          }
-                        >
+                                ? "border-primary/35 bg-primary/10 text-primary"
+                                : "border-border bg-background text-muted-foreground"
+                        }`}
+                      >
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          {DAY_LABELS[dayOfWeek]}
+                        </span>
+                        <span className="font-sans text-xs">
                           {conflictType === "SICK"
                             ? "Krank"
                             : conflictType === "VACATION"
-                            ? "Urlaub"
-                            : shift
-                            ? formatHourRange(shift.startTime, shift.endTime)
-                            : "Frei"}
-                        </button>
-                      </td>
+                              ? "Urlaub"
+                              : shift
+                                ? formatHourRange(shift.startTime, shift.endTime)
+                                : "Frei"}
+                        </span>
+                      </button>
                     );
                   })}
-                </tr>
-              ))}
-              <tr className="border-t border-border bg-card/60">
-                <td className="px-3 py-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Stunden-Summe</td>
-                {matrixDayTotals.map((minutes, idx) => (
-                  <td key={`sum-${MATRIX_DAYS[idx]}`} className="px-2 py-2 text-center text-xs font-semibold text-primary">
-                    {formatHours(minutes)}
-                  </td>
+                </div>
+              </div>
+            ))}
+            <div className="rounded-xl border border-border bg-muted/30 px-3 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Summe Stunden / Tag</p>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {MATRIX_DAYS.map((dayOfWeek, idx) => (
+                  <div key={dayOfWeek} className="rounded-lg bg-background px-2 py-2 text-center">
+                    <p className="text-[10px] text-muted-foreground">{DAY_LABELS[dayOfWeek]}</p>
+                    <p className="text-sm font-semibold text-primary">{formatHours(matrixDayTotals[idx] ?? 0)}</p>
+                  </div>
                 ))}
-              </tr>
-            </tbody>
-          </table>
+              </div>
+            </div>
+          </div>
+
+          <div className="hidden overflow-x-auto lg:block">
+            <table className="w-full min-w-[760px] text-sm">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="px-3 py-2 text-left">Mitarbeiter</th>
+                  {MATRIX_DAYS.map((dayOfWeek) => (
+                    <th key={dayOfWeek} className="px-2 py-2 text-center text-xs font-sans uppercase tracking-wider">
+                      {DAY_LABELS[dayOfWeek]}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {visibleMatrixMembers.map((m) => (
+                  <tr key={m.id} className="border-b border-border last:border-0">
+                    <td className="px-3 py-2 text-foreground">{m.name ?? m.email}</td>
+                    {MATRIX_DAYS.map((dayOfWeek) => {
+                      const shift = shiftByUserAndDay.get(`${m.id}-${selectedWeekIndex}-${dayOfWeek}`);
+                      const conflictType = conflictTypeByCell.get(`${m.id}-${dayOfWeek}`);
+                      const isBlocked = Boolean(conflictType);
+                      return (
+                        <td key={`${m.id}-${dayOfWeek}`} className="px-2 py-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() => applyMatrixCell(m.id, dayOfWeek)}
+                            disabled={isPending || isBlocked}
+                            className={`min-h-12 w-full touch-manipulation rounded-lg border px-2 py-2 text-[11px] font-sans transition-colors sm:min-h-0 sm:rounded-md sm:py-1.5 ${
+                              conflictType === "SICK"
+                                ? "cursor-not-allowed border-red-400/35 bg-red-500/15 text-red-100"
+                                : conflictType === "VACATION"
+                                  ? "cursor-not-allowed border-amber-400/35 bg-amber-500/15 text-amber-100"
+                                  : shift
+                                    ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                                    : "border-border bg-background text-muted-foreground hover:bg-card/80"
+                            }`}
+                            title={
+                              conflictType === "SICK"
+                                ? "Krank blockiert"
+                                : conflictType === "VACATION"
+                                  ? "Urlaub blockiert"
+                                  : "Klicken für Schnellzuweisung / Löschen"
+                            }
+                          >
+                            {conflictType === "SICK"
+                              ? "Krank"
+                              : conflictType === "VACATION"
+                                ? "Urlaub"
+                                : shift
+                                  ? formatHourRange(shift.startTime, shift.endTime)
+                                  : "Frei"}
+                          </button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+                <tr className="border-t border-border bg-card/60">
+                  <td className="px-3 py-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Stunden-Summe</td>
+                  {matrixDayTotals.map((minutes, idx) => (
+                    <td key={`sum-${MATRIX_DAYS[idx]}`} className="px-2 py-2 text-center text-xs font-semibold text-primary">
+                      {formatHours(minutes)}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <p className="px-3 py-2 text-[11px] text-muted-foreground">
             Grau = frei, Grün = Schicht, Orange = Urlaub, Rot = Krank (gesperrt).
           </p>
@@ -843,40 +928,58 @@ export function ShiftManager({
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
-            <select
-              value={timelineDay}
-              onChange={(e) => setTimelineDay(Number(e.target.value))}
-              className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
-            >
-              {MATRIX_DAYS.map((d) => (
-                <option key={d} value={d}>
-                  {DAY_LABELS[d]}
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              min={1}
-              max={20}
-              value={neededStaff}
-              onChange={(e) => setNeededStaff(Math.max(1, Number(e.target.value) || 1))}
-              className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
-              title="Benötigte Mitarbeiter pro Zeitfenster"
-            />
-            <p className="flex items-center text-[11px] text-muted-foreground leading-snug">
-              15-Minuten-Raster · Stunden-Hilfslinien · Balken ziehen oder anklicken zum Bearbeiten
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div>
+              {compact && (
+                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Wochentag</span>
+              )}
+              <select
+                value={timelineDay}
+                onChange={(e) => setTimelineDay(Number(e.target.value))}
+                className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-base sm:min-h-11 sm:text-sm"
+              >
+                {MATRIX_DAYS.map((d) => (
+                  <option key={d} value={d}>
+                    {DAY_LABELS[d]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              {compact && (
+                <label
+                  htmlFor="vrema-needed-staff"
+                  className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
+                >
+                  Mindestbesetzung (pro Zeitfenster)
+                </label>
+              )}
+              <input
+                id="vrema-needed-staff"
+                type="number"
+                min={1}
+                max={20}
+                value={neededStaff}
+                onChange={(e) => setNeededStaff(Math.max(1, Number(e.target.value) || 1))}
+                className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-base tabular-nums sm:min-h-11 sm:text-sm"
+                title="Benötigte Mitarbeiter pro Zeitfenster"
+              />
+            </div>
+            <p className="hidden items-center text-[11px] text-muted-foreground leading-snug lg:flex">
+              15-Minuten-Raster · Stunden-Hilfslinien · Balken ziehen oder anklicken zum Bearbeiten (nur Desktop)
             </p>
           </div>
-          <div className="mt-2 flex justify-end">
+          <div className={`mt-2 flex ${compact ? "justify-stretch" : "justify-end"}`}>
             {firstCriticalSlot ? (
-              <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] text-red-700">
+              <span
+                className={`inline-flex items-center rounded-full border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 sm:text-[11px] ${compact ? "min-h-12 w-full justify-center" : ""}`}
+              >
                 Erste Lücke ab {firstCriticalSlot}
               </span>
             ) : null}
           </div>
 
-          <div className="mt-3 max-h-[75vh] overflow-auto overscroll-contain">
+          <div className="mt-3 hidden max-h-[75vh] overflow-auto overscroll-contain lg:block">
             <div className="min-w-0 space-y-4 lg:min-w-[880px]">
               <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground lg:grid-cols-[220px_1fr] lg:items-center">
                 <div className="hidden font-medium text-foreground lg:block">Mitarbeiter</div>
@@ -1027,20 +1130,86 @@ export function ShiftManager({
               })}
             </div>
           </div>
+
+          <div className="mt-3 space-y-3 lg:hidden">
+            <p className="text-sm font-medium text-foreground">
+              {DAY_LABELS[timelineDay]} · alle Mitarbeitenden
+            </p>
+            {timelineRows.map((row) => {
+              const initials = (row.member.name ?? row.member.email).slice(0, 2).toUpperCase();
+              const label = row.member.name ?? row.member.email;
+              const norm = (t: string) => (t.length >= 5 ? t.slice(0, 5) : t);
+              return (
+                <div
+                  key={row.member.id}
+                  className="rounded-2xl border border-border bg-white p-4 shadow-[0_8px_28px_rgba(0,0,0,0.07)]"
+                >
+                  <div className="flex gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-bold text-foreground">
+                      {initials}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-base font-semibold text-foreground">{label}</p>
+                      {row.conflict === "SICK" && (
+                        <p className="mt-1 text-sm text-red-700">Krank – keine Schicht möglich</p>
+                      )}
+                      {row.conflict === "VACATION" && (
+                        <p className="mt-1 text-sm text-amber-800">Urlaub – keine Schicht möglich</p>
+                      )}
+                      {!row.conflict && row.shift && (
+                        <p className="mt-1 font-mono text-sm text-primary">
+                          {formatHourRange(norm(row.shift.startTime), norm(row.shift.endTime))}
+                        </p>
+                      )}
+                      {!row.conflict && !row.shift && (
+                        <p className="mt-1 text-sm text-muted-foreground">Keine Schicht geplant</p>
+                      )}
+                    </div>
+                  </div>
+                  {!row.conflict && (
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => {
+                        if (row.shift) {
+                          setShiftEdit({
+                            userId: row.member.id,
+                            label,
+                            startTime: norm(row.shift.startTime),
+                            endTime: norm(row.shift.endTime),
+                          });
+                        } else {
+                          setShiftEdit({
+                            userId: row.member.id,
+                            label,
+                            startTime: "08:00",
+                            endTime: "16:00",
+                          });
+                        }
+                      }}
+                      className="mt-4 min-h-12 w-full touch-manipulation rounded-xl border border-primary/35 bg-primary/10 py-3 text-sm font-semibold text-primary active:scale-[0.99] disabled:opacity-50"
+                    >
+                      {row.shift ? "Zeiten ändern" : "Schicht eintragen"}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
       {shiftEdit && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-white/70 p-4"
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0 lg:items-center lg:bg-white/70 lg:p-4"
           role="dialog"
           aria-modal="true"
           onPointerDown={(e) => {
             if (e.target === e.currentTarget) setShiftEdit(null);
           }}
         >
-          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-            <h3 className="text-sm font-semibold text-foreground">Schicht bearbeiten</h3>
+          <div className="max-h-[min(88dvh,640px)] w-full max-w-full overflow-y-auto rounded-t-3xl border border-b-0 border-border bg-card px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 shadow-[0_-12px_40px_rgba(0,0,0,0.18)] sm:max-h-[90vh] lg:max-h-none lg:max-w-sm lg:rounded-2xl lg:border lg:pb-5 lg:shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+            <h3 className="text-base font-semibold text-foreground lg:text-sm">Schicht bearbeiten</h3>
             <p className="mt-1 text-xs text-muted-foreground">{DAY_LABELS[timelineDay]} · {shiftEdit.label}</p>
             <div className="mt-4 grid gap-3">
               <div>

@@ -18,24 +18,24 @@ export default async function TeamPage() {
   const inactive = members.filter((m) => !m.isActive).length;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="mx-auto max-w-5xl space-y-5 px-1 sm:space-y-6 sm:px-0">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Team</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold sm:text-2xl">Team</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {active} aktiv{inactive > 0 ? ` · ${inactive} deaktiviert` : ""}
           </p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20">
+        <div className="inline-flex w-fit items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-3 py-2">
           <Users className="w-4 h-4 text-[#22c55e]" />
           <span className="text-sm font-bold text-[#22c55e]">{members.length}</span>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Member list – takes 2/3 */}
-        <div className="lg:col-span-2">
+        <div className="min-w-0 lg:col-span-2">
           <TeamList members={members} canManage={canManage} currentUserId={session.user.id} />
         </div>
 

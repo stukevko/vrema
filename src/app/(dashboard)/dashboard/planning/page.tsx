@@ -21,10 +21,10 @@ export default async function PlanningPage() {
       getShiftCycleWeeks(),
     ]);
     return (
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="rounded-2xl border border-border bg-white px-5 py-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-          <h1 className="text-2xl font-bold">Planung</h1>
-          <p className="text-muted-foreground text-sm mt-1">Schichtplanung für Team und Soll/Ist-Basis.</p>
+      <div className="mx-auto max-w-6xl space-y-4 px-1 sm:space-y-6 sm:px-0">
+        <div className="rounded-2xl border border-border bg-white px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:px-5 sm:py-4">
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Planung</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Schichtplanung für Team und Soll/Ist-Basis.</p>
         </div>
         <ShiftManager
           members={members.map((m) => ({ id: m.id, name: m.name, email: m.email }))}

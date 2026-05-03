@@ -156,11 +156,12 @@ function PlanGateButton({
 
   return (
     <button
+      type="button"
       onClick={locked ? onLockedClick : onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all active:scale-95 border ${
+      className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition-all active:scale-[0.99] sm:w-auto sm:py-2.5 ${
         locked
-          ? "bg-card border-border text-muted-foreground cursor-pointer md:hover:bg-muted/50"
-          : "bg-white border-border text-foreground md:hover:bg-muted/50"
+          ? "cursor-pointer border-border bg-card text-muted-foreground md:hover:bg-muted/50"
+          : "border-border bg-white text-foreground md:hover:bg-muted/50"
       }`}
     >
       {locked ? <Lock className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
@@ -816,16 +817,18 @@ export function ReportsClient({
           isRoutePending ? "scale-x-100" : "scale-x-0"
         }`}
       />
-      <div className="max-w-6xl mx-auto space-y-5 md:space-y-6">
+      <div className="mx-auto max-w-6xl space-y-5 px-1 sm:space-y-6 sm:px-0">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Berichte</h1>
-            <p className="text-muted-foreground text-sm mt-1">{month} · {logs.length} Einträge</p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Berichte</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {month} · {logs.length} Einträge
+            </p>
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap lg:justify-end lg:gap-2">
             <select
               value={monthKey}
               onChange={(e) => {
@@ -835,7 +838,7 @@ export function ReportsClient({
                   router.push(`${pathname}?${params.toString()}`);
                 });
               }}
-              className="rounded-2xl border border-border bg-white px-3 py-2 text-sm text-foreground"
+              className="min-h-12 w-full touch-manipulation rounded-2xl border border-border bg-white px-3 py-2.5 text-base text-foreground sm:text-sm lg:min-h-0 lg:w-auto lg:py-2"
             >
               {monthOptions.map((option) => (
                 <option key={option.key} value={option.key}>
@@ -844,11 +847,12 @@ export function ReportsClient({
               ))}
             </select>
             <button
+              type="button"
               onClick={runAIAnalysis}
               disabled={isAIAnalyzing}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-medium border transition-all active:scale-95 ${
+              className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition-all active:scale-[0.99] sm:py-2.5 lg:min-h-0 lg:w-auto ${
                 isAIAnalyzing
-                  ? "border-violet-200 bg-violet-50/80 text-violet-700 shadow-[0_0_24px_rgba(139,92,246,0.22)] animate-pulse"
+                  ? "animate-pulse border-violet-200 bg-violet-50/80 text-violet-700 shadow-[0_0_24px_rgba(139,92,246,0.22)]"
                   : "border-violet-200 bg-white text-violet-700 md:hover:bg-violet-50"
               }`}
             >
@@ -856,11 +860,12 @@ export function ReportsClient({
               {isAIAnalyzing ? "KI analysiert..." : "KI-Analyse"}
             </button>
             <button
+              type="button"
               onClick={hasBusinessAccess ? exportPdf : lockedMsg}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 ${
+              className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 lg:min-h-0 lg:w-auto ${
                 hasBusinessAccess
                   ? "bg-primary text-foreground ring-1 ring-inset ring-white/20 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
-                  : "bg-card border border-border text-muted-foreground md:hover:bg-muted/50"
+                  : "border border-border bg-card text-muted-foreground md:hover:bg-muted/50"
               }`}
             >
               {hasBusinessAccess ? <Download className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
@@ -883,11 +888,12 @@ export function ReportsClient({
               onClick={exportCsv}
             />
             <button
+              type="button"
               onClick={hasBusinessAccess ? () => setShowDatevModal(true) : lockedMsg}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 border ${
+              className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 lg:min-h-0 lg:w-auto ${
                 hasBusinessAccess
-                  ? "bg-white border-border text-foreground md:hover:bg-muted/50"
-                  : "bg-card border border-border text-muted-foreground cursor-pointer md:hover:bg-muted/50"
+                  ? "border-border bg-white text-foreground md:hover:bg-muted/50"
+                  : "cursor-pointer border border-border bg-card text-muted-foreground md:hover:bg-muted/50"
               }`}
             >
               {hasBusinessAccess ? (
@@ -901,7 +907,7 @@ export function ReportsClient({
         </div>
 
         {/* Summary cards */}
-        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
           {[
             { label: "Gesamtstunden", value: `${totalHoursDecimal} h`, tone: "text-foreground", note: "Zusammenfassung der monatlichen Arbeitszeiten" },
             { label: "Personalkosten (indikativ)", value: `${new Intl.NumberFormat("de-DE").format(Math.round(indicativeCosts))} €`, tone: "text-foreground", note: "Kalkulationsbasis: 29 €/h" },
@@ -913,7 +919,7 @@ export function ReportsClient({
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
-              className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              className="animate-in fade-in slide-in-from-bottom-4 rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] duration-500 sm:p-6"
             >
               <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-2">{s.label}</p>
               <p className={`text-4xl font-extrabold tracking-tight tabular-nums ${s.tone}`}>{s.value}</p>

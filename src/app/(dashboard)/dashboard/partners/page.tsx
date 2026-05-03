@@ -11,9 +11,9 @@ export default async function PartnerAdminPage() {
   if (!isSuperAdmin) redirect("/dashboard");
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Vertriebspartner</h1>
+    <div className="mx-auto max-w-6xl space-y-5 px-1 sm:space-y-6 sm:px-0">
+      <div className="min-w-0">
+        <h1 className="text-xl font-bold sm:text-2xl">Vertriebspartner</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Partner anlegen, Abschluesse verfolgen und Auszahlungen als erledigt markieren.
         </p>

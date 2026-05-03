@@ -32,7 +32,7 @@ export function DashboardLayoutClient({
       <DashboardMobileNavDrawer open={navOpen} onOpenChange={setNavOpen} role={role} plan={plan} />
       <div className="flex min-w-0 flex-1 flex-col bg-background lg:min-h-screen">
         <DashboardTopbar user={user} onOpenMobileNav={openNav} />
-        <main className="flex-1 overflow-auto p-4 pb-28 pt-[calc(4rem+env(safe-area-inset-top,0px))] lg:p-8 lg:pb-6 lg:pt-0">
+        <main className="dashboard-touch-scroll flex-1 overflow-auto overscroll-y-contain px-3 pb-32 pt-[calc(4rem+env(safe-area-inset-top,0px))] touch-manipulation sm:px-4 lg:px-8 lg:pb-6 lg:pt-0">
           {children}
           <footer className="mb-2 mt-8 text-center text-xs text-muted-foreground">VREMA – Intelligente Zeiterfassung</footer>
         </main>

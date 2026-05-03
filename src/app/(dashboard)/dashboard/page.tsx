@@ -91,10 +91,10 @@ export default async function DashboardPage() {
   }, 0);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 text-foreground">
+    <div className="mx-auto max-w-6xl space-y-5 px-1 text-foreground sm:space-y-6 sm:px-0 md:space-y-8">
       {/* Header */}
-      <div className="rounded-2xl glass-panel p-8">
-        <h1 className="text-3xl font-bold tracking-tight">
+      <div className="rounded-2xl glass-panel p-5 sm:p-8">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
           Guten {new Date().getHours() < 12 ? "Morgen" : new Date().getHours() < 18 ? "Tag" : "Abend"},{" "}
           {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
         </h1>
@@ -108,7 +108,7 @@ export default async function DashboardPage() {
       )}
 
       {employeeCount === 0 && (
-        <div className="rounded-2xl glass-panel p-8">
+        <div className="rounded-2xl glass-panel p-5 sm:p-8">
           <div className="flex items-center gap-2 mb-2">
             <ListChecks className="w-4 h-4 text-primary" />
             <p className="font-semibold text-sm">Noch kein Team angelegt</p>
@@ -134,21 +134,30 @@ export default async function DashboardPage() {
       {/* Team stats (for owners/managers) */}
       {teamStats && (
         <div className="space-y-4">
-          <div className="rounded-2xl glass-panel p-8">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
+          <div className="rounded-2xl glass-panel p-5 sm:p-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+              <div className="min-w-0">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">Command Center</p>
-                <h2 className="text-sm font-semibold tracking-tight mt-1">Heute im Blick: Live-Status und offene Aufgaben</h2>
+                <h2 className="mt-1 text-sm font-semibold tracking-tight">Heute im Blick: Live-Status und offene Aufgaben</h2>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Link href="/dashboard/planning" className="rounded-2xl border border-border px-4 py-2 text-xs text-foreground md:hover:bg-card/70 transition-all active:scale-95">
-                  Wochenplan prüfen
+              <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:max-w-md sm:grid-cols-3">
+                <Link
+                  href="/dashboard/planning"
+                  className="flex min-h-12 items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] md:hover:bg-card/70"
+                >
+                  Wochenplan
                 </Link>
-                <Link href="/dashboard/reports" className="rounded-2xl border border-border px-4 py-2 text-xs text-foreground md:hover:bg-card/70 transition-all active:scale-95">
-                  Zeiten prüfen
+                <Link
+                  href="/dashboard/reports"
+                  className="flex min-h-12 items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] md:hover:bg-card/70"
+                >
+                  Zeiten
                 </Link>
-                <Link href="/dashboard/vacation" className="rounded-2xl border border-border px-4 py-2 text-xs text-foreground md:hover:bg-card/70 transition-all active:scale-95">
-                  Anträge öffnen
+                <Link
+                  href="/dashboard/vacation"
+                  className="flex min-h-12 items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] md:hover:bg-card/70"
+                >
+                  Urlaub
                 </Link>
               </div>
             </div>
@@ -182,7 +191,7 @@ export default async function DashboardPage() {
             { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24" },
             { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc" },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-2xl glass-panel p-8 transition-all md:hover:bg-card/80">
+            <div key={stat.label} className="rounded-2xl glass-panel p-5 transition-all sm:p-8 md:hover:bg-card/80">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-muted-foreground">{stat.label}</p>
                 <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
@@ -225,8 +234,8 @@ export default async function DashboardPage() {
       </div>
 
       {/* Today summary */}
-      <div className="rounded-2xl glass-panel p-8 transition-all md:hover:bg-card/80">
-        <div className="flex items-center justify-between mb-4">
+      <div className="rounded-2xl glass-panel p-5 transition-all sm:p-8 md:hover:bg-card/80">
+        <div className="mb-4 flex items-center justify-between gap-2">
           <h2 className="font-semibold">Heute</h2>
           <span className="text-sm text-primary tabular-nums font-bold">
             {Math.floor(todayWorkedMins / 60)}h {Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m
@@ -238,7 +247,7 @@ export default async function DashboardPage() {
             <p className="text-sm text-muted-foreground">Noch kein Zeiteintrag für heute. Sie können jetzt den ersten Eintrag erfassen.</p>
             <Link
               href="#terminal-widget"
-              className="mt-3 inline-flex items-center rounded-2xl border border-border px-4 py-2 text-sm text-foreground transition-all active:scale-95 md:hover:bg-card/80"
+              className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] sm:w-auto md:hover:bg-card/80"
             >
               Jetzt einstempeln
             </Link>
@@ -250,7 +259,7 @@ export default async function DashboardPage() {
                 ? (log.clockOut.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins
                 : null;
               return (
-                <div key={log.id} className="flex items-center justify-between py-2.5 px-3 rounded-2xl bg-background">
+                <div key={log.id} className="flex min-h-[3.25rem] items-center justify-between gap-3 rounded-2xl bg-background px-3 py-3 sm:py-2.5">
                   <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-muted-foreground/30" : "bg-primary animate-pulse"}`} />
                     <span className="text-sm text-foreground">
@@ -275,14 +284,14 @@ export default async function DashboardPage() {
 
       {/* Business plan CTA */}
       {plan === "STARTER" && (
-        <div className="rounded-2xl bg-card border border-border backdrop-blur-xl p-8 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-          <div>
-            <p className="font-semibold text-sm">PDF-Export & Lohnbüro-Versand freischalten</p>
-            <p className="text-xs text-muted-foreground mt-1">Upgrade auf Business für vollständige Berichte.</p>
+        <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold">PDF-Export & Lohnbüro-Versand freischalten</p>
+            <p className="mt-1 text-xs text-muted-foreground">Upgrade auf Business für vollständige Berichte.</p>
           </div>
           <Link
             href="/dashboard/billing"
-            className="shrink-0 px-4 py-2 rounded-2xl bg-primary text-foreground text-sm font-bold ring-1 ring-inset ring-white/20 md:hover:bg-primary/90 transition-all active:scale-95"
+            className="inline-flex min-h-12 w-full shrink-0 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-all active:scale-[0.99] md:hover:bg-primary/90 sm:w-auto"
           >
             Upgrade
           </Link>

@@ -29,7 +29,7 @@ export function PasskeySecurityForm() {
   };
 
   return (
-    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 space-y-4">
+    <div className="space-y-4 rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:p-6">
       <p className="text-sm text-foreground">
         Registriere einen Passkey (Face ID, Touch ID oder Windows Hello) für eine schnelle und sichere Anmeldung.
       </p>
@@ -49,7 +49,7 @@ export function PasskeySecurityForm() {
         type="button"
         onClick={handleRegisterPasskey}
         disabled={isPending}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-card hover:bg-card/80 border border-border text-sm font-medium transition-colors disabled:opacity-60"
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium transition-colors hover:bg-card/80 disabled:opacity-60 sm:w-auto sm:py-2.5"
       >
         {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Fingerprint className="w-4 h-4" />}
         Neuen Passkey registrieren

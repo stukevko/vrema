@@ -79,7 +79,7 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
   })();
 
   return (
-    <div className="rounded-2xl bg-card/90 backdrop-blur-md border border-border p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+    <div className="rounded-2xl border border-border bg-card/90 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-md sm:p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-semibold text-lg">Terminal</h2>
       </div>
