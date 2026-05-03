@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { Drawer } from "vaul";
 import { applyStandardWeek, clearShiftForDay, copyWeekToAllMembers, setShiftForDay } from "@/lib/actions/team";
 
 type Member = {
@@ -19,6 +20,8 @@ type ShiftRow = {
 };
 
 const DAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+/** Mobile: volle Wochentagsnamen für bessere Lesbarkeit. */
+const MOBILE_DAY_NAMES = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"] as const;
 /** Reihenfolge Wochentag-Dropdown in der Timeline (Mo–So). */
 const TIMELINE_WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
 const TIMELINE_START_HOUR = 6;
@@ -50,6 +53,17 @@ function minutesToHHMM(total: number) {
 
 function snapMinutes(total: number) {
   return Math.round(total / TIMELINE_SNAP_MINUTES) * TIMELINE_SNAP_MINUTES;
+}
+
+function scrollFieldIntoView(e: React.FocusEvent<HTMLElement>) {
+  const target = e.target;
+  if (!(target instanceof HTMLElement)) return;
+  const field = (target.closest("input,textarea,select") as HTMLElement | null) ?? target;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      field.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+  });
 }
 
 export function ShiftManager({
@@ -103,10 +117,25 @@ export function ShiftManager({
   const [simpleSheetDay, setSimpleSheetDay] = useState(1);
   const [showDetails, setShowDetails] = useState(false);
   const [showPlannerInfo, setShowPlannerInfo] = useState(false);
+  const [mobileMemberPickerOpen, setMobileMemberPickerOpen] = useState(false);
+  const [mobileStartPickerOpen, setMobileStartPickerOpen] = useState(false);
+  const [mobileEndPickerOpen, setMobileEndPickerOpen] = useState(false);
+  const [mobileStartPickerCustom, setMobileStartPickerCustom] = useState(false);
+  const [mobileEndPickerCustom, setMobileEndPickerCustom] = useState(false);
+  const mobileDayLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mobileDayLongPressFiredRef = useRef(false);
 
   useEffect(() => {
     if (viewMode !== "simple") setSimpleAddSheetOpen(false);
   }, [viewMode]);
+
+  useEffect(() => {
+    if (!mobileStartPickerOpen) setMobileStartPickerCustom(false);
+  }, [mobileStartPickerOpen]);
+
+  useEffect(() => {
+    if (!mobileEndPickerOpen) setMobileEndPickerCustom(false);
+  }, [mobileEndPickerOpen]);
 
   const userShifts = useMemo(
     () =>
@@ -419,91 +448,143 @@ export function ShiftManager({
     });
   };
 
+  const clearMobileDayLongPressTimer = () => {
+    if (mobileDayLongPressTimerRef.current !== null) {
+      clearTimeout(mobileDayLongPressTimerRef.current);
+      mobileDayLongPressTimerRef.current = null;
+    }
+  };
+
+  const onMobileDayPointerDown = (idx: number, e: React.PointerEvent) => {
+    if (isPending || !selectedUserId) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    mobileDayLongPressFiredRef.current = false;
+    clearMobileDayLongPressTimer();
+    mobileDayLongPressTimerRef.current = setTimeout(() => {
+      mobileDayLongPressTimerRef.current = null;
+      mobileDayLongPressFiredRef.current = true;
+      setSimpleSheetDay(idx);
+      setSimpleAddSheetOpen(true);
+    }, 480);
+  };
+
+  const onMobileDayPointerEnd = () => {
+    clearMobileDayLongPressTimer();
+  };
+
+  const onMobileDayCardClick = (idx: number) => {
+    if (mobileDayLongPressFiredRef.current) {
+      mobileDayLongPressFiredRef.current = false;
+      return;
+    }
+    applyDayFromInputs(idx);
+  };
+
+  const mobileOverlayOpen =
+    simpleAddSheetOpen || mobileMemberPickerOpen || mobileStartPickerOpen || mobileEndPickerOpen;
+
+  const openMobileQuickAdd = (dayIdx = 1) => {
+    setSimpleSheetDay(dayIdx);
+    setSimpleAddSheetOpen(true);
+  };
+
   const MobileView = (
     <>
+        <div className="flex flex-col gap-6 pb-40">
         <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-          <strong className="text-foreground">Einfach-Planer</strong>: Mitarbeiter wählen, Zeit setzen, Tage antippen oder{" "}
-          <strong className="text-foreground">„+ Schicht für einen Tag“</strong> für das Sheet.
+          <strong className="text-foreground">Einfach-Planer</strong>: Mitarbeiter und Zeiten per Sheet wählen, Tage antippen.{" "}
+          <strong className="text-foreground">Halte</strong> einen Tag gedrückt für den Schnell-Editor. Unten: Schicht hinzufügen.
         </p>
-        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-5">
-        <select
-          value={selectedUserId}
-          onChange={(e) => setSelectedUserId(e.target.value)}
-          className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
-          disabled={isPending}
-        >
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name ?? m.email}
-            </option>
-          ))}
-        </select>
 
-        <input
-          type="time"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-          className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
-          disabled={isPending}
-        />
-        <input
-          type="time"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
-          className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
-          disabled={isPending}
-        />
+        <div className="flex flex-col gap-5">
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => setMobileMemberPickerOpen(true)}
+            className="flex min-h-14 w-full flex-col items-start justify-center rounded-2xl border border-border bg-background px-4 py-3 text-left shadow-sm transition-colors active:bg-muted/40"
+          >
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Mitarbeiter</span>
+            <span className="text-lg font-bold leading-tight text-foreground">
+              {selectedMember ? selectedMember.name ?? selectedMember.email : "Auswählen"}
+            </span>
+          </button>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => setMobileStartPickerOpen(true)}
+              className="flex min-h-14 flex-col items-start justify-center rounded-2xl border border-border bg-background px-4 py-3 text-left active:bg-muted/40"
+            >
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Start</span>
+              <span className="text-xl font-bold tabular-nums text-foreground">{startTime.slice(0, 5)}</span>
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => setMobileEndPickerOpen(true)}
+              className="flex min-h-14 flex-col items-start justify-center rounded-2xl border border-border bg-background px-4 py-3 text-left active:bg-muted/40"
+            >
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Ende</span>
+              <span className="text-xl font-bold tabular-nums text-foreground">{endTime.slice(0, 5)}</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
         <button
           type="button"
           onClick={submitStandardWeek}
           disabled={isPending || !selectedUserId}
-          className="min-h-11 touch-manipulation rounded-lg border border-primary/30 bg-primary/15 px-3 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-primary/20 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] disabled:opacity-60 sm:min-h-0 sm:py-2"
+          className="min-h-14 touch-manipulation rounded-2xl border border-primary/30 bg-primary/15 px-4 py-3 text-base font-semibold text-primary transition-colors active:bg-primary/25 disabled:opacity-60"
         >
-          Standardwoche (Mo-Fr)
+          Standardwoche (Mo–Fr)
         </button>
         <button
           type="button"
           onClick={submitCopyToAll}
           disabled={isPending || !selectedUserId}
-          className="min-h-11 touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-card/80 disabled:opacity-60 sm:min-h-0 sm:py-2"
+          className="min-h-14 touch-manipulation rounded-2xl border border-border bg-background px-4 py-3 text-base font-semibold text-foreground transition-colors active:bg-muted/50 disabled:opacity-60"
         >
           Auf alle übertragen
         </button>
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <p className="text-[11px] text-muted-foreground">Tipp: Zeit oben einstellen und Tage direkt antippen. Erneuter Klick mit gleicher Zeit löscht den Tag.</p>
+      <div className="mt-2 flex flex-col gap-4">
+        <p className="text-sm leading-snug text-muted-foreground">
+          Tipp: Zeiten über die großen Start-/Ende-Felder oder die Presets setzen. Tag kurz tippen oder halten für den Editor.
+        </p>
         {selectedUserVacationDays.size > 0 && (
-          <p className="text-[11px] text-amber-300">
+          <p className="text-sm font-medium text-amber-300">
             Abwesenheit: {Array.from(selectedUserVacationDays).map((d) => DAY_LABELS[d]).join(", ")}
             {selectedUserSickDays.size > 0 ? " (rot = krank)." : "."}
           </p>
         )}
       </div>
-      <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
-        <div className="rounded-xl border border-border bg-background px-3 py-2">
+      <div className="mt-2 grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div className="flex min-h-14 flex-col justify-center rounded-2xl border border-border bg-background px-4 py-4">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 1</p>
-          <p className="text-sm text-foreground">Zeit oben wählen (oder Früh/Standard/Spät klicken).</p>
+          <p className="text-base font-medium text-foreground">Zeit per Sheet wählen (oder Presets unten).</p>
         </div>
-        <div className="rounded-xl border border-border bg-background px-3 py-2">
+        <div className="flex min-h-14 flex-col justify-center rounded-2xl border border-border bg-background px-4 py-4">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 2</p>
-          <p className="text-sm text-foreground">Tage antippen. Jeder Klick speichert sofort.</p>
+          <p className="text-base font-medium text-foreground">Tage antippen – speichert sofort. Halten öffnet den Editor.</p>
         </div>
       </div>
       {hasInvalidRange && (
-        <p className="mt-2 text-xs text-amber-300">Bitte gültige Zeit wählen: Ende muss später als Start sein.</p>
+        <p className="mt-3 text-sm font-medium text-amber-300">Bitte gültige Zeit wählen: Ende muss später als Start sein.</p>
       )}
 
-      <div className="mt-3 flex flex-wrap items-stretch gap-2 text-xs">
+      <div className="mt-5 grid grid-cols-1 gap-4">
         <button
           type="button"
           onClick={() => {
             setStartTime("08:00");
             setEndTime("16:00");
           }}
-          className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-md border border-border bg-background px-2 py-2.5 text-foreground sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-card/80"
+          className="min-h-14 w-full touch-manipulation rounded-2xl border border-border bg-background px-4 py-3 text-left text-base font-semibold text-foreground active:bg-muted/50"
           disabled={isPending}
         >
-          Früh: 08:00-16:00
+          Früh · 08:00–16:00
         </button>
         <button
           type="button"
@@ -511,10 +592,10 @@ export function ShiftManager({
             setStartTime("09:00");
             setEndTime("17:00");
           }}
-          className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-md border border-border bg-background px-2 py-2.5 text-foreground sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-card/80"
+          className="min-h-14 w-full touch-manipulation rounded-2xl border border-border bg-background px-4 py-3 text-left text-base font-semibold text-foreground active:bg-muted/50"
           disabled={isPending}
         >
-          Standard: 09:00-17:00
+          Standard · 09:00–17:00
         </button>
         <button
           type="button"
@@ -522,79 +603,89 @@ export function ShiftManager({
             setStartTime("14:00");
             setEndTime("22:00");
           }}
-          className="min-h-11 min-w-0 flex-[1_1_100%] touch-manipulation rounded-md border border-border bg-background px-2 py-2.5 text-foreground sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-card/80"
+          className="min-h-14 w-full touch-manipulation rounded-2xl border border-border bg-background px-4 py-3 text-left text-base font-semibold text-foreground active:bg-muted/50"
           disabled={isPending}
         >
-          Spät: 14:00-22:00
+          Spät · 14:00–22:00
         </button>
       </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setSimpleSheetDay(1);
-            setSimpleAddSheetOpen(true);
-          }}
-          className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 text-base font-semibold text-primary transition-transform duration-100 active:scale-[0.98]"
-        >
-          + Schicht für einen Tag
-        </button>
-
-        <div className="mt-4 grid grid-cols-1 gap-3">
-        {DAY_LABELS.map((label, idx) => (
+        <div className="mt-8 grid grid-cols-1 gap-5">
+        {DAY_LABELS.map((label, idx) => {
+          const planned = userPrimaryShiftByDay.get(idx);
+          const hasShift = Boolean(planned);
+          const baseCard =
+            selectedUserVacationDays.has(idx) && selectedUserSickDays.has(idx)
+              ? "border-red-400/45 bg-red-500/15 text-red-50 active:bg-red-500/25"
+              : selectedUserVacationDays.has(idx)
+                ? "border-amber-400/45 bg-amber-500/14 text-amber-50 active:bg-amber-500/22"
+                : hasShift
+                  ? "border-primary/40 bg-primary/12 text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] active:bg-primary/18"
+                  : "border-border/80 bg-muted/25 text-foreground active:bg-muted/40";
+          return (
           <button
             key={label}
             type="button"
-            onClick={() => applyDayFromInputs(idx)}
+            onPointerDown={(e) => onMobileDayPointerDown(idx, e)}
+            onPointerUp={onMobileDayPointerEnd}
+            onPointerCancel={onMobileDayPointerEnd}
+            onPointerLeave={onMobileDayPointerEnd}
+            onClick={() => onMobileDayCardClick(idx)}
             disabled={isPending || !selectedUserId}
-            className={`touch-manipulation min-h-[4.75rem] rounded-xl border px-3 py-3 text-left text-sm transition-colors disabled:opacity-60 sm:rounded-lg sm:text-xs ${
-              selectedUserVacationDays.has(idx)
-                ? selectedUserSickDays.has(idx)
-                  ? "border-red-400/35 bg-red-500/12 text-red-100 hover:bg-red-500/20"
-                  : "border-amber-400/35 bg-amber-500/10 text-amber-100 hover:bg-amber-500/15"
-                : usedDays.has(idx)
-                  ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
-                : "border-border bg-background text-foreground hover:bg-card/80"
-            } ${recentDayAction?.dayOfWeek === idx ? "ring-2 ring-primary/60" : ""}`}
+            className={`touch-manipulation flex min-h-14 w-full flex-col items-start justify-center rounded-2xl border px-4 py-4 text-left transition-colors disabled:opacity-60 ${baseCard} ${
+              recentDayAction?.dayOfWeek === idx ? "ring-2 ring-primary/70 ring-offset-2 ring-offset-card" : ""
+            }`}
           >
-            <span className="block text-xs">{label}</span>
-            <span className="mt-0.5 block text-[10px] font-sans opacity-80">
-              {userPrimaryShiftByDay.get(idx)
-                ? `${userPrimaryShiftByDay.get(idx)?.startTime}-${userPrimaryShiftByDay.get(idx)?.endTime}`
-                : "frei"}
+            <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{label}</span>
+            <span className="mt-1 block text-2xl font-extrabold leading-tight tracking-tight text-foreground">
+              {MOBILE_DAY_NAMES[idx]}
+            </span>
+            <span className="mt-2 block text-lg font-semibold tabular-nums text-foreground/90">
+              {planned ? `${planned.startTime.slice(0, 5)} – ${planned.endTime.slice(0, 5)}` : "Frei – antippen zum Planen"}
             </span>
             {recentDayAction?.dayOfWeek === idx && (
-              <span className={`mt-1 block text-[10px] ${recentDayAction.action === "saved" ? "text-primary" : "text-red-700"}`}>
+              <span className={`mt-2 block text-sm font-semibold ${recentDayAction.action === "saved" ? "text-primary" : "text-red-400"}`}>
                 {recentDayAction.action === "saved" ? "Gespeichert" : "Gelöscht"}
               </span>
             )}
           </button>
-        ))}
+          );
+        })}
       </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">
-          Grün = Schicht, Orange = Urlaub, Rot = Krank. Klick setzt die oben gewählte Zeit direkt für den Tag.
+
+        <button
+          type="button"
+          onClick={() => openMobileQuickAdd(1)}
+          className="mt-8 flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-muted-foreground/35 bg-muted/15 px-4 py-6 text-center active:bg-muted/30"
+        >
+          <span className="text-base font-bold text-foreground">Freifläche</span>
+          <span className="max-w-xs text-sm text-muted-foreground">Tippen, um den Schicht-Editor zu öffnen (Montag vorausgewählt).</span>
+        </button>
+
+        <p className="mt-6 text-[11px] leading-relaxed text-muted-foreground">
+          Kurz tippen: Schicht mit der gewählten Zeit setzen oder löschen. <strong className="text-foreground">Halten</strong>: voller Editor. Orange/Rot = Abwesenheit.
         </p>
 
-        <div className="mt-4">
+        <div className="mt-6">
           <button
             type="button"
             onClick={() => setShowDetails((v) => !v)}
-            className="min-h-11 touch-manipulation rounded-md border border-border bg-background px-4 py-2 text-xs text-foreground sm:min-h-0 sm:px-3 sm:py-1.5 md:hover:bg-card/80"
+            className="min-h-14 w-full touch-manipulation rounded-2xl border border-border bg-background px-4 py-3 text-base font-semibold text-foreground active:bg-muted/40"
           >
             {showDetails ? "Details ausblenden" : "Details anzeigen"}
           </button>
         </div>
         {showDetails && (
-          <div className="mt-3 rounded-xl border border-border bg-background">
+          <div className="mt-4 rounded-2xl border border-border bg-background">
             {userShifts.length === 0 ? (
-              <p className="px-3 py-4 text-sm text-muted-foreground">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
+              <p className="min-h-14 px-4 py-5 text-base text-muted-foreground">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
             ) : (
               <ul className="divide-y divide-border">
                 {userShifts.map((s) => (
-                  <li key={s.id} className="flex min-h-14 items-center justify-between gap-3 px-4 py-3 text-sm">
-                    <span className="font-medium text-foreground">{DAY_LABELS[s.dayOfWeek] ?? s.dayOfWeek}</span>
-                    <span className="font-sans tabular-nums text-muted-foreground">
-                      {s.startTime} – {s.endTime}
+                  <li key={s.id} className="flex min-h-14 items-center justify-between gap-4 px-4 py-4 text-base">
+                    <span className="text-lg font-bold text-foreground">{MOBILE_DAY_NAMES[s.dayOfWeek] ?? DAY_LABELS[s.dayOfWeek]}</span>
+                    <span className="font-sans text-lg font-semibold tabular-nums text-muted-foreground">
+                      {s.startTime.slice(0, 5)} – {s.endTime.slice(0, 5)}
                     </span>
                   </li>
                 ))}
@@ -603,115 +694,267 @@ export function ShiftManager({
           </div>
         )}
 
-        {simpleAddSheetOpen && (
-          <div
-            className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="vrema-simple-sheet-title"
-            onPointerDown={(e) => {
-              if (e.target === e.currentTarget) setSimpleAddSheetOpen(false);
-            }}
-          >
-            <div className="max-h-[min(90dvh,720px)] w-full max-w-full overflow-y-auto overscroll-y-contain rounded-t-3xl border border-b-0 border-border bg-card px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_40px_rgba(0,0,0,0.18)]">
-              <div className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/35" aria-hidden />
-              <h3 id="vrema-simple-sheet-title" className="text-lg font-semibold text-foreground">
-                Schicht setzen
-              </h3>
-              <p className="mt-1 text-xs text-muted-foreground">Mitarbeiter, Tag und Zeit wählen – alles in Daumen-Reichweite.</p>
+        </div>
 
-              <label className="mt-4 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Mitarbeiter
-              </label>
-              <select
-                value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)}
-                className="mt-1 min-h-12 w-full touch-manipulation rounded-xl border border-border bg-white px-3 py-3 text-base text-foreground"
-                disabled={isPending}
-              >
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name ?? m.email}
-                  </option>
-                ))}
-              </select>
-
-              <p className="mt-4 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Wochentag</p>
-              <div className="mt-2 grid max-h-[40vh] grid-cols-1 gap-2 overflow-y-auto overscroll-y-contain">
-                {DAY_LABELS.map((label, idx) => (
-                  <button
-                    key={`sheet-day-${label}`}
-                    type="button"
-                    onClick={() => setSimpleSheetDay(idx)}
-                    className={`min-h-14 rounded-2xl border px-4 text-left text-sm font-medium transition-transform duration-100 active:scale-[0.98] ${
-                      simpleSheetDay === idx
-                        ? "border-primary/50 bg-primary/12 text-primary"
-                        : "border-border bg-background text-foreground"
-                    }`}
-                  >
-                    {label}
-                    {userPrimaryShiftByDay.get(idx) ? (
-                      <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-                        {userPrimaryShiftByDay.get(idx)?.startTime?.slice(0, 5)}–
-                        {userPrimaryShiftByDay.get(idx)?.endTime?.slice(0, 5)}
-                      </span>
-                    ) : (
-                      <span className="mt-0.5 block text-xs font-normal text-muted-foreground">frei</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Start</label>
-                  <input
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className="mt-1 min-h-12 w-full rounded-xl border border-border bg-white px-3 py-3 text-base text-foreground"
-                    disabled={isPending}
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Ende</label>
-                  <input
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    className="mt-1 min-h-12 w-full rounded-xl border border-border bg-white px-3 py-3 text-base text-foreground"
-                    disabled={isPending}
-                  />
-                </div>
-              </div>
-
-              {hasInvalidRange && (
-                <p className="mt-2 text-xs text-amber-600">Ende muss nach Start liegen.</p>
-              )}
-
-              <div className="mt-5 flex flex-col gap-2">
-                <button
-                  type="button"
-                  disabled={isPending || !selectedUserId || hasInvalidRange}
-                  onClick={() => {
-                    applyDayFromInputs(simpleSheetDay);
-                    setSimpleAddSheetOpen(false);
-                  }}
-                  className="min-h-14 w-full rounded-2xl border border-primary/35 bg-primary/15 text-base font-semibold text-primary transition-transform duration-100 active:scale-[0.98] disabled:opacity-50"
-                >
-                  Speichern
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSimpleAddSheetOpen(false)}
-                  className="min-h-14 w-full rounded-2xl border border-border bg-background text-base font-medium text-foreground transition-transform duration-100 active:scale-[0.98] md:hover:bg-card/80"
-                >
-                  Abbrechen
-                </button>
-              </div>
-            </div>
+        {!mobileOverlayOpen && (
+          <div className="fixed bottom-0 left-0 right-0 z-[45] border-t border-border bg-card/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-10px_40px_rgba(0,0,0,0.14)] backdrop-blur-md supports-[backdrop-filter]:bg-card/90">
+            <button
+              type="button"
+              onClick={() => openMobileQuickAdd(1)}
+              className="flex min-h-14 w-full items-center justify-center rounded-2xl border-2 border-dashed border-primary/55 bg-primary/12 text-base font-bold text-primary active:scale-[0.99] active:bg-primary/18"
+            >
+              + Schicht hinzufügen
+            </button>
           </div>
         )}
+
+        <Drawer.Root open={mobileMemberPickerOpen} onOpenChange={setMobileMemberPickerOpen} repositionInputs fixed shouldScaleBackground={false}>
+          <Drawer.Portal>
+            <Drawer.Overlay className="fixed inset-0 z-[101] bg-black/50" />
+            <Drawer.Content className="fixed inset-x-0 bottom-0 z-[102] flex max-h-[88vh] flex-col rounded-t-[28px] border border-border bg-card outline-none">
+              <Drawer.Handle className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/35" />
+              <Drawer.Title className="px-4 pt-2 text-xl font-bold text-foreground">Mitarbeiter wählen</Drawer.Title>
+              <Drawer.Description className="px-4 pb-2 text-sm text-muted-foreground">Tippe einen Namen – die Auswahl wird sofort übernommen.</Drawer.Description>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4">
+                <div className="flex flex-col gap-4">
+                  {members.map((m) => (
+                    <button
+                      key={`mob-pick-${m.id}`}
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => {
+                        setSelectedUserId(m.id);
+                        setMobileMemberPickerOpen(false);
+                      }}
+                      className={`min-h-14 w-full rounded-2xl border px-4 py-3 text-left text-base font-semibold transition-colors active:scale-[0.99] ${
+                        m.id === selectedUserId
+                          ? "border-primary/50 bg-primary/15 text-primary"
+                          : "border-border bg-background text-foreground active:bg-muted/40"
+                      }`}
+                    >
+                      {m.name ?? m.email}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="shrink-0 border-t border-border px-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <Drawer.Close className="flex min-h-14 w-full items-center justify-center rounded-2xl border border-border bg-background text-base font-semibold text-foreground active:bg-muted/40">
+                  Schließen
+                </Drawer.Close>
+              </div>
+            </Drawer.Content>
+          </Drawer.Portal>
+        </Drawer.Root>
+
+        <Drawer.Root open={mobileStartPickerOpen} onOpenChange={setMobileStartPickerOpen} repositionInputs fixed shouldScaleBackground={false}>
+          <Drawer.Portal>
+            <Drawer.Overlay className="fixed inset-0 z-[101] bg-black/50" />
+            <Drawer.Content className="fixed inset-x-0 bottom-0 z-[102] flex max-h-[85vh] flex-col rounded-t-[28px] border border-border bg-card outline-none">
+              <Drawer.Handle className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/35" />
+              <Drawer.Title className="px-4 pt-2 text-xl font-bold text-foreground">Startzeit</Drawer.Title>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4">
+                <div className="flex flex-col gap-4">
+                  {(["06:00", "08:00", "09:00", "14:00"] as const).map((t) => (
+                    <button
+                      key={`st-${t}`}
+                      type="button"
+                      className="min-h-14 w-full rounded-2xl border border-border bg-background px-4 py-3 text-left text-lg font-bold tabular-nums active:bg-muted/40"
+                      onClick={() => {
+                        setStartTime(t);
+                        setMobileStartPickerOpen(false);
+                      }}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="min-h-14 w-full rounded-2xl border border-dashed border-muted-foreground/40 bg-muted/20 px-4 py-3 text-base font-semibold text-foreground"
+                    onClick={() => setMobileStartPickerCustom((v) => !v)}
+                  >
+                    {mobileStartPickerCustom ? "Presets anzeigen" : "Eigene Uhrzeit …"}
+                  </button>
+                  {mobileStartPickerCustom && (
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      onFocus={scrollFieldIntoView}
+                      className="min-h-14 w-full rounded-2xl border border-border bg-white px-4 py-3 text-lg font-semibold tabular-nums text-foreground"
+                      disabled={isPending}
+                    />
+                  )}
+                </div>
+              </div>
+              <div className="shrink-0 border-t border-border px-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <Drawer.Close className="flex min-h-14 w-full items-center justify-center rounded-2xl border border-primary/35 bg-primary/15 text-base font-bold text-primary">
+                  Fertig
+                </Drawer.Close>
+              </div>
+            </Drawer.Content>
+          </Drawer.Portal>
+        </Drawer.Root>
+
+        <Drawer.Root open={mobileEndPickerOpen} onOpenChange={setMobileEndPickerOpen} repositionInputs fixed shouldScaleBackground={false}>
+          <Drawer.Portal>
+            <Drawer.Overlay className="fixed inset-0 z-[101] bg-black/50" />
+            <Drawer.Content className="fixed inset-x-0 bottom-0 z-[102] flex max-h-[85vh] flex-col rounded-t-[28px] border border-border bg-card outline-none">
+              <Drawer.Handle className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/35" />
+              <Drawer.Title className="px-4 pt-2 text-xl font-bold text-foreground">Endzeit</Drawer.Title>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4">
+                <div className="flex flex-col gap-4">
+                  {(["16:00", "17:00", "18:00", "22:00"] as const).map((t) => (
+                    <button
+                      key={`en-${t}`}
+                      type="button"
+                      className="min-h-14 w-full rounded-2xl border border-border bg-background px-4 py-3 text-left text-lg font-bold tabular-nums active:bg-muted/40"
+                      onClick={() => {
+                        setEndTime(t);
+                        setMobileEndPickerOpen(false);
+                      }}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="min-h-14 w-full rounded-2xl border border-dashed border-muted-foreground/40 bg-muted/20 px-4 py-3 text-base font-semibold text-foreground"
+                    onClick={() => setMobileEndPickerCustom((v) => !v)}
+                  >
+                    {mobileEndPickerCustom ? "Presets anzeigen" : "Eigene Uhrzeit …"}
+                  </button>
+                  {mobileEndPickerCustom && (
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      onFocus={scrollFieldIntoView}
+                      className="min-h-14 w-full rounded-2xl border border-border bg-white px-4 py-3 text-lg font-semibold tabular-nums text-foreground"
+                      disabled={isPending}
+                    />
+                  )}
+                </div>
+              </div>
+              <div className="shrink-0 border-t border-border px-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <Drawer.Close className="flex min-h-14 w-full items-center justify-center rounded-2xl border border-primary/35 bg-primary/15 text-base font-bold text-primary">
+                  Fertig
+                </Drawer.Close>
+              </div>
+            </Drawer.Content>
+          </Drawer.Portal>
+        </Drawer.Root>
+
+        <Drawer.Root open={simpleAddSheetOpen} onOpenChange={setSimpleAddSheetOpen} repositionInputs fixed shouldScaleBackground={false}>
+          <Drawer.Portal>
+            <Drawer.Overlay className="fixed inset-0 z-[100] bg-black/50" />
+            <Drawer.Content className="fixed inset-x-0 bottom-0 z-[100] flex h-[92dvh] max-h-[92dvh] flex-col rounded-t-[28px] border border-border bg-card shadow-[0_-12px_40px_rgba(0,0,0,0.18)] outline-none">
+              <Drawer.Handle className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/35" />
+              <Drawer.Title className="px-4 pt-1 text-xl font-bold text-foreground">Schicht setzen</Drawer.Title>
+              <Drawer.Description className="px-4 text-sm text-muted-foreground">
+                Mitarbeiter, Tag und Zeit – Aktionen unten in der Daumen-Zone.
+              </Drawer.Description>
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-2">
+                <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-y-contain pb-4">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Mitarbeiter</p>
+                    <div className="mt-3 flex flex-col gap-4">
+                      {members.map((m) => (
+                        <button
+                          key={`sheet-mem-${m.id}`}
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => setSelectedUserId(m.id)}
+                          className={`min-h-14 w-full rounded-2xl border px-4 py-3 text-left text-base font-semibold transition-colors ${
+                            m.id === selectedUserId
+                              ? "border-primary/50 bg-primary/15 text-primary"
+                              : "border-border bg-background text-foreground active:bg-muted/40"
+                          }`}
+                        >
+                          {m.name ?? m.email}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Wochentag</p>
+                    <div className="mt-3 flex flex-col gap-4">
+                      {DAY_LABELS.map((label, idx) => (
+                        <button
+                          key={`sheet-day-${label}`}
+                          type="button"
+                          onClick={() => setSimpleSheetDay(idx)}
+                          className={`flex min-h-14 w-full flex-col items-start justify-center rounded-2xl border px-4 py-3 text-left transition-colors active:scale-[0.99] ${
+                            simpleSheetDay === idx
+                              ? "border-primary/50 bg-primary/15 text-primary"
+                              : "border-border bg-background text-foreground active:bg-muted/40"
+                          }`}
+                        >
+                          <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{label}</span>
+                          <span className="text-lg font-bold text-foreground">{MOBILE_DAY_NAMES[idx]}</span>
+                          {userPrimaryShiftByDay.get(idx) ? (
+                            <span className="mt-1 text-sm font-semibold tabular-nums text-muted-foreground">
+                              {userPrimaryShiftByDay.get(idx)?.startTime?.slice(0, 5)}–
+                              {userPrimaryShiftByDay.get(idx)?.endTime?.slice(0, 5)}
+                            </span>
+                          ) : (
+                            <span className="mt-1 text-sm text-muted-foreground">frei</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Start</label>
+                      <input
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        onFocus={scrollFieldIntoView}
+                        className="mt-2 min-h-14 w-full rounded-2xl border border-border bg-white px-4 py-3 text-lg font-semibold tabular-nums text-foreground"
+                        disabled={isPending}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Ende</label>
+                      <input
+                        type="time"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                        onFocus={scrollFieldIntoView}
+                        className="mt-2 min-h-14 w-full rounded-2xl border border-border bg-white px-4 py-3 text-lg font-semibold tabular-nums text-foreground"
+                        disabled={isPending}
+                      />
+                    </div>
+                  </div>
+
+                  {hasInvalidRange && (
+                    <p className="text-sm font-medium text-amber-600">Ende muss nach Start liegen.</p>
+                  )}
+                </div>
+
+                <div className="shrink-0 space-y-3 border-t border-border bg-card pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                  <button
+                    type="button"
+                    disabled={isPending || !selectedUserId || hasInvalidRange}
+                    onClick={() => {
+                      applyDayFromInputs(simpleSheetDay);
+                      setSimpleAddSheetOpen(false);
+                    }}
+                    className="min-h-14 w-full rounded-2xl border border-primary/40 bg-primary/15 text-base font-bold text-primary active:bg-primary/25 disabled:opacity-50"
+                  >
+                    Speichern
+                  </button>
+                  <Drawer.Close className="flex min-h-14 w-full items-center justify-center rounded-2xl border border-border bg-background text-base font-semibold text-foreground active:bg-muted/40">
+                    Abbrechen
+                  </Drawer.Close>
+                </div>
+              </div>
+            </Drawer.Content>
+          </Drawer.Portal>
+        </Drawer.Root>
     </>
   );
 
