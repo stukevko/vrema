@@ -97,13 +97,15 @@ function LoginForm() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        {/* Logo */}
-        <div className="flex flex-col items-center gap-3 mb-8">
-          <Image src="/vrema_logo.png" alt="VREMA" width={200} height={56} className="-mb-2 h-14 w-auto object-contain" priority />
-          <div className="text-center">
-            <span className="font-bold text-xl tracking-tight">Vrema</span>
-            <span className="block text-[10px] text-muted-foreground font-sans uppercase tracking-widest">by KevkoStudio</span>
-          </div>
+        <div className="flex flex-col items-center mb-10">
+          <Image
+            src="/vrema_logo.png"
+            alt="VREMA"
+            width={400}
+            height={112}
+            className="h-24 w-auto max-w-full object-contain md:h-28"
+            priority
+          />
         </div>
 
         <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">

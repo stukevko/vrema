@@ -226,13 +226,16 @@ export default function LandingPage() {
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-border glass-nav">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Image src="/vrema_logo_icon.png" alt="VREMA" width={44} height={44} className="-my-2" />
-            <div>
-              <span className="font-bold text-base tracking-tight">Vrema</span>
-              <span className="ml-2 text-[10px] text-muted-foreground uppercase tracking-widest">by KevkoStudio</span>
-            </div>
-          </div>
+          <Link href="/" className="flex items-center shrink-0 py-1">
+            <Image
+              src="/vrema_logo.png"
+              alt="VREMA"
+              width={280}
+              height={78}
+              className="h-10 w-auto object-contain sm:h-11 md:h-12 max-w-[min(52vw,280px)]"
+              priority
+            />
+          </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
             <a href="#features" className="hover:text-foreground transition-colors">Features</a>
