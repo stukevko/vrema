@@ -94,6 +94,18 @@ function formatDateDE(value: Date) {
   return value.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
+/** Striktes TT.MM.JJJJ für Lohn-/DATEV-Exporte (unabhängig von Browser-Locale-Details). */
+function formatDateCsv(value: Date) {
+  const d = value.getDate().toString().padStart(2, "0");
+  const m = (value.getMonth() + 1).toString().padStart(2, "0");
+  const y = value.getFullYear();
+  return `${d}.${m}.${y}`;
+}
+
+function formatTimeCsv(value: Date) {
+  return value.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
 function employeeNumberOrFallback(log: LogRow) {
   if (log.employeeNumber && log.employeeNumber.trim()) return log.employeeNumber.trim();
   return `MA-${log.userId.slice(-6).toUpperCase()}`;
@@ -383,26 +395,27 @@ export function ReportsClient({
   };
   const buildCsv = () => {
     const separator = ";";
+    const personalHeaders = isManager ? (["Mitarbeiter-Nr", "Mitarbeiter Name"] as const) : [];
     const headers = [
-      "Datensatz_Typ",
-      "Lohnart_Code",
-      "Lohnart_Text",
-      ...(isManager ? ["Mitarbeiter_Nr", "Mitarbeiter"] : []),
+      ...personalHeaders,
+      "Zeilenart",
       "Datum",
-      "Einstempel",
-      "Ausstempel",
-      "Pause_Minuten",
-      "Arbeitszeit_Netto_Minuten",
-      "Dauer_Dezimal_Stunden",
-      "Soll_Stunden_Monat",
-      "Ist_Stunden_Monat",
-      "Differenz_Stunden",
+      "Einstempelzeit",
+      "Ausstempelzeit",
+      "Pause (Minuten)",
+      "Arbeitszeit netto (Minuten)",
+      "Stunden (Dezimal)",
+      "Lohnart-Code",
+      "Lohnart-Bezeichnung",
+      "Sollzeit Monat (Std)",
+      "Istzeit Monat (Std)",
+      "Differenz (Std)",
       "Status",
-      "Status_Code",
-      "GPS_Latitude",
-      "GPS_Longitude",
-      "Notiz",
+      "Bemerkung",
     ];
+
+    const personalCells = (nr: string, name: string) => (isManager ? [nr, name] : []);
+
     const users = Object.values(byUser)
       .filter((arr) => arr.length > 0)
       .sort((a, b) => a[0].userName.localeCompare(b[0].userName, "de-DE"));
@@ -422,25 +435,23 @@ export function ReportsClient({
         const inAt = new Date(log.clockIn);
         const outAt = log.clockOut ? new Date(log.clockOut) : null;
         const dur = durationMins(log);
-        const durationMinutes = dur !== null ? Math.round(dur) : "";
+        const netMin = dur !== null ? Math.round(dur) : "";
+        const dezStd = netMin !== "" ? decimalHoursDE(Number(netMin)) : "";
         rows.push([
-          "DETAIL",
+          ...personalCells(mitarbeiterNr, log.userName),
+          "Arbeitstag",
+          formatDateCsv(inAt),
+          formatTimeCsv(inAt),
+          outAt ? formatTimeCsv(outAt) : "",
+          log.breakMins,
+          netMin,
+          dezStd,
           "001",
           "Arbeitszeit",
-          ...(isManager ? [mitarbeiterNr, log.userName] : []),
-          formatDateDE(inAt),
-          inAt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
-          outAt ? outAt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "",
-          log.breakMins,
-          durationMinutes,
-          durationMinutes !== "" ? decimalHoursDE(durationMinutes) : "",
           "",
           "",
           "",
           statusLabel(log.status),
-          log.status,
-          log.latitude ?? "",
-          log.longitude ?? "",
           log.note ?? "",
         ]);
       });
@@ -449,12 +460,13 @@ export function ReportsClient({
       userAbsences.forEach((a) => {
         const s = new Date(a.startDate);
         const e = new Date(a.endDate);
+        const absenceNote = s.getTime() === e.getTime() ? "" : `bis ${formatDateCsv(e)}`;
         rows.push([
-          "ABSENCE",
+          ...personalCells(mitarbeiterNr, first.userName),
+          "Abwesenheit",
+          formatDateCsv(s),
           "",
           "",
-          ...(isManager ? [mitarbeiterNr, first.userName] : []),
-          formatDateDE(s),
           "",
           "",
           "",
@@ -464,52 +476,43 @@ export function ReportsClient({
           "",
           "",
           a.type === "SICK" ? "Krank" : "Urlaub",
-          a.type,
-          "",
-          "",
-          s.getTime() === e.getTime() ? "" : `bis ${formatDateDE(e)}`,
+          absenceNote,
         ]);
       });
 
       rows.push([
-        "SUMMARY",
-          "001",
-          "Arbeitszeit",
-        ...(isManager ? [mitarbeiterNr, first.userName] : []),
+        ...personalCells(mitarbeiterNr, first.userName),
+        "Summe Monat",
         "",
         "",
         "",
         "",
         "",
         "",
+        "001",
+        "Arbeitszeit",
         decimalHoursDE(userSoll),
         decimalHoursDE(userIst),
         decimalHoursDE(diff),
-        "Monatssumme",
-        "SUMMARY",
-        "",
-        "",
+        "Monatssumme (Ist − Soll)",
         "",
       ]);
       if (diff > 0) {
         rows.push([
-          "SUMMARY_OVERTIME",
-          "002",
+          ...personalCells(mitarbeiterNr, first.userName),
           "Überstunden",
-          ...(isManager ? [mitarbeiterNr, first.userName] : []),
           "",
           "",
           "",
           "",
           diff,
           decimalHoursDE(diff),
-          "",
-          "",
-          "",
+          "002",
           "Überstunden",
-          "OVERTIME",
           "",
           "",
+          "",
+          "Positiver Saldo gegenüber Sollzeit",
           "",
         ]);
       }
@@ -574,8 +577,8 @@ export function ReportsClient({
   };
 
   const buildDatevCsv = (config: { beraterNummer: string; mandantenNummer: string; abrechnungsMonat: string }) => {
-    // Basis: bestehendes Export-CSV (DETAIL/ABSENCE/SUMMARY inkl. Lohnarten 001/002 + Pausen-Abzug)
-    // Ergänzung: DATEV-Metadaten als zusätzliche Spalten vorne anhängen.
+    // Basis: gleicher Lohn-CSV wie User-Export (ohne GPS; Datum TT.MM.JJJJ; Stunden mit Komma).
+    // DATEV: Berater-, Mandantennummer und Abrechnungsmonat als erste Spalten (Stammdaten vor Personaldaten).
     const baseCsv = buildCsv();
     const separator = ";";
     const [headerLine, ...dataLines] = baseCsv.split("\n");
@@ -1392,7 +1395,8 @@ export function ReportsClient({
           <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <Dialog.Title className="text-base font-semibold">DATEV Lohn-Export</Dialog.Title>
             <p className="mt-1 text-xs text-muted-foreground">
-              Dieser Export generiert ein DATEV-konformes CSV-Format inklusive Lohnarten (001/002) und Pausen-Abzug.
+              CSV mit Berater-/Mandantenbezug und Abrechnungsmonat; Spalten für Lohnarten 001/002, Datum TT.MM.JJJJ und
+              Dezimalstunden im deutschen Format (Komma). Ohne GPS-Koordinaten, ohne interne Status-Codes.
             </p>
 
             <label className="mt-4 block text-xs text-muted-foreground">Beraternummer</label>
