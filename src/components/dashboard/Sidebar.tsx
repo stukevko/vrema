@@ -58,23 +58,24 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden md:flex w-64 lg:w-72 flex-col glass-nav sticky top-0 h-screen">
-      {/* Logo */}
-      <div className="min-h-[5.25rem] py-3 flex items-center gap-4 px-6 border-b border-border">
+    <aside className="hidden md:flex w-72 lg:w-80 flex-col glass-nav sticky top-0 h-screen">
+      {/* Marke: volle Wortmarke, viel Fläche, klar lesbar */}
+      <Link
+        href="/dashboard"
+        className="group block border-b border-border px-6 py-6 transition-colors md:hover:bg-muted/25"
+      >
         <Image
-          src="/vrema_logo_icon.png"
+          src="/vrema_logo.png"
           alt="VREMA"
-          width={64}
-          height={64}
-          className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 object-contain"
+          width={400}
+          height={112}
+          priority
+          className="h-auto w-full max-h-[7.5rem] lg:max-h-[8.25rem] object-contain object-left"
         />
-        <div className="min-w-0">
-          <span className="font-bold text-xl tracking-tight leading-tight">VREMA</span>
-          <span className="block text-[11px] sm:text-xs text-muted-foreground uppercase tracking-wider mt-0.5 leading-snug">
-            Intelligente Zeiterfassung
-          </span>
-        </div>
-      </div>
+        <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground leading-relaxed">
+          Intelligente Zeiterfassung
+        </p>
+      </Link>
 
       {/* Plan badge */}
       <div className="px-5 pt-5">

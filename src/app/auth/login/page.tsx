@@ -5,11 +5,11 @@ import { signIn } from "next-auth/react";
 import { signIn as signInWithWebAuthn } from "next-auth/webauthn";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { Fingerprint, Loader2, Mail, Lock } from "lucide-react";
 import { resendVerificationLink } from "@/lib/actions/auth";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
+import { AuthBrandLogo } from "@/components/brand/AuthBrandLogo";
 
 function LoginForm() {
   const [isPending, startTransition] = useTransition();
@@ -97,15 +97,8 @@ function LoginForm() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="flex flex-col items-center mb-10">
-          <Image
-            src="/vrema_logo.png"
-            alt="VREMA"
-            width={400}
-            height={112}
-            className="h-24 w-auto max-w-full object-contain md:h-28"
-            priority
-          />
+        <div className="mb-10">
+          <AuthBrandLogo />
         </div>
 
         <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">

@@ -47,6 +47,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  manifest: "/site.webmanifest",
   robots: {
     index: true,
     follow: true,
@@ -75,11 +76,12 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
       { url: "/favicon.ico", type: "image/x-icon", sizes: "any" },
-      { url: "/vrema_logo_icon.png", type: "image/png", sizes: "32x32" },
     ],
     shortcut: [{ url: "/favicon.ico", type: "image/x-icon" }],
-    apple: [{ url: "/vrema_logo_icon.png", type: "image/png", sizes: "180x180" }],
+    apple: [{ url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" }],
   },
 };
 
@@ -91,10 +93,11 @@ export default function RootLayout({
   return (
     <html lang="de">
       <head>
-        {/* Explizit host-relativ: funktioniert auch wenn metadataBase / .env auf Prod zeigt */}
+        {/* Statische Assets aus /public — gleiche URLs wie PWA-Manifest */}
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/png" href="/vrema_logo_icon.png" sizes="32x32" />
-        <link rel="apple-touch-icon" href="/vrema_logo_icon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
         <SessionProvider>{children}</SessionProvider>

@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useTransition } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { AuthBrandLogo } from "@/components/brand/AuthBrandLogo";
 import { motion } from "framer-motion";
 import { Loader2, Mail } from "lucide-react";
 import { requestPasswordReset } from "@/lib/actions/auth";
@@ -28,15 +28,8 @@ function ForgotPasswordForm() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-        <div className="flex flex-col items-center mb-10">
-          <Image
-            src="/vrema_logo.png"
-            alt="VREMA"
-            width={400}
-            height={112}
-            className="h-24 w-auto max-w-full object-contain md:h-28"
-            priority
-          />
+        <div className="mb-10">
+          <AuthBrandLogo />
         </div>
 
         <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">

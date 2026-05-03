@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthBrandLogo } from "@/components/brand/AuthBrandLogo";
 
 const ERROR_MESSAGES: Record<string, string> = {
   AccessDenied: "Zugriff verweigert.",
@@ -19,6 +20,9 @@ export default async function AuthErrorPage({
 
   return (
     <main className="min-h-screen bg-background text-foreground px-4 py-10">
+      <div className="mx-auto max-w-md mb-8">
+        <AuthBrandLogo />
+      </div>
       <div className="mx-auto max-w-md rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
         <p className="text-xs font-sans uppercase tracking-widest text-red-300">Auth Error</p>
         <h1 className="mt-2 text-xl font-bold">Anmeldung nicht möglich</h1>

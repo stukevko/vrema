@@ -784,7 +784,13 @@ export default function LandingPage() {
       <footer className="border-t border-border py-10 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <Image src="/vrema_logo.png" alt="VREMA" width={120} height={32} className="opacity-60 h-8 w-auto -my-2" />
+            <Image
+              src="/vrema_logo.png"
+              alt="VREMA"
+              width={160}
+              height={44}
+              className="opacity-90 h-10 w-auto md:h-11 -my-1"
+            />
             <div>
               <span className="font-bold text-sm">VREMA</span>
               <span className="ml-1.5 text-[10px] text-muted-foreground">Intelligente Zeiterfassung</span>
