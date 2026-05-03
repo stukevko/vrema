@@ -828,7 +828,7 @@ export function ReportsClient({
           </div>
 
           {/* Action buttons */}
-          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap lg:justify-end lg:gap-2">
+          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 md:flex md:w-auto md:flex-wrap md:justify-end md:gap-2">
             <select
               value={monthKey}
               onChange={(e) => {
@@ -838,7 +838,7 @@ export function ReportsClient({
                   router.push(`${pathname}?${params.toString()}`);
                 });
               }}
-              className="min-h-12 w-full touch-manipulation rounded-2xl border border-border bg-white px-3 py-2.5 text-base text-foreground sm:text-sm lg:min-h-0 lg:w-auto lg:py-2"
+              className="min-h-12 w-full touch-manipulation rounded-2xl border border-border bg-white px-3 py-2.5 text-base text-foreground sm:text-sm md:min-h-0 md:w-auto md:py-2"
             >
               {monthOptions.map((option) => (
                 <option key={option.key} value={option.key}>
@@ -850,7 +850,7 @@ export function ReportsClient({
               type="button"
               onClick={runAIAnalysis}
               disabled={isAIAnalyzing}
-              className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition-all active:scale-[0.99] sm:py-2.5 lg:min-h-0 lg:w-auto ${
+              className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition-all active:scale-[0.99] sm:py-2.5 md:min-h-0 md:w-auto ${
                 isAIAnalyzing
                   ? "animate-pulse border-violet-200 bg-violet-50/80 text-violet-700 shadow-[0_0_24px_rgba(139,92,246,0.22)]"
                   : "border-violet-200 bg-white text-violet-700 md:hover:bg-violet-50"
@@ -862,7 +862,7 @@ export function ReportsClient({
             <button
               type="button"
               onClick={hasBusinessAccess ? exportPdf : lockedMsg}
-              className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 lg:min-h-0 lg:w-auto ${
+              className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 md:min-h-0 md:w-auto ${
                 hasBusinessAccess
                   ? "bg-primary text-foreground ring-1 ring-inset ring-white/20 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
                   : "border border-border bg-card text-muted-foreground md:hover:bg-muted/50"
@@ -890,7 +890,7 @@ export function ReportsClient({
             <button
               type="button"
               onClick={hasBusinessAccess ? () => setShowDatevModal(true) : lockedMsg}
-              className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 lg:min-h-0 lg:w-auto ${
+              className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 md:min-h-0 md:w-auto ${
                 hasBusinessAccess
                   ? "border-border bg-white text-foreground md:hover:bg-muted/50"
                   : "cursor-pointer border border-border bg-card text-muted-foreground md:hover:bg-muted/50"

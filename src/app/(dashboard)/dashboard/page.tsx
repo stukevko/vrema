@@ -91,9 +91,9 @@ export default async function DashboardPage() {
   }, 0);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 px-1 text-foreground sm:space-y-6 sm:px-0 md:space-y-8">
+    <div className="mx-auto flex max-w-6xl flex-col gap-5 px-2 text-foreground sm:gap-6 sm:px-0 md:gap-8 md:px-0">
       {/* Header */}
-      <div className="rounded-2xl glass-panel p-5 sm:p-8">
+      <div className="order-1 shrink-0 rounded-2xl glass-panel p-5 sm:p-8">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
           Guten {new Date().getHours() < 12 ? "Morgen" : new Date().getHours() < 18 ? "Tag" : "Abend"},{" "}
           {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
@@ -104,11 +104,13 @@ export default async function DashboardPage() {
       </div>
 
       {isSuperAdmin && superAdminCompanies && superAdminMonitoring && (
-        <SuperAdminInlinePanel companies={superAdminCompanies} monitoring={superAdminMonitoring} />
+        <div className="order-2">
+          <SuperAdminInlinePanel companies={superAdminCompanies} monitoring={superAdminMonitoring} />
+        </div>
       )}
 
       {employeeCount === 0 && (
-        <div className="rounded-2xl glass-panel p-5 sm:p-8">
+        <div className="order-3 rounded-2xl glass-panel p-5 sm:p-8">
           <div className="flex items-center gap-2 mb-2">
             <ListChecks className="w-4 h-4 text-primary" />
             <p className="font-semibold text-sm">Noch kein Team angelegt</p>
@@ -131,9 +133,9 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Team stats (for owners/managers) */}
+      {/* Team stats (for owners/managers) — auf Mobil unter Terminal/AI/Saldo (order) */}
       {teamStats && (
-        <div className="space-y-4">
+        <div className="order-5 space-y-4 md:order-4">
           <div className="rounded-2xl glass-panel p-5 sm:p-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <div className="min-w-0">
@@ -161,7 +163,7 @@ export default async function DashboardPage() {
                 </Link>
               </div>
             </div>
-            <div className="mt-3 grid grid-cols-1 gap-2 text-xs md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-3 grid grid-cols-1 gap-2 text-xs md:grid-cols-2 xl:grid-cols-3">
               <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] px-3 py-2">
                 <span className="text-muted-foreground">Fehlend heute</span>
                 <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-red-700" : "text-emerald-700"}`}>
@@ -182,7 +184,7 @@ export default async function DashboardPage() {
               </div>
             </div>
           </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        <div className="-mx-2 flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-visible pb-2 pt-1 scrollbar-hide md:mx-0 md:grid md:snap-none md:grid-cols-2 md:gap-4 md:overflow-visible md:pb-0 md:pt-0 xl:grid-cols-3 2xl:grid-cols-6">
           {[
             { label: "Mitarbeiter gesamt", value: teamStats.totalEmployees, icon: Users, color: "#60a5fa" },
             { label: "Heute aktiv", value: teamStats.activeToday, icon: Clock, color: "#86efac" },
@@ -191,7 +193,10 @@ export default async function DashboardPage() {
             { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24" },
             { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc" },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-2xl glass-panel p-5 transition-all sm:p-8 md:hover:bg-card/80">
+            <div
+              key={stat.label}
+              className="w-[min(88vw,20rem)] shrink-0 snap-center rounded-2xl glass-panel p-5 transition-all sm:p-6 md:w-auto md:min-w-0 md:hover:bg-card/80"
+            >
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-muted-foreground">{stat.label}</p>
                 <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
@@ -203,12 +208,12 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Main grid: Mobile zuerst AI-Hinweise, Desktop wie bisher Terminal → Saldo → AI */}
-      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-        <div className="order-first lg:order-3">
+      {/* Main grid: Mobil zuerst AI (order), Desktop Terminal → Saldo → AI */}
+      <div className="order-4 flex flex-col gap-5 md:order-5 md:grid md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+        <div className="order-first md:order-3">
           <AIInsights />
         </div>
-        <div id="terminal-widget" className="order-2 lg:order-1">
+        <div id="terminal-widget" className="order-2 md:order-1">
           <TerminalWidget
             activeLog={
               activeLog
@@ -223,7 +228,7 @@ export default async function DashboardPage() {
             }
           />
         </div>
-        <div className="order-3 lg:order-2">
+        <div className="order-3 md:order-2">
           <SaldoWidget
             workedMinutes={saldo.workedMinutes}
             expectedMinutes={saldo.expectedMinutes}
@@ -234,7 +239,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Today summary */}
-      <div className="rounded-2xl glass-panel p-5 transition-all sm:p-8 md:hover:bg-card/80">
+      <div className="order-6 rounded-2xl glass-panel p-5 transition-all sm:p-8 md:hover:bg-card/80">
         <div className="mb-4 flex items-center justify-between gap-2">
           <h2 className="font-semibold">Heute</h2>
           <span className="text-sm text-primary tabular-nums font-bold">
@@ -284,7 +289,7 @@ export default async function DashboardPage() {
 
       {/* Business plan CTA */}
       {plan === "STARTER" && (
-        <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div className="order-7 flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:p-8">
           <div className="min-w-0">
             <p className="text-sm font-semibold">PDF-Export & Lohnbüro-Versand freischalten</p>
             <p className="mt-1 text-xs text-muted-foreground">Upgrade auf Business für vollständige Berichte.</p>

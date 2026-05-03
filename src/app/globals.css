@@ -112,15 +112,33 @@ button[class] {
 }
 
 /* Dashboard & Co.: größere Tap-Ziele am Handy (eine Hand + Alltag). */
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
   button[class] {
     min-height: 48px;
   }
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
   html {
     -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Horizontale Snap-Reihen (Dashboard-KPIs): kein sichtbarer Scrollbalken */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Leichtes „Native“-Feedback bei Tap (nur Dashboard-Hauptbereich) */
+@media (max-width: 767px) {
+  .native-app-tap button:not(:disabled):active,
+  .native-app-tap a[href]:active {
+    transform: scale(0.97);
+    transition: transform 90ms ease;
   }
 }
 

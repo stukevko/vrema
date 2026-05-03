@@ -51,16 +51,16 @@ function snapMinutes(total: number) {
   return Math.round(total / TIMELINE_SNAP_MINUTES) * TIMELINE_SNAP_MINUTES;
 }
 
-/** Unter 1024px: Karten-UI statt Desktop-Timeline und breiter Matrix-Tabelle. */
+/** Unter md (768px): Karten-UI, Bottom-Sheets, keine Tabellen-Planung. */
 function usePlanningCompactLayout() {
   return useSyncExternalStore(
     (notify) => {
       if (typeof window === "undefined") return () => {};
-      const mq = window.matchMedia("(max-width: 1023px)");
+      const mq = window.matchMedia("(max-width: 767px)");
       mq.addEventListener("change", notify);
       return () => mq.removeEventListener("change", notify);
     },
-    () => (typeof window !== "undefined" ? window.matchMedia("(max-width: 1023px)").matches : false),
+    () => (typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false),
     () => false
   );
 }
@@ -111,10 +111,17 @@ export function ShiftManager({
     pointerId: number;
   } | null>(null);
   const [recentDayAction, setRecentDayAction] = useState<{ dayOfWeek: number; action: "saved" | "deleted" } | null>(null);
+  /** Mobil: „+“ öffnet Bottom-Sheet statt nur Mini-Zellen. */
+  const [simpleAddSheetOpen, setSimpleAddSheetOpen] = useState(false);
+  const [simpleSheetDay, setSimpleSheetDay] = useState(1);
   const [showDetails, setShowDetails] = useState(false);
   const [showOnlyGaps, setShowOnlyGaps] = useState(false);
   const [showPlannerInfo, setShowPlannerInfo] = useState(false);
   const compact = usePlanningCompactLayout();
+
+  useEffect(() => {
+    if (viewMode !== "simple") setSimpleAddSheetOpen(false);
+  }, [viewMode]);
 
   const userShifts = useMemo(
     () =>
@@ -547,7 +554,7 @@ export function ShiftManager({
       )}
       {viewMode === "simple" && (
         <>
-      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-5">
         <select
           value={selectedUserId}
           onChange={(e) => setSelectedUserId(e.target.value)}
@@ -651,14 +658,35 @@ export function ShiftManager({
         </button>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+      {compact && (
+        <button
+          type="button"
+          onClick={() => {
+            setSimpleSheetDay(1);
+            setSimpleAddSheetOpen(true);
+          }}
+          className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 text-base font-semibold text-primary transition-transform duration-100 active:scale-[0.98]"
+        >
+          + Schicht für einen Tag
+        </button>
+      )}
+
+      <div
+        className={
+          compact
+            ? "mt-4 grid grid-cols-1 gap-3"
+            : "mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-7"
+        }
+      >
         {DAY_LABELS.map((label, idx) => (
           <button
             key={label}
             type="button"
             onClick={() => applyDayFromInputs(idx)}
             disabled={isPending || !selectedUserId}
-            className={`min-h-[4.5rem] touch-manipulation rounded-xl border px-2 py-3 text-left text-xs transition-colors disabled:opacity-60 sm:min-h-0 sm:rounded-lg sm:py-2 ${
+            className={`touch-manipulation rounded-xl border px-3 py-3 text-left text-sm transition-colors disabled:opacity-60 sm:rounded-lg sm:text-xs ${
+              compact ? "min-h-[4.75rem] sm:min-h-[4.5rem]" : "min-h-[4.5rem] sm:min-h-0 sm:py-2"
+            } ${
               selectedUserVacationDays.has(idx)
                 ? selectedUserSickDays.has(idx)
                   ? "border-red-400/35 bg-red-500/12 text-red-100 hover:bg-red-500/20"
@@ -698,32 +726,51 @@ export function ShiftManager({
         </button>
       </div>
       {showDetails && (
-      <div className="mt-3 rounded-xl border border-border bg-background">
-        <div className="grid grid-cols-3 border-b border-border px-3 py-2 text-[11px] uppercase tracking-widest text-muted-foreground">
-          <span>Tag</span>
-          <span>Start</span>
-          <span>Ende</span>
+        <div className="mt-3 rounded-xl border border-border bg-background">
+          {compact ? (
+            userShifts.length === 0 ? (
+              <p className="px-3 py-4 text-sm text-muted-foreground">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {userShifts.map((s) => (
+                  <li key={s.id} className="flex min-h-14 items-center justify-between gap-3 px-4 py-3 text-sm">
+                    <span className="font-medium text-foreground">{DAY_LABELS[s.dayOfWeek] ?? s.dayOfWeek}</span>
+                    <span className="font-sans tabular-nums text-muted-foreground">
+                      {s.startTime} – {s.endTime}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )
+          ) : (
+            <>
+              <div className="grid grid-cols-3 border-b border-border px-3 py-2 text-[11px] uppercase tracking-widest text-muted-foreground">
+                <span>Tag</span>
+                <span>Start</span>
+                <span>Ende</span>
+              </div>
+              {userShifts.length === 0 ? (
+                <p className="px-3 py-3 text-xs text-muted-foreground">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
+              ) : (
+                userShifts.map((s, idx) => (
+                  <div key={s.id} className={`grid grid-cols-3 items-center px-3 py-2 text-sm ${idx % 2 === 0 ? "bg-white/[0.01]" : ""}`}>
+                    <span>{DAY_LABELS[s.dayOfWeek] ?? s.dayOfWeek}</span>
+                    <span className="font-sans text-foreground">{s.startTime}</span>
+                    <span className="font-sans text-foreground">{s.endTime}</span>
+                  </div>
+                ))
+              )}
+            </>
+          )}
         </div>
-        {userShifts.length === 0 ? (
-          <p className="px-3 py-3 text-xs text-muted-foreground">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
-        ) : (
-          userShifts.map((s, idx) => (
-            <div key={s.id} className={`grid grid-cols-3 items-center px-3 py-2 text-sm ${idx % 2 === 0 ? "bg-white/[0.01]" : ""}`}>
-              <span>{DAY_LABELS[s.dayOfWeek] ?? s.dayOfWeek}</span>
-              <span className="font-sans text-foreground">{s.startTime}</span>
-              <span className="font-sans text-foreground">{s.endTime}</span>
-            </div>
-          ))
-        )}
-      </div>
       )}
       </>
       )}
 
       {viewMode === "matrix" && (
-        <div className="mt-4 rounded-xl border border-border bg-background overflow-x-auto">
+        <div className="mt-4 rounded-xl border border-border bg-background max-md:overflow-x-hidden">
           <div className="px-3 py-3 border-b border-border">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-5">
               <input
                 type="time"
                 value={startTime}
@@ -777,7 +824,7 @@ export function ShiftManager({
             </p>
           </div>
 
-          <div className="lg:hidden space-y-4 px-1 py-2">
+          <div className="md:hidden space-y-4 px-1 py-2">
             {visibleMatrixMembers.map((m) => (
               <div key={m.id} className="rounded-2xl border border-border bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
                 <p className="truncate text-base font-semibold text-foreground">{m.name ?? m.email}</p>
@@ -833,7 +880,7 @@ export function ShiftManager({
             </div>
           </div>
 
-          <div className="hidden overflow-x-auto lg:block">
+          <div className="hidden overflow-x-auto overscroll-x-contain md:block">
             <table className="w-full min-w-[760px] text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
@@ -965,7 +1012,7 @@ export function ShiftManager({
                 title="Benötigte Mitarbeiter pro Zeitfenster"
               />
             </div>
-            <p className="hidden items-center text-[11px] text-muted-foreground leading-snug lg:flex">
+            <p className="hidden items-center text-[11px] text-muted-foreground leading-snug md:flex">
               15-Minuten-Raster · Stunden-Hilfslinien · Balken ziehen oder anklicken zum Bearbeiten (nur Desktop)
             </p>
           </div>
@@ -979,10 +1026,10 @@ export function ShiftManager({
             ) : null}
           </div>
 
-          <div className="mt-3 hidden max-h-[75vh] overflow-auto overscroll-contain lg:block">
-            <div className="min-w-0 space-y-4 lg:min-w-[880px]">
-              <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground lg:grid-cols-[220px_1fr] lg:items-center">
-                <div className="hidden font-medium text-foreground lg:block">Mitarbeiter</div>
+          <div className="mt-3 hidden max-h-[75vh] overflow-auto overscroll-contain md:block">
+            <div className="min-w-0 space-y-4 md:min-w-[880px]">
+              <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground md:grid-cols-[220px_1fr] md:items-center">
+                <div className="hidden font-medium text-foreground md:block">Mitarbeiter</div>
                 <div className="grid grid-cols-9 font-sans">
                   {Array.from({ length: 9 }).map((_, idx) => {
                     const hour = TIMELINE_START_HOUR + idx * 2;
@@ -1013,11 +1060,11 @@ export function ShiftManager({
                 return (
                   <div
                     key={row.member.id}
-                    className="grid grid-cols-1 items-stretch gap-2 lg:grid-cols-[220px_1fr] lg:items-center lg:gap-3"
+                    className="grid grid-cols-1 items-stretch gap-2 md:grid-cols-[220px_1fr] md:items-center md:gap-3"
                   >
-                    <div className="flex min-h-12 items-center rounded-2xl border border-border bg-white px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] lg:min-h-0 lg:px-4 lg:py-4">
+                    <div className="flex min-h-12 items-center rounded-2xl border border-border bg-white px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] md:min-h-0 md:px-4 md:py-4">
                       <span className="inline-flex min-w-0 items-center gap-2 text-sm text-foreground">
-                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-foreground lg:h-7 lg:w-7 lg:text-[11px]">
+                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-foreground md:h-7 md:w-7 md:text-[11px]">
                           {initials}
                         </span>
                         <span className="truncate text-[15px] font-medium">{row.member.name ?? row.member.email}</span>
@@ -1025,7 +1072,7 @@ export function ShiftManager({
                     </div>
                     <div
                       data-timeline-lane
-                      className="relative h-[4.25rem] touch-manipulation rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)] lg:h-16"
+                      className="relative h-[4.25rem] touch-manipulation rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)] md:h-16"
                       style={{ touchAction: "pan-y" }}
                       onPointerDown={(e) => {
                         if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -1110,7 +1157,7 @@ export function ShiftManager({
                                   });
                                 });
                               }}
-                              className="absolute -right-1 -top-1 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-300/40 bg-red-500/90 text-sm text-foreground opacity-100 lg:h-7 lg:w-7 lg:text-xs lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100"
+                              className="absolute -right-1 -top-1 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-300/40 bg-red-500/90 text-sm text-foreground opacity-100 md:h-7 md:w-7 md:text-xs md:opacity-0 md:transition-opacity md:group-hover:opacity-100"
                               title="Schicht löschen"
                             >
                               ×
@@ -1131,7 +1178,7 @@ export function ShiftManager({
             </div>
           </div>
 
-          <div className="mt-3 space-y-3 lg:hidden">
+          <div className="mt-3 space-y-3 md:hidden">
             <p className="text-sm font-medium text-foreground">
               {DAY_LABELS[timelineDay]} · alle Mitarbeitenden
             </p>
@@ -1199,17 +1246,127 @@ export function ShiftManager({
         </div>
       )}
 
+      {simpleAddSheetOpen && viewMode === "simple" && (
+        <div
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0 md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="vrema-simple-sheet-title"
+          onPointerDown={(e) => {
+            if (e.target === e.currentTarget) setSimpleAddSheetOpen(false);
+          }}
+        >
+          <div className="max-h-[min(90dvh,720px)] w-full max-w-full overflow-y-auto overscroll-y-contain rounded-t-3xl border border-b-0 border-border bg-card px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_40px_rgba(0,0,0,0.18)]">
+            <div className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/35" aria-hidden />
+            <h3 id="vrema-simple-sheet-title" className="text-lg font-semibold text-foreground">
+              Schicht setzen
+            </h3>
+            <p className="mt-1 text-xs text-muted-foreground">Mitarbeiter, Tag und Zeit wählen – alles in Daumen-Reichweite.</p>
+
+            <label className="mt-4 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Mitarbeiter
+            </label>
+            <select
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              className="mt-1 min-h-12 w-full touch-manipulation rounded-xl border border-border bg-white px-3 py-3 text-base text-foreground"
+              disabled={isPending}
+            >
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name ?? m.email}
+                </option>
+              ))}
+            </select>
+
+            <p className="mt-4 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Wochentag</p>
+            <div className="mt-2 grid max-h-[40vh] grid-cols-1 gap-2 overflow-y-auto overscroll-y-contain">
+              {DAY_LABELS.map((label, idx) => (
+                <button
+                  key={`sheet-day-${label}`}
+                  type="button"
+                  onClick={() => setSimpleSheetDay(idx)}
+                  className={`min-h-14 rounded-2xl border px-4 text-left text-sm font-medium transition-transform duration-100 active:scale-[0.98] ${
+                    simpleSheetDay === idx
+                      ? "border-primary/50 bg-primary/12 text-primary"
+                      : "border-border bg-background text-foreground"
+                  }`}
+                >
+                  {label}
+                  {userPrimaryShiftByDay.get(idx) ? (
+                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+                      {userPrimaryShiftByDay.get(idx)?.startTime?.slice(0, 5)}–
+                      {userPrimaryShiftByDay.get(idx)?.endTime?.slice(0, 5)}
+                    </span>
+                  ) : (
+                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">frei</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Start</label>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="mt-1 min-h-12 w-full rounded-xl border border-border bg-white px-3 py-3 text-base text-foreground"
+                  disabled={isPending}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Ende</label>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="mt-1 min-h-12 w-full rounded-xl border border-border bg-white px-3 py-3 text-base text-foreground"
+                  disabled={isPending}
+                />
+              </div>
+            </div>
+
+            {hasInvalidRange && (
+              <p className="mt-2 text-xs text-amber-600">Ende muss nach Start liegen.</p>
+            )}
+
+            <div className="mt-5 flex flex-col gap-2">
+              <button
+                type="button"
+                disabled={isPending || !selectedUserId || hasInvalidRange}
+                onClick={() => {
+                  applyDayFromInputs(simpleSheetDay);
+                  setSimpleAddSheetOpen(false);
+                }}
+                className="min-h-14 w-full rounded-2xl border border-primary/35 bg-primary/15 text-base font-semibold text-primary transition-transform duration-100 active:scale-[0.98] disabled:opacity-50"
+              >
+                Speichern
+              </button>
+              <button
+                type="button"
+                onClick={() => setSimpleAddSheetOpen(false)}
+                className="min-h-14 w-full rounded-2xl border border-border bg-background text-base font-medium text-foreground transition-transform duration-100 active:scale-[0.98] md:hover:bg-card/80"
+              >
+                Abbrechen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {shiftEdit && (
         <div
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0 lg:items-center lg:bg-white/70 lg:p-4"
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0 md:items-center md:bg-white/70 md:p-4"
           role="dialog"
           aria-modal="true"
           onPointerDown={(e) => {
             if (e.target === e.currentTarget) setShiftEdit(null);
           }}
         >
-          <div className="max-h-[min(88dvh,640px)] w-full max-w-full overflow-y-auto rounded-t-3xl border border-b-0 border-border bg-card px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 shadow-[0_-12px_40px_rgba(0,0,0,0.18)] sm:max-h-[90vh] lg:max-h-none lg:max-w-sm lg:rounded-2xl lg:border lg:pb-5 lg:shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-            <h3 className="text-base font-semibold text-foreground lg:text-sm">Schicht bearbeiten</h3>
+          <div className="max-h-[min(88dvh,640px)] w-full max-w-full overflow-y-auto rounded-t-3xl border border-b-0 border-border bg-card px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 shadow-[0_-12px_40px_rgba(0,0,0,0.18)] sm:max-h-[90vh] md:max-h-none md:max-w-sm md:rounded-2xl md:border md:pb-5 md:shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+            <h3 className="text-base font-semibold text-foreground md:text-sm">Schicht bearbeiten</h3>
             <p className="mt-1 text-xs text-muted-foreground">{DAY_LABELS[timelineDay]} · {shiftEdit.label}</p>
             <div className="mt-4 grid gap-3">
               <div>
@@ -1219,7 +1376,7 @@ export function ShiftManager({
                   step={900}
                   value={shiftEdit.startTime.slice(0, 5)}
                   onChange={(e) => setShiftEdit({ ...shiftEdit, startTime: e.target.value })}
-                  className="mt-1 min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground sm:min-h-0 sm:py-2"
+                  className="mt-1 min-h-12 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-3 text-base text-foreground md:min-h-0 md:py-2 md:text-sm"
                 />
               </div>
               <div>
@@ -1229,7 +1386,7 @@ export function ShiftManager({
                   step={900}
                   value={shiftEdit.endTime.slice(0, 5)}
                   onChange={(e) => setShiftEdit({ ...shiftEdit, endTime: e.target.value })}
-                  className="mt-1 min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground sm:min-h-0 sm:py-2"
+                  className="mt-1 min-h-12 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-3 text-base text-foreground md:min-h-0 md:py-2 md:text-sm"
                 />
               </div>
             </div>

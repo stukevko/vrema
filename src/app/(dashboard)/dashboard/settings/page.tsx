@@ -1,10 +1,12 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getCompanySettings } from "@/lib/actions/settings";
 import { CompanySettingsForm } from "@/components/dashboard/CompanySettingsForm";
 import { PasswordChangeForm } from "@/components/dashboard/PasswordChangeForm";
 import { PasskeySecurityForm } from "@/components/dashboard/PasskeySecurityForm";
-import { Settings, Building2, Lock, Fingerprint } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Settings, Building2, Lock, Fingerprint, Users, CalendarDays, CreditCard, Timer, Shield, ChevronRight } from "lucide-react";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -12,8 +14,22 @@ export default async function SettingsPage() {
 
   const role = session.user.role ?? "EMPLOYEE";
   const isOwner = role === "COMPANY_OWNER" || role === "SUPER_ADMIN";
+  const isSuperAdmin = role === "SUPER_ADMIN";
+  const showBilling = role !== "EMPLOYEE";
 
   const company = isOwner ? await getCompanySettings() : null;
+
+  const mobileMoreLinks: { href: string; label: string; icon: LucideIcon }[] = [
+    { href: "/dashboard/team", label: "Team", icon: Users },
+    { href: "/dashboard/vacation", label: "Urlaub", icon: CalendarDays },
+    { href: "/dashboard#terminal-widget", label: "Terminal", icon: Timer },
+  ];
+  if (showBilling) {
+    mobileMoreLinks.push({ href: "/dashboard/billing", label: "Abonnement", icon: CreditCard });
+  }
+  if (isSuperAdmin) {
+    mobileMoreLinks.push({ href: "/dashboard/partners", label: "Vertriebspartner", icon: Shield });
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 px-1 sm:space-y-6 sm:px-0">
@@ -24,6 +40,30 @@ export default async function SettingsPage() {
         </h1>
         <p className="text-muted-foreground text-sm mt-1">Firma & persönliches Konto verwalten.</p>
       </div>
+
+      <nav
+        className="md:hidden rounded-2xl border border-border bg-card p-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
+        aria-label="Weitere Bereiche"
+      >
+        <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Weitere Bereiche
+        </p>
+        <div className="flex flex-col gap-1">
+          {mobileMoreLinks.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex min-h-14 items-center justify-between gap-3 rounded-xl border border-transparent px-3 py-2 text-sm font-medium text-foreground transition-colors active:scale-[0.99] active:bg-muted/60"
+            >
+              <span className="flex items-center gap-3">
+                <item.icon className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+                {item.label}
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </Link>
+          ))}
+        </div>
+      </nav>
 
       {/* Company settings – only for owners */}
       {isOwner && company && (

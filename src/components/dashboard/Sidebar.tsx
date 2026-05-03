@@ -3,16 +3,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Timer, CalendarClock, CreditCard, LogOut } from "lucide-react";
+import { LayoutDashboard, CalendarClock, FileText, Settings, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import clsx from "clsx";
 import { getDashboardNavItems } from "./dashboard-nav-config";
 
+/** Nur Mobil (< md): Daumen-Zone, vier Kernrouten — kein Hamburger, Rest über Einstellungen/Dashboard. */
 const MOBILE_NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard#terminal-widget", label: "Terminal", icon: Timer },
-  { href: "/dashboard/planning", label: "Planung", icon: CalendarClock },
-  { href: "/dashboard/billing", label: "Abonnement", icon: CreditCard },
+  { href: "/dashboard/planning", label: "Planen", icon: CalendarClock },
+  { href: "/dashboard/reports", label: "Berichte", icon: FileText },
+  { href: "/dashboard/settings", label: "Einstellungen", icon: Settings },
 ];
 
 interface SidebarProps {
@@ -25,7 +26,7 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
   const visibleItems = getDashboardNavItems(role, plan);
 
   return (
-    <aside className="hidden h-screen w-72 shrink-0 flex-col border-r border-border glass-nav lg:flex lg:w-80">
+    <aside className="hidden h-screen w-72 shrink-0 flex-col border-r border-border glass-nav md:flex md:w-80">
       <Link
         href="/dashboard"
         className="group block border-b border-border px-6 py-6 transition-colors md:hover:bg-muted/25"
@@ -36,7 +37,7 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
           width={400}
           height={112}
           priority
-          className="h-auto w-full max-h-[7.5rem] object-contain object-left lg:max-h-[8.25rem]"
+          className="h-auto w-full max-h-[7.5rem] object-contain object-left md:max-h-[8.25rem]"
         />
         <p className="mt-3 text-[10px] font-semibold uppercase leading-relaxed tracking-[0.2em] text-muted-foreground">
           Intelligente Zeiterfassung
@@ -85,30 +86,30 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
   );
 }
 
-export function DashboardMobileBottomNav({ role }: { role?: string }) {
+export function DashboardMobileBottomNav() {
   const pathname = usePathname();
-  const items = MOBILE_NAV_ITEMS.filter((item) => !(item.href === "/dashboard/billing" && role === "EMPLOYEE"));
+  const items = MOBILE_NAV_ITEMS;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 rounded-t-3xl border-t border-border bg-white/80 px-2 pt-2 shadow-[0_-12px_24px_rgba(0,0,0,0.18)] backdrop-blur-xl pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden">
-      <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-muted-foreground/30" />
-      <div className="grid grid-cols-4 gap-1">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md md:hidden"
+      aria-label="Hauptnavigation"
+    >
+      <div className="mx-auto grid max-w-lg grid-cols-4 gap-0.5">
         {items.map((item) => {
           const isActive =
-            item.href === "/dashboard#terminal-widget"
-              ? pathname === "/dashboard"
-              : pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}
               href={item.href}
               className={clsx(
-                "flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium transition-all active:scale-95",
-                isActive ? "bg-primary/10 text-primary backdrop-blur-sm" : "text-muted-foreground"
+                "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1 text-[10px] font-semibold leading-tight transition-transform duration-100 active:scale-95",
+                isActive ? "bg-primary/12 text-primary" : "text-muted-foreground"
               )}
             >
-              <item.icon className="h-5 w-5" />
-              {item.label}
+              <item.icon className="h-6 w-6 shrink-0 stroke-[1.75]" aria-hidden />
+              <span className="line-clamp-2 text-center">{item.label}</span>
             </Link>
           );
         })}

@@ -33,7 +33,7 @@ export default async function TeamPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Member list – takes 2/3 */}
         <div className="min-w-0 lg:col-span-2">
           <TeamList members={members} canManage={canManage} currentUserId={session.user.id} />

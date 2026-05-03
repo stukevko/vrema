@@ -91,7 +91,7 @@ export function SuperAdminInlinePanel({
       </div>
 
       <form
-        className="mb-4 grid grid-cols-1 gap-2 rounded-2xl border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
+        className="mb-4 grid grid-cols-1 gap-2 rounded-2xl border border-border bg-card p-4 sm:grid-cols-2 md:grid-cols-4"
         onSubmit={(e) => {
           e.preventDefault();
           const form = e.currentTarget;

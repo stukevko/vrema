@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, ChevronDown, LogOut, Menu, Settings, UserCircle2 } from "lucide-react";
+import { Bell, ChevronDown, LogOut, Settings, UserCircle2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
@@ -13,10 +13,9 @@ interface TopbarProps {
     image?: string | null;
     role?: string | null;
   };
-  onOpenMobileNav?: () => void;
 }
 
-export function DashboardTopbar({ user, onOpenMobileNav }: TopbarProps) {
+export function DashboardTopbar({ user }: TopbarProps) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -40,35 +39,20 @@ export function DashboardTopbar({ user, onOpenMobileNav }: TopbarProps) {
     : user.email?.[0]?.toUpperCase() ?? "?";
 
   return (
-    <header className="glass-nav fixed inset-x-0 top-0 z-50 border-b border-border pt-[env(safe-area-inset-top,0px)] lg:relative lg:inset-auto lg:pt-0">
-      <div className="relative flex h-16 items-center justify-end gap-2 px-3 sm:px-4 lg:justify-between lg:px-6">
-        {onOpenMobileNav && (
-          <div className="absolute left-3 top-1/2 z-[1] -translate-y-1/2 lg:hidden">
-            <button
-              type="button"
-              aria-label="Menü öffnen"
-              onClick={onOpenMobileNav}
-              className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-white/90 text-foreground shadow-sm transition-all active:scale-95 md:hover:bg-card/70"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-          </div>
-        )}
+    <header className="glass-nav fixed inset-x-0 top-0 z-[60] border-b border-border pt-[env(safe-area-inset-top,0px)] md:relative md:inset-auto md:z-30 md:pt-0">
+      <div className="flex h-16 items-center justify-between gap-2 px-3 sm:px-4 md:px-6">
+        <Link href="/dashboard" className="shrink-0 md:hidden">
+          <Image
+            src="/vrema_logo.png"
+            alt="VREMA"
+            width={160}
+            height={44}
+            priority
+            className="h-8 w-auto max-w-[40vw] object-contain"
+          />
+        </Link>
 
-        <div className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 lg:hidden">
-          <Link href="/dashboard" className="pointer-events-auto shrink-0">
-            <Image
-              src="/vrema_logo.png"
-              alt="VREMA"
-              width={160}
-              height={44}
-              priority
-              className="h-8 w-auto max-w-[44vw] object-contain"
-            />
-          </Link>
-        </div>
-
-        <div className="hidden lg:block lg:flex-1" />
+        <div className="hidden md:block md:flex-1" />
 
         <div className="flex items-center gap-2 sm:gap-3">
           {user.role === "SUPER_ADMIN" && (
@@ -78,7 +62,7 @@ export function DashboardTopbar({ user, onOpenMobileNav }: TopbarProps) {
           )}
           <button
             type="button"
-            className="relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-white/90 shadow-sm transition-all active:scale-95 md:hover:bg-card/70 lg:h-11 lg:w-11"
+            className="relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-white/90 shadow-sm transition-all active:scale-95 md:hover:bg-card/70 md:h-11 md:w-11"
             aria-label="Benachrichtigungen"
           >
             <Bell className="h-4 w-4 text-muted-foreground" />
@@ -88,7 +72,7 @@ export function DashboardTopbar({ user, onOpenMobileNav }: TopbarProps) {
             <button
               type="button"
               onClick={() => setOpen((prev) => !prev)}
-              className="flex min-h-12 items-center gap-2 rounded-2xl border border-border bg-white px-2 py-1.5 transition-all active:scale-95 md:hover:bg-card/70 lg:min-h-0"
+              className="flex min-h-12 items-center gap-2 rounded-2xl border border-border bg-white px-2 py-1.5 transition-all active:scale-95 md:hover:bg-card/70 md:min-h-0"
             >
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-xs font-bold text-primary">
                 {initials}
