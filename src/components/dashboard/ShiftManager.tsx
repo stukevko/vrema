@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { applyStandardWeek, clearShiftForDay, copyWeekToAllMembers, setShiftForDay } from "@/lib/actions/team";
 
 type Member = {
@@ -19,7 +19,8 @@ type ShiftRow = {
 };
 
 const DAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-const MATRIX_DAYS = [1, 2, 3, 4, 5, 6, 0];
+/** Reihenfolge Wochentag-Dropdown in der Timeline (Mo–So). */
+const TIMELINE_WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
 const TIMELINE_START_HOUR = 6;
 const TIMELINE_END_HOUR = 24;
 const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
@@ -49,20 +50,6 @@ function minutesToHHMM(total: number) {
 
 function snapMinutes(total: number) {
   return Math.round(total / TIMELINE_SNAP_MINUTES) * TIMELINE_SNAP_MINUTES;
-}
-
-/** Bis einschließlich Tablet/Small-Desktop (1023px): nur Einfach-Planer, große Karten, Bottom-Sheet. Ab 1024px: + Timeline. */
-function usePlanningCompactLayout() {
-  return useSyncExternalStore(
-    (notify) => {
-      if (typeof window === "undefined") return () => {};
-      const mq = window.matchMedia("(max-width: 1023px)");
-      mq.addEventListener("change", notify);
-      return () => mq.removeEventListener("change", notify);
-    },
-    () => (typeof window !== "undefined" ? window.matchMedia("(max-width: 1023px)").matches : false),
-    () => false
-  );
 }
 
 export function ShiftManager({
@@ -116,15 +103,10 @@ export function ShiftManager({
   const [simpleSheetDay, setSimpleSheetDay] = useState(1);
   const [showDetails, setShowDetails] = useState(false);
   const [showPlannerInfo, setShowPlannerInfo] = useState(false);
-  const compact = usePlanningCompactLayout();
 
   useEffect(() => {
     if (viewMode !== "simple") setSimpleAddSheetOpen(false);
   }, [viewMode]);
-
-  useEffect(() => {
-    if (compact) setViewMode("simple");
-  }, [compact]);
 
   const userShifts = useMemo(
     () =>
@@ -460,7 +442,307 @@ export function ShiftManager({
           })}
         </div>
       )}
-      {!compact && (
+      {selectedMember && (
+        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] text-foreground">
+          <span>Ausgewählt:</span>
+          <span className="font-semibold text-foreground">{selectedMember.name ?? selectedMember.email}</span>
+        </div>
+      )}
+      <div className="block lg:hidden">
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+          <strong className="text-foreground">Einfach-Planer</strong>: Mitarbeiter wählen, Zeit setzen, Tage antippen oder{" "}
+          <strong className="text-foreground">„+ Schicht für einen Tag“</strong> für das Sheet.
+        </p>
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-5">
+        <select
+          value={selectedUserId}
+          onChange={(e) => setSelectedUserId(e.target.value)}
+          className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
+          disabled={isPending}
+        >
+          {members.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.name ?? m.email}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="time"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
+          disabled={isPending}
+        />
+        <input
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
+          disabled={isPending}
+        />
+        <button
+          type="button"
+          onClick={submitStandardWeek}
+          disabled={isPending || !selectedUserId}
+          className="min-h-11 touch-manipulation rounded-lg border border-primary/30 bg-primary/15 px-3 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-primary/20 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] disabled:opacity-60 sm:min-h-0 sm:py-2"
+        >
+          Standardwoche (Mo-Fr)
+        </button>
+        <button
+          type="button"
+          onClick={submitCopyToAll}
+          disabled={isPending || !selectedUserId}
+          className="min-h-11 touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-card/80 disabled:opacity-60 sm:min-h-0 sm:py-2"
+        >
+          Auf alle übertragen
+        </button>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <p className="text-[11px] text-muted-foreground">Tipp: Zeit oben einstellen und Tage direkt antippen. Erneuter Klick mit gleicher Zeit löscht den Tag.</p>
+        {selectedUserVacationDays.size > 0 && (
+          <p className="text-[11px] text-amber-300">
+            Abwesenheit: {Array.from(selectedUserVacationDays).map((d) => DAY_LABELS[d]).join(", ")}
+            {selectedUserSickDays.size > 0 ? " (rot = krank)." : "."}
+          </p>
+        )}
+      </div>
+      <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+        <div className="rounded-xl border border-border bg-background px-3 py-2">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 1</p>
+          <p className="text-sm text-foreground">Zeit oben wählen (oder Früh/Standard/Spät klicken).</p>
+        </div>
+        <div className="rounded-xl border border-border bg-background px-3 py-2">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 2</p>
+          <p className="text-sm text-foreground">Tage antippen. Jeder Klick speichert sofort.</p>
+        </div>
+      </div>
+      {hasInvalidRange && (
+        <p className="mt-2 text-xs text-amber-300">Bitte gültige Zeit wählen: Ende muss später als Start sein.</p>
+      )}
+
+      <div className="mt-3 flex flex-wrap items-stretch gap-2 text-xs">
+        <button
+          type="button"
+          onClick={() => {
+            setStartTime("08:00");
+            setEndTime("16:00");
+          }}
+          className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-md border border-border bg-background px-2 py-2.5 text-foreground sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-card/80"
+          disabled={isPending}
+        >
+          Früh: 08:00-16:00
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setStartTime("09:00");
+            setEndTime("17:00");
+          }}
+          className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-md border border-border bg-background px-2 py-2.5 text-foreground sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-card/80"
+          disabled={isPending}
+        >
+          Standard: 09:00-17:00
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setStartTime("14:00");
+            setEndTime("22:00");
+          }}
+          className="min-h-11 min-w-0 flex-[1_1_100%] touch-manipulation rounded-md border border-border bg-background px-2 py-2.5 text-foreground sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-card/80"
+          disabled={isPending}
+        >
+          Spät: 14:00-22:00
+        </button>
+      </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setSimpleSheetDay(1);
+            setSimpleAddSheetOpen(true);
+          }}
+          className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 text-base font-semibold text-primary transition-transform duration-100 active:scale-[0.98] lg:hidden"
+        >
+          + Schicht für einen Tag
+        </button>
+
+        <div className="mt-4 grid grid-cols-1 gap-3">
+        {DAY_LABELS.map((label, idx) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => applyDayFromInputs(idx)}
+            disabled={isPending || !selectedUserId}
+            className={`touch-manipulation min-h-[4.75rem] rounded-xl border px-3 py-3 text-left text-sm transition-colors disabled:opacity-60 sm:rounded-lg sm:text-xs ${
+              selectedUserVacationDays.has(idx)
+                ? selectedUserSickDays.has(idx)
+                  ? "border-red-400/35 bg-red-500/12 text-red-100 hover:bg-red-500/20"
+                  : "border-amber-400/35 bg-amber-500/10 text-amber-100 hover:bg-amber-500/15"
+                : usedDays.has(idx)
+                  ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                : "border-border bg-background text-foreground hover:bg-card/80"
+            } ${recentDayAction?.dayOfWeek === idx ? "ring-2 ring-primary/60" : ""}`}
+          >
+            <span className="block text-xs">{label}</span>
+            <span className="mt-0.5 block text-[10px] font-sans opacity-80">
+              {userPrimaryShiftByDay.get(idx)
+                ? `${userPrimaryShiftByDay.get(idx)?.startTime}-${userPrimaryShiftByDay.get(idx)?.endTime}`
+                : "frei"}
+            </span>
+            {recentDayAction?.dayOfWeek === idx && (
+              <span className={`mt-1 block text-[10px] ${recentDayAction.action === "saved" ? "text-primary" : "text-red-700"}`}>
+                {recentDayAction.action === "saved" ? "Gespeichert" : "Gelöscht"}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Grün = Schicht, Orange = Urlaub, Rot = Krank. Klick setzt die oben gewählte Zeit direkt für den Tag.
+        </p>
+
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setShowDetails((v) => !v)}
+            className="min-h-11 touch-manipulation rounded-md border border-border bg-background px-4 py-2 text-xs text-foreground sm:min-h-0 sm:px-3 sm:py-1.5 md:hover:bg-card/80"
+          >
+            {showDetails ? "Details ausblenden" : "Details anzeigen"}
+          </button>
+        </div>
+        {showDetails && (
+          <div className="mt-3 rounded-xl border border-border bg-background">
+            {userShifts.length === 0 ? (
+              <p className="px-3 py-4 text-sm text-muted-foreground">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {userShifts.map((s) => (
+                  <li key={s.id} className="flex min-h-14 items-center justify-between gap-3 px-4 py-3 text-sm">
+                    <span className="font-medium text-foreground">{DAY_LABELS[s.dayOfWeek] ?? s.dayOfWeek}</span>
+                    <span className="font-sans tabular-nums text-muted-foreground">
+                      {s.startTime} – {s.endTime}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {simpleAddSheetOpen && (
+          <div
+            className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0 lg:hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="vrema-simple-sheet-title"
+            onPointerDown={(e) => {
+              if (e.target === e.currentTarget) setSimpleAddSheetOpen(false);
+            }}
+          >
+            <div className="max-h-[min(90dvh,720px)] w-full max-w-full overflow-y-auto overscroll-y-contain rounded-t-3xl border border-b-0 border-border bg-card px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_40px_rgba(0,0,0,0.18)]">
+              <div className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/35" aria-hidden />
+              <h3 id="vrema-simple-sheet-title" className="text-lg font-semibold text-foreground">
+                Schicht setzen
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground">Mitarbeiter, Tag und Zeit wählen – alles in Daumen-Reichweite.</p>
+
+              <label className="mt-4 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Mitarbeiter
+              </label>
+              <select
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+                className="mt-1 min-h-12 w-full touch-manipulation rounded-xl border border-border bg-white px-3 py-3 text-base text-foreground"
+                disabled={isPending}
+              >
+                {members.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name ?? m.email}
+                  </option>
+                ))}
+              </select>
+
+              <p className="mt-4 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Wochentag</p>
+              <div className="mt-2 grid max-h-[40vh] grid-cols-1 gap-2 overflow-y-auto overscroll-y-contain">
+                {DAY_LABELS.map((label, idx) => (
+                  <button
+                    key={`sheet-day-${label}`}
+                    type="button"
+                    onClick={() => setSimpleSheetDay(idx)}
+                    className={`min-h-14 rounded-2xl border px-4 text-left text-sm font-medium transition-transform duration-100 active:scale-[0.98] ${
+                      simpleSheetDay === idx
+                        ? "border-primary/50 bg-primary/12 text-primary"
+                        : "border-border bg-background text-foreground"
+                    }`}
+                  >
+                    {label}
+                    {userPrimaryShiftByDay.get(idx) ? (
+                      <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+                        {userPrimaryShiftByDay.get(idx)?.startTime?.slice(0, 5)}–
+                        {userPrimaryShiftByDay.get(idx)?.endTime?.slice(0, 5)}
+                      </span>
+                    ) : (
+                      <span className="mt-0.5 block text-xs font-normal text-muted-foreground">frei</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Start</label>
+                  <input
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="mt-1 min-h-12 w-full rounded-xl border border-border bg-white px-3 py-3 text-base text-foreground"
+                    disabled={isPending}
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Ende</label>
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="mt-1 min-h-12 w-full rounded-xl border border-border bg-white px-3 py-3 text-base text-foreground"
+                    disabled={isPending}
+                  />
+                </div>
+              </div>
+
+              {hasInvalidRange && (
+                <p className="mt-2 text-xs text-amber-600">Ende muss nach Start liegen.</p>
+              )}
+
+              <div className="mt-5 flex flex-col gap-2">
+                <button
+                  type="button"
+                  disabled={isPending || !selectedUserId || hasInvalidRange}
+                  onClick={() => {
+                    applyDayFromInputs(simpleSheetDay);
+                    setSimpleAddSheetOpen(false);
+                  }}
+                  className="min-h-14 w-full rounded-2xl border border-primary/35 bg-primary/15 text-base font-semibold text-primary transition-transform duration-100 active:scale-[0.98] disabled:opacity-50"
+                >
+                  Speichern
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSimpleAddSheetOpen(false)}
+                  className="min-h-14 w-full rounded-2xl border border-border bg-background text-base font-medium text-foreground transition-transform duration-100 active:scale-[0.98] md:hover:bg-card/80"
+                >
+                  Abbrechen
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="hidden lg:block">
         <div className="mt-3 grid w-full max-w-full grid-cols-2 gap-2 rounded-xl border border-border bg-background p-2 text-xs sm:text-[13px]">
           <button
             type="button"
@@ -477,26 +759,12 @@ export function ShiftManager({
             Timeline
           </button>
         </div>
-      )}
-      {!compact && (
         <p className="mt-2 text-[11px] text-muted-foreground">
           <strong className="text-foreground">Einfach-Planer</strong>: eine Person, Woche per Tippen.{" "}
           <strong className="text-foreground">Timeline</strong>: einen Wochentag, alle Mitarbeitenden als Balken (ziehen und klicken).
         </p>
-      )}
-      {compact && (
-        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-          <strong className="text-foreground">Einfach-Planer</strong>: Mitarbeiter wählen, Zeit setzen, Tage antippen oder{" "}
-          <strong className="text-foreground">„+ Schicht für einen Tag“</strong> für das Sheet.
-        </p>
-      )}
-      {selectedMember && (
-        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] text-foreground">
-          <span>Ausgewählt:</span>
-          <span className="font-semibold text-foreground">{selectedMember.name ?? selectedMember.email}</span>
-        </div>
-      )}
-      {viewMode === "simple" && (
+
+        {viewMode === "simple" && (
         <>
       <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-5">
         <select
@@ -602,35 +870,14 @@ export function ShiftManager({
         </button>
       </div>
 
-      {compact && (
-        <button
-          type="button"
-          onClick={() => {
-            setSimpleSheetDay(1);
-            setSimpleAddSheetOpen(true);
-          }}
-          className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 text-base font-semibold text-primary transition-transform duration-100 active:scale-[0.98]"
-        >
-          + Schicht für einen Tag
-        </button>
-      )}
-
-      <div
-        className={
-          compact
-            ? "mt-4 grid grid-cols-1 gap-3"
-            : "mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-7"
-        }
-      >
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         {DAY_LABELS.map((label, idx) => (
           <button
-            key={label}
+            key={`desktop-day-${label}`}
             type="button"
             onClick={() => applyDayFromInputs(idx)}
             disabled={isPending || !selectedUserId}
-            className={`touch-manipulation rounded-xl border px-3 py-3 text-left text-sm transition-colors disabled:opacity-60 sm:rounded-lg sm:text-xs ${
-              compact ? "min-h-[4.75rem] sm:min-h-[4.5rem]" : "min-h-[4.5rem] sm:min-h-0 sm:py-2"
-            } ${
+            className={`touch-manipulation rounded-xl border px-3 py-3 text-left text-sm transition-colors disabled:opacity-60 sm:rounded-lg sm:text-xs min-h-[4.5rem] sm:min-h-0 sm:py-2 ${
               selectedUserVacationDays.has(idx)
                 ? selectedUserSickDays.has(idx)
                   ? "border-red-400/35 bg-red-500/12 text-red-100 hover:bg-red-500/20"
@@ -658,8 +905,6 @@ export function ShiftManager({
         Grün = Schicht, Orange = Urlaub, Rot = Krank. Klick setzt die oben gewählte Zeit direkt für den Tag.
       </p>
 
-      {message && <p className="mt-3 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground">{message}</p>}
-
       <div className="mt-4">
         <button
           type="button"
@@ -671,47 +916,28 @@ export function ShiftManager({
       </div>
       {showDetails && (
         <div className="mt-3 rounded-xl border border-border bg-background">
-          {compact ? (
-            userShifts.length === 0 ? (
-              <p className="px-3 py-4 text-sm text-muted-foreground">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
-            ) : (
-              <ul className="divide-y divide-border">
-                {userShifts.map((s) => (
-                  <li key={s.id} className="flex min-h-14 items-center justify-between gap-3 px-4 py-3 text-sm">
-                    <span className="font-medium text-foreground">{DAY_LABELS[s.dayOfWeek] ?? s.dayOfWeek}</span>
-                    <span className="font-sans tabular-nums text-muted-foreground">
-                      {s.startTime} – {s.endTime}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )
+          <div className="grid grid-cols-3 border-b border-border px-3 py-2 text-[11px] uppercase tracking-widest text-muted-foreground">
+            <span>Tag</span>
+            <span>Start</span>
+            <span>Ende</span>
+          </div>
+          {userShifts.length === 0 ? (
+            <p className="px-3 py-3 text-xs text-muted-foreground">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
           ) : (
-            <>
-              <div className="grid grid-cols-3 border-b border-border px-3 py-2 text-[11px] uppercase tracking-widest text-muted-foreground">
-                <span>Tag</span>
-                <span>Start</span>
-                <span>Ende</span>
+            userShifts.map((s, idx) => (
+              <div key={s.id} className={`grid grid-cols-3 items-center px-3 py-2 text-sm ${idx % 2 === 0 ? "bg-white/[0.01]" : ""}`}>
+                <span>{DAY_LABELS[s.dayOfWeek] ?? s.dayOfWeek}</span>
+                <span className="font-sans text-foreground">{s.startTime}</span>
+                <span className="font-sans text-foreground">{s.endTime}</span>
               </div>
-              {userShifts.length === 0 ? (
-                <p className="px-3 py-3 text-xs text-muted-foreground">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
-              ) : (
-                userShifts.map((s, idx) => (
-                  <div key={s.id} className={`grid grid-cols-3 items-center px-3 py-2 text-sm ${idx % 2 === 0 ? "bg-white/[0.01]" : ""}`}>
-                    <span>{DAY_LABELS[s.dayOfWeek] ?? s.dayOfWeek}</span>
-                    <span className="font-sans text-foreground">{s.startTime}</span>
-                    <span className="font-sans text-foreground">{s.endTime}</span>
-                  </div>
-                ))
-              )}
-            </>
+            ))
           )}
         </div>
       )}
-      </>
-      )}
+        </>
+        )}
 
-      {!compact && viewMode === "timeline" && (
+      {viewMode === "timeline" && (
         <div className="mt-4 rounded-xl border border-border bg-background p-3 sm:p-4">
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">Fokusmodus: Planung zuerst, Kennzahlen optional.</p>
@@ -743,7 +969,7 @@ export function ShiftManager({
                 onChange={(e) => setTimelineDay(Number(e.target.value))}
                 className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-base sm:min-h-11 sm:text-sm"
               >
-                {MATRIX_DAYS.map((d) => (
+                {TIMELINE_WEEKDAY_ORDER.map((d) => (
                   <option key={d} value={d}>
                     {DAY_LABELS[d]}
                   </option>
@@ -934,115 +1160,9 @@ export function ShiftManager({
         </div>
       )}
 
-      {simpleAddSheetOpen && viewMode === "simple" && (
-        <div
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0 lg:hidden"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="vrema-simple-sheet-title"
-          onPointerDown={(e) => {
-            if (e.target === e.currentTarget) setSimpleAddSheetOpen(false);
-          }}
-        >
-          <div className="max-h-[min(90dvh,720px)] w-full max-w-full overflow-y-auto overscroll-y-contain rounded-t-3xl border border-b-0 border-border bg-card px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-12px_40px_rgba(0,0,0,0.18)]">
-            <div className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/35" aria-hidden />
-            <h3 id="vrema-simple-sheet-title" className="text-lg font-semibold text-foreground">
-              Schicht setzen
-            </h3>
-            <p className="mt-1 text-xs text-muted-foreground">Mitarbeiter, Tag und Zeit wählen – alles in Daumen-Reichweite.</p>
+      </div>
 
-            <label className="mt-4 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Mitarbeiter
-            </label>
-            <select
-              value={selectedUserId}
-              onChange={(e) => setSelectedUserId(e.target.value)}
-              className="mt-1 min-h-12 w-full touch-manipulation rounded-xl border border-border bg-white px-3 py-3 text-base text-foreground"
-              disabled={isPending}
-            >
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name ?? m.email}
-                </option>
-              ))}
-            </select>
-
-            <p className="mt-4 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Wochentag</p>
-            <div className="mt-2 grid max-h-[40vh] grid-cols-1 gap-2 overflow-y-auto overscroll-y-contain">
-              {DAY_LABELS.map((label, idx) => (
-                <button
-                  key={`sheet-day-${label}`}
-                  type="button"
-                  onClick={() => setSimpleSheetDay(idx)}
-                  className={`min-h-14 rounded-2xl border px-4 text-left text-sm font-medium transition-transform duration-100 active:scale-[0.98] ${
-                    simpleSheetDay === idx
-                      ? "border-primary/50 bg-primary/12 text-primary"
-                      : "border-border bg-background text-foreground"
-                  }`}
-                >
-                  {label}
-                  {userPrimaryShiftByDay.get(idx) ? (
-                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-                      {userPrimaryShiftByDay.get(idx)?.startTime?.slice(0, 5)}–
-                      {userPrimaryShiftByDay.get(idx)?.endTime?.slice(0, 5)}
-                    </span>
-                  ) : (
-                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">frei</span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Start</label>
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="mt-1 min-h-12 w-full rounded-xl border border-border bg-white px-3 py-3 text-base text-foreground"
-                  disabled={isPending}
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Ende</label>
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="mt-1 min-h-12 w-full rounded-xl border border-border bg-white px-3 py-3 text-base text-foreground"
-                  disabled={isPending}
-                />
-              </div>
-            </div>
-
-            {hasInvalidRange && (
-              <p className="mt-2 text-xs text-amber-600">Ende muss nach Start liegen.</p>
-            )}
-
-            <div className="mt-5 flex flex-col gap-2">
-              <button
-                type="button"
-                disabled={isPending || !selectedUserId || hasInvalidRange}
-                onClick={() => {
-                  applyDayFromInputs(simpleSheetDay);
-                  setSimpleAddSheetOpen(false);
-                }}
-                className="min-h-14 w-full rounded-2xl border border-primary/35 bg-primary/15 text-base font-semibold text-primary transition-transform duration-100 active:scale-[0.98] disabled:opacity-50"
-              >
-                Speichern
-              </button>
-              <button
-                type="button"
-                onClick={() => setSimpleAddSheetOpen(false)}
-                className="min-h-14 w-full rounded-2xl border border-border bg-background text-base font-medium text-foreground transition-transform duration-100 active:scale-[0.98] md:hover:bg-card/80"
-              >
-                Abbrechen
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {message && <p className="mt-3 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground">{message}</p>}
 
       {shiftEdit && (
         <div
