@@ -419,36 +419,8 @@ export function ShiftManager({
     });
   };
 
-  return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
-      <h2 className="text-lg font-semibold">Arbeitsplan (Soll-Zeiten)</h2>
-      <p className="mt-1 text-xs text-muted-foreground">Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.</p>
-      {shiftCycleWeeks > 1 && (
-        <div className="mt-3 inline-flex max-w-full rounded-lg border border-border bg-background p-1 text-xs">
-          {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
-            const week = (idx + 1) as 1 | 2 | 3;
-            return (
-              <button
-                key={week}
-                type="button"
-                onClick={() => setSelectedWeekIndex(week)}
-                className={`min-h-11 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${
-                  selectedWeekIndex === week ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Woche {week}
-              </button>
-            );
-          })}
-        </div>
-      )}
-      {selectedMember && (
-        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] text-foreground">
-          <span>Ausgewählt:</span>
-          <span className="font-semibold text-foreground">{selectedMember.name ?? selectedMember.email}</span>
-        </div>
-      )}
-      <div className="block lg:hidden">
+  const MobileView = (
+    <>
         <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
           <strong className="text-foreground">Einfach-Planer</strong>: Mitarbeiter wählen, Zeit setzen, Tage antippen oder{" "}
           <strong className="text-foreground">„+ Schicht für einen Tag“</strong> für das Sheet.
@@ -563,7 +535,7 @@ export function ShiftManager({
             setSimpleSheetDay(1);
             setSimpleAddSheetOpen(true);
           }}
-          className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 text-base font-semibold text-primary transition-transform duration-100 active:scale-[0.98] lg:hidden"
+          className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 text-base font-semibold text-primary transition-transform duration-100 active:scale-[0.98]"
         >
           + Schicht für einen Tag
         </button>
@@ -633,7 +605,7 @@ export function ShiftManager({
 
         {simpleAddSheetOpen && (
           <div
-            className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0 lg:hidden"
+            className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0"
             role="dialog"
             aria-modal="true"
             aria-labelledby="vrema-simple-sheet-title"
@@ -740,9 +712,11 @@ export function ShiftManager({
             </div>
           </div>
         )}
-      </div>
+    </>
+  );
 
-      <div className="hidden lg:block">
+  const DesktopView = (
+    <>
         <div className="mt-3 grid w-full max-w-full grid-cols-2 gap-2 rounded-xl border border-border bg-background p-2 text-xs sm:text-[13px]">
           <button
             type="button"
@@ -938,7 +912,7 @@ export function ShiftManager({
         )}
 
       {viewMode === "timeline" && (
-        <div className="mt-4 rounded-xl border border-border bg-background p-3 sm:p-4">
+        <div className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-xl border border-border bg-background p-3 sm:p-4">
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">Fokusmodus: Planung zuerst, Kennzahlen optional.</p>
             <button
@@ -1006,8 +980,8 @@ export function ShiftManager({
             ) : null}
           </div>
 
-          <div className="mt-3 max-h-[75vh] overflow-auto overscroll-contain">
-            <div className="min-w-0 space-y-4 md:min-w-[880px]">
+          <div className="mt-3 max-h-[75vh] min-w-0 max-w-full overflow-x-auto overflow-y-auto overscroll-contain">
+            <div className="w-full min-w-[720px] space-y-4 md:min-w-[880px]">
               <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground md:grid-cols-[220px_1fr] md:items-center">
                 <div className="hidden font-medium text-foreground md:block">Mitarbeiter</div>
                 <div className="grid grid-cols-9 font-sans">
@@ -1159,8 +1133,42 @@ export function ShiftManager({
           </div>
         </div>
       )}
+    </>
+  );
 
-      </div>
+  return (
+    <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
+      <h2 className="text-lg font-semibold">Arbeitsplan (Soll-Zeiten)</h2>
+      <p className="mt-1 text-xs text-muted-foreground">Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.</p>
+      {shiftCycleWeeks > 1 && (
+        <div className="mt-3 inline-flex max-w-full rounded-lg border border-border bg-background p-1 text-xs">
+          {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
+            const week = (idx + 1) as 1 | 2 | 3;
+            return (
+              <button
+                key={week}
+                type="button"
+                onClick={() => setSelectedWeekIndex(week)}
+                className={`min-h-11 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${
+                  selectedWeekIndex === week ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Woche {week}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {selectedMember && (
+        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] text-foreground">
+          <span>Ausgewählt:</span>
+          <span className="font-semibold text-foreground">{selectedMember.name ?? selectedMember.email}</span>
+        </div>
+      )}
+      <>
+        <div className="block lg:hidden">{MobileView}</div>
+        <div className="hidden lg:block">{DesktopView}</div>
+      </>
 
       {message && <p className="mt-3 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground">{message}</p>}
 
