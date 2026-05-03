@@ -21,7 +21,10 @@ export default function DatenschutzPage() {
 
         <section className="space-y-2 text-sm text-foreground">
           <h2 className="font-semibold text-foreground">2. Verarbeitete Daten und Zwecke</h2>
-          <p>Accountdaten (Name, E-Mail), Organisationsdaten, Arbeitszeitdaten, optionale Standortdaten zur Zeiterfassung.</p>
+          <p>
+            Accountdaten (Name, E-Mail), Organisationsdaten, Arbeitszeitdaten. VREMA erfasst keine Standortdaten
+            (Privacy by Design).
+          </p>
           <p>Zwecke: Bereitstellung der Plattform, Authentifizierung, Abrechnung, Support, Sicherheit und Missbrauchsprävention.</p>
           <p>Vrema richtet sich primär an Unternehmen und gewerbliche Nutzer (B2B).</p>
         </section>

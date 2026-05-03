@@ -32,13 +32,12 @@ export async function getMockDashboardAIInsights(): Promise<AIInsightsPayload> {
 export async function getMockReportAnalysis(input: AIReportAnalysisInput): Promise<AIReportAnalysisPayload> {
   await sleep(1200);
   const totalHours = minutesToDecimalHours(input.totalMinutes, 2);
-  const gpsRatio = input.totalEntries > 0 ? Math.round((input.gpsEntries / input.totalEntries) * 100) : 0;
 
   return {
     generatedAt: new Date().toISOString(),
     summary: `Für ${input.month} wurden ${totalHours} Stunden in ${input.totalEntries} Einträgen dokumentiert. Der Verlauf wirkt stabil, mit guter Datenqualität in den Kernprozessen.`,
     highlights: [
-      `${gpsRatio} % der Einträge enthalten Standortdaten und sind revisionssicher dokumentiert.`,
+      "Die erfassten Zeiten sind zwischen Tabelle, CSV- und PDF-Export konsistent ausgewiesen (Datum, Zeiten, Pause, Netto, Status).",
       "Abweichungen konzentrieren sich auf wenige Einzelereignisse und sind operativ gut steuerbar.",
       "Die aktuelle Arbeitszeitstruktur ist konsistent und unterstützt eine verlässliche Monatsauswertung.",
     ],

@@ -21,5 +21,4 @@ export interface AIReportAnalysisInput {
   month: string;
   totalMinutes: number;
   totalEntries: number;
-  gpsEntries: number;
 }

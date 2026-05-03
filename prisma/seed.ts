@@ -27,9 +27,6 @@ async function main() {
       name: "VREMA Solutions",
       slug: companySlug,
       plan: "BUSINESS",
-      geoRadiusMeters: 150,
-      geoLatitude: 49.317,
-      geoLongitude: 8.437,
       trialEndsAt: addHours(new Date(), 24 * 14),
       isActive: true,
     },
@@ -66,7 +63,6 @@ async function main() {
     })
   );
 
-  const outOfRangeDays = new Set([4, 17, 26]);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -84,8 +80,6 @@ async function main() {
 
       const workedHours = 7.8 + ((dayOffset + i) % 4) * 0.2;
       const clockOut = addHours(clockIn, workedHours);
-      const outOfRange = outOfRangeDays.has(dayOffset) && i % 2 === 0;
-
       await prisma.workLog.create({
         data: {
           companyId: company.id,
@@ -93,11 +87,7 @@ async function main() {
           clockIn,
           clockOut,
           breakMins: 30,
-          latitude: outOfRange ? 49.75 : 49.3175 + i * 0.0003,
-          longitude: outOfRange ? 8.95 : 8.4372 + i * 0.0002,
-          isOutOfRange: outOfRange,
-          distanceMeters: outOfRange ? 42000 + i * 900 : 45 + i * 10,
-          note: outOfRange ? "Demo: ausserhalb Radius gestempelt" : null,
+          note: null,
         },
       });
     }

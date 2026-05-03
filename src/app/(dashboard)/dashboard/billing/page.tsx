@@ -105,7 +105,7 @@ export default async function BillingPage({
               )}
 
               <ul className="mt-4 mb-6 space-y-2">
-                {plan.features.slice(0, 4).map((f) => (
+                {plan.features.slice(0, 6).map((f) => (
                   <li key={f} className="flex items-center gap-2 text-xs text-foreground">
                     <Check className="w-3.5 h-3.5 text-[#22c55e] shrink-0" />
                     {f}

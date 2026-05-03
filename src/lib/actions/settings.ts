@@ -16,9 +16,6 @@ export async function getCompanySettings() {
       slug: true,
       plan: true,
       logoUrl: true,
-      geoRadiusMeters: true,
-      geoLatitude: true,
-      geoLongitude: true,
       shiftCycleWeeks: true,
     },
   });
@@ -26,9 +23,6 @@ export async function getCompanySettings() {
 
 export async function updateCompanySettings(data: {
   name?: string;
-  geoRadiusMeters?: number;
-  geoLatitude?: number | null;
-  geoLongitude?: number | null;
   shiftCycleWeeks?: number;
 }) {
   const { companyId, role } = await requireTenant();
@@ -41,19 +35,6 @@ export async function updateCompanySettings(data: {
     where: { id: companyId },
     data: {
       ...(data.name ? { name: data.name.trim() } : {}),
-      ...(typeof data.geoRadiusMeters === "number" && !Number.isNaN(data.geoRadiusMeters)
-        ? { geoRadiusMeters: Math.max(10, Math.round(data.geoRadiusMeters)) }
-        : {}),
-      ...(typeof data.geoLatitude === "number" && !Number.isNaN(data.geoLatitude)
-        ? { geoLatitude: data.geoLatitude }
-        : data.geoLatitude === null
-          ? { geoLatitude: null }
-          : {}),
-      ...(typeof data.geoLongitude === "number" && !Number.isNaN(data.geoLongitude)
-        ? { geoLongitude: data.geoLongitude }
-        : data.geoLongitude === null
-          ? { geoLongitude: null }
-          : {}),
       ...(typeof data.shiftCycleWeeks === "number" && Number.isFinite(data.shiftCycleWeeks)
         ? { shiftCycleWeeks: Math.min(3, Math.max(1, Math.floor(data.shiftCycleWeeks))) }
         : {}),

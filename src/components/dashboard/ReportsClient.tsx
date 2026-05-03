@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FileText, Mail, MapPin, Clock, Lock, Download, TriangleAlert, FileSpreadsheet, Sparkles } from "lucide-react";
+import { FileText, Mail, Clock, Lock, Download, FileSpreadsheet, Sparkles } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
 import { useMemo, useState, useTransition } from "react";
@@ -32,9 +32,6 @@ type LogRow = {
   breakMins: number;
   status: "ON_TIME" | "LATE" | "ABSENT" | "MANUAL_ADJUSTED";
   note: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  isOutOfRange?: boolean;
 };
 
 interface Props {
@@ -122,6 +119,14 @@ function defaultDatevAbrechnungsmonatMMYYYY() {
   const mm = String(now.getMonth() + 1).padStart(2, "0");
   const yyyy = now.getFullYear();
   return `${mm}/${yyyy}`;
+}
+
+/** PDF-Kopf: Mandantenname oder neutraler VREMA-Titel (ohne Hersteller-Branding in der Kopfzeile). */
+function pdfHeaderFirmenzeile(companyName: string) {
+  const t = companyName.trim();
+  if (!t) return "VREMA Report";
+  if (/^kevkostudio$/i.test(t)) return "VREMA Report";
+  return t;
 }
 
 function statusLabel(status: LogRow["status"]) {
@@ -254,7 +259,7 @@ export function ReportsClient({
       doc.setFontSize(14);
       doc.text("VREMA", 10, 11);
       doc.setFontSize(10);
-      doc.text(companyName || "Firmenreport", pageWidth / 2, 11, { align: "center" });
+      doc.text(pdfHeaderFirmenzeile(companyName), pageWidth / 2, 11, { align: "center" });
       doc.text(month, pageWidth - 10, 11, { align: "right" });
       doc.setFontSize(8);
       doc.setTextColor(210, 210, 210);
@@ -307,14 +312,16 @@ export function ReportsClient({
           const inAt = new Date(log.clockIn);
           const outAt = log.clockOut ? new Date(log.clockOut) : null;
           const dur = durationMins(log);
+          const netMin = dur !== null ? Math.round(dur) : null;
           const week = `${inAt.getFullYear()}-${Math.ceil((inAt.getDate() + new Date(inAt.getFullYear(), inAt.getMonth(), 1).getDay()) / 7)}`;
           if (dur && dur > 0) weekBuckets.set(week, (weekBuckets.get(week) ?? 0) + Math.round(dur));
           return [
-            inAt.toLocaleDateString("de-DE"),
-            inAt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
-            outAt ? outAt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "-",
-            `${log.breakMins} min`,
-            dur !== null ? formatMins(dur) : "-",
+            formatDateCsv(inAt),
+            formatTimeCsv(inAt),
+            outAt ? formatTimeCsv(outAt) : "—",
+            log.breakMins,
+            netMin !== null ? netMin : "—",
+            netMin !== null ? decimalHoursDE(netMin) : "—",
             statusLabel(log.status),
             log.note ?? "",
           ];
@@ -322,23 +329,35 @@ export function ReportsClient({
 
       autoTable(doc, {
         startY: sectionStartY + 15,
-        head: [["Datum", "Einstempel", "Ausstempel", "Pause", "Dauer", "Status", "Notiz"]],
+        head: [
+          [
+            "Datum",
+            "Einstempelzeit",
+            "Ausstempelzeit",
+            "Pause (Minuten)",
+            "Arbeitszeit netto (Minuten)",
+            "Stunden (Dezimal)",
+            "Status",
+            "Bemerkung",
+          ],
+        ],
         body: sortedLogs,
         theme: "grid",
-        styles: { fontSize: 8, cellPadding: 1.6, lineColor: [220, 220, 220], lineWidth: 0.1 },
-        headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255], fontStyle: "bold" },
+        styles: { fontSize: 8, cellPadding: 1.4, lineColor: [220, 220, 220], lineWidth: 0.1 },
+        headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 7 },
         alternateRowStyles: { fillColor: [248, 248, 248] },
         columnStyles: {
-          0: { cellWidth: 23 },
-          1: { cellWidth: 20 },
-          2: { cellWidth: 20 },
-          3: { cellWidth: 18 },
-          4: { cellWidth: 20 },
-          5: { cellWidth: 24 },
-          6: { cellWidth: "auto" },
+          0: { cellWidth: 22 },
+          1: { cellWidth: 22 },
+          2: { cellWidth: 22 },
+          3: { cellWidth: 16 },
+          4: { cellWidth: 26 },
+          5: { cellWidth: 22 },
+          6: { cellWidth: 22 },
+          7: { cellWidth: "auto" },
         },
         didParseCell: (data) => {
-          if (data.section !== "body" || data.column.index !== 5) return;
+          if (data.section !== "body" || data.column.index !== 6) return;
           const raw = String(data.cell.raw ?? "");
           if (raw.includes("Zu spät") || raw.includes("Fehlend")) {
             data.cell.styles.textColor = [180, 0, 0];
@@ -357,9 +376,9 @@ export function ReportsClient({
         doc.setTextColor(120, 120, 120);
         const list = userAbsences
           .map((a) => {
-            const s = new Date(a.startDate).toLocaleDateString("de-DE");
-            const e = new Date(a.endDate).toLocaleDateString("de-DE");
-            return `${a.type === "SICK" ? "Krank" : "Urlaub"} ${s}${s === e ? "" : ` - ${e}`}`;
+            const s = formatDateCsv(new Date(a.startDate));
+            const e = formatDateCsv(new Date(a.endDate));
+            return `${a.type === "SICK" ? "Krank" : "Urlaub"} ${s}${s === e ? "" : ` – ${e}`}`;
           })
           .join(" | ");
         doc.text(`Abwesenheiten: ${list}`, 11, y);
@@ -577,7 +596,7 @@ export function ReportsClient({
   };
 
   const buildDatevCsv = (config: { beraterNummer: string; mandantenNummer: string; abrechnungsMonat: string }) => {
-    // Basis: gleicher Lohn-CSV wie User-Export (ohne GPS; Datum TT.MM.JJJJ; Stunden mit Komma).
+    // Basis: gleicher Lohn-CSV wie User-Export (Datum TT.MM.JJJJ; Stunden mit Komma).
     // DATEV: Berater-, Mandantennummer und Abrechnungsmonat als erste Spalten (Stammdaten vor Personaldaten).
     const baseCsv = buildCsv();
     const separator = ";";
@@ -780,7 +799,6 @@ export function ReportsClient({
         month,
         totalMinutes,
         totalEntries: logs.length,
-        gpsEntries: logs.filter((l) => l.latitude).length,
       });
       setAIAnalysis(analysis);
       show("KI-Analyse erfolgreich erstellt.", "success");
@@ -888,7 +906,7 @@ export function ReportsClient({
             { label: "Gesamtstunden", value: `${totalHoursDecimal} h`, tone: "text-foreground", note: "Zusammenfassung der monatlichen Arbeitszeiten" },
             { label: "Personalkosten (indikativ)", value: `${new Intl.NumberFormat("de-DE").format(Math.round(indicativeCosts))} €`, tone: "text-foreground", note: "Kalkulationsbasis: 29 €/h" },
             { label: "Ø Stunden pro Arbeitstag", value: `${avgHoursPerDay} h`, tone: "text-muted-foreground", note: `${productiveDays} Arbeitstage erfasst` },
-            { label: "GPS-validierte Einträge", value: logs.filter((l) => l.latitude).length.toString(), tone: "text-muted-foreground", note: "Standortdaten vorhanden" },
+            { label: "Zeiteinträge", value: String(logs.length), tone: "text-muted-foreground", note: "Anzahl erfasster Buchungen im Monat" },
           ].map((s) => (
             <motion.div
               key={s.label}
@@ -1135,13 +1153,13 @@ export function ReportsClient({
                     {[
                       isManager ? "Mitarbeiter" : null,
                       "Datum",
-                      "Einstempel",
-                      "Ausstempel",
-                      "Pause",
-                      "Dauer",
+                      "Einstempelzeit",
+                      "Ausstempelzeit",
+                      "Pause (Min)",
+                      "Netto (Min)",
+                      "Stunden (Dez.)",
                       "Status",
-                      "GPS",
-                      "Notiz",
+                      "Bemerkung",
                       isManager ? "Aktion" : null,
                     ]
                       .filter(Boolean)
@@ -1170,7 +1188,7 @@ export function ReportsClient({
                           </td>
                         )}
                         <td className="px-5 py-4 tabular-nums text-muted-foreground text-xs">
-                          {clockInDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                          {formatDateCsv(clockInDate)}
                         </td>
                         <td className="px-5 py-4 tabular-nums text-foreground">
                           {clockInDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
@@ -1181,10 +1199,13 @@ export function ReportsClient({
                             : <span className="text-amber-700 animate-pulse">offen</span>}
                         </td>
                         <td className="px-5 py-4 tabular-nums text-muted-foreground text-xs">
-                          {log.breakMins > 0 ? `${log.breakMins}min` : "–"}
+                          {log.breakMins > 0 ? log.breakMins : "–"}
                         </td>
-                        <td className="px-5 py-4 tabular-nums font-bold text-foreground">
-                          {dur !== null ? formatMins(dur) : "–"}
+                        <td className="px-5 py-4 tabular-nums font-medium text-foreground text-xs">
+                          {dur !== null ? Math.round(dur) : "–"}
+                        </td>
+                        <td className="px-5 py-4 tabular-nums text-foreground text-xs">
+                          {dur !== null ? decimalHoursDE(Math.round(dur)) : "–"}
                         </td>
                         <td className="px-5 py-4">
                           <span
@@ -1201,22 +1222,8 @@ export function ReportsClient({
                             {statusLabel(log.status)}
                           </span>
                         </td>
-                        <td className="px-5 py-4">
-                          {log.latitude ? (
-                            <span title={`${log.latitude?.toFixed(4)}, ${log.longitude?.toFixed(4)}`}>
-                              <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">–</span>
-                          )}
-                        </td>
                         <td className="px-5 py-4 text-muted-foreground text-xs max-w-[120px] truncate">
-                          <span className="inline-flex items-center gap-1.5">
-                            {log.isOutOfRange && (
-                              <TriangleAlert className="w-3.5 h-3.5 text-red-600 shrink-0" />
-                            )}
-                            {log.note ?? "–"}
-                          </span>
+                          {log.note ?? "–"}
                         </td>
                         {isManager && (
                           <td className="px-5 py-4">
@@ -1396,7 +1403,7 @@ export function ReportsClient({
             <Dialog.Title className="text-base font-semibold">DATEV Lohn-Export</Dialog.Title>
             <p className="mt-1 text-xs text-muted-foreground">
               CSV mit Berater-/Mandantenbezug und Abrechnungsmonat; Spalten für Lohnarten 001/002, Datum TT.MM.JJJJ und
-              Dezimalstunden im deutschen Format (Komma). Ohne GPS-Koordinaten, ohne interne Status-Codes.
+              Dezimalstunden im deutschen Format (Komma). Ohne Standortdaten, ohne interne Status-Codes.
             </p>
 
             <label className="mt-4 block text-xs text-muted-foreground">Beraternummer</label>

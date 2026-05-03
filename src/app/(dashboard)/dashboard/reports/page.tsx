@@ -22,7 +22,7 @@ export default async function ReportsPage({
     where: { id: companyId },
     select: { name: true, shiftCycleWeeks: true },
   });
-  const companyName = company?.name ?? "Vrema";
+  const companyName = company?.name ?? "";
 
   const now = new Date();
   const monthParam = searchParams?.month;
@@ -43,6 +43,7 @@ export default async function ReportsPage({
     }),
     include: { user: { select: { id: true, name: true, email: true, employeeNumber: true, weeklyHours: true } } },
     orderBy: { clockIn: "desc" },
+    take: 25_000,
   });
 
   const userIds = Array.from(new Set(logs.map((l) => l.user.id)));
@@ -121,9 +122,6 @@ export default async function ReportsPage({
         breakMins: l.breakMins,
         status: l.status,
         note: l.note,
-        latitude: l.latitude,
-        longitude: l.longitude,
-        isOutOfRange: l.isOutOfRange,
       }))}
       totalMinutes={totalMinutes}
       month={`${start.toLocaleString("de-DE", { month: "long" })} ${year}`}

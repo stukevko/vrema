@@ -98,10 +98,7 @@ export async function POST(req: NextRequest) {
       verifyUrl,
     });
 
-    return NextResponse.json(
-      { success: true, companyId: company.id },
-      { status: 201 }
-    );
+    return NextResponse.json({ success: true }, { status: 201 });
   } catch (err) {
     console.error("[register] Unexpected error:", err);
     return NextResponse.json(

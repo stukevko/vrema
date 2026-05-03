@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, LogIn, LogOut, MapPin, Loader2, Pause } from "lucide-react";
+import { Clock, LogIn, LogOut, Loader2, Pause } from "lucide-react";
 import { clockIn, clockOut, toggleBreak } from "@/lib/actions/worklogs";
 
 interface TerminalWidgetProps {
@@ -13,8 +13,6 @@ interface TerminalWidgetProps {
     isOnBreak: boolean;
     breakStartedAt: Date | null;
   } | null;
-  gpsRequired: boolean;
-  gpsFeatureEnabled: boolean;
 }
 
 function formatDuration(ms: number): string {
@@ -25,21 +23,9 @@ function formatDuration(ms: number): string {
   return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
-function errorHint(error: string | null) {
-  if (!error) return null;
-  if (error.includes("erfordert GPS")) {
-    return "Bitte GPS aktivieren, Standortfreigabe im Browser erlauben und erneut einstempeln.";
-  }
-  if (error.includes("GPS-Radius")) {
-    return "Sie befinden sich ausserhalb des erlaubten Radius. Bitte wechseln Sie zur hinterlegten Arbeitsadresse oder wenden Sie sich an die Administration.";
-  }
-  return null;
-}
-
-export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: TerminalWidgetProps) {
+export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [useGps, setUseGps] = useState(false);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -47,42 +33,15 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (gpsRequired) setUseGps(true);
-  }, [gpsRequired]);
-
   const handleClockIn = () => {
     setError(null);
-    if (useGps && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          startTransition(async () => {
-            try {
-              await clockIn(pos.coords.latitude, pos.coords.longitude);
-            } catch (e: unknown) {
-              setError(e instanceof Error ? e.message : "Fehler beim Einstempeln");
-            }
-          });
-        },
-        () => {
-          startTransition(async () => {
-            try {
-              await clockIn();
-            } catch (e: unknown) {
-              setError(e instanceof Error ? e.message : "Fehler beim Einstempeln");
-            }
-          });
-        }
-      );
-    } else {
-      startTransition(async () => {
-        try {
-          await clockIn();
-        } catch (e: unknown) {
-          setError(e instanceof Error ? e.message : "Fehler beim Einstempeln");
-        }
-      });
-    }
+    startTransition(async () => {
+      try {
+        await clockIn();
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "Fehler beim Einstempeln");
+      }
+    });
   };
 
   const handleClockOut = () => {
@@ -123,33 +82,13 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
     <div className="rounded-2xl bg-card/90 backdrop-blur-md border border-border p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-semibold text-lg">Terminal</h2>
-        {gpsFeatureEnabled && (
-          <label
-            className={`flex items-center gap-2 text-xs text-muted-foreground select-none ${
-              gpsRequired ? "cursor-not-allowed opacity-90" : "cursor-pointer"
-            }`}
-          >
-            <input
-              type="checkbox"
-              checked={useGps}
-              onChange={(e) => setUseGps(e.target.checked)}
-              disabled={gpsRequired}
-              className="w-3.5 h-3.5 accent-[#22c55e]"
-            />
-            <MapPin className="w-3 h-3" />
-            {gpsRequired ? "GPS Pflicht" : "GPS"}
-          </label>
-        )}
       </div>
 
-      {gpsRequired && (
-        <div className="mb-4 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs text-amber-200">
-          Business-Regel aktiv: GPS innerhalb des Firmenradius ist beim Einstempeln verpflichtend.
-        </div>
-      )}
+      <p className="mb-4 text-[11px] text-muted-foreground leading-relaxed rounded-xl border border-border bg-background/80 px-3 py-2">
+        Ohne Standort-Tracking: Einstempeln direkt hier oder am PIN-Terminal – DSGVO-konform ohne GPS.
+      </p>
 
       <div className="flex flex-col items-center py-6">
-        {/* Status indicator */}
         <AnimatePresence mode="wait">
           {activeLog ? (
             <motion.div
@@ -170,9 +109,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
                 />
               </div>
               <div className="text-center">
-                <p className="text-3xl font-mono font-bold text-primary">
-                  {formatDuration(workedMs)}
-                </p>
+                <p className="text-3xl font-mono font-bold text-primary">{formatDuration(workedMs)}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {activeLog.isOnBreak ? (
                     "Pause aktiv"
@@ -206,7 +143,6 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
           )}
         </AnimatePresence>
 
-        {/* Button */}
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={activeLog ? handleClockOut : handleClockIn}
@@ -253,9 +189,8 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
         )}
 
         {error && (
-          <div className="mt-3 space-y-1 text-center">
+          <div className="mt-3 text-center">
             <p className="text-xs text-red-700">{error}</p>
-            {errorHint(error) && <p className="text-[11px] text-muted-foreground">{errorHint(error)}</p>}
           </div>
         )}
       </div>

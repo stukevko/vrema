@@ -109,9 +109,6 @@ model Company {
   subEndsAt         DateTime?
   isActive          Boolean         @default(true)
   logoUrl           String?
-  geoRadiusMeters   Int             @default(100)
-  geoLatitude       Float?
-  geoLongitude      Float?
   shiftCycleWeeks   Int             @default(1)
   affiliateId       String?
   createdAt         DateTime        @default(now())
@@ -229,10 +226,6 @@ model WorkLog {
   isOnBreak   Boolean   @default(false)
   breakStartedAt DateTime?
   note        String?
-  latitude    Float?
-  longitude   Float?
-  isOutOfRange Boolean   @default(false)
-  distanceMeters Int?
   ipAddress   String?
   status      EntryStatus @default(ON_TIME)
   createdAt   DateTime  @default(now())
@@ -351,4 +344,6 @@ model VacationRequest {
 
   @@index([companyId, userId])
   @@index([companyId, status])
+  @@index([companyId, startDate])
+  @@index([companyId, endDate])
 }

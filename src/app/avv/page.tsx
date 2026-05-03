@@ -41,8 +41,7 @@ export default function AvvPage() {
           <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
             <h2 className="mb-2 font-semibold text-foreground">3. Art der Daten und Kategorien Betroffener</h2>
             <p>
-              Datenarten: Stammdaten, Kontaktdaten, Arbeitszeitdaten, ggf. Standortdaten bei aktivierter Geofunktion,
-              technische Metadaten.
+              Datenarten: Stammdaten, Kontaktdaten, Arbeitszeitdaten, technische Metadaten. Keine Standortdaten.
             </p>
             <p>Betroffene: Mitarbeiter, Teamleiter, Kundenadministratoren.</p>
           </section>

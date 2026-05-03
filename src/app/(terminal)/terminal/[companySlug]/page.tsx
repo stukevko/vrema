@@ -17,16 +17,6 @@ export default function TerminalPage() {
   const [message, setMessage] = useState("PIN eingeben");
   const [isPending, startTransition] = useTransition();
 
-  const guidance = (() => {
-    if (message.includes("erfordert GPS")) {
-      return "Standort freigeben und erneut mit OK bestätigen.";
-    }
-    if (message.includes("GPS-Radius")) {
-      return "Standort liegt außerhalb des erlaubten Arbeitsradius.";
-    }
-    return null;
-  })();
-
   const runValidation = () => {
     if (pin.length < 4 || !companySlug) {
       setFeedbackState("error");
@@ -36,19 +26,7 @@ export default function TerminalPage() {
 
     startTransition(async () => {
       try {
-        const locationData = await new Promise<{ latitude?: number; longitude?: number }>((resolve) => {
-          if (!navigator.geolocation) {
-            resolve({});
-            return;
-          }
-          navigator.geolocation.getCurrentPosition(
-            (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-            () => resolve({}),
-            { enableHighAccuracy: true, timeout: 4000 }
-          );
-        });
-
-        const result = await validatePinAndClock(companySlug, pin, locationData);
+        const result = await validatePinAndClock(companySlug, pin);
         setFeedbackState(result.status);
         setMessage(result.message);
       } catch {
@@ -81,6 +59,9 @@ export default function TerminalPage() {
         <p className="text-center text-xs font-sans uppercase tracking-widest text-muted-foreground mb-2">
           Vrema Terminal
         </p>
+        <p className="text-center text-[11px] text-muted-foreground mb-3">
+          Ohne Standort-Tracking – nur PIN und Arbeitszeit.
+        </p>
         <div
           className={clsx(
             "mb-5 rounded-2xl border px-4 py-3 text-center font-semibold transition-colors",
@@ -92,9 +73,6 @@ export default function TerminalPage() {
         >
           {message}
         </div>
-        {guidance && (
-          <p className="mb-4 -mt-2 text-center text-xs text-muted-foreground">{guidance}</p>
-        )}
 
         <div className="mb-5 rounded-2xl bg-background border border-border py-5 text-center">
           <p className="font-sans text-3xl tracking-[0.5em] pl-[0.5em]">{pin.replace(/./g, "•") || "----"}</p>

@@ -60,11 +60,17 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
   return (
     <aside className="hidden md:flex w-64 lg:w-72 flex-col glass-nav sticky top-0 h-screen">
       {/* Logo */}
-      <div className="h-16 flex items-center gap-3 px-6 border-b border-border">
-        <Image src="/vrema_logo_icon.png" alt="VREMA" width={40} height={40} className="shrink-0 -my-2" />
-        <div>
-          <span className="font-bold text-base tracking-tight">VREMA</span>
-          <span className="block text-[9px] text-muted-foreground uppercase tracking-widest -mt-0.5">
+      <div className="min-h-[5.25rem] py-3 flex items-center gap-4 px-6 border-b border-border">
+        <Image
+          src="/vrema_logo_icon.png"
+          alt="VREMA"
+          width={64}
+          height={64}
+          className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 object-contain"
+        />
+        <div className="min-w-0">
+          <span className="font-bold text-xl tracking-tight leading-tight">VREMA</span>
+          <span className="block text-[11px] sm:text-xs text-muted-foreground uppercase tracking-wider mt-0.5 leading-snug">
             Intelligente Zeiterfassung
           </span>
         </div>

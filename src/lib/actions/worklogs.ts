@@ -3,245 +3,21 @@
 import { db } from "@/lib/db";
 import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
 import { revalidatePath } from "next/cache";
-import { calculateDistance } from "@/lib/geo";
 import type { CorrectionRequestStatus, EntryStatus } from "@prisma/client";
-import { getWeekCycleIndex } from "@/lib/shift-cycle";
-import { sumWorkedMinutes } from "@/lib/time/payroll";
+import { calculateSaldoForUser } from "@/lib/time/saldo-for-user";
 import { randomUUID } from "crypto";
+import {
+  closeClockForUser,
+  createClockInEntry,
+  ensureWorkLogAuditTable,
+  writeWorkLogAudit,
+} from "@/lib/worklogs/clock-core";
 
-const LATE_GRACE_MINUTES = 15;
-let constraintsEnsured = false;
-
-async function ensureWorkLogOpenUniqueConstraint() {
-  if (constraintsEnsured) return;
-  await db.$executeRawUnsafe(
-    'CREATE UNIQUE INDEX IF NOT EXISTS "worklog_open_unique_idx" ON "WorkLog" ("companyId","userId") WHERE "clockOut" IS NULL'
-  );
-  constraintsEnsured = true;
-}
-
-let auditTableEnsured = false;
-async function ensureWorkLogAuditTable() {
-  if (auditTableEnsured) return;
-  await db.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS "WorkLogAudit" (
-      "id" TEXT PRIMARY KEY,
-      "companyId" TEXT NOT NULL,
-      "workLogId" TEXT,
-      "actorUserId" TEXT,
-      "action" TEXT NOT NULL,
-      "source" TEXT NOT NULL DEFAULT 'app',
-      "reason" TEXT,
-      "beforeJson" JSONB,
-      "afterJson" JSONB,
-      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT NOW()
-    )
-  `);
-  auditTableEnsured = true;
-}
-
-async function writeWorkLogAudit(params: {
-  companyId: string;
-  workLogId?: string | null;
-  actorUserId?: string | null;
-  action: string;
-  source?: string;
-  reason?: string | null;
-  beforeJson?: unknown;
-  afterJson?: unknown;
-}) {
-  await ensureWorkLogAuditTable();
-  await db.$executeRawUnsafe(
-    `
-    INSERT INTO "WorkLogAudit"
-      ("id","companyId","workLogId","actorUserId","action","source","reason","beforeJson","afterJson")
-    VALUES
-      ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb)
-    `,
-    randomUUID(),
-    params.companyId,
-    params.workLogId ?? null,
-    params.actorUserId ?? null,
-    params.action,
-    params.source ?? "app",
-    params.reason ?? null,
-    params.beforeJson ? JSON.stringify(params.beforeJson) : null,
-    params.afterJson ? JSON.stringify(params.afterJson) : null
-  );
-}
-
-function parseShiftTimeToDate(baseDate: Date, hhmm: string) {
-  const [hRaw, mRaw] = hhmm.split(":");
-  const hours = Number(hRaw);
-  const minutes = Number(mRaw);
-  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
-  const parsed = new Date(baseDate);
-  parsed.setHours(hours, minutes, 0, 0);
-  return parsed;
-}
-
-async function createClockInEntry(params: {
-  companyId: string;
-  userId: string;
-  role: string;
-  actorUserId?: string;
-  latitude?: number;
-  longitude?: number;
-}) {
-  const { companyId, userId, role, latitude, longitude, actorUserId } = params;
-  await ensureWorkLogOpenUniqueConstraint();
-  await ensureWorkLogAuditTable();
-
-  const company = await db.company.findUnique({
-    where: { id: companyId },
-    select: { plan: true, geoRadiusMeters: true, geoLatitude: true, geoLongitude: true, shiftCycleWeeks: true },
-  });
-  if (!company) throw new Error("Firma nicht gefunden");
-
-  const isAdmin = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
-  const gpsProvided = typeof latitude === "number" && typeof longitude === "number";
-  if (company.plan === "BUSINESS" && !isAdmin && !gpsProvided) {
-    throw new Error("Business-Plan erfordert GPS beim Einstempeln.");
-  }
-
-  let isOutOfRange = false;
-  let distanceMeters: number | null = null;
-  let warning: string | null = null;
-
-  if (gpsProvided && typeof company.geoLatitude === "number" && typeof company.geoLongitude === "number") {
-    distanceMeters = Math.round(
-      calculateDistance(latitude as number, longitude as number, company.geoLatitude, company.geoLongitude)
-    );
-    const geoRadiusMeters = company.geoRadiusMeters ?? 100;
-    if (distanceMeters > geoRadiusMeters) {
-      isOutOfRange = true;
-      warning = "Achtung: Standort liegt außerhalb des erlaubten Radius.";
-    }
-  }
-
-  if (company.plan === "BUSINESS" && !isAdmin && isOutOfRange) {
-    throw new Error("Business-Plan: Einstempeln nur innerhalb des definierten GPS-Radius.");
-  }
-
-  const now = new Date();
-  const weekIndex = getWeekCycleIndex(now, company.shiftCycleWeeks);
-  const dayOfWeek = now.getDay();
-  const shift = await db.shift.findFirst({
-    where: tenantWhere(companyId, { userId, dayOfWeek, weekIndex }),
-    orderBy: { startTime: "asc" },
-    select: { startTime: true, endTime: true },
-  });
-
-  let status: EntryStatus = "ON_TIME";
-  let extraShiftNote: string | null = null;
-  if (shift) {
-    const shiftStart = parseShiftTimeToDate(now, shift.startTime);
-    if (shiftStart) {
-      const diffMins = Math.round((now.getTime() - shiftStart.getTime()) / 60000);
-      if (diffMins > LATE_GRACE_MINUTES) status = "LATE";
-    }
-  } else {
-    // No planned shift today -> keep ON_TIME but mark for reporting context.
-    extraShiftNote = "[EXTRA_SHIFT] Kein geplanter Schichtslot gefunden.";
-  }
-
-  const log = await db.$transaction(async (tx) => {
-    const active = await tx.workLog.findFirst({
-      where: tenantWhere(companyId, { userId, clockOut: null }),
-      select: { id: true },
-    });
-    if (active) throw new Error("Bereits eingestempelt");
-
-    const created = await tx.workLog.create({
-      data: {
-        companyId,
-        userId,
-        clockIn: now,
-        latitude,
-        longitude,
-        isOutOfRange,
-        distanceMeters,
-        status,
-        ...(extraShiftNote ? { note: extraShiftNote } : {}),
-      },
-    });
-    await tx.$executeRawUnsafe(
-      `
-      INSERT INTO "WorkLogAudit"
-        ("id","companyId","workLogId","actorUserId","action","source","afterJson")
-      VALUES
-        ($1,$2,$3,$4,$5,$6,$7::jsonb)
-      `,
-      randomUUID(),
-      companyId,
-      created.id,
-      actorUserId ?? userId,
-      "CLOCK_IN",
-      "app",
-      JSON.stringify(created)
-    );
-    return created;
-  });
-
-  return { log, warning, isOutOfRange };
-}
-
-export async function clockIn(latitude?: number, longitude?: number) {
-  const { userId, companyId, role } = await requireTenant();
-  const result = await createClockInEntry({ companyId, userId, role, actorUserId: userId, latitude, longitude });
+export async function clockIn() {
+  const { userId, companyId } = await requireTenant();
+  const result = await createClockInEntry({ companyId, userId, actorUserId: userId });
   revalidatePath("/dashboard");
   return result;
-}
-
-async function closeClockForUser(params: {
-  companyId: string;
-  userId: string;
-  actorUserId?: string;
-  logId?: string;
-}) {
-  const { companyId, userId, logId, actorUserId } = params;
-  await ensureWorkLogAuditTable();
-  return db.$transaction(async (tx) => {
-    const active = logId
-      ? await tx.workLog.findFirst({ where: tenantWhere(companyId, { id: logId, userId, clockOut: null }) })
-      : await tx.workLog.findFirst({ where: tenantWhere(companyId, { userId, clockOut: null }) });
-
-    if (!active) throw new Error("Kein aktiver Stempel gefunden");
-
-    const now = new Date();
-    let nextBreakMins = active.breakMins;
-    if (active.isOnBreak && active.breakStartedAt) {
-      const extraBreak = Math.max(0, Math.round((now.getTime() - active.breakStartedAt.getTime()) / 60000));
-      nextBreakMins += extraBreak;
-    }
-
-    const updated = await tx.workLog.update({
-      where: { id: active.id },
-      data: {
-        clockOut: now,
-        breakMins: nextBreakMins,
-        isOnBreak: false,
-        breakStartedAt: null,
-      },
-    });
-    await tx.$executeRawUnsafe(
-      `
-      INSERT INTO "WorkLogAudit"
-        ("id","companyId","workLogId","actorUserId","action","source","beforeJson","afterJson")
-      VALUES
-        ($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb)
-      `,
-      randomUUID(),
-      companyId,
-      active.id,
-      actorUserId ?? userId,
-      "CLOCK_OUT",
-      "app",
-      JSON.stringify(active),
-      JSON.stringify(updated)
-    );
-    return updated;
-  });
 }
 
 export async function clockOut(logId?: string) {
@@ -452,86 +228,26 @@ export async function deleteWorkLogByManager(logId: string, deleteReason?: strin
   revalidatePath("/dashboard");
 }
 
-export async function toggleClockForUser(params: {
-  companyId: string;
-  userId: string;
-  role?: string;
-  latitude?: number;
-  longitude?: number;
-}) {
-  await ensureWorkLogOpenUniqueConstraint();
-  const active = await db.workLog.findFirst({
-    where: tenantWhere(params.companyId, { userId: params.userId, clockOut: null }),
-    select: { id: true },
-  });
-
-  if (active) {
-    const log = await closeClockForUser({
-      companyId: params.companyId,
-      userId: params.userId,
-      actorUserId: params.userId,
-      logId: active.id,
-    });
-    return { type: "clock_out" as const, log, warning: null };
-  }
-
-  const result = await createClockInEntry({
-    companyId: params.companyId,
-    userId: params.userId,
-    role: params.role ?? "EMPLOYEE",
-    actorUserId: params.userId,
-    latitude: params.latitude,
-    longitude: params.longitude,
-  });
-
-  return { type: "clock_in" as const, ...result };
-}
-
 export async function getMonthlyWorkLogs(year: number, month: number, targetUserId?: string) {
-  const { userId, companyId } = await requireTenant();
+  const { userId, companyId, role } = await requireTenant();
+  const target = targetUserId ?? userId;
+  if (
+    target !== userId &&
+    !["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role ?? "")
+  ) {
+    throw new Error("Keine Berechtigung.");
+  }
 
   const start = new Date(year, month - 1, 1);
   const end = new Date(year, month, 0, 23, 59, 59);
 
   return db.workLog.findMany({
     where: tenantWhere(companyId, {
-      userId: targetUserId ?? userId,
+      userId: target,
       clockIn: { gte: start, lte: end },
     }),
     orderBy: { clockIn: "desc" },
   });
-}
-
-export async function calculateSaldoForUser(companyId: string, userId: string) {
-  const user = await db.user.findFirst({
-    where: tenantWhere(companyId, { id: userId }),
-    select: { weeklyHours: true },
-  });
-
-  if (!user) throw new Error("User not found");
-
-  // Get all completed work logs
-  const logs = await db.workLog.findMany({
-    where: tenantWhere(companyId, { userId, clockOut: { not: null } }),
-    orderBy: { clockIn: "asc" },
-  });
-
-  // Total worked minutes
-  const workedMinutes = sumWorkedMinutes(logs);
-
-  // Calculate expected minutes based on weeks elapsed since first log
-  const firstLog = logs[0]?.clockIn;
-  if (!firstLog) return { workedMinutes: 0, expectedMinutes: 0, saldoMinutes: 0 };
-
-  const weeksSinceStart =
-    (Date.now() - firstLog.getTime()) / (1000 * 60 * 60 * 24 * 7);
-  const expectedMinutes = weeksSinceStart * user.weeklyHours * 60;
-
-  return {
-    workedMinutes,
-    expectedMinutes: Math.round(expectedMinutes),
-    saldoMinutes: workedMinutes - Math.round(expectedMinutes),
-  };
 }
 
 /**
@@ -539,8 +255,15 @@ export async function calculateSaldoForUser(companyId: string, userId: string) {
  * Returns difference in minutes (positive = Überstunden, negative = Minusstunden).
  */
 export async function calculateSaldo(targetUserId?: string) {
-  const { userId, companyId } = await requireTenant();
-  return calculateSaldoForUser(companyId, targetUserId ?? userId);
+  const { userId, companyId, role } = await requireTenant();
+  const target = targetUserId ?? userId;
+  if (
+    target !== userId &&
+    !["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role ?? "")
+  ) {
+    throw new Error("Keine Berechtigung.");
+  }
+  return calculateSaldoForUser(companyId, target);
 }
 
 export async function createWorkLogCorrectionRequest(input: {

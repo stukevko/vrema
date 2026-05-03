@@ -2,13 +2,9 @@
 
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
-import { toggleClockForUser } from "@/lib/actions/worklogs";
+import { toggleClockForUser } from "@/lib/worklogs/clock-core";
 
-export async function validatePinAndClock(
-  companySlug: string,
-  pin: string,
-  locationData?: { latitude?: number; longitude?: number }
-) {
+export async function validatePinAndClock(companySlug: string, pin: string) {
   const normalizedPin = pin.trim();
   if (!/^\d{4,8}$/.test(normalizedPin)) {
     return { status: "error" as const, message: "Ungültige PIN." };
@@ -25,15 +21,15 @@ export async function validatePinAndClock(
 
   const users = await db.user.findMany({
     where: { companyId: company.id, isActive: true, terminalPinHash: { not: null } },
-    select: { id: true, name: true, terminalPinHash: true, role: true },
+    select: { id: true, name: true, terminalPinHash: true },
   });
 
-  let matchedUser: { id: string; name: string | null; role: string } | null = null;
+  let matchedUser: { id: string; name: string | null } | null = null;
   for (const user of users) {
     if (!user.terminalPinHash) continue;
     const valid = await bcrypt.compare(normalizedPin, user.terminalPinHash);
     if (valid) {
-      matchedUser = { id: user.id, name: user.name, role: user.role };
+      matchedUser = { id: user.id, name: user.name };
       break;
     }
   }
@@ -47,21 +43,11 @@ export async function validatePinAndClock(
     result = await toggleClockForUser({
       companyId: company.id,
       userId: matchedUser.id,
-      role: matchedUser.role,
-      latitude: locationData?.latitude,
-      longitude: locationData?.longitude,
     });
   } catch (error: unknown) {
     return {
       status: "error" as const,
       message: error instanceof Error ? error.message : "Stempeln fehlgeschlagen.",
-    };
-  }
-
-  if (result.type === "clock_in" && result.isOutOfRange) {
-    return {
-      status: "warning" as const,
-      message: `${matchedUser.name ?? "Mitarbeiter"} eingestempelt (ausserhalb Radius).`,
     };
   }
 

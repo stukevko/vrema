@@ -3,7 +3,7 @@ import { db } from "../src/lib/db";
 import { generateVerificationToken } from "../src/lib/actions/auth";
 import { inviteEmployeeForCompany } from "../src/lib/actions/team";
 import { validatePinAndClock } from "../src/lib/actions/terminal";
-import { calculateSaldoForUser } from "../src/lib/actions/worklogs";
+import { calculateSaldoForUser } from "../src/lib/time/saldo-for-user";
 import { applyCheckoutSessionCompleted } from "../src/lib/actions/billing";
 
 type TestResult = { name: string; ok: boolean; details?: string };
@@ -43,9 +43,6 @@ async function main() {
     data: {
       name: "Initial Setup Company",
       slug: companySlug,
-      geoRadiusMeters: 150,
-      geoLatitude: 52.52,
-      geoLongitude: 13.405,
       plan: "STARTER",
       users: {
         create: {
@@ -77,9 +74,6 @@ async function main() {
     where: { id: company.id },
     data: {
       name: "VREMA Test-Fabrik",
-      geoLatitude: 52.52,
-      geoLongitude: 13.405,
-      geoRadiusMeters: 200,
     },
   });
 
@@ -120,25 +114,14 @@ async function main() {
     details: teamSecure ? "PIN gehasht + company_id korrekt" : "PIN/Company Pruefung fehlgeschlagen",
   });
 
-  // Phase 3: Terminal & Geofencing
-  const erikaClockIn = await validatePinAndClock(companySlug, erikaInvite.terminalPin, {
-    latitude: 52.5202,
-    longitude: 13.4052,
-  });
-  const maxClockIn = await validatePinAndClock(companySlug, maxInvite.terminalPin, {
-    latitude: 52.97,
-    longitude: 13.92,
-  });
-
-  const maxActiveLog = await db.workLog.findFirst({
-    where: { companyId: company.id, userId: maxInvite.user.id, clockOut: null },
-    orderBy: { createdAt: "desc" },
-  });
-  const geoOk = erikaClockIn.status === "success" && maxClockIn.status === "warning" && Boolean(maxActiveLog?.isOutOfRange);
+  // Phase 3: Terminal (PIN, ohne Standort)
+  const erikaClockIn = await validatePinAndClock(companySlug, erikaInvite.terminalPin);
+  const maxClockIn = await validatePinAndClock(companySlug, maxInvite.terminalPin);
+  const terminalOk = erikaClockIn.status === "success" && maxClockIn.status === "success";
   results.push({
-    name: "Geo-Fencing Logic",
-    ok: geoOk,
-    details: geoOk ? "OutOfRange korrekt erkannt" : `Erika=${erikaClockIn.status}, Max=${maxClockIn.status}`,
+    name: "Terminal PIN Stempeln",
+    ok: terminalOk,
+    details: terminalOk ? "Beide Einstempeln erfolgreich" : `Erika=${erikaClockIn.status}, Max=${maxClockIn.status}`,
   });
 
   // Phase 4: Logik & Saldo
@@ -153,10 +136,7 @@ async function main() {
     });
   }
 
-  await validatePinAndClock(companySlug, erikaInvite.terminalPin, {
-    latitude: 52.5201,
-    longitude: 13.4051,
-  });
+  await validatePinAndClock(companySlug, erikaInvite.terminalPin);
 
   const erikaSaldo = await calculateSaldoForUser(company.id, erikaInvite.user.id);
   const saldoOk = erikaSaldo.workedMinutes === 480;

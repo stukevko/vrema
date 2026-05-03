@@ -7,7 +7,6 @@ import Image from "next/image";
 import Script from "next/script";
 import {
   Clock,
-  MapPin,
   FileText,
   Shield,
   ShieldCheck,
@@ -80,7 +79,12 @@ function TerminalWindow({ title = "vrema — zsh", children }: { title?: string;
 const FEATURES = [
   { icon: Clock, cmd: "clock-in", title: "1-Klick Stempeluhr", desc: "Start, Pause, Stop. Mehr nicht. Auf Smartphone oder Terminal." },
   { icon: BarChart3, cmd: "report --live", title: "Echtzeit-Auswertungen", desc: "Stundenübersicht, Wochenstatistik, Abweichungen. Sofort sichtbar." },
-  { icon: MapPin, cmd: "gps --verify", title: "GPS-Tracking", desc: "Baustelle, Kundenbesuch, Außendienst. Position wird sicher erfasst." },
+  {
+    icon: ShieldCheck,
+    cmd: "privacy --design",
+    title: "Privacy by Design",
+    desc: "Kein Standort-Tracking. 100 % DSGVO-konform – klarer Vorteil gegenüber US-Zeiterfassung mit GPS.",
+  },
   { icon: FileText, cmd: "export --pdf", title: "PDF-Reports", desc: "Stundenzettel für Lohnbüro, Abrechnung oder Archiv. Ein Klick." },
   { icon: Shield, cmd: "secure --256bit", title: "Verschlüsselt & Privat", desc: "Deine Daten bleiben bei dir. DSGVO-konform, ohne Drittanbieter." },
   { icon: QrCode, cmd: "terminal --qr", title: "QR-Terminal Support", desc: "Physisches Terminal mit QR-Code. Robuste Hardware trifft Cloud." },
@@ -91,6 +95,7 @@ const STATS = [
   { value: "<50ms", label: "Latenz" },
   { value: "256bit", label: "Verschlüsselung" },
   { value: "100%", label: "DSGVO-konform" },
+  { value: "0", label: "Standort-Tracking" },
 ];
 
 const PLANS = [
@@ -100,8 +105,15 @@ const PLANS = [
     monthlyPrice: 29,
     yearlyPrice: 24,
     highlight: false,
-    features: ["Bis zu 10 Mitarbeiter", "Live-Terminal", "Saldo-Übersicht", "Urlaubsanträge", "E-Mail-Support"],
-    missing: ["PDF-Export", "GPS-Stempelung", "Lohnbüro-Versand"],
+    features: [
+      "Bis zu 10 Mitarbeiter",
+      "Live-Terminal",
+      "Saldo-Übersicht",
+      "Urlaubsanträge",
+      "Privacy by Design (ohne Standort-Tracking)",
+      "E-Mail-Support",
+    ],
+    missing: ["PDF-Export", "Lohnbüro-Versand"],
   },
   {
     key: "BUSINESS",
@@ -110,7 +122,14 @@ const PLANS = [
     yearlyPrice: 66,
     highlight: true,
     badge: "Beliebtester Plan",
-    features: ["Bis zu 100 Mitarbeiter", "Alles aus Starter", "PDF-Export", "Lohnbüro-Versand", "GPS-Stempelung", "Prioritäts-Support"],
+    features: [
+      "Bis zu 100 Mitarbeiter",
+      "Alles aus Starter",
+      "PDF-Export",
+      "Lohnbüro-Versand",
+      "Privacy by Design (ohne Standort-Tracking)",
+      "Prioritäts-Support",
+    ],
     missing: ["API-Zugang"],
   },
   {
@@ -119,7 +138,15 @@ const PLANS = [
     monthlyPrice: null,
     yearlyPrice: null,
     highlight: false,
-    features: ["Unbegrenzte Mitarbeiter", "Alles aus Business", "API-Zugang", "Custom Branding", "Dedizierter Support", "SLA-Garantie"],
+    features: [
+      "Unbegrenzte Mitarbeiter",
+      "Alles aus Business",
+      "API-Zugang",
+      "Custom Branding",
+      "Privacy by Design (ohne Standort-Tracking)",
+      "Dedizierter Support",
+      "SLA-Garantie",
+    ],
     missing: [],
   },
 ];
@@ -151,8 +178,8 @@ export default function LandingPage() {
   const TERMINAL_LINES = [
     "$ vrema login --company muster-gmbh",
     "✓ Authentifiziert als kevin@muster.de",
-    "$ vrema clock-in --gps",
-    "✓ Eingestempelt: 08:02 Uhr · GPS verifiziert",
+    "$ vrema clock-in",
+    "✓ Eingestempelt: 08:02 Uhr · ohne Standortdaten",
     "$ vrema status",
     "→ Heute: 7h 23m · Saldo: +12h 45m · Urlaub: 18 Tage",
     "$ vrema export --month 04-2026 --format pdf",
@@ -202,7 +229,7 @@ export default function LandingPage() {
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
         description:
-          "Digitale Zeiterfassung mit Stempeluhr, GPS, Berichten und DATEV-freundlichem Export.",
+          "Digitale Zeiterfassung mit Stempeluhr und Berichten. Privacy by Design: 100 % DSGVO-konform ohne Standort-Tracking, DATEV-freundlicher Export.",
         url: appUrl,
         brand: {
           "@type": "Brand",
@@ -385,7 +412,7 @@ export default function LandingPage() {
 
       {/* ── STATS BAR ───────────────────────────────────────────────────────── */}
       <section className="py-10 px-6 border-y border-border">
-        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
           {STATS.map((s) => <AnimatedStat key={s.label} {...s} />)}
         </div>
       </section>

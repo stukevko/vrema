@@ -210,8 +210,6 @@ export default async function DashboardPage() {
                   }
                 : null
             }
-            gpsRequired={plan === "BUSINESS" && role === "EMPLOYEE"}
-            gpsFeatureEnabled={plan !== "STARTER"}
           />
         </div>
 
