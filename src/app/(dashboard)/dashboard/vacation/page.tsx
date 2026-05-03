@@ -23,9 +23,11 @@ export default async function VacationPage() {
         <p className="text-muted-foreground text-sm mt-1">Anträge stellen, verwalten und genehmigen.</p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <VacationRequestForm />
-        <div className="space-y-4 rounded-2xl border border-border bg-card backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="min-w-0">
+          <VacationRequestForm />
+        </div>
+        <div className="min-w-0 space-y-4 rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:p-8">
           <h2 className="font-semibold tracking-tight">Meine Anträge</h2>
           <VacationList requests={myRequests} canApprove={false} />
         </div>

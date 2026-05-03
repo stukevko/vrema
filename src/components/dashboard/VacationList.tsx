@@ -54,7 +54,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.05 }}
-          className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
+          className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:p-6"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
@@ -79,20 +79,24 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                 {STATUS_LABELS[req.status]}
               </span>
               {canApprove && req.status === "PENDING" && (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     disabled={isPending}
                     onClick={() => startTransition(async () => { await approveVacation(req.id); })}
-                    className="w-7 h-7 rounded-lg bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 transition-colors hover:bg-primary/20"
+                    aria-label="Genehmigen"
                   >
-                    <Check className="w-3.5 h-3.5 text-primary" />
+                    <Check className="h-4 w-4 text-primary" />
                   </button>
                   <button
+                    type="button"
                     disabled={isPending}
                     onClick={() => startTransition(async () => { await rejectVacation(req.id); })}
-                    className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center transition-colors"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-red-500/10 transition-colors hover:bg-red-500/20"
+                    aria-label="Ablehnen"
                   >
-                    <X className="w-3.5 h-3.5 text-red-400" />
+                    <X className="h-4 w-4 text-red-400" />
                   </button>
                 </div>
               )}

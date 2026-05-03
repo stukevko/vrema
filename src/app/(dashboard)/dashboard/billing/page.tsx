@@ -43,9 +43,9 @@ export default async function BillingPage({
       )}
 
       {/* Current plan */}
-      <div className="rounded-2xl glass-panel p-8">
-        <div className="flex items-center justify-between">
-          <div>
+      <div className="rounded-2xl glass-panel p-6 sm:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <p className="text-xs text-muted-foreground mb-1">Aktueller Plan</p>
             <p className="text-2xl font-bold capitalize">{currentPlan}</p>
             {company.subEndsAt && (
@@ -58,7 +58,7 @@ export default async function BillingPage({
             <form action={createBillingPortalSession}>
               <button
                 type="submit"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-muted/50 border border-border text-sm font-medium transition-colors"
+              className="flex min-h-12 items-center gap-2 rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium transition-colors hover:bg-muted/50 sm:min-h-0 sm:py-2"
               >
                 <CreditCard className="w-4 h-4" />
                 Zahlungsportal
@@ -69,7 +69,7 @@ export default async function BillingPage({
       </div>
 
       {/* Plan cards */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {(Object.entries(PLANS) as [keyof typeof PLANS, (typeof PLANS)[keyof typeof PLANS]][]).map(([key, plan]) => {
           const isCurrent = currentPlan === key;
           return (
@@ -93,7 +93,7 @@ export default async function BillingPage({
               {isCurrent ? (
                 <a
                   href="/dashboard"
-                  className="mb-1 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 hover:bg-primary/90 transition-colors"
+                  className="mb-1 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 sm:min-h-0"
                 >
                   Zum Dashboard gehen
                 </a>
@@ -118,7 +118,7 @@ export default async function BillingPage({
                   <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "monthly")}>
                     <button
                       type="submit"
-                      className="w-full py-2.5 rounded-xl bg-primary text-foreground text-sm font-bold ring-1 ring-inset ring-white/20 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                      className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 sm:min-h-0 sm:py-2.5"
                     >
                       <Zap className="w-4 h-4" />
                       Monatlich upgraden
@@ -127,7 +127,7 @@ export default async function BillingPage({
                   <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "yearly")}>
                     <button
                       type="submit"
-                      className="w-full py-2.5 rounded-xl bg-white border border-border text-sm font-medium hover:bg-muted/50 transition-colors"
+                      className="min-h-12 w-full rounded-xl border border-border bg-white py-3.5 text-sm font-medium transition-colors hover:bg-muted/50 sm:min-h-0 sm:py-2.5"
                     >
                       Jährlich (2 Monate gratis)
                     </button>
@@ -137,7 +137,7 @@ export default async function BillingPage({
               {key === "ENTERPRISE" && !isCurrent && (
                 <a
                   href="mailto:kontakt@kevko.studio?subject=Enterprise%20Anfrage%20Vrema"
-                  className="block w-full py-2.5 rounded-xl bg-white border border-border text-sm font-medium text-center hover:bg-muted/50 transition-colors"
+                  className="block min-h-12 w-full rounded-xl border border-border bg-white py-3.5 text-center text-sm font-medium transition-colors hover:bg-muted/50 sm:min-h-0 sm:py-2.5"
                 >
                   Kontakt aufnehmen
                 </a>

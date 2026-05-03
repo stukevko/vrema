@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { DashboardMobileBottomNav, DashboardSidebar } from "@/components/dashboard/Sidebar";
-import { DashboardTopbar } from "@/components/dashboard/Topbar";
+import { DashboardLayoutClient } from "@/components/dashboard/DashboardLayoutClient";
 import { db } from "@/lib/db";
 
 export default async function DashboardLayout({
@@ -33,21 +32,8 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
-      <DashboardSidebar
-        role={session.user.role ?? "EMPLOYEE"}
-        plan={session.user.plan ?? "STARTER"}
-      />
-      <div className="flex-1 flex flex-col min-w-0 bg-background">
-        <DashboardTopbar user={session.user} />
-        <main className="flex-1 p-4 pb-24 md:p-8 md:pb-6 overflow-auto">
-          {children}
-          <footer className="mt-8 mb-2 text-center text-xs text-muted-foreground">
-            VREMA – Intelligente Zeiterfassung
-          </footer>
-        </main>
-      </div>
-      <DashboardMobileBottomNav role={session.user.role ?? "EMPLOYEE"} />
-    </div>
+    <DashboardLayoutClient role={session.user.role ?? "EMPLOYEE"} plan={session.user.plan ?? "STARTER"} user={session.user}>
+      {children}
+    </DashboardLayoutClient>
   );
 }

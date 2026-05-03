@@ -42,38 +42,38 @@ export function VacationRequestForm() {
   };
 
   return (
-    <div className="rounded-2xl bg-card border border-border backdrop-blur-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+    <div className="min-w-0 rounded-2xl bg-card border border-border backdrop-blur-xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-8">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <CalendarDays className="w-5 h-5 text-primary" />
         </div>
         <h2 className="font-semibold">{mode === "vacation" ? "Urlaub beantragen" : "Krankmeldung"}</h2>
       </div>
-      <div className="mb-4 inline-flex rounded-lg border border-border bg-background p-1 text-xs">
+      <div className="mb-4 inline-flex w-full max-w-full rounded-lg border border-border bg-background p-1 text-xs sm:w-auto">
         <button
           type="button"
           onClick={() => setMode("vacation")}
-          className={`rounded-md px-3 py-1.5 ${mode === "vacation" ? "bg-card text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`min-h-11 flex-1 rounded-md px-3 py-2 sm:flex-none sm:py-1.5 ${mode === "vacation" ? "bg-card text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           Urlaub
         </button>
         <button
           type="button"
           onClick={() => setMode("sick")}
-          className={`rounded-md px-3 py-1.5 ${mode === "sick" ? "bg-red-500/20 text-red-700" : "text-muted-foreground hover:text-foreground"}`}
+          className={`min-h-11 flex-1 rounded-md px-3 py-2 sm:flex-none sm:py-1.5 ${mode === "sick" ? "bg-red-500/20 text-red-700" : "text-muted-foreground hover:text-foreground"}`}
         >
           Krank melden
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">Von</label>
           <input
             type="date"
             name="startDate"
             required
-            className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/50 transition-colors"
+            className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
         <div>
@@ -82,7 +82,7 @@ export function VacationRequestForm() {
             type="date"
             name="endDate"
             required
-            className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/50 transition-colors"
+            className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
         <div>
@@ -93,7 +93,7 @@ export function VacationRequestForm() {
             name="reason"
             rows={3}
             placeholder={mode === "vacation" ? "z.B. Familienurlaub" : "z.B. krank mit Attest"}
-            className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/50 transition-colors resize-none"
+            className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/50 transition-colors resize-none"
           />
         </div>
         {mode === "sick" && (
@@ -112,7 +112,7 @@ export function VacationRequestForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full py-3 rounded-xl bg-primary text-foreground font-bold text-sm ring-1 ring-inset ring-white/20 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 disabled:opacity-60 sm:py-3"
         >
           {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
           {mode === "vacation" ? "Antrag einreichen" : "Krankmeldung speichern"}

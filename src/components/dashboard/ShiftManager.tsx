@@ -511,7 +511,7 @@ export function ShiftManager({
       )}
       {viewMode === "simple" && (
         <>
-      <div className="mt-4 grid gap-2 md:grid-cols-5">
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
         <select
           value={selectedUserId}
           onChange={(e) => setSelectedUserId(e.target.value)}
@@ -565,7 +565,7 @@ export function ShiftManager({
           </p>
         )}
       </div>
-      <div className="mt-3 grid gap-2 md:grid-cols-2">
+      <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
         <div className="rounded-xl border border-border bg-background px-3 py-2">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 1</p>
           <p className="text-sm text-foreground">Zeit oben wählen (oder Früh/Standard/Spät klicken).</p>
@@ -687,7 +687,7 @@ export function ShiftManager({
       {viewMode === "matrix" && (
         <div className="mt-4 rounded-xl border border-border bg-background overflow-x-auto">
           <div className="px-3 py-3 border-b border-border">
-            <div className="grid gap-2 md:grid-cols-5">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
               <input
                 type="time"
                 value={startTime}
@@ -831,7 +831,7 @@ export function ShiftManager({
             </div>
           )}
 
-          <div className="grid gap-2 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
             <select
               value={timelineDay}
               onChange={(e) => setTimelineDay(Number(e.target.value))}

@@ -152,7 +152,7 @@ export default async function DashboardPage() {
                 </Link>
               </div>
             </div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-3 text-xs">
+            <div className="mt-3 grid grid-cols-1 gap-2 text-xs md:grid-cols-2 lg:grid-cols-3">
               <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] px-3 py-2">
                 <span className="text-muted-foreground">Fehlend heute</span>
                 <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-red-700" : "text-emerald-700"}`}>
@@ -173,7 +173,7 @@ export default async function DashboardPage() {
               </div>
             </div>
           </div>
-        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
           {[
             { label: "Mitarbeiter gesamt", value: teamStats.totalEmployees, icon: Users, color: "#60a5fa" },
             { label: "Heute aktiv", value: teamStats.activeToday, icon: Clock, color: "#86efac" },
@@ -194,10 +194,12 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Main grid */}
-      <div className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
-        {/* Terminal */}
-        <div id="terminal-widget">
+      {/* Main grid: Mobile zuerst AI-Hinweise, Desktop wie bisher Terminal → Saldo → AI */}
+      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+        <div className="order-first lg:order-3">
+          <AIInsights />
+        </div>
+        <div id="terminal-widget" className="order-2 lg:order-1">
           <TerminalWidget
             activeLog={
               activeLog
@@ -212,15 +214,14 @@ export default async function DashboardPage() {
             }
           />
         </div>
-
-        {/* Saldo */}
-        <SaldoWidget
-          workedMinutes={saldo.workedMinutes}
-          expectedMinutes={saldo.expectedMinutes}
-          saldoMinutes={saldo.saldoMinutes}
-          hasWorkLogs={Boolean(hasAnyWorkLog)}
-        />
-        <AIInsights />
+        <div className="order-3 lg:order-2">
+          <SaldoWidget
+            workedMinutes={saldo.workedMinutes}
+            expectedMinutes={saldo.expectedMinutes}
+            saldoMinutes={saldo.saldoMinutes}
+            hasWorkLogs={Boolean(hasAnyWorkLog)}
+          />
+        </div>
       </div>
 
       {/* Today summary */}

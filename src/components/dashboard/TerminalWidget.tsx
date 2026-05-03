@@ -147,7 +147,7 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
           whileTap={{ scale: 0.96 }}
           onClick={activeLog ? handleClockOut : handleClockIn}
           disabled={isPending}
-          className={`w-full py-4 rounded-full font-bold text-base flex items-center justify-center gap-2 transition-all ${
+          className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-full py-4 text-base font-bold transition-all sm:min-h-0 ${
             activeLog
               ? "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20"
               : "bg-primary text-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)]"
@@ -174,7 +174,7 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
               type="button"
               onClick={handleBreakToggle}
               disabled={isPending}
-              className={`w-full rounded-2xl border px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
+              className={`flex min-h-12 w-full items-center justify-center rounded-2xl border px-3 py-3 text-xs font-semibold transition-colors disabled:opacity-60 sm:min-h-0 sm:py-2 ${
                 activeLog.isOnBreak
                   ? "border-primary/40 bg-primary/15 text-primary hover:bg-primary/20"
                   : "border-border bg-card text-foreground hover:bg-card/80"

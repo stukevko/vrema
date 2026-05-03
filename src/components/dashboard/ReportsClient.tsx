@@ -1146,125 +1146,228 @@ export function ReportsClient({
               </a>
             </div>
           ) : (
-            <div className="max-h-[72vh] overflow-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="sticky top-0 z-20 border-b border-border bg-card">
-                    {[
-                      isManager ? "Mitarbeiter" : null,
-                      "Datum",
-                      "Einstempelzeit",
-                      "Ausstempelzeit",
-                      "Pause (Min)",
-                      "Netto (Min)",
-                      "Stunden (Dez.)",
-                      "Status",
-                      "Bemerkung",
-                      isManager ? "Aktion" : null,
-                    ]
-                      .filter(Boolean)
-                      .map((h) => (
-                        <th key={h!} className="px-5 py-3 text-left text-[10px] text-muted-foreground uppercase tracking-widest">
-                          {h}
-                        </th>
-                      ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map((log, i) => {
-                    const dur = durationMins(log);
-                    const clockInDate = new Date(log.clockIn);
-                    return (
-                      <motion.tr
-                        key={log.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: i * 0.025 }}
-                        className="even:bg-muted/40/50 hover:bg-muted/50 transition-colors"
-                      >
-                        {isManager && (
-                          <td className="px-5 py-4">
-                            <span className="text-foreground font-medium">{log.userName}</span>
-                          </td>
-                        )}
-                        <td className="px-5 py-4 tabular-nums text-muted-foreground text-xs">
-                          {formatDateCsv(clockInDate)}
-                        </td>
-                        <td className="px-5 py-4 tabular-nums text-foreground">
-                          {clockInDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
-                        </td>
-                        <td className="px-5 py-4 tabular-nums text-foreground">
-                          {log.clockOut
-                            ? new Date(log.clockOut).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
-                            : <span className="text-amber-700 animate-pulse">offen</span>}
-                        </td>
-                        <td className="px-5 py-4 tabular-nums text-muted-foreground text-xs">
-                          {log.breakMins > 0 ? log.breakMins : "–"}
-                        </td>
-                        <td className="px-5 py-4 tabular-nums font-medium text-foreground text-xs">
-                          {dur !== null ? Math.round(dur) : "–"}
-                        </td>
-                        <td className="px-5 py-4 tabular-nums text-foreground text-xs">
-                          {dur !== null ? decimalHoursDE(Math.round(dur)) : "–"}
-                        </td>
-                        <td className="px-5 py-4">
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                              log.status === "ABSENT"
-                                ? "bg-red-50 text-red-700"
-                                : log.status === "LATE"
-                                  ? "bg-amber-50 text-amber-700"
-                                  : log.status === "MANUAL_ADJUSTED"
-                                    ? "bg-sky-50 text-sky-700"
-                                    : "bg-emerald-50 text-emerald-700"
-                            }`}
+            <>
+              <div className="space-y-3 p-3 sm:hidden">
+                {logs.map((log, i) => {
+                  const dur = durationMins(log);
+                  const clockInDate = new Date(log.clockIn);
+                  return (
+                    <motion.div
+                      key={log.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.02 }}
+                      className="rounded-2xl border border-border bg-card/90 p-4 text-sm shadow-[0_12px_30px_rgba(0,0,0,0.06)]"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border/70 pb-3">
+                        <div className="min-w-0 flex-1">
+                          {isManager && (
+                            <p className="text-base font-semibold text-foreground">{log.userName}</p>
+                          )}
+                          <p className="text-xs text-muted-foreground tabular-nums">{formatDateCsv(clockInDate)}</p>
+                        </div>
+                        <span
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                            log.status === "ABSENT"
+                              ? "bg-red-50 text-red-700"
+                              : log.status === "LATE"
+                                ? "bg-amber-50 text-amber-700"
+                                : log.status === "MANUAL_ADJUSTED"
+                                  ? "bg-sky-50 text-sky-700"
+                                  : "bg-emerald-50 text-emerald-700"
+                          }`}
+                        >
+                          {statusLabel(log.status)}
+                        </span>
+                      </div>
+                      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                        <div>
+                          <dt className="text-muted-foreground">Einstempelung</dt>
+                          <dd className="font-mono text-foreground">
+                            {clockInDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground">Ausstempelung</dt>
+                          <dd className="font-mono text-foreground">
+                            {log.clockOut ? (
+                              new Date(log.clockOut).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
+                            ) : (
+                              <span className="text-amber-700">offen</span>
+                            )}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground">Pause (Min)</dt>
+                          <dd className="tabular-nums text-foreground">{log.breakMins > 0 ? log.breakMins : "–"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground">Netto / Std.</dt>
+                          <dd className="tabular-nums text-foreground">
+                            {dur !== null ? `${Math.round(dur)} min · ${decimalHoursDE(Math.round(dur))} h` : "–"}
+                          </dd>
+                        </div>
+                      </dl>
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground/80">Bemerkung: </span>
+                        {log.note ?? "–"}
+                      </p>
+                      {isManager && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(log)}
+                            disabled={isSaving}
+                            className="min-h-11 flex-1 rounded-xl border border-border px-3 py-2.5 text-xs font-medium text-foreground transition-all active:scale-[0.99] disabled:opacity-50 sm:flex-none md:hover:bg-card/70"
                           >
-                            {statusLabel(log.status)}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-muted-foreground text-xs max-w-[120px] truncate">
-                          {log.note ?? "–"}
-                        </td>
-                        {isManager && (
-                          <td className="px-5 py-4">
-                            <div className="flex items-center gap-2">
+                            Bearbeiten
+                          </button>
+                          {log.status === "ABSENT" && (
+                            <>
                               <button
                                 type="button"
-                                onClick={() => handleEdit(log)}
+                                onClick={() => handleAbsentOverride(log)}
                                 disabled={isSaving}
-                                className="rounded-xl border border-border px-2.5 py-1 text-[11px] text-foreground md:hover:bg-card/70 transition-all active:scale-95 disabled:opacity-50"
+                                className="min-h-11 flex-1 rounded-xl border border-amber-200 px-3 py-2.5 text-xs font-medium text-amber-800 transition-all active:scale-[0.99] disabled:opacity-50 sm:flex-none md:hover:bg-amber-50"
                               >
-                                Bearbeiten
+                                Korrigieren
                               </button>
-                              {log.status === "ABSENT" && (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleAbsentOverride(log)}
-                                    disabled={isSaving}
-                                    className="rounded-xl border border-amber-200 px-2.5 py-1 text-[11px] text-amber-700 md:hover:bg-amber-50 transition-all active:scale-95 disabled:opacity-50"
-                                  >
-                                    Korrigieren
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDelete(log)}
-                                    disabled={isSaving}
-                                    className="rounded-xl border border-red-200 px-2.5 py-1 text-[11px] text-red-700 md:hover:bg-red-50 transition-all active:scale-95 disabled:opacity-50"
-                                  >
-                                    Löschen
-                                  </button>
-                                </>
-                              )}
-                            </div>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(log)}
+                                disabled={isSaving}
+                                className="min-h-11 flex-1 rounded-xl border border-red-200 px-3 py-2.5 text-xs font-medium text-red-700 transition-all active:scale-[0.99] disabled:opacity-50 sm:flex-none md:hover:bg-red-50"
+                              >
+                                Löschen
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+              <div className="hidden max-h-[72vh] overflow-auto overflow-x-auto sm:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="sticky top-0 z-20 border-b border-border bg-card">
+                      {[
+                        isManager ? "Mitarbeiter" : null,
+                        "Datum",
+                        "Einstempelzeit",
+                        "Ausstempelzeit",
+                        "Pause (Min)",
+                        "Netto (Min)",
+                        "Stunden (Dez.)",
+                        "Status",
+                        "Bemerkung",
+                        isManager ? "Aktion" : null,
+                      ]
+                        .filter(Boolean)
+                        .map((h) => (
+                          <th key={h!} className="px-5 py-3 text-left text-[10px] text-muted-foreground uppercase tracking-widest">
+                            {h}
+                          </th>
+                        ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {logs.map((log, i) => {
+                      const dur = durationMins(log);
+                      const clockInDate = new Date(log.clockIn);
+                      return (
+                        <motion.tr
+                          key={log.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: i * 0.025 }}
+                          className="even:bg-muted/40/50 hover:bg-muted/50 transition-colors"
+                        >
+                          {isManager && (
+                            <td className="px-5 py-4">
+                              <span className="font-medium text-foreground">{log.userName}</span>
+                            </td>
+                          )}
+                          <td className="px-5 py-4 tabular-nums text-xs text-muted-foreground">
+                            {formatDateCsv(clockInDate)}
                           </td>
-                        )}
-                      </motion.tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          <td className="px-5 py-4 tabular-nums text-foreground">
+                            {clockInDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+                          </td>
+                          <td className="px-5 py-4 tabular-nums text-foreground">
+                            {log.clockOut
+                              ? new Date(log.clockOut).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
+                              : <span className="animate-pulse text-amber-700">offen</span>}
+                          </td>
+                          <td className="px-5 py-4 tabular-nums text-xs text-muted-foreground">
+                            {log.breakMins > 0 ? log.breakMins : "–"}
+                          </td>
+                          <td className="px-5 py-4 tabular-nums text-xs font-medium text-foreground">
+                            {dur !== null ? Math.round(dur) : "–"}
+                          </td>
+                          <td className="px-5 py-4 tabular-nums text-xs text-foreground">
+                            {dur !== null ? decimalHoursDE(Math.round(dur)) : "–"}
+                          </td>
+                          <td className="px-5 py-4">
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                log.status === "ABSENT"
+                                  ? "bg-red-50 text-red-700"
+                                  : log.status === "LATE"
+                                    ? "bg-amber-50 text-amber-700"
+                                    : log.status === "MANUAL_ADJUSTED"
+                                      ? "bg-sky-50 text-sky-700"
+                                      : "bg-emerald-50 text-emerald-700"
+                              }`}
+                            >
+                              {statusLabel(log.status)}
+                            </span>
+                          </td>
+                          <td className="max-w-[120px] truncate px-5 py-4 text-xs text-muted-foreground">
+                            {log.note ?? "–"}
+                          </td>
+                          {isManager && (
+                            <td className="px-5 py-4">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleEdit(log)}
+                                  disabled={isSaving}
+                                  className="rounded-xl border border-border px-2.5 py-1 text-[11px] text-foreground transition-all active:scale-95 disabled:opacity-50 md:hover:bg-card/70"
+                                >
+                                  Bearbeiten
+                                </button>
+                                {log.status === "ABSENT" && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAbsentOverride(log)}
+                                      disabled={isSaving}
+                                      className="rounded-xl border border-amber-200 px-2.5 py-1 text-[11px] text-amber-700 transition-all active:scale-95 disabled:opacity-50 md:hover:bg-amber-50"
+                                    >
+                                      Korrigieren
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDelete(log)}
+                                      disabled={isSaving}
+                                      className="rounded-xl border border-red-200 px-2.5 py-1 text-[11px] text-red-700 transition-all active:scale-95 disabled:opacity-50 md:hover:bg-red-50"
+                                    >
+                                      Löschen
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          )}
+                        </motion.tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
 

@@ -42,8 +42,8 @@ export function CompanySettingsForm({ company }: Props) {
   };
 
   return (
-    <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6">
-      <form onSubmit={handleSubmit} className="space-y-5">
+    <div className="min-w-0 rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6">
+      <form onSubmit={handleSubmit} className="min-w-0 space-y-5">
         <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 flex gap-3">
           <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div className="text-sm text-foreground leading-snug">
@@ -55,8 +55,8 @@ export function CompanySettingsForm({ company }: Props) {
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="min-w-0">
             <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
               Firmenname
             </label>
@@ -65,17 +65,17 @@ export function CompanySettingsForm({ company }: Props) {
               type="text"
               defaultValue={company.name}
               required
-              className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
+              className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
               Firmen-Slug
             </label>
             <input
               value={company.slug}
               readOnly
-              className="w-full px-3 py-2.5 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-muted-foreground text-sm font-sans cursor-not-allowed"
+              className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-muted-foreground text-sm font-sans cursor-not-allowed"
             />
           </div>
         </div>
@@ -86,7 +86,7 @@ export function CompanySettingsForm({ company }: Props) {
           <select
             value={shiftCycleWeeks}
             onChange={(e) => setShiftCycleWeeks(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
+            className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
           >
             <option value="1">1 Woche (Standard)</option>
             <option value="2">2 Wochen</option>
@@ -121,7 +121,7 @@ export function CompanySettingsForm({ company }: Props) {
         <button
           type="submit"
           disabled={isPending}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-foreground font-bold text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-foreground text-sm font-bold transition-colors hover:bg-primary/90 disabled:opacity-60 sm:w-auto sm:py-2.5"
         >
           {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {success ? "✓ Gespeichert" : "Speichern"}

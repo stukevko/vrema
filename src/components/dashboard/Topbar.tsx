@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, ChevronDown, LogOut, Settings, UserCircle2 } from "lucide-react";
+import { Bell, ChevronDown, LogOut, Menu, Settings, UserCircle2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
@@ -12,9 +13,10 @@ interface TopbarProps {
     image?: string | null;
     role?: string | null;
   };
+  onOpenMobileNav?: () => void;
 }
 
-export function DashboardTopbar({ user }: TopbarProps) {
+export function DashboardTopbar({ user, onOpenMobileNav }: TopbarProps) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -29,65 +31,105 @@ export function DashboardTopbar({ user }: TopbarProps) {
   }, []);
 
   const initials = user.name
-    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
     : user.email?.[0]?.toUpperCase() ?? "?";
 
   return (
-    <header className="h-16 border-b border-border flex items-center justify-between px-4 md:px-6 glass-nav sticky top-0 z-50">
-      <div />
-      <div className="flex items-center gap-3">
-        {user.role === "SUPER_ADMIN" && (
-          <span className="rounded-full border border-amber-300/40 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-700">
-            Super Admin
-          </span>
+    <header className="glass-nav fixed inset-x-0 top-0 z-50 border-b border-border pt-[env(safe-area-inset-top,0px)] lg:relative lg:inset-auto lg:pt-0">
+      <div className="relative flex h-16 items-center justify-end gap-2 px-3 sm:px-4 lg:justify-between lg:px-6">
+        {onOpenMobileNav && (
+          <div className="absolute left-3 top-1/2 z-[1] -translate-y-1/2 lg:hidden">
+            <button
+              type="button"
+              aria-label="Menü öffnen"
+              onClick={onOpenMobileNav}
+              className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-white/90 text-foreground shadow-sm transition-all active:scale-95 md:hover:bg-card/70"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
         )}
-        <button className="relative w-11 h-11 rounded-2xl glass-panel md:hover:bg-card/70 flex items-center justify-center transition-all active:scale-95">
-          <Bell className="w-4 h-4 text-muted-foreground" />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
-        </button>
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setOpen((prev) => !prev)}
-            className="flex items-center gap-2 rounded-2xl border border-border bg-white px-2 py-1.5 md:hover:bg-card/70 transition-all active:scale-95"
-          >
-            <div className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center text-xs font-bold text-primary">
-              {initials}
-            </div>
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-          </button>
 
-          {open && (
-            <div className="absolute right-0 top-12 w-52 rounded-2xl glass-panel p-1 z-30">
-              <div className="px-3 py-2 border-b border-border mb-1">
-                <p className="text-sm font-semibold truncate">{user.name ?? "Profil"}</p>
-                <p className="text-xs text-muted-foreground truncate">{user.email ?? ""}</p>
-              </div>
+        <div className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 lg:hidden">
+          <Link href="/dashboard" className="pointer-events-auto shrink-0">
+            <Image
+              src="/vrema_logo.png"
+              alt="VREMA"
+              width={160}
+              height={44}
+              priority
+              className="h-8 w-auto max-w-[44vw] object-contain"
+            />
+          </Link>
+        </div>
 
-              <Link
-                href="/dashboard/settings"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-foreground md:hover:bg-card/70 transition-all active:scale-95"
-              >
-                <UserCircle2 className="w-4 h-4" />
-                Profil
-              </Link>
-              <Link
-                href="/dashboard/settings"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-foreground md:hover:bg-card/70 transition-all active:scale-95"
-              >
-                <Settings className="w-4 h-4" />
-                Einstellungen
-              </Link>
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm text-red-600 md:hover:bg-red-50 transition-all active:scale-95"
-              >
-                <LogOut className="w-4 h-4" />
-                Abmelden
-              </button>
-            </div>
+        <div className="hidden lg:block lg:flex-1" />
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          {user.role === "SUPER_ADMIN" && (
+            <span className="hidden rounded-full border border-amber-300/40 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-700 sm:inline-flex">
+              Super Admin
+            </span>
           )}
+          <button
+            type="button"
+            className="relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-white/90 shadow-sm transition-all active:scale-95 md:hover:bg-card/70 lg:h-11 lg:w-11"
+            aria-label="Benachrichtigungen"
+          >
+            <Bell className="h-4 w-4 text-muted-foreground" />
+            <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary" />
+          </button>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setOpen((prev) => !prev)}
+              className="flex min-h-12 items-center gap-2 rounded-2xl border border-border bg-white px-2 py-1.5 transition-all active:scale-95 md:hover:bg-card/70 lg:min-h-0"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-xs font-bold text-primary">
+                {initials}
+              </div>
+              <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
+            </button>
+
+            {open && (
+              <div className="absolute right-0 top-[calc(100%+0.25rem)] z-30 w-56 rounded-2xl glass-panel p-1 shadow-lg">
+                <div className="mb-1 border-b border-border px-3 py-2">
+                  <p className="truncate text-sm font-semibold">{user.name ?? "Profil"}</p>
+                  <p className="truncate text-xs text-muted-foreground">{user.email ?? ""}</p>
+                </div>
+
+                <Link
+                  href="/dashboard/settings"
+                  onClick={() => setOpen(false)}
+                  className="flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm text-foreground transition-all active:scale-95 md:hover:bg-card/70"
+                >
+                  <UserCircle2 className="h-4 w-4 shrink-0" />
+                  Profil
+                </Link>
+                <Link
+                  href="/dashboard/settings"
+                  onClick={() => setOpen(false)}
+                  className="flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm text-foreground transition-all active:scale-95 md:hover:bg-card/70"
+                >
+                  <Settings className="h-4 w-4 shrink-0" />
+                  Einstellungen
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm text-red-600 transition-all active:scale-95 md:hover:bg-red-50"
+                >
+                  <LogOut className="h-4 w-4 shrink-0" />
+                  Abmelden
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

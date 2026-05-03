@@ -127,24 +127,24 @@ export function InviteForm() {
                     type={f.type}
                     required
                     placeholder={f.placeholder}
-                    className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 transition-colors font-sans"
+                    className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 transition-colors font-sans"
                   />
                 </div>
               ))}
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="min-w-0">
                   <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1 block">Rolle</label>
                   <select
                     name="role"
                     defaultValue="EMPLOYEE"
-                    className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans appearance-none"
+                    className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans appearance-none"
                   >
                     <option value="EMPLOYEE">Mitarbeiter</option>
                     <option value="MANAGER">Manager</option>
                   </select>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1 block">Std/Woche</label>
                   <input
                     name="weeklyHours"
@@ -152,7 +152,7 @@ export function InviteForm() {
                     defaultValue={40}
                     min={1}
                     max={60}
-                    className="w-full px-3 py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans"
+                    className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors font-sans"
                   />
                 </div>
               </div>
@@ -166,7 +166,7 @@ export function InviteForm() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full py-3 rounded-xl bg-primary text-foreground font-bold text-sm hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-60 font-sans"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-sans text-sm font-bold text-foreground transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] disabled:opacity-60 sm:py-3"
               >
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Terminal className="w-4 h-4" />}
                 {isPending ? "Wird angelegt..." : "$ invite --send"}

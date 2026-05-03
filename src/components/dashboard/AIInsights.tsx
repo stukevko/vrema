@@ -48,9 +48,9 @@ export function AIInsights() {
             <div className="h-4 rounded-full bg-muted animate-pulse w-10/12" />
           </div>
         ) : (
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {items.map((item) => (
-              <li key={item.id} className="text-sm leading-relaxed">
+              <li key={item.id} className="border-b border-border/60 py-1 text-sm leading-relaxed last:border-0 last:pb-0 sm:border-0 sm:py-0">
                 <span className={`font-medium ${levelStyles[item.level]}`}>✨</span>{" "}
                 <span className="text-foreground">{item.text}</span>
               </li>
