@@ -159,8 +159,10 @@ test.describe("VREMA full browser flow", () => {
     await expect(page.getByText("Krankmeldung erfolgreich gespeichert!")).toBeVisible();
 
     await page.goto("/dashboard/planning");
-    await page.getByRole("button", { name: "Wochenmatrix" }).click();
-    await expect(page.getByText("Krank")).toBeVisible();
+    await page.getByRole("button", { name: "Timeline" }).click();
+    const sickDayOfWeek = String(new Date().getDay());
+    await page.getByRole("combobox").first().selectOption(sickDayOfWeek);
+    await expect(page.getByText("Krank (gesperrt)")).toBeVisible();
 
     // Phase 4: Billing check
     await page.goto("/dashboard/billing");
