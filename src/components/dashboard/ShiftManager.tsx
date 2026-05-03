@@ -129,6 +129,20 @@ export function ShiftManager({
     if (viewMode !== "simple") setSimpleAddSheetOpen(false);
   }, [viewMode]);
 
+  /** Unter lg nur Einfach-Planer: Timeline-Modus und ggf. Timeline-Dialog bereinigen. */
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const sync = () => {
+      if (mq.matches) {
+        setViewMode("simple");
+        setShiftEdit(null);
+      }
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   useEffect(() => {
     if (!mobileStartPickerOpen) setMobileStartPickerCustom(false);
   }, [mobileStartPickerOpen]);
@@ -1381,8 +1395,14 @@ export function ShiftManager({
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
-      <h2 className="text-lg font-semibold">Arbeitsplan (Soll-Zeiten)</h2>
-      <p className="mt-1 text-xs text-muted-foreground">Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.</p>
+      <h2 className="text-lg font-semibold tracking-tight">
+        <span className="lg:hidden">Einfach-Planer</span>
+        <span className="hidden lg:inline">Arbeitsplan (Soll-Zeiten)</span>
+      </h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        <span className="lg:hidden">Nur diese Ansicht: Mitarbeiter, Zeiten und Wochentage – ohne Timeline.</span>
+        <span className="hidden lg:inline">Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.</span>
+      </p>
       {shiftCycleWeeks > 1 && (
         <div className="mt-3 inline-flex max-w-full rounded-lg border border-border bg-background p-1 text-xs">
           {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
@@ -1417,7 +1437,7 @@ export function ShiftManager({
 
       {shiftEdit && (
         <div
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0 md:items-center md:bg-white/70 md:p-4"
+          className="fixed inset-0 z-[100] hidden items-end justify-center bg-black/45 p-0 lg:flex md:items-center md:bg-white/70 md:p-4"
           role="dialog"
           aria-modal="true"
           onPointerDown={(e) => {
