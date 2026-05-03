@@ -162,7 +162,7 @@ export function CompanySettingsForm({ company }: Props) {
             }}
           />
           <p className="text-[10px] text-muted-foreground font-sans">
-            Klick auf die Karte setzt deinen Shop-Standort. Der grüne Kreis zeigt den aktiven Radius.
+            Ein Klick auf die Karte setzt den Standort Ihres Betriebs. Der grüne Kreis zeigt den aktiven Radius.
           </p>
         </div>
 
@@ -218,7 +218,7 @@ export function CompanySettingsForm({ company }: Props) {
         <button
           type="submit"
           disabled={isPending}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-black font-bold text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-foreground font-bold text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
           {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {success ? "✓ Gespeichert" : "Speichern"}

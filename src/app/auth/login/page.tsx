@@ -43,9 +43,9 @@ function LoginForm() {
       if (result?.error) {
         if (
           result.error.includes("unverified_email") ||
-          result.error.includes("Bitte verifiziere erst deine E-Mail")
+          result.error.includes("Bitte verifizieren Sie zuerst Ihre E-Mail-Adresse")
         ) {
-          setError("Bitte verifiziere erst deine E-Mail.");
+          setError("Bitte verifizieren Sie zuerst Ihre E-Mail-Adresse.");
           setShowResend(true);
         } else {
           setError("E-Mail oder Passwort ist falsch.");
@@ -64,7 +64,7 @@ function LoginForm() {
 
   const handleResendVerification = () => {
     if (!email.trim()) {
-      show("Bitte gib zuerst deine E-Mail ein.", "info");
+      show("Bitte geben Sie zuerst Ihre E-Mail-Adresse ein.", "info");
       return;
     }
 
@@ -85,7 +85,7 @@ function LoginForm() {
           redirectTo: callbackUrl,
         });
       } catch {
-        setError("Passkey-Anmeldung fehlgeschlagen. Bitte nutze alternativ dein Passwort.");
+        setError("Passkey-Anmeldung fehlgeschlagen. Bitte melden Sie sich alternativ mit Passwort an.");
       }
     });
   };
@@ -99,7 +99,7 @@ function LoginForm() {
       >
         {/* Logo */}
         <div className="flex flex-col items-center gap-3 mb-8">
-          <Image src="/vremalogo.png" alt="Vrema Logo" width={80} height={80} className="-mb-2" />
+          <Image src="/vrema_logo.png" alt="VREMA" width={200} height={56} className="-mb-2 h-14 w-auto object-contain" priority />
           <div className="text-center">
             <span className="font-bold text-xl tracking-tight">Vrema</span>
             <span className="block text-[10px] text-muted-foreground font-sans uppercase tracking-widest">by KevkoStudio</span>
@@ -108,23 +108,23 @@ function LoginForm() {
 
         <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <h1 className="text-xl font-bold mb-1">Willkommen zurück</h1>
-          <p className="text-muted-foreground text-sm mb-8">Melde dich bei deinem Konto an.</p>
+          <p className="text-muted-foreground text-sm mb-8">Melden Sie sich mit Ihren Zugangsdaten an.</p>
 
           {registered && (
             <p className="mb-4 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
-              Check dein Postfach! Wir haben dir einen Bestätigungslink geschickt.
+              Bitte prüfen Sie Ihr E-Mail-Postfach. Wir haben Ihnen einen Bestätigungslink gesendet.
             </p>
           )}
 
           {verified && (
             <p className="mb-4 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
-              E-Mail erfolgreich bestätigt. Du kannst dich jetzt anmelden.
+              E-Mail erfolgreich bestätigt. Sie können sich jetzt anmelden.
             </p>
           )}
 
           {(verifyError === "invalid_verification" || verifyError === "expired_verification") && (
             <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-              Verifizierungslink ungültig oder abgelaufen. Bitte registriere dich erneut oder fordere einen neuen Link an.
+              Verifizierungslink ungültig oder abgelaufen. Bitte registrieren Sie sich erneut oder fordern Sie einen neuen Link an.
             </p>
           )}
 
@@ -140,7 +140,7 @@ function LoginForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@firma.de"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -153,7 +153,7 @@ function LoginForm() {
                   name="password"
                   required
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -178,7 +178,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-primary text-black font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all disabled:opacity-60"
+              className="w-full py-3 rounded-xl bg-primary text-foreground font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all disabled:opacity-60"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               Anmelden
@@ -188,7 +188,7 @@ function LoginForm() {
               type="button"
               onClick={handlePasskeyLogin}
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-slate-900 font-semibold flex items-center justify-center gap-2 hover:bg-card/80 transition-colors disabled:opacity-60"
+              className="w-full py-3 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-foreground font-semibold flex items-center justify-center gap-2 hover:bg-card/80 transition-colors disabled:opacity-60"
             >
               <Fingerprint className="w-4 h-4" />
               Mit Passkey anmelden

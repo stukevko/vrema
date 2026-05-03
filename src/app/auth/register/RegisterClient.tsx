@@ -146,7 +146,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
         className="w-full max-w-md"
       >
         <div className="flex flex-col items-center gap-3 mb-8">
-          <Image src="/vremalogo.png" alt="Vrema Logo" width={80} height={80} className="-mb-2" />
+          <Image src="/vrema_logo.png" alt="VREMA" width={200} height={56} className="-mb-2 h-14 w-auto object-contain" priority />
           <div className="text-center">
             <span className="font-bold text-xl tracking-tight">Vrema</span>
             <span className="block text-[10px] text-muted-foreground font-sans uppercase tracking-widest">by KevkoStudio</span>
@@ -175,7 +175,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
 
           <form onSubmit={handleSubmit} className="space-y-4 mt-6">
             <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">Dein Name</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Ihr Name</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
@@ -183,7 +183,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
                   name="name"
                   required
                   placeholder="Max Mustermann"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -196,7 +196,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
                   name="companyName"
                   required
                   placeholder="Musterfirma GmbH"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -209,7 +209,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
                   name="email"
                   required
                   placeholder="name@firma.de"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -223,7 +223,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
                   required
                   minLength={8}
                   placeholder="Mindestens 8 Zeichen"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -237,7 +237,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
             <button
               type="submit"
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-primary text-black font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all disabled:opacity-60"
+              className="w-full py-3 rounded-xl bg-primary text-foreground font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all disabled:opacity-60"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               Konto erstellen

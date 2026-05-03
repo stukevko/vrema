@@ -142,8 +142,8 @@ function PlanGateButton({
       onClick={locked ? onLockedClick : onClick}
       className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all active:scale-95 border ${
         locked
-          ? "bg-card border-border text-muted-foreground cursor-pointer md:hover:bg-slate-50"
-          : "bg-white border-border text-foreground md:hover:bg-slate-50"
+          ? "bg-card border-border text-muted-foreground cursor-pointer md:hover:bg-muted/50"
+          : "bg-white border-border text-foreground md:hover:bg-muted/50"
       }`}
     >
       {locked ? <Lock className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
@@ -838,8 +838,8 @@ export function ReportsClient({
               onClick={hasBusinessAccess ? exportPdf : lockedMsg}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 ${
                 hasBusinessAccess
-                  ? "bg-primary text-black ring-1 ring-inset ring-white/20 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
-                  : "bg-card border border-border text-muted-foreground md:hover:bg-slate-50"
+                  ? "bg-primary text-foreground ring-1 ring-inset ring-white/20 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
+                  : "bg-card border border-border text-muted-foreground md:hover:bg-muted/50"
               }`}
             >
               {hasBusinessAccess ? <Download className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
@@ -865,8 +865,8 @@ export function ReportsClient({
               onClick={hasBusinessAccess ? () => setShowDatevModal(true) : lockedMsg}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 border ${
                 hasBusinessAccess
-                  ? "bg-white border-border text-foreground md:hover:bg-slate-50"
-                  : "bg-card border border-border text-muted-foreground cursor-pointer md:hover:bg-slate-50"
+                  ? "bg-white border-border text-foreground md:hover:bg-muted/50"
+                  : "bg-card border border-border text-muted-foreground cursor-pointer md:hover:bg-muted/50"
               }`}
             >
               {hasBusinessAccess ? (
@@ -1046,7 +1046,7 @@ export function ReportsClient({
                   type="button"
                   onClick={submitCorrectionRequest}
                   disabled={isSaving}
-                  className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-black md:hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-60"
+                  className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-foreground md:hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-60"
                 >
                   Antrag senden
                 </button>
@@ -1159,7 +1159,7 @@ export function ReportsClient({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: i * 0.025 }}
-                        className="even:bg-slate-50/50 hover:bg-slate-50 transition-colors"
+                        className="even:bg-muted/40/50 hover:bg-muted/50 transition-colors"
                       >
                         {isManager && (
                           <td className="px-5 py-4">
@@ -1269,7 +1269,7 @@ export function ReportsClient({
             </div>
             <a
               href="/dashboard/billing"
-              className="shrink-0 px-4 py-2 rounded-2xl bg-primary text-black text-sm font-bold md:hover:bg-primary/90 transition-all active:scale-95"
+              className="shrink-0 px-4 py-2 rounded-2xl bg-primary text-foreground text-sm font-bold md:hover:bg-primary/90 transition-all active:scale-95"
             >
               Upgrade
             </a>
@@ -1344,7 +1344,7 @@ export function ReportsClient({
                 type="button"
                 onClick={submitEdit}
                 disabled={isSaving}
-                className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-black md:hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-60"
+                className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-foreground md:hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-60"
               >
                 {isSaving ? "Speichere..." : "Änderung speichern"}
               </button>
@@ -1377,7 +1377,7 @@ export function ReportsClient({
                 type="button"
                 onClick={confirmSendToPayroll}
                 disabled={isSaving}
-                className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-black md:hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-60"
+                className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-foreground md:hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-60"
               >
                 {isSaving ? "Sende..." : "PDF senden"}
               </button>
@@ -1434,7 +1434,7 @@ export function ReportsClient({
                 type="button"
                 onClick={confirmDatevExport}
                 disabled={isDatevDownloading}
-                className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-black md:hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-60"
+                className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-foreground md:hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-60"
               >
                 {isDatevDownloading ? "Generiere..." : "Jetzt generieren & herunterladen"}
               </button>

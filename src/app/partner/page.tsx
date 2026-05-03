@@ -13,13 +13,13 @@ const PARTNER_MAILTO = `mailto:kontakt@kevko.studio?subject=${encodeURIComponent
 
 export default function PartnerPage() {
   return (
-    <main className="min-h-screen bg-background px-6 py-16 text-slate-900">
+    <main className="min-h-screen bg-background px-6 py-16 text-foreground">
       <div className="mx-auto max-w-lg">
-        <div className="mb-6 flex items-center justify-between rounded-2xl border border-border bg-white px-4 py-3 text-xs text-slate-700 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="mb-6 flex items-center justify-between rounded-2xl border border-border bg-white px-4 py-3 text-xs text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <span className="font-sans text-muted-foreground">vrema — partner</span>
           <Link
             href="/"
-            className="rounded-xl border border-border px-3 py-1.5 text-slate-900/85 hover:bg-card/70"
+            className="rounded-xl border border-border px-3 py-1.5 text-foreground/85 hover:bg-card/70"
           >
             Zurück zur Startseite
           </Link>
@@ -28,7 +28,7 @@ export default function PartnerPage() {
         <div className="space-y-8 rounded-2xl border border-border bg-card p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <h1 className="text-2xl font-bold tracking-tight">Partner werden</h1>
 
-          <div className="space-y-4 text-base leading-relaxed text-slate-900">
+          <div className="space-y-4 text-base leading-relaxed text-foreground">
             <p>Empfehlen Sie VREMA.</p>
             <p>Erhalten Sie 15 € pro Business-Kunden.</p>
             <p>Werden Sie Teil der VREMA-Erfolgsgeschichte.</p>
@@ -36,7 +36,7 @@ export default function PartnerPage() {
 
           <a
             href={PARTNER_MAILTO}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3.5 text-sm font-bold text-black transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] font-sans"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3.5 text-sm font-bold text-foreground transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] font-sans"
           >
             Jetzt Partner anfragen
           </a>

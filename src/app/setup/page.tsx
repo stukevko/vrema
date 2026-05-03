@@ -94,13 +94,13 @@ export default async function SetupPage({
 
         {requireCard && company?.paymentMethodVerifiedAt && (
           <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-700">
-            Karte verifiziert. Du kannst das Setup abschliessen.
+            Karte verifiziert. Sie können das Setup abschliessen.
           </p>
         )}
 
         <form action={finishSetup} className="mt-8 space-y-4">
           <div>
-            <label className="mb-1.5 block text-xs text-muted-foreground">Wie heisst deine Firma?</label>
+            <label className="mb-1.5 block text-xs text-muted-foreground">Wie lautet der Name Ihrer Firma?</label>
             <input
               name="companyName"
               type="text"
@@ -112,7 +112,7 @@ export default async function SetupPage({
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs text-muted-foreground">Wie viele Mitarbeiter habt ihr?</label>
+            <label className="mb-1.5 block text-xs text-muted-foreground">Wie viele Mitarbeitende planen Sie?</label>
             <input
               name="employeeCount"
               type="number"
@@ -121,13 +121,13 @@ export default async function SetupPage({
               placeholder="z. B. 8"
               className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors"
             />
-            <p className="mt-1 text-[11px] text-muted-foreground">Diese Angabe hilft bei der Einordnung deines Setups.</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Diese Angabe hilft bei der Einordnung Ihres Setups.</p>
           </div>
 
           <button
             type="submit"
             disabled={requireCard && !company?.paymentMethodVerifiedAt}
-            className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-bold text-black ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Weiter zum Dashboard
           </button>

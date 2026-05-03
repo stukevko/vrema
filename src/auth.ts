@@ -153,7 +153,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!user?.email) return false;
 
       if (!dbUser?.emailVerified) {
-        throw new Error("Bitte verifiziere erst deine E-Mail");
+        throw new Error("Bitte verifizieren Sie zuerst Ihre E-Mail-Adresse.");
       }
 
       return true;

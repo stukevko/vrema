@@ -36,7 +36,7 @@ export default function PartnerLoginPage() {
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center gap-3 mb-8">
-          <Image src="/vremalogo.png" alt="Vrema Logo" width={80} height={80} className="-mb-2" />
+          <Image src="/vrema_logo.png" alt="VREMA" width={200} height={56} className="-mb-2 h-14 w-auto object-contain" priority />
           <div className="text-center">
             <span className="font-bold text-xl tracking-tight">Partner Portal</span>
             <span className="block text-[10px] text-muted-foreground font-sans uppercase tracking-widest">Vrema by KevkoStudio</span>
@@ -45,7 +45,7 @@ export default function PartnerLoginPage() {
 
         <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <h1 className="text-xl font-bold mb-1">Partner Login</h1>
-          <p className="text-muted-foreground text-sm mb-8">Melde dich mit deinem Partnerzugang an.</p>
+          <p className="text-muted-foreground text-sm mb-8">Melden Sie sich mit Ihrem Partnerzugang an.</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -57,7 +57,7 @@ export default function PartnerLoginPage() {
                   name="email"
                   required
                   placeholder="partner@firma.de"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -70,7 +70,7 @@ export default function PartnerLoginPage() {
                   name="password"
                   required
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-slate-900 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
@@ -80,7 +80,7 @@ export default function PartnerLoginPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-primary text-black font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all disabled:opacity-60"
+              className="w-full py-3 rounded-xl bg-primary text-foreground font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all disabled:opacity-60"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               Einloggen

@@ -41,7 +41,7 @@ function statusLabel(status: Row["status"]) {
 function statusBadgeClass(status: Row["status"]) {
   if (status === "PENDING") return "bg-amber-50 text-amber-700";
   if (status === "AVAILABLE") return "bg-emerald-50 text-emerald-700";
-  if (status === "PAID") return "bg-slate-100 text-slate-700";
+  if (status === "PAID") return "bg-muted text-foreground";
   return "bg-red-50 text-red-700";
 }
 
@@ -84,21 +84,23 @@ export function PartnerDashboardClient({
         <div className="flex items-center justify-between gap-3">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Partner Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Willkommen, {name}. Hier siehst du deine Abschluesse und Provisionen.</p>
+            <p className="text-sm text-muted-foreground">
+              Willkommen, {name}. Hier finden Sie Ihre Abschlüsse und Provisionen im Überblick.
+            </p>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/partner-login" })}
-            className="rounded-2xl border border-border px-3 py-2 text-sm text-foreground hover:bg-slate-50"
+            className="rounded-2xl border border-border px-3 py-2 text-sm text-foreground hover:bg-muted/50"
           >
             Abmelden
           </button>
         </div>
 
         <div className="rounded-2xl premium-card p-5">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Dein Ref-Link</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Ihr Referenzlink</p>
           <div className="flex flex-wrap items-center gap-2">
             <code className="rounded-2xl border border-border bg-white px-2 py-1.5 text-xs text-foreground break-all">{refUrl}</code>
-            <button onClick={() => void copy(refUrl)} className="inline-flex items-center gap-1 rounded-2xl border border-border bg-white px-2.5 py-1.5 text-xs text-foreground hover:bg-slate-50">
+            <button onClick={() => void copy(refUrl)} className="inline-flex items-center gap-1 rounded-2xl border border-border bg-white px-2.5 py-1.5 text-xs text-foreground hover:bg-muted/50">
               <Copy className="w-3 h-3" />
               Link kopieren
             </button>
@@ -124,13 +126,17 @@ export function PartnerDashboardClient({
         <div className="rounded-2xl premium-card p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-base font-semibold">Deine Erfolgs-Statistik</h2>
+              <h2 className="text-base font-semibold">Ihre Erfolgsstatistik</h2>
               <p className="text-xs text-muted-foreground">Einmalige Provision pro direktem Abschluss (ohne Testphase).</p>
             </div>
             <button
               type="button"
-              className="rounded-2xl border border-border bg-white px-4 py-2 text-sm text-foreground hover:bg-slate-50"
-              onClick={() => window.alert("Hier findest du bald Logos, Screenshots und Texte für WhatsApp/Instagram.")}
+              className="rounded-2xl border border-border bg-white px-4 py-2 text-sm text-foreground hover:bg-muted/50"
+              onClick={() =>
+                window.alert(
+                  "Werbemittel (Logos, Screenshots und Textbausteine) werden hier in Kürze bereitgestellt."
+                )
+              }
             >
               Werbemittel-Kit
             </button>
@@ -171,7 +177,7 @@ export function PartnerDashboardClient({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-card/80 text-muted-foreground">
-                  {["Plan", "Deine Provision"].map((h) => (
+                  {["Plan", "Ihre Provision"].map((h) => (
                     <th key={h} className="px-4 py-2 text-left text-xs font-medium">{h}</th>
                   ))}
                 </tr>
@@ -183,7 +189,7 @@ export function PartnerDashboardClient({
                   </tr>
                 ) : (
                   recentDeals.map((row) => (
-                    <tr key={row.id} className="border-b border-border active:bg-background/70 md:hover:bg-slate-50 transition-colors">
+                    <tr key={row.id} className="border-b border-border active:bg-background/70 md:hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-4 text-foreground/80">{planLabel(row.plan)}</td>
                       <td className="px-4 py-4 text-emerald-700 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
                     </tr>
@@ -214,7 +220,7 @@ export function PartnerDashboardClient({
                   </tr>
                 ) : (
                   rows.map((row) => (
-                    <tr key={row.id} className="border-b border-border active:bg-background/70 md:hover:bg-slate-50 transition-colors">
+                    <tr key={row.id} className="border-b border-border active:bg-background/70 md:hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-4">{row.companyName}</td>
                       <td className="px-4 py-4 text-foreground/80">{planLabel(row.plan)}</td>
                       <td className="px-4 py-4 text-emerald-700 tabular-nums">{formatProvisionByPlan(row.plan)}</td>

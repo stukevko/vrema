@@ -116,9 +116,6 @@ export async function POST(req: NextRequest) {
         if (result.skipped && "reason" in result && result.reason === "no_company" && "retryable" in result && result.retryable) {
           throw new Error("[affiliate] retry requested: company missing during invoice.paid");
         }
-        if (result.skipped && process.env.NODE_ENV === "development" && "reason" in result) {
-          console.log("[stripe webhook] affiliate invoice.paid skipped:", result.reason);
-        }
         break;
       }
 

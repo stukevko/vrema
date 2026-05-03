@@ -93,7 +93,7 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 text-foreground">
       {/* Header */}
-      <div className="rounded-3xl glass-panel p-8">
+      <div className="rounded-2xl glass-panel p-8">
         <h1 className="text-3xl font-bold tracking-tight">
           Guten {new Date().getHours() < 12 ? "Morgen" : new Date().getHours() < 18 ? "Tag" : "Abend"},{" "}
           {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
@@ -108,13 +108,13 @@ export default async function DashboardPage() {
       )}
 
       {employeeCount === 0 && (
-        <div className="rounded-3xl glass-panel p-8">
+        <div className="rounded-2xl glass-panel p-8">
           <div className="flex items-center gap-2 mb-2">
             <ListChecks className="w-4 h-4 text-primary" />
             <p className="font-semibold text-sm">Noch kein Team angelegt</p>
           </div>
           <p className="mb-3 text-sm text-muted-foreground">
-            Starte mit einem klaren Setup und aktiviere danach direkt das Terminal fuer den ersten Testlauf.
+            Starten Sie mit einem klaren Setup und aktivieren Sie anschliessend das Terminal für den ersten Testlauf.
           </p>
           <ol className="list-decimal pl-5 text-sm text-foreground space-y-1">
             <li>
@@ -134,7 +134,7 @@ export default async function DashboardPage() {
       {/* Team stats (for owners/managers) */}
       {teamStats && (
         <div className="space-y-4">
-          <div className="rounded-3xl glass-panel p-8">
+          <div className="rounded-2xl glass-panel p-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">Command Center</p>
@@ -182,7 +182,7 @@ export default async function DashboardPage() {
             { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24" },
             { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc" },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-3xl glass-panel p-8 transition-all md:hover:bg-card/80">
+            <div key={stat.label} className="rounded-2xl glass-panel p-8 transition-all md:hover:bg-card/80">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-muted-foreground">{stat.label}</p>
                 <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
@@ -226,7 +226,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Today summary */}
-      <div className="rounded-3xl glass-panel p-8 transition-all md:hover:bg-card/80">
+      <div className="rounded-2xl glass-panel p-8 transition-all md:hover:bg-card/80">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Heute</h2>
           <span className="text-sm text-primary tabular-nums font-bold">
@@ -236,7 +236,7 @@ export default async function DashboardPage() {
 
         {todayLogs.length === 0 ? (
           <div className="py-6 text-center">
-            <p className="text-sm text-muted-foreground">Noch kein Zeiteintrag heute - starte jetzt den ersten Eintrag.</p>
+            <p className="text-sm text-muted-foreground">Noch kein Zeiteintrag für heute. Sie können jetzt den ersten Eintrag erfassen.</p>
             <Link
               href="#terminal-widget"
               className="mt-3 inline-flex items-center rounded-2xl border border-border px-4 py-2 text-sm text-foreground transition-all active:scale-95 md:hover:bg-card/80"
@@ -253,7 +253,7 @@ export default async function DashboardPage() {
               return (
                 <div key={log.id} className="flex items-center justify-between py-2.5 px-3 rounded-2xl bg-background">
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-slate-300" : "bg-primary animate-pulse"}`} />
+                    <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-muted-foreground/30" : "bg-primary animate-pulse"}`} />
                     <span className="text-sm text-foreground">
                       {new Date(log.clockIn).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
                       {" — "}
@@ -276,14 +276,14 @@ export default async function DashboardPage() {
 
       {/* Business plan CTA */}
       {plan === "STARTER" && (
-        <div className="rounded-3xl bg-card border border-border backdrop-blur-xl p-8 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="rounded-2xl bg-card border border-border backdrop-blur-xl p-8 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <div>
             <p className="font-semibold text-sm">PDF-Export & Lohnbüro-Versand freischalten</p>
             <p className="text-xs text-muted-foreground mt-1">Upgrade auf Business für vollständige Berichte.</p>
           </div>
           <Link
             href="/dashboard/billing"
-            className="shrink-0 px-4 py-2 rounded-2xl bg-primary text-black text-sm font-bold ring-1 ring-inset ring-white/20 md:hover:bg-primary/90 transition-all active:scale-95"
+            className="shrink-0 px-4 py-2 rounded-2xl bg-primary text-foreground text-sm font-bold ring-1 ring-inset ring-white/20 md:hover:bg-primary/90 transition-all active:scale-95"
           >
             Upgrade
           </Link>

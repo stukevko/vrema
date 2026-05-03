@@ -30,20 +30,20 @@ export default async function BillingPage({
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 text-foreground premium-enter">
-      <div className="rounded-3xl glass-panel p-8">
+      <div className="rounded-2xl glass-panel p-8">
         <h1 className="text-3xl font-bold tracking-tight">Abonnement & Billing</h1>
-        <p className="text-muted-foreground text-sm mt-1">Verwalte dein Abo und deine Zahlungsmethoden.</p>
+        <p className="text-muted-foreground text-sm mt-1">Verwalten Sie Ihr Abonnement und Ihre Zahlungsmethoden.</p>
       </div>
 
       {params.success && (
         <div className="rounded-xl bg-primary/10 border border-primary/30 p-4 flex items-center gap-3">
           <Check className="w-5 h-5 text-[#22c55e]" />
-          <p className="text-sm text-[#22c55e] font-medium">Zahlung erfolgreich! Dein Plan wurde aktualisiert.</p>
+          <p className="text-sm text-[#22c55e] font-medium">Zahlung erfolgreich. Ihr Plan wurde aktualisiert.</p>
         </div>
       )}
 
       {/* Current plan */}
-      <div className="rounded-3xl glass-panel p-8">
+      <div className="rounded-2xl glass-panel p-8">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Aktueller Plan</p>
@@ -58,7 +58,7 @@ export default async function BillingPage({
             <form action={createBillingPortalSession}>
               <button
                 type="submit"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-border text-sm font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-muted/50 border border-border text-sm font-medium transition-colors"
               >
                 <CreditCard className="w-4 h-4" />
                 Zahlungsportal
@@ -75,7 +75,7 @@ export default async function BillingPage({
           return (
             <div
               key={key}
-              className={`rounded-3xl p-8 border backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all hover:-translate-y-0.5 ${
+              className={`rounded-2xl p-8 border backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all hover:-translate-y-0.5 ${
                 isCurrent
                   ? "bg-primary/5 border-primary/30"
                   : "bg-card border-border"
@@ -93,7 +93,7 @@ export default async function BillingPage({
               {isCurrent ? (
                 <a
                   href="/dashboard"
-                  className="mb-1 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-bold text-black ring-1 ring-inset ring-white/20 hover:bg-primary/90 transition-colors"
+                  className="mb-1 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 hover:bg-primary/90 transition-colors"
                 >
                   Zum Dashboard gehen
                 </a>
@@ -118,7 +118,7 @@ export default async function BillingPage({
                   <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "monthly")}>
                     <button
                       type="submit"
-                      className="w-full py-2.5 rounded-xl bg-primary text-black text-sm font-bold ring-1 ring-inset ring-white/20 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-2.5 rounded-xl bg-primary text-foreground text-sm font-bold ring-1 ring-inset ring-white/20 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
                     >
                       <Zap className="w-4 h-4" />
                       Monatlich upgraden
@@ -127,7 +127,7 @@ export default async function BillingPage({
                   <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "yearly")}>
                     <button
                       type="submit"
-                      className="w-full py-2.5 rounded-xl bg-white border border-border text-sm font-medium hover:bg-slate-50 transition-colors"
+                      className="w-full py-2.5 rounded-xl bg-white border border-border text-sm font-medium hover:bg-muted/50 transition-colors"
                     >
                       Jährlich (2 Monate gratis)
                     </button>
@@ -137,7 +137,7 @@ export default async function BillingPage({
               {key === "ENTERPRISE" && !isCurrent && (
                 <a
                   href="mailto:kontakt@kevko.studio?subject=Enterprise%20Anfrage%20Vrema"
-                  className="block w-full py-2.5 rounded-xl bg-white border border-border text-sm font-medium text-center hover:bg-slate-50 transition-colors"
+                  className="block w-full py-2.5 rounded-xl bg-white border border-border text-sm font-medium text-center hover:bg-muted/50 transition-colors"
                 >
                   Kontakt aufnehmen
                 </a>

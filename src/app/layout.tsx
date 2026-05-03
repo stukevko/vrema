@@ -16,11 +16,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Vrema | Digitale Zeiterfassung von KevkoStudio",
-    template: "%s | Vrema by KevkoStudio",
+    default: "VREMA - Intelligente Zeiterfassung",
+    template: "%s | VREMA - Intelligente Zeiterfassung",
   },
   description:
-    "Vrema ist die digitale Zeiterfassung von KevkoStudio: Stempeluhr, Pausen, GPS-Zeiterfassung, Berichte und DATEV-freundlicher Export in einer Cloud.",
+    "VREMA: Intelligente Zeiterfassung mit Stempeluhr, Pausen, GPS-Validierung, Berichten und DATEV-freundlichem Export in der Cloud.",
   keywords: [
     "Zeiterfassung",
     "Digitale Zeiterfassung",
@@ -31,6 +31,7 @@ export const metadata: Metadata = {
     "GPS Zeiterfassung",
     "DATEV Export",
     "Vrema",
+    "VREMA",
     "KevkoStudio",
   ],
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://vrema.app"),
@@ -49,34 +50,24 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Vrema | Zeiterfassung von KevkoStudio",
+    title: "VREMA - Intelligente Zeiterfassung",
     description:
-      "Digitale Zeiterfassung mit Stempeluhr, GPS, Berichten und Export. Ein Produkt von KevkoStudio.",
+      "Intelligente Zeiterfassung mit Stempeluhr, GPS-Validierung, Berichten und DATEV-freundlichem Export.",
     url: "https://vrema.app",
-    siteName: "Vrema by KevkoStudio",
+    siteName: "VREMA",
     locale: "de_DE",
     type: "website",
-    images: [
-      {
-        url: "/api/assets/logo",
-        width: 512,
-        height: 512,
-        alt: "Vrema by KevkoStudio",
-      },
-    ],
+    images: [{ url: "/vrema_logo.png", alt: "VREMA - Intelligente Zeiterfassung" }],
   },
   twitter: {
     card: "summary",
-    title: "Vrema | Digitale Zeiterfassung",
-    description: "Digitale Zeiterfassung von KevkoStudio",
+    title: "VREMA - Intelligente Zeiterfassung",
+    description: "Intelligente Zeiterfassung für Teams und Unternehmen.",
   },
   icons: {
-    icon: [
-      { url: "/api/assets/favicon", type: "image/x-icon" },
-      { url: "/api/assets/logo", type: "image/png" },
-    ],
-    shortcut: [{ url: "/api/assets/favicon", type: "image/x-icon" }],
-    apple: [{ url: "/api/assets/logo", type: "image/png" }],
+    icon: [{ url: "/favicon.ico", type: "image/x-icon", sizes: "any" }],
+    shortcut: [{ url: "/favicon.ico", type: "image/x-icon" }],
+    apple: [{ url: "/vrema_logo_icon.png", type: "image/png" }],
   },
 };
 
@@ -86,7 +77,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="de" className="dark">
+    <html lang="de">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
         <SessionProvider>{children}</SessionProvider>
       </body>

@@ -11,7 +11,7 @@ export default function TerminalIndexPage() {
         </p>
         <Link
           href="/"
-          className="inline-block rounded-xl bg-primary px-4 py-2 text-sm font-bold text-black hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all"
+          className="inline-block rounded-xl bg-primary px-4 py-2 text-sm font-bold text-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all"
         >
           Zur Startseite
         </Link>

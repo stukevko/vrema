@@ -32,7 +32,7 @@ const MOBILE_NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard#terminal-widget", label: "Terminal", icon: Timer },
   { href: "/dashboard/planning", label: "Planung", icon: CalendarClock },
-  { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+  { href: "/dashboard/billing", label: "Abonnement", icon: CreditCard },
 ];
 
 interface SidebarProps {
@@ -61,7 +61,7 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
     <aside className="hidden md:flex w-64 lg:w-72 flex-col glass-nav sticky top-0 h-screen">
       {/* Logo */}
       <div className="h-16 flex items-center gap-3 px-6 border-b border-border">
-        <Image src="/vremalogo.png" alt="Vrema" width={40} height={40} className="shrink-0 -my-2" />
+        <Image src="/vrema_logo_icon.png" alt="VREMA" width={40} height={40} className="shrink-0 -my-2" />
         <div>
           <span className="font-bold text-base tracking-tight">VREMA</span>
           <span className="block text-[9px] text-muted-foreground uppercase tracking-widest -mt-0.5">
@@ -72,7 +72,7 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
 
       {/* Plan badge */}
       <div className="px-5 pt-5">
-        <div className="px-3 py-1.5 rounded-2xl bg-slate-50 border border-border text-slate-700 text-xs font-semibold capitalize">
+        <div className="px-4 py-1.5 rounded-2xl bg-muted/40 border border-border text-foreground text-xs font-semibold capitalize">
           {plan} Plan
         </div>
       </div>
@@ -88,7 +88,7 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
               className={clsx(
                 "flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all active:scale-95",
                 isActive
-                  ? "bg-slate-100 text-slate-900 backdrop-blur-sm"
+                  ? "bg-muted text-foreground backdrop-blur-sm"
                   : "text-muted-foreground md:hover:text-foreground md:hover:bg-card/70"
               )}
             >
@@ -119,7 +119,7 @@ export function DashboardMobileBottomNav({ role }: { role?: string }) {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-white/70 backdrop-blur-xl px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 rounded-t-3xl shadow-[0_-12px_24px_rgba(0,0,0,0.25)]">
-      <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-slate-300" />
+      <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-muted-foreground/30" />
       <div className="grid grid-cols-4 gap-1">
         {items.map((item) => {
           const isActive =

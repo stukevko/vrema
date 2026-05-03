@@ -64,7 +64,7 @@ function Cursor({ show = true }: { show?: boolean }) {
 // ─── Terminal window component ────────────────────────────────────────────────
 function TerminalWindow({ title = "vrema — zsh", children }: { title?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-3xl overflow-hidden glass-panel">
+    <div className="rounded-2xl overflow-hidden glass-panel">
       <div className="flex items-center gap-2 px-4 py-3 bg-card border-b border-border">
         <span className="w-2.5 h-2.5 rounded-full bg-red-400/90" />
         <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/90" />
@@ -227,7 +227,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-border glass-nav">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Image src="/vremalogo.png" alt="Vrema Logo" width={44} height={44} className="-my-2" />
+            <Image src="/vrema_logo_icon.png" alt="VREMA" width={44} height={44} className="-my-2" />
             <div>
               <span className="font-bold text-base tracking-tight">Vrema</span>
               <span className="ml-2 text-[10px] text-muted-foreground uppercase tracking-widest">by KevkoStudio</span>
@@ -264,12 +264,12 @@ export default function LandingPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7 }}
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 text-xs mb-8">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-white text-foreground text-xs mb-8">
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />
                 VREMA - Intelligente Zeiterfassung
               </div>
 
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-6 text-slate-900">
+              <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-6 text-foreground">
                 VREMA: Die intelligente Infrastruktur fuer Ihre Personalzeitwirtschaft.
               </h1>
 
@@ -281,7 +281,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-4 flex-wrap">
                 <Link
                   href="/auth/register"
-                  className="group flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-primary text-black font-bold ring-1 ring-inset ring-white/20 transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)] active:scale-95"
+                  className="group flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-primary text-foreground font-bold ring-1 ring-inset ring-white/20 transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)] active:scale-95"
                 >
                   Jetzt starten
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -312,9 +312,9 @@ export default function LandingPage() {
 
               <div className="flex items-center gap-6 mt-8 text-xs text-muted-foreground uppercase tracking-widest">
                 <span>DSGVO-konform</span>
-                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                 <span>Made in Germany</span>
-                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                 <span>Kein Outsourcing</span>
               </div>
             </motion.div>
@@ -397,7 +397,7 @@ export default function LandingPage() {
             className="mb-16"
           >
             <p className="text-xs text-muted-foreground uppercase tracking-widest mb-4">01 / Features</p>
-            <h2 className="text-4xl md:text-5xl font-bold leading-tight text-slate-900">
+            <h2 className="text-4xl md:text-5xl font-bold leading-tight text-foreground">
               Modulare Funktionen fuer
               <br />
               <span className="text-muted-foreground">eine verlaessliche Zeitwirtschaft.</span>
@@ -412,15 +412,15 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-7 transition-all md:hover:bg-slate-50/70"
+                className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-7 transition-all md:hover:bg-muted/50"
               >
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shrink-0">
-                    <feature.icon className="w-5 h-5 text-slate-700" />
+                    <feature.icon className="w-5 h-5 text-foreground" />
                   </div>
                   <div>
                     <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">{feature.cmd}</p>
-                    <h3 className="font-semibold text-sm mb-1.5 text-slate-900">{feature.title}</h3>
+                    <h3 className="font-semibold text-sm mb-1.5 text-foreground">{feature.title}</h3>
                     <p className="text-muted-foreground text-sm leading-relaxed">{feature.desc}</p>
                   </div>
                 </div>
@@ -438,7 +438,7 @@ export default function LandingPage() {
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">02 / Core Intelligence</p>
-                  <h3 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
+                  <h3 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
                     KI-gestuetzte Analyse fuer operative Entscheidungen.
                   </h3>
                   <p className="mt-3 text-sm text-muted-foreground max-w-3xl">
@@ -600,14 +600,14 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className={`relative rounded-3xl p-8 border transition-all shadow-2xl shadow-black/20 ${
+                className={`relative rounded-2xl p-8 border transition-all shadow-2xl shadow-black/20 ${
                   plan.highlight
                     ? "bg-card border-primary/30 shadow-[0_0_40px_rgba(34,197,94,0.07)]"
                     : "bg-card border-border hover:border-white/15"
                 }`}
               >
                 {"badge" in plan && plan.badge && (
-                  <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-emerald-300 text-black text-[10px] font-bold uppercase tracking-wider">
+                  <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-emerald-300 text-foreground text-[10px] font-bold uppercase tracking-wider">
                     {plan.badge}
                   </div>
                 )}
@@ -669,7 +669,7 @@ export default function LandingPage() {
                   }
                   className={`block w-full text-center py-3 rounded-2xl font-bold text-sm transition-all ${
                     plan.highlight
-                      ? "bg-primary text-black hover:bg-primary/90"
+                      ? "bg-primary text-foreground hover:bg-primary/90"
                       : "bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-muted-foreground hover:bg-card/70"
                   }`}
                 >
@@ -712,7 +712,7 @@ export default function LandingPage() {
                 <div className="flex items-center justify-center gap-4 pt-2 flex-wrap">
                   <Link
                     href="/auth/register"
-                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-primary text-black font-bold hover:bg-primary/90 transition-all hover:scale-105 active:scale-95"
+                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-primary text-foreground font-bold hover:bg-primary/90 transition-all hover:scale-105 active:scale-95"
                   >
                     <Zap className="w-4 h-4" />
                     Jetzt registrieren
@@ -732,7 +732,7 @@ export default function LandingPage() {
       </section>
 
       <section className="py-16 px-6 border-t border-border">
-        <div className="max-w-4xl mx-auto rounded-3xl glass-panel p-8">
+        <div className="max-w-4xl mx-auto rounded-2xl glass-panel p-8">
           <h3 className="text-2xl font-bold">Werde VREMA-Partner</h3>
           <p className="mt-2 text-muted-foreground">
             Du kennst Betriebe, die eine moderne Zeiterfassung brauchen? Empfiehl VREMA und erhalte bis zu 15€ pro
@@ -741,7 +741,7 @@ export default function LandingPage() {
           <div className="mt-5">
             <Link
               href="/partner-login"
-              className="inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-black hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-foreground hover:bg-primary/90 transition-colors"
             >
               Jetzt Partner werden
               <ArrowRight className="h-4 w-4" />
@@ -754,7 +754,7 @@ export default function LandingPage() {
       <footer className="border-t border-border py-10 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <Image src="/vremalogo.png" alt="Vrema Logo" width={40} height={40} className="opacity-60 -my-2" />
+            <Image src="/vrema_logo.png" alt="VREMA" width={120} height={32} className="opacity-60 h-8 w-auto -my-2" />
             <div>
               <span className="font-bold text-sm">VREMA</span>
               <span className="ml-1.5 text-[10px] text-muted-foreground">Intelligente Zeiterfassung</span>
@@ -815,7 +815,7 @@ export default function LandingPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-lg"
             >
-              <div className="rounded-3xl overflow-hidden glass-panel">
+              <div className="rounded-2xl overflow-hidden glass-panel">
                 {/* Title bar */}
                 <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
                   <div className="flex items-center gap-2">
@@ -874,7 +874,7 @@ export default function LandingPage() {
                         ["kontakt", "kontakt@kevko.studio"],
                         ["2. Erhebung", "Nur soweit nötig für Website & Vrema-Dienste"],
                         ["3. Rechtsgrundlage", "Art. 6 Abs. 1 lit. b, c, f DSGVO"],
-                        ["4. Deine Rechte", "Auskunft · Berichtigung · Löschung · Widerspruch"],
+                        ["4. Ihre Rechte", "Auskunft · Berichtigung · Löschung · Widerspruch"],
                         ["Anfragen", "kontakt@kevko.studio"],
                       ].map(([key, val]) => (
                         <div key={key} className="flex gap-3">

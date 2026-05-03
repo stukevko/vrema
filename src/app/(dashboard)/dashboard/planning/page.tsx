@@ -46,7 +46,7 @@ export default async function PlanningPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="rounded-2xl border border-border bg-white px-5 py-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
         <h1 className="text-2xl font-bold">Mein Plan</h1>
-        <p className="text-muted-foreground text-sm mt-1">Hier siehst du deine hinterlegten Soll-Schichten pro Woche.</p>
+        <p className="text-muted-foreground text-sm mt-1">Übersicht Ihrer hinterlegten Soll-Schichten pro Woche.</p>
       </div>
       <section className="rounded-2xl border border-border bg-card p-5">
         <div className="grid gap-3 md:grid-cols-2">

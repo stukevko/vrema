@@ -66,7 +66,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
               <Link
                 href="/dashboard/settings"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-foreground md:hover:bg-card/70 transition-all active:scale-95"
+                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-foreground md:hover:bg-card/70 transition-all active:scale-95"
               >
                 <UserCircle2 className="w-4 h-4" />
                 Profil
@@ -74,14 +74,14 @@ export function DashboardTopbar({ user }: TopbarProps) {
               <Link
                 href="/dashboard/settings"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-foreground md:hover:bg-card/70 transition-all active:scale-95"
+                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-foreground md:hover:bg-card/70 transition-all active:scale-95"
               >
                 <Settings className="w-4 h-4" />
                 Einstellungen
               </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-red-600 md:hover:bg-red-50 transition-all active:scale-95"
+                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm text-red-600 md:hover:bg-red-50 transition-all active:scale-95"
               >
                 <LogOut className="w-4 h-4" />
                 Abmelden

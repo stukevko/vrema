@@ -251,7 +251,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
                 type="button"
                 onClick={handleMarkPaid}
                 disabled={selected.size === 0 || isPending}
-                className="text-xs px-3 py-1.5 rounded-lg bg-primary text-black font-semibold hover:bg-primary/90 disabled:opacity-40 flex items-center gap-1.5"
+                className="text-xs px-3 py-1.5 rounded-lg bg-primary text-foreground font-semibold hover:bg-primary/90 disabled:opacity-40 flex items-center gap-1.5"
               >
                 {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Als erledigt markieren
@@ -358,7 +358,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
               <button
                 type="submit"
                 disabled={isPending || !newName.trim() || !newEmail.trim()}
-                className="px-4 py-2 rounded-lg bg-primary text-sm font-semibold text-black hover:bg-primary/90 disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-primary text-sm font-semibold text-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 Partner erzeugen
               </button>

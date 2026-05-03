@@ -39,8 +39,8 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
 
   if (requests.length === 0) {
     return (
-      <div className="rounded-3xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-        <Clock className="w-8 h-8 text-slate-400 mx-auto mb-3" />
+      <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <Clock className="w-8 h-8 text-muted-foreground/60 mx-auto mb-3" />
         <p className="text-sm text-muted-foreground">Keine Urlaubsanträge vorhanden.</p>
       </div>
     );

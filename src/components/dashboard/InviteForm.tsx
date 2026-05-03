@@ -98,7 +98,7 @@ export function InviteForm() {
                 </button>
                 <button
                   onClick={() => setResult(null)}
-                  className="flex-1 py-2.5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 transition-colors"
+                  className="flex-1 py-2.5 rounded-xl bg-primary text-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
                 >
                   Weiteren einladen
                 </button>
@@ -166,7 +166,7 @@ export function InviteForm() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full py-3 rounded-xl bg-primary text-black font-bold text-sm hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-60 font-sans"
+                className="w-full py-3 rounded-xl bg-primary text-foreground font-bold text-sm hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-60 font-sans"
               >
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Terminal className="w-4 h-4" />}
                 {isPending ? "Wird angelegt..." : "$ invite --send"}

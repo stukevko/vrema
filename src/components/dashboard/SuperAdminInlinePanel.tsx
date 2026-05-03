@@ -45,15 +45,15 @@ export function SuperAdminInlinePanel({
   const [resultMsg, setResultMsg] = useState<string | null>(null);
 
   return (
-    <section id="super-admin" className="rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+    <section id="super-admin" className="rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
       <div className="mb-4 flex items-center gap-2">
         <Shield className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">Super Admin Modus</h2>
       </div>
 
       <p className="mb-4 text-[11px] leading-relaxed text-muted-foreground">
-        Hier legst du <span className="text-foreground">Kundenfirmen</span> an.{" "}
-        <span className="text-foreground">Empfehlungspartner (Affiliate)</span> mit Ref-Link erstellst du auf der Seite{" "}
+        Hier legen Sie <span className="text-foreground">Kundenfirmen</span> an.{" "}
+        <span className="text-foreground">Empfehlungspartner (Affiliate)</span> mit Referenzlink legen Sie auf der Seite{" "}
         <Link href="/dashboard/partners" className="text-primary underline underline-offset-2 hover:text-primary/90">
           /dashboard/partners
         </Link>{" "}
@@ -121,25 +121,25 @@ export function SuperAdminInlinePanel({
         <input
           name="companyName"
           placeholder="Firma (z. B. Muster GmbH)"
-          className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-foreground"
+          className="rounded-2xl border border-border bg-white px-3 py-2 text-xs text-foreground"
           required
         />
         <input
           name="ownerName"
           placeholder="Owner Name"
-          className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-foreground"
+          className="rounded-2xl border border-border bg-white px-3 py-2 text-xs text-foreground"
           required
         />
         <input
           name="ownerEmail"
           type="email"
           placeholder="owner@firma.de"
-          className="rounded-2xl border border-border bg-background px-3 py-2 text-xs text-foreground"
+          className="rounded-2xl border border-border bg-white px-3 py-2 text-xs text-foreground"
           required
         />
         <button
           type="submit"
-          className="rounded-2xl border border-primary/35 bg-primary px-3 py-2 text-xs font-semibold text-black hover:bg-primary/90 disabled:opacity-60"
+          className="rounded-2xl border border-primary/35 bg-primary px-3 py-2 text-xs font-semibold text-foreground hover:bg-primary/90 disabled:opacity-60"
           disabled={isPending}
         >
           Firma hinzufügen
@@ -196,7 +196,7 @@ export function SuperAdminInlinePanel({
                         });
                       })
                     }
-                    className="rounded-2xl border border-border bg-background px-2 py-1 text-foreground"
+                    className="rounded-2xl border border-border bg-white px-2 py-1 text-foreground"
                     disabled={isPending}
                   >
                     <option value="STARTER">STARTER</option>
@@ -217,7 +217,7 @@ export function SuperAdminInlinePanel({
                         });
                       })
                     }
-                    className="rounded-2xl border border-border bg-background px-2 py-1 text-foreground"
+                    className="rounded-2xl border border-border bg-white px-2 py-1 text-foreground"
                     disabled={isPending}
                   >
                     <option value="MONTHLY">MONTHLY</option>

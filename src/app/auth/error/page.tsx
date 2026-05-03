@@ -18,11 +18,11 @@ export default async function AuthErrorPage({
   const message = ERROR_MESSAGES[code] ?? ERROR_MESSAGES.Default;
 
   return (
-    <main className="min-h-screen bg-background text-slate-900 px-4 py-10">
+    <main className="min-h-screen bg-background text-foreground px-4 py-10">
       <div className="mx-auto max-w-md rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
         <p className="text-xs font-sans uppercase tracking-widest text-red-300">Auth Error</p>
         <h1 className="mt-2 text-xl font-bold">Anmeldung nicht möglich</h1>
-        <p className="mt-3 text-sm text-slate-700">{message}</p>
+        <p className="mt-3 text-sm text-foreground">{message}</p>
         <div className="mt-6">
           <Link href="/auth/login" className="text-sm font-semibold text-primary hover:underline">
             Zurück zum Login

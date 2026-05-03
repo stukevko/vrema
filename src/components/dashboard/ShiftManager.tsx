@@ -471,7 +471,7 @@ export function ShiftManager({
                 type="button"
                 onClick={() => setSelectedWeekIndex(week)}
                 className={`rounded-md px-3 py-1.5 ${
-                  selectedWeekIndex === week ? "bg-slate-100 text-foreground" : "text-muted-foreground hover:text-foreground"
+                  selectedWeekIndex === week ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Woche {week}
@@ -484,21 +484,21 @@ export function ShiftManager({
         <button
           type="button"
           onClick={() => setViewMode("timeline")}
-          className={`rounded-md px-3 py-1.5 ${viewMode === "timeline" ? "bg-slate-100 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`rounded-md px-3 py-1.5 ${viewMode === "timeline" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           Team-Timeline
         </button>
         <button
           type="button"
           onClick={() => setViewMode("simple")}
-          className={`rounded-md px-3 py-1.5 ${viewMode === "simple" ? "bg-slate-100 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`rounded-md px-3 py-1.5 ${viewMode === "simple" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           Einfach-Planer
         </button>
         <button
           type="button"
           onClick={() => setViewMode("matrix")}
-          className={`rounded-md px-3 py-1.5 ${viewMode === "matrix" ? "bg-slate-100 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`rounded-md px-3 py-1.5 ${viewMode === "matrix" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           Wochenmatrix
         </button>
@@ -515,7 +515,7 @@ export function ShiftManager({
         <select
           value={selectedUserId}
           onChange={(e) => setSelectedUserId(e.target.value)}
-          className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          className="rounded-lg border border-border bg-white px-3 py-2 text-sm"
           disabled={isPending}
         >
           {members.map((m) => (
@@ -529,14 +529,14 @@ export function ShiftManager({
           type="time"
           value={startTime}
           onChange={(e) => setStartTime(e.target.value)}
-          className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          className="rounded-lg border border-border bg-white px-3 py-2 text-sm"
           disabled={isPending}
         />
         <input
           type="time"
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)}
-          className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          className="rounded-lg border border-border bg-white px-3 py-2 text-sm"
           disabled={isPending}
         />
         <button
@@ -899,7 +899,7 @@ export function ShiftManager({
                   <div key={row.member.id} className="grid grid-cols-[220px_1fr] items-center gap-3">
                     <div className="flex items-center rounded-2xl border border-border bg-white px-4 py-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
                       <span className="inline-flex items-center gap-2 truncate text-sm text-foreground">
-                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-foreground">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-foreground">
                           {initials}
                         </span>
                         <span className="truncate text-[15px] font-medium">{row.member.name ?? row.member.email}</span>
@@ -1024,7 +1024,7 @@ export function ShiftManager({
                   step={900}
                   value={shiftEdit.startTime.slice(0, 5)}
                   onChange={(e) => setShiftEdit({ ...shiftEdit, startTime: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground"
                 />
               </div>
               <div>
@@ -1034,7 +1034,7 @@ export function ShiftManager({
                   step={900}
                   value={shiftEdit.endTime.slice(0, 5)}
                   onChange={(e) => setShiftEdit({ ...shiftEdit, endTime: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground"
                 />
               </div>
             </div>

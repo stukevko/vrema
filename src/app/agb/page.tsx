@@ -8,23 +8,23 @@ export const metadata: Metadata = {
 
 export default function AgbPage() {
   return (
-    <main className="min-h-screen bg-background px-6 py-16 text-slate-900">
+    <main className="min-h-screen bg-background px-6 py-16 text-foreground">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-xs text-slate-600">
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-xs text-muted-foreground">
           <span>Vrema by KevkoStudio</span>
-          <Link href="/" className="rounded-md border border-border px-3 py-1.5 text-slate-900 hover:bg-card/80">
+          <Link href="/" className="rounded-md border border-border px-3 py-1.5 text-foreground hover:bg-card/80">
             Zurück zur Startseite
           </Link>
         </div>
 
         <div className="space-y-6 rounded-2xl border border-border bg-card p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
         <h1 className="text-3xl font-bold">Allgemeine Geschäftsbedingungen (AGB)</h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           Diese AGB gelten für die Nutzung der SaaS-Anwendung Vrema, bereitgestellt von KevkoStudio.
         </p>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
-          <h2 className="mb-2 font-semibold text-slate-900">1. Anbieter und Geltungsbereich</h2>
+        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <h2 className="mb-2 font-semibold text-foreground">1. Anbieter und Geltungsbereich</h2>
           <p>
             Anbieter ist Kevin Konkin - KevkoStudio, Kolbstr. 5, 67346 Speyer, Deutschland, kontakt@kevko.studio.
             Diese AGB gelten für alle Verträge über die Nutzung von Vrema.
@@ -35,8 +35,8 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
-          <h2 className="mb-2 font-semibold text-slate-900">2. Vertragsgegenstand</h2>
+        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <h2 className="mb-2 font-semibold text-foreground">2. Vertragsgegenstand</h2>
           <p>
             Vertragsgegenstand ist die zeitlich befristete Bereitstellung der cloudbasierten Anwendung Vrema zur digitalen
             Arbeitszeiterfassung inklusive der jeweils im gebuchten Paket enthaltenen Funktionen.
@@ -44,8 +44,8 @@ export default function AgbPage() {
           <p>Der genaue Funktionsumfang ergibt sich aus der jeweils aktuellen Leistungsbeschreibung auf der Website.</p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
-          <h2 className="mb-2 font-semibold text-slate-900">3. Registrierung und Zugang</h2>
+        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <h2 className="mb-2 font-semibold text-foreground">3. Registrierung und Zugang</h2>
           <p>
             Der Kunde ist verpflichtet, bei Registrierung wahrheitsgemäße Angaben zu machen und Zugangsdaten vertraulich zu
             behandeln. Der Kunde ist für alle Aktivitäten unter seinen Accounts verantwortlich.
@@ -55,8 +55,8 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
-          <h2 className="mb-2 font-semibold text-slate-900">4. Preise, Abrechnung und Zahlung</h2>
+        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <h2 className="mb-2 font-semibold text-foreground">4. Preise, Abrechnung und Zahlung</h2>
           <p>Es gelten die auf der Website ausgewiesenen Preise zum Zeitpunkt des Vertragsschlusses.</p>
           <p>
             Abrechnung und Zahlungsabwicklung erfolgen über den angebundenen Zahlungsdienstleister (z. B. Stripe). Bei
@@ -64,8 +64,8 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
-          <h2 className="mb-2 font-semibold text-slate-900">5. Laufzeit, Verlängerung und Kündigung</h2>
+        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <h2 className="mb-2 font-semibold text-foreground">5. Laufzeit, Verlängerung und Kündigung</h2>
           <p>
             Die Vertragslaufzeit richtet sich nach dem gebuchten Intervall (monatlich oder jährlich) und verlängert sich
             automatisch um die jeweilige Laufzeit, sofern nicht fristgerecht gekündigt wird.
@@ -76,8 +76,8 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
-          <h2 className="mb-2 font-semibold text-slate-900">6. Verfügbarkeit und Wartung</h2>
+        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <h2 className="mb-2 font-semibold text-foreground">6. Verfügbarkeit und Wartung</h2>
           <p>
             Der Anbieter bemüht sich um einen störungsfreien Betrieb. Wartungsfenster, sicherheitsrelevante Updates und
             technisch notwendige Unterbrechungen sind zulässig.
@@ -87,8 +87,8 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
-          <h2 className="mb-2 font-semibold text-slate-900">7. Pflichten des Kunden</h2>
+        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <h2 className="mb-2 font-semibold text-foreground">7. Pflichten des Kunden</h2>
           <p>
             Der Kunde darf die Anwendung nur im vertraglich vorgesehenen Rahmen nutzen und keine rechtswidrigen Inhalte
             verarbeiten. Er ist für die Rechtmäßigkeit der eingegebenen Daten verantwortlich.
@@ -99,8 +99,8 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
-          <h2 className="mb-2 font-semibold text-slate-900">8. Haftung</h2>
+        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <h2 className="mb-2 font-semibold text-foreground">8. Haftung</h2>
           <p>
             Der Anbieter haftet unbeschränkt bei Vorsatz und grober Fahrlässigkeit sowie bei Verletzung von Leben, Körper
             oder Gesundheit.
@@ -111,16 +111,16 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
-          <h2 className="mb-2 font-semibold text-slate-900">9. Datenschutz und Auftragsverarbeitung</h2>
+        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <h2 className="mb-2 font-semibold text-foreground">9. Datenschutz und Auftragsverarbeitung</h2>
           <p>
             Die Verarbeitung personenbezogener Daten erfolgt gemäß Datenschutzhinweisen unter /datenschutz. Soweit
             erforderlich, wird eine Auftragsverarbeitungsvereinbarung (AVV) geschlossen.
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-slate-700">
-          <h2 className="mb-2 font-semibold text-slate-900">10. Schlussbestimmungen</h2>
+        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <h2 className="mb-2 font-semibold text-foreground">10. Schlussbestimmungen</h2>
           <p>
             Es gilt deutsches Recht unter Ausschluss des UN-Kaufrechts. Gerichtsstand für Kaufleute ist, soweit gesetzlich
             zulässig, Speyer.

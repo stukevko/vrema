@@ -77,7 +77,7 @@ export default function TerminalPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
         <p className="text-center text-xs font-sans uppercase tracking-widest text-muted-foreground mb-2">
           Vrema Terminal
         </p>
@@ -108,7 +108,7 @@ export default function TerminalPage() {
               className={clsx(
                 "h-16 rounded-2xl text-xl font-bold transition-colors",
                 key === "ok" &&
-                  "bg-primary text-black hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)]",
+                  "bg-primary text-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)]",
                 key === "clear" && "bg-red-50 text-red-700 hover:bg-red-100",
                 key !== "ok" && key !== "clear" && "bg-card text-foreground hover:bg-card/80"
               )}

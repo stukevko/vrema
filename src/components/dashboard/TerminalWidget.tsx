@@ -31,7 +31,7 @@ function errorHint(error: string | null) {
     return "Bitte GPS aktivieren, Standortfreigabe im Browser erlauben und erneut einstempeln.";
   }
   if (error.includes("GPS-Radius")) {
-    return "Du bist ausserhalb des erlaubten Radius. Bitte zur Arbeitsadresse wechseln oder Admin kontaktieren.";
+    return "Sie befinden sich ausserhalb des erlaubten Radius. Bitte wechseln Sie zur hinterlegten Arbeitsadresse oder wenden Sie sich an die Administration.";
   }
   return null;
 }
@@ -120,7 +120,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
   })();
 
   return (
-    <div className="rounded-3xl bg-card/90 backdrop-blur-md border border-border p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+    <div className="rounded-2xl bg-card/90 backdrop-blur-md border border-border p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-semibold text-lg">Terminal</h2>
         {gpsFeatureEnabled && (
@@ -214,7 +214,7 @@ export function TerminalWidget({ activeLog, gpsRequired, gpsFeatureEnabled }: Te
           className={`w-full py-4 rounded-full font-bold text-base flex items-center justify-center gap-2 transition-all ${
             activeLog
               ? "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20"
-              : "bg-primary text-black hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)]"
+              : "bg-primary text-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)]"
           }`}
         >
           {isPending ? (

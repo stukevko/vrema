@@ -15,8 +15,8 @@ export default function DashboardLoading() {
       </div>
 
       <div className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
-        <div className="h-80 rounded-3xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)]" />
-        <div className="h-80 rounded-3xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)]" />
+        <div className="h-80 rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)]" />
+        <div className="h-80 rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)]" />
       </div>
     </div>
   );
