@@ -67,7 +67,8 @@ export function ShiftManager({
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("16:00");
   const [message, setMessage] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"simple" | "matrix" | "timeline">("timeline");
+  /** Standard „Einfach-Planer“: auf dem Handy bedienbar; Timeline/Matrix optional. */
+  const [viewMode, setViewMode] = useState<"simple" | "matrix" | "timeline">("simple");
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<1 | 2 | 3>(1);
   const [timelineDay, setTimelineDay] = useState(1);
   const [neededStaff, setNeededStaff] = useState(2);
@@ -93,6 +94,7 @@ export function ShiftManager({
     originEndMinute: number;
     laneLeft: number;
     laneWidth: number;
+    pointerId: number;
   } | null>(null);
   const [recentDayAction, setRecentDayAction] = useState<{ dayOfWeek: number; action: "saved" | "deleted" } | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -268,7 +270,8 @@ export function ShiftManager({
     userId: string,
     mode: "create" | "move",
     originStartMinute?: number,
-    originEndMinute?: number
+    originEndMinute?: number,
+    pointerId = 0
   ) => {
     if (isPending) return;
     const rect = laneEl.getBoundingClientRect();
@@ -292,6 +295,7 @@ export function ShiftManager({
       originEndMinute: defaultEnd,
       laneLeft: rect.left,
       laneWidth: rect.width,
+      pointerId,
     });
     dragDraftRef.current = initialDraft;
     setDragDraft(initialDraft);
@@ -328,11 +332,13 @@ export function ShiftManager({
       setDragDraft(next);
       rafId = null;
     };
-    const onMove = (event: MouseEvent) => {
+    const onMove = (event: PointerEvent) => {
+      if (event.pointerId !== activeDrag.pointerId) return;
       lastClientX = event.clientX;
       if (rafId === null) rafId = window.requestAnimationFrame(flushMove);
     };
-    const onUp = () => {
+    const onUp = (event: PointerEvent) => {
+      if (event.pointerId !== activeDrag.pointerId) return;
       if (rafId !== null) window.cancelAnimationFrame(rafId);
       const draft = dragDraftRef.current;
       const snap = dragSnapshotRef.current;
@@ -359,12 +365,14 @@ export function ShiftManager({
       setDragDraft(null);
       dragDraftRef.current = null;
     };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
     return () => {
       if (rafId !== null) window.cancelAnimationFrame(rafId);
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
     };
   }, [activeDrag, members]);
 
@@ -458,11 +466,11 @@ export function ShiftManager({
   };
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+    <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
       <h2 className="text-lg font-semibold">Arbeitsplan (Soll-Zeiten)</h2>
       <p className="mt-1 text-xs text-muted-foreground">Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.</p>
       {shiftCycleWeeks > 1 && (
-        <div className="mt-3 inline-flex rounded-lg border border-border bg-background p-1 text-xs">
+        <div className="mt-3 inline-flex max-w-full rounded-lg border border-border bg-background p-1 text-xs">
           {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
             const week = (idx + 1) as 1 | 2 | 3;
             return (
@@ -470,7 +478,7 @@ export function ShiftManager({
                 key={week}
                 type="button"
                 onClick={() => setSelectedWeekIndex(week)}
-                className={`rounded-md px-3 py-1.5 ${
+                className={`min-h-11 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${
                   selectedWeekIndex === week ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -480,29 +488,33 @@ export function ShiftManager({
           })}
         </div>
       )}
-      <div className="mt-3 inline-flex rounded-lg border border-border bg-background p-1 text-xs">
-        <button
-          type="button"
-          onClick={() => setViewMode("timeline")}
-          className={`rounded-md px-3 py-1.5 ${viewMode === "timeline" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-        >
-          Team-Timeline
-        </button>
+      <div className="mt-3 flex max-w-full gap-1 overflow-x-auto rounded-lg border border-border bg-background p-1 text-xs [-webkit-overflow-scrolling:touch]">
         <button
           type="button"
           onClick={() => setViewMode("simple")}
-          className={`rounded-md px-3 py-1.5 ${viewMode === "simple" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`min-h-11 shrink-0 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${viewMode === "simple" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           Einfach-Planer
         </button>
         <button
           type="button"
           onClick={() => setViewMode("matrix")}
-          className={`rounded-md px-3 py-1.5 ${viewMode === "matrix" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`min-h-11 shrink-0 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${viewMode === "matrix" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           Wochenmatrix
         </button>
+        <button
+          type="button"
+          onClick={() => setViewMode("timeline")}
+          className={`min-h-11 shrink-0 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${viewMode === "timeline" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          Team-Timeline
+        </button>
       </div>
+      <p className="mt-2 text-[11px] text-muted-foreground lg:hidden">
+        Tipp: Auf dem Handy am besten <strong className="text-foreground">Einfach-Planer</strong> – Zeit wählen, Tag antippen. Timeline
+        funktioniert mit dem Finger ziehen; Matrix zum horizontal Scrollen.
+      </p>
       {selectedMember && (
         <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] text-foreground">
           <span>Ausgewählt:</span>
@@ -515,7 +527,7 @@ export function ShiftManager({
         <select
           value={selectedUserId}
           onChange={(e) => setSelectedUserId(e.target.value)}
-          className="rounded-lg border border-border bg-white px-3 py-2 text-sm"
+          className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
           disabled={isPending}
         >
           {members.map((m) => (
@@ -529,21 +541,21 @@ export function ShiftManager({
           type="time"
           value={startTime}
           onChange={(e) => setStartTime(e.target.value)}
-          className="rounded-lg border border-border bg-white px-3 py-2 text-sm"
+          className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
           disabled={isPending}
         />
         <input
           type="time"
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)}
-          className="rounded-lg border border-border bg-white px-3 py-2 text-sm"
+          className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
           disabled={isPending}
         />
         <button
           type="button"
           onClick={submitStandardWeek}
           disabled={isPending || !selectedUserId}
-          className="rounded-lg border border-primary/30 bg-primary/15 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/20 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all disabled:opacity-60"
+          className="min-h-11 touch-manipulation rounded-lg border border-primary/30 bg-primary/15 px-3 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-primary/20 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] disabled:opacity-60 sm:min-h-0 sm:py-2"
         >
           Standardwoche (Mo-Fr)
         </button>
@@ -551,7 +563,7 @@ export function ShiftManager({
           type="button"
           onClick={submitCopyToAll}
           disabled={isPending || !selectedUserId}
-          className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground hover:bg-card/80 disabled:opacity-60"
+          className="min-h-11 touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-card/80 disabled:opacity-60 sm:min-h-0 sm:py-2"
         >
           Auf alle übertragen
         </button>
@@ -579,14 +591,14 @@ export function ShiftManager({
         <p className="mt-2 text-xs text-amber-300">Bitte gültige Zeit wählen: Ende muss später als Start sein.</p>
       )}
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+      <div className="mt-3 flex flex-wrap items-stretch gap-2 text-xs">
         <button
           type="button"
           onClick={() => {
             setStartTime("08:00");
             setEndTime("16:00");
           }}
-          className="rounded-md border border-border bg-background px-2.5 py-1 text-foreground hover:bg-card/80"
+          className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-md border border-border bg-background px-2 py-2.5 text-foreground sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-card/80"
           disabled={isPending}
         >
           Früh: 08:00-16:00
@@ -597,7 +609,7 @@ export function ShiftManager({
             setStartTime("09:00");
             setEndTime("17:00");
           }}
-          className="rounded-md border border-border bg-background px-2.5 py-1 text-foreground hover:bg-card/80"
+          className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-md border border-border bg-background px-2 py-2.5 text-foreground sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-card/80"
           disabled={isPending}
         >
           Standard: 09:00-17:00
@@ -608,21 +620,21 @@ export function ShiftManager({
             setStartTime("14:00");
             setEndTime("22:00");
           }}
-          className="rounded-md border border-border bg-background px-2.5 py-1 text-foreground hover:bg-card/80"
+          className="min-h-11 min-w-0 flex-[1_1_100%] touch-manipulation rounded-md border border-border bg-background px-2 py-2.5 text-foreground sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-card/80"
           disabled={isPending}
         >
           Spät: 14:00-22:00
         </button>
       </div>
 
-      <div className="mt-4 grid grid-cols-7 gap-2">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         {DAY_LABELS.map((label, idx) => (
           <button
             key={label}
             type="button"
             onClick={() => applyDayFromInputs(idx)}
             disabled={isPending || !selectedUserId}
-            className={`rounded-lg border px-2 py-2 text-xs transition-colors disabled:opacity-60 ${
+            className={`min-h-[4.5rem] touch-manipulation rounded-xl border px-2 py-3 text-left text-xs transition-colors disabled:opacity-60 sm:min-h-0 sm:rounded-lg sm:py-2 ${
               selectedUserVacationDays.has(idx)
                 ? selectedUserSickDays.has(idx)
                   ? "border-red-400/35 bg-red-500/12 text-red-100 hover:bg-red-500/20"
@@ -656,7 +668,7 @@ export function ShiftManager({
         <button
           type="button"
           onClick={() => setShowDetails((v) => !v)}
-          className="rounded-md border border-border bg-background px-3 py-1.5 text-xs text-foreground hover:bg-card/80"
+          className="min-h-11 touch-manipulation rounded-md border border-border bg-background px-4 py-2 text-xs text-foreground sm:min-h-0 sm:px-3 sm:py-1.5 md:hover:bg-card/80"
         >
           {showDetails ? "Details ausblenden" : "Details anzeigen"}
         </button>
@@ -692,14 +704,14 @@ export function ShiftManager({
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="rounded-lg border border-border bg-white px-3 py-2 text-sm"
+                className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
                 disabled={isPending}
               />
               <input
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="rounded-lg border border-border bg-white px-3 py-2 text-sm"
+                className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
                 disabled={isPending}
               />
               <button
@@ -708,7 +720,7 @@ export function ShiftManager({
                   setStartTime("08:00");
                   setEndTime("16:00");
                 }}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-card/80"
+                className="min-h-11 touch-manipulation rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground sm:min-h-0 sm:py-2 md:hover:bg-card/80"
               >
                 Früh 08-16
               </button>
@@ -718,17 +730,17 @@ export function ShiftManager({
                   setStartTime("09:00");
                   setEndTime("17:00");
                 }}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-card/80"
+                className="min-h-11 touch-manipulation rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground sm:min-h-0 sm:py-2 md:hover:bg-card/80"
               >
                 Standard 09-17
               </button>
               <button
                 type="button"
                 onClick={() => setShowOnlyGaps((v) => !v)}
-                className={`rounded-lg border px-3 py-2 text-sm ${
+                className={`min-h-11 touch-manipulation rounded-lg border px-3 py-2.5 text-sm sm:min-h-0 sm:py-2 ${
                   showOnlyGaps
                     ? "border-primary/40 bg-primary/15 text-primary"
-                    : "border-border bg-background text-foreground hover:bg-card/80"
+                    : "border-border bg-background text-foreground md:hover:bg-card/80"
                 }`}
               >
                 {showOnlyGaps ? "Nur Lücken: AN" : "Nur Lücken zeigen"}
@@ -763,7 +775,7 @@ export function ShiftManager({
                           type="button"
                           onClick={() => applyMatrixCell(m.id, dayOfWeek)}
                           disabled={isPending || isBlocked}
-                          className={`w-full rounded-md border px-2 py-1.5 text-[11px] font-sans transition-colors ${
+                          className={`min-h-12 w-full touch-manipulation rounded-lg border px-2 py-2 text-[11px] font-sans transition-colors sm:min-h-0 sm:rounded-md sm:py-1.5 ${
                             conflictType === "SICK"
                               ? "border-red-400/35 bg-red-500/15 text-red-100 cursor-not-allowed"
                               : conflictType === "VACATION"
@@ -810,13 +822,13 @@ export function ShiftManager({
       )}
 
       {viewMode === "timeline" && (
-        <div className="mt-4 rounded-xl border border-border bg-background p-3">
-          <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="mt-4 rounded-xl border border-border bg-background p-3 sm:p-4">
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">Fokusmodus: Planung zuerst, Kennzahlen optional.</p>
             <button
               type="button"
               onClick={() => setShowPlannerInfo((v) => !v)}
-              className="rounded-md border border-border bg-background px-2.5 py-1 text-[11px] text-foreground hover:bg-card/80"
+              className="min-h-11 shrink-0 touch-manipulation rounded-md border border-border bg-background px-3 py-2 text-[11px] text-foreground sm:min-h-0 sm:px-2.5 sm:py-1 md:hover:bg-card/80"
             >
               {showPlannerInfo ? "Info ausblenden" : "Info einblenden"}
             </button>
@@ -835,7 +847,7 @@ export function ShiftManager({
             <select
               value={timelineDay}
               onChange={(e) => setTimelineDay(Number(e.target.value))}
-              className="rounded-lg border border-border bg-white px-3 py-2 text-sm"
+              className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
             >
               {MATRIX_DAYS.map((d) => (
                 <option key={d} value={d}>
@@ -849,7 +861,7 @@ export function ShiftManager({
               max={20}
               value={neededStaff}
               onChange={(e) => setNeededStaff(Math.max(1, Number(e.target.value) || 1))}
-              className="rounded-lg border border-border bg-white px-3 py-2 text-sm"
+              className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
               title="Benötigte Mitarbeiter pro Zeitfenster"
             />
             <p className="flex items-center text-[11px] text-muted-foreground leading-snug">
@@ -864,16 +876,16 @@ export function ShiftManager({
             ) : null}
           </div>
 
-          <div className="mt-3 max-h-[70vh] overflow-auto">
-            <div className="min-w-[880px] space-y-4">
-              <div className="sticky top-0 z-30 grid grid-cols-[220px_1fr] items-center gap-2 border-b border-border bg-background py-1 text-[11px] text-muted-foreground">
-                <div>Mitarbeiter</div>
-                <div className="grid grid-cols-9">
+          <div className="mt-3 max-h-[75vh] overflow-auto overscroll-contain">
+            <div className="min-w-0 space-y-4 lg:min-w-[880px]">
+              <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground lg:grid-cols-[220px_1fr] lg:items-center">
+                <div className="hidden font-medium text-foreground lg:block">Mitarbeiter</div>
+                <div className="grid grid-cols-9 font-sans">
                   {Array.from({ length: 9 }).map((_, idx) => {
                     const hour = TIMELINE_START_HOUR + idx * 2;
                     return (
-                      <span key={hour} className="text-center font-sans">
-                        {String(hour).padStart(2, "0")}:00
+                      <span key={hour} className="text-center text-[10px] sm:text-[11px]">
+                        {String(hour).padStart(2, "0")}
                       </span>
                     );
                   })}
@@ -896,10 +908,13 @@ export function ShiftManager({
                     : (Math.max(0, Math.min(visualEnd, TIMELINE_END_HOUR * 60) - Math.max(visualStart, TIMELINE_START_HOUR * 60)) / TIMELINE_TOTAL_MINUTES) * 100;
                 const initials = (row.member.name ?? row.member.email).slice(0, 2).toUpperCase();
                 return (
-                  <div key={row.member.id} className="grid grid-cols-[220px_1fr] items-center gap-3">
-                    <div className="flex items-center rounded-2xl border border-border bg-white px-4 py-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-                      <span className="inline-flex items-center gap-2 truncate text-sm text-foreground">
-                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-foreground">
+                  <div
+                    key={row.member.id}
+                    className="grid grid-cols-1 items-stretch gap-2 lg:grid-cols-[220px_1fr] lg:items-center lg:gap-3"
+                  >
+                    <div className="flex min-h-12 items-center rounded-2xl border border-border bg-white px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] lg:min-h-0 lg:px-4 lg:py-4">
+                      <span className="inline-flex min-w-0 items-center gap-2 text-sm text-foreground">
+                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-foreground lg:h-7 lg:w-7 lg:text-[11px]">
                           {initials}
                         </span>
                         <span className="truncate text-[15px] font-medium">{row.member.name ?? row.member.email}</span>
@@ -907,10 +922,20 @@ export function ShiftManager({
                     </div>
                     <div
                       data-timeline-lane
-                      className="relative h-16 rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
-                      onMouseDown={(e) => {
+                      className="relative h-[4.25rem] touch-manipulation rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)] lg:h-16"
+                      style={{ touchAction: "pan-y" }}
+                      onPointerDown={(e) => {
+                        if (e.pointerType === "mouse" && e.button !== 0) return;
                         if (row.conflict) return;
-                        beginTimelineDrag(e.clientX, e.currentTarget as HTMLElement, row.member.id, "create");
+                        beginTimelineDrag(
+                          e.clientX,
+                          e.currentTarget as HTMLElement,
+                          row.member.id,
+                          "create",
+                          undefined,
+                          undefined,
+                          e.pointerId
+                        );
                       }}
                       onDragOver={(e) => {
                         if (!row.conflict) e.preventDefault();
@@ -950,14 +975,15 @@ export function ShiftManager({
                         </div>
                       ) : widthPct > 0 ? (
                         <div
-                          className={`group absolute top-1.5 bottom-1.5 z-10 rounded-lg bg-primary/40 border border-primary/60 px-2 text-[11px] text-emerald-100 flex items-center cursor-grab active:cursor-grabbing ${
+                          className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg border border-primary/60 bg-primary/40 px-2 text-[11px] text-emerald-100 active:cursor-grabbing ${
                             activeDrag?.userId === row.member.id
-                              ? "transition-none shadow-lg shadow-black/40"
+                              ? "shadow-lg shadow-black/40 transition-none"
                               : "transition-[left,width] duration-100 ease-out"
                           }`}
                           style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
                           title={`${minutesToHHMM(visualStart ?? TIMELINE_START_HOUR * 60)}-${minutesToHHMM(visualEnd ?? TIMELINE_START_HOUR * 60)}`}
-                          onMouseDown={(e) => {
+                          onPointerDown={(e) => {
+                            if (e.pointerType === "mouse" && e.button !== 0) return;
                             if (!row.shift || row.conflict) return;
                             const lane = (e.currentTarget as HTMLElement).closest("[data-timeline-lane]");
                             if (!(lane instanceof HTMLElement)) return;
@@ -965,7 +991,7 @@ export function ShiftManager({
                             const em = toMinutes(row.shift.endTime);
                             if (sm === null || em === null) return;
                             e.stopPropagation();
-                            beginTimelineDrag(e.clientX, lane, row.member.id, "move", sm, em);
+                            beginTimelineDrag(e.clientX, lane, row.member.id, "move", sm, em, e.pointerId);
                           }}
                         >
                           {!activeDrag && (
@@ -981,7 +1007,7 @@ export function ShiftManager({
                                   });
                                 });
                               }}
-                              className="absolute -top-1 -right-1 hidden h-4 w-4 items-center justify-center rounded-full border border-red-300/40 bg-red-500/90 text-[10px] text-foreground group-hover:inline-flex"
+                              className="absolute -right-1 -top-1 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-300/40 bg-red-500/90 text-sm text-foreground opacity-100 lg:h-7 lg:w-7 lg:text-xs lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100"
                               title="Schicht löschen"
                             >
                               ×
@@ -1009,7 +1035,7 @@ export function ShiftManager({
           className="fixed inset-0 z-[100] flex items-center justify-center bg-white/70 p-4"
           role="dialog"
           aria-modal="true"
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             if (e.target === e.currentTarget) setShiftEdit(null);
           }}
         >
@@ -1024,7 +1050,7 @@ export function ShiftManager({
                   step={900}
                   value={shiftEdit.startTime.slice(0, 5)}
                   onChange={(e) => setShiftEdit({ ...shiftEdit, startTime: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground"
+                  className="mt-1 min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground sm:min-h-0 sm:py-2"
                 />
               </div>
               <div>
@@ -1034,11 +1060,11 @@ export function ShiftManager({
                   step={900}
                   value={shiftEdit.endTime.slice(0, 5)}
                   onChange={(e) => setShiftEdit({ ...shiftEdit, endTime: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground"
+                  className="mt-1 min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground sm:min-h-0 sm:py-2"
                 />
               </div>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <button
                 type="button"
                 disabled={isPending}
@@ -1068,7 +1094,7 @@ export function ShiftManager({
                     }
                   });
                 }}
-                className="rounded-lg border border-primary/35 bg-primary/15 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/25 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all disabled:opacity-50"
+                className="min-h-12 w-full touch-manipulation rounded-lg border border-primary/35 bg-primary/15 px-4 py-3 text-sm font-semibold text-primary transition-all hover:bg-primary/25 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] disabled:opacity-50 sm:w-auto sm:py-2"
               >
                 Speichern
               </button>
@@ -1091,14 +1117,14 @@ export function ShiftManager({
                     }
                   });
                 }}
-                className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 hover:bg-red-100 disabled:opacity-50"
+                className="min-h-12 w-full touch-manipulation rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 transition-colors hover:bg-red-100 disabled:opacity-50 sm:w-auto sm:py-2"
               >
                 Löschen
               </button>
               <button
                 type="button"
                 onClick={() => setShiftEdit(null)}
-                className="rounded-lg border border-border bg-background px-4 py-2 text-sm text-foreground hover:bg-card/80"
+                className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground transition-colors sm:w-auto sm:py-2 md:hover:bg-card/80"
               >
                 Abbrechen
               </button>
