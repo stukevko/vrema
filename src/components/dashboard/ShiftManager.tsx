@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Drawer } from "vaul";
 import { applyStandardWeek, clearShiftForDay, copyWeekToAllMembers, setShiftForDay } from "@/lib/actions/team";
 
@@ -124,16 +124,19 @@ export function ShiftManager({
   const [mobileEndPickerCustom, setMobileEndPickerCustom] = useState(false);
   const mobileDayLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mobileDayLongPressFiredRef = useRef(false);
+  /** Ab 1024px: Desktop-Baum (Tabs + Timeline) mounten – darunter kein Timeline-DOM. */
+  const [renderDesktopTree, setRenderDesktopTree] = useState(false);
 
   useEffect(() => {
     if (viewMode !== "simple") setSimpleAddSheetOpen(false);
   }, [viewMode]);
 
-  /** Unter lg nur Einfach-Planer: Timeline-Modus und ggf. Timeline-Dialog bereinigen. */
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1023px)");
+  useLayoutEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
     const sync = () => {
-      if (mq.matches) {
+      const wide = mq.matches;
+      setRenderDesktopTree(wide);
+      if (!wide) {
         setViewMode("simple");
         setShiftEdit(null);
       }
@@ -1393,51 +1396,66 @@ export function ShiftManager({
     </>
   );
 
+  const weekPicker =
+    shiftCycleWeeks > 1 ? (
+      <div className="mt-3 inline-flex max-w-full rounded-lg border border-border bg-background p-1 text-xs">
+        {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
+          const week = (idx + 1) as 1 | 2 | 3;
+          return (
+            <button
+              key={week}
+              type="button"
+              onClick={() => setSelectedWeekIndex(week)}
+              className={`min-h-11 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${
+                selectedWeekIndex === week ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Woche {week}
+            </button>
+          );
+        })}
+      </div>
+    ) : null;
+
+  const selectedMemberChip =
+    selectedMember ? (
+      <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] text-foreground">
+        <span>Ausgewählt:</span>
+        <span className="font-semibold text-foreground">{selectedMember.name ?? selectedMember.email}</span>
+      </div>
+    ) : null;
+
   return (
     <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
-      <h2 className="text-lg font-semibold tracking-tight">
-        <span className="lg:hidden">Einfach-Planer</span>
-        <span className="hidden lg:inline">Arbeitsplan (Soll-Zeiten)</span>
-      </h2>
-      <p className="mt-1 text-xs text-muted-foreground">
-        <span className="lg:hidden">Nur diese Ansicht: Mitarbeiter, Zeiten und Wochentage – ohne Timeline.</span>
-        <span className="hidden lg:inline">Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.</span>
-      </p>
-      {shiftCycleWeeks > 1 && (
-        <div className="mt-3 inline-flex max-w-full rounded-lg border border-border bg-background p-1 text-xs">
-          {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
-            const week = (idx + 1) as 1 | 2 | 3;
-            return (
-              <button
-                key={week}
-                type="button"
-                onClick={() => setSelectedWeekIndex(week)}
-                className={`min-h-11 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${
-                  selectedWeekIndex === week ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Woche {week}
-              </button>
-            );
-          })}
+      {!renderDesktopTree ? (
+        <div className="block">
+          <h2 className="text-lg font-semibold tracking-tight">Einfach-Planer</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Mitarbeiter, Zeiten und Wochentage – nur diese Planung, kein Timeline-Modus.
+          </p>
+          {weekPicker}
+          {selectedMemberChip}
+          {MobileView}
         </div>
-      )}
-      {selectedMember && (
-        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] text-foreground">
-          <span>Ausgewählt:</span>
-          <span className="font-semibold text-foreground">{selectedMember.name ?? selectedMember.email}</span>
+      ) : null}
+
+      {renderDesktopTree ? (
+        <div className="block">
+          <h2 className="text-lg font-semibold tracking-tight">Arbeitsplan (Soll-Zeiten)</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.
+          </p>
+          {weekPicker}
+          {selectedMemberChip}
+          {DesktopView}
         </div>
-      )}
-      <>
-        <div className="block lg:hidden">{MobileView}</div>
-        <div className="hidden lg:block">{DesktopView}</div>
-      </>
+      ) : null}
 
       {message && <p className="mt-3 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground">{message}</p>}
 
-      {shiftEdit && (
+      {renderDesktopTree && shiftEdit ? (
         <div
-          className="fixed inset-0 z-[100] hidden items-end justify-center bg-black/45 p-0 lg:flex md:items-center md:bg-white/70 md:p-4"
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-0 md:items-center md:bg-white/70 md:p-4"
           role="dialog"
           aria-modal="true"
           onPointerDown={(e) => {
@@ -1536,7 +1554,7 @@ export function ShiftManager({
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </section>
   );
 }
