@@ -14,6 +14,7 @@
     "retention:run": "tsx scripts/data-retention.ts",
     "absent:run": "tsx scripts/mark-absent.ts",
     "affiliate:mature": "tsx scripts/affiliate-mature.ts",
+    "blog:seed": "tsx scripts/seed-blog-posts.ts",
     "test:browser": "playwright test"
   },
   "prisma": {
@@ -28,6 +29,7 @@
     "@simplewebauthn/browser": "^9.0.1",
     "@simplewebauthn/server": "^9.0.3",
     "@stripe/stripe-js": "^9.3.1",
+    "@tailwindcss/typography": "^0.5.19",
     "@types/bcryptjs": "^2.4.6",
     "@types/pg": "^8.20.0",
     "bcryptjs": "^3.0.3",
@@ -49,9 +51,9 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
-    "@types/leaflet": "^1.9.21",
     "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

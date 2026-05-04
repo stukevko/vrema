@@ -38,7 +38,7 @@ export const authConfig: NextAuthConfig = {
       const isLoggedIn = !!auth?.user;
       const { pathname } = request.nextUrl;
 
-      if (pathname === "/") return true;
+      if (pathname === "/" || pathname.startsWith("/blog")) return true;
       const PUBLIC_PREFIXES = [
         "/auth/",
         "/partner-login",

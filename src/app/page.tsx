@@ -268,9 +268,18 @@ export default function LandingPage() {
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
             <a href="#features" className="hover:text-foreground transition-colors">Features</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">Preise</a>
+            <Link href="/blog" className="font-medium text-foreground transition-colors hover:text-primary">
+              Insights
+            </Link>
           </div>
 
           <div className="flex min-w-0 max-w-[55%] flex-shrink-0 flex-wrap items-center justify-end gap-x-1.5 gap-y-1 sm:max-w-none sm:gap-3">
+            <Link
+              href="/blog"
+              className="shrink-0 rounded-xl px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-card hover:text-foreground md:hidden"
+            >
+              Insights
+            </Link>
             <Link
               href="/auth/login"
               className="max-w-full break-words text-right text-sm text-muted-foreground transition-colors hover:text-foreground px-2 py-1.5 rounded-xl hover:bg-card sm:px-3 md:whitespace-nowrap"
@@ -831,6 +840,9 @@ export default function LandingPage() {
             </Link>
             <Link href="/avv" className="hover:text-foreground transition-colors">
               AVV
+            </Link>
+            <Link href="/blog" className="hover:text-foreground transition-colors">
+              Insights
             </Link>
             <a href="#pricing" className="hover:text-foreground transition-colors">Preise</a>
             <Link href="/partner" className="hover:text-foreground transition-colors">

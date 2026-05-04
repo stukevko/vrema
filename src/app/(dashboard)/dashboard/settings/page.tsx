@@ -6,7 +6,21 @@ import { CompanySettingsForm } from "@/components/dashboard/CompanySettingsForm"
 import { PasswordChangeForm } from "@/components/dashboard/PasswordChangeForm";
 import { PasskeySecurityForm } from "@/components/dashboard/PasskeySecurityForm";
 import type { LucideIcon } from "lucide-react";
-import { Settings, Building2, Lock, Fingerprint, Users, CalendarDays, CreditCard, Timer, Shield, ChevronRight } from "lucide-react";
+import {
+  Settings,
+  Building2,
+  Lock,
+  Fingerprint,
+  Users,
+  CalendarDays,
+  CreditCard,
+  Timer,
+  Shield,
+  ChevronRight,
+  UserRound,
+  Rss,
+} from "lucide-react";
+import { ProfileAvatarForm } from "@/components/dashboard/ProfileAvatarForm";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -29,6 +43,7 @@ export default async function SettingsPage() {
   }
   if (isSuperAdmin) {
     mobileMoreLinks.push({ href: "/dashboard/partners", label: "Vertriebspartner", icon: Shield });
+    mobileMoreLinks.push({ href: "/dashboard/super-admin/blog", label: "Blog-Manager", icon: Rss });
   }
 
   return (
@@ -64,6 +79,17 @@ export default async function SettingsPage() {
           ))}
         </div>
       </nav>
+
+      <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <UserRound className="h-4 w-4 text-muted-foreground" />
+          <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">Profil</h2>
+        </div>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Persönliches Profilbild — erscheint in der Kopfzeile und macht das Konto leichter wiederzuerkennen.
+        </p>
+        <ProfileAvatarForm imageUrl={session.user.image ?? null} />
+      </section>
 
       {/* Company settings – only for owners */}
       {isOwner && company && (

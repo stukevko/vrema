@@ -7,6 +7,7 @@ import type { Provider } from "next-auth/providers";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { authConfig } from "@/auth.config";
+import { getCachedUserProfile } from "@/lib/session-user-profile";
 
 // Custom error so the login page receives a clear, typed reason.
 class InvalidCredentialsError extends CredentialsSignin {
@@ -139,6 +140,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.plan = (token.plan as string) ?? "STARTER";
       session.user.affiliateId = (token.affiliateId as string | undefined) ?? undefined;
       session.user.accountType = (token.accountType as "user" | "affiliate" | undefined) ?? undefined;
+
+      const userId = session.user.id;
+      if (userId && !userId.startsWith("affiliate:")) {
+        const row = await getCachedUserProfile(userId);
+        if (row) {
+          session.user.name = row.name ?? session.user.name ?? null;
+          session.user.email = row.email ?? session.user.email ?? null;
+          if (row.image?.startsWith("data:")) {
+            session.user.image = "/api/user-avatar";
+          } else {
+            session.user.image = row.image ?? null;
+          }
+        }
+      }
+
       return session;
     },
     async signIn({ user, account }) {

@@ -39,8 +39,8 @@ export function DashboardTopbar({ user }: TopbarProps) {
     : user.email?.[0]?.toUpperCase() ?? "?";
 
   return (
-    <header className="glass-nav fixed inset-x-0 top-0 z-[60] border-b border-border pt-[env(safe-area-inset-top,0px)] md:relative md:inset-auto md:z-30 md:pt-0">
-      <div className="flex h-16 min-w-0 items-center justify-between gap-2 overflow-hidden px-3 sm:px-4 md:px-6">
+    <header className="glass-nav fixed inset-x-0 top-0 z-[60] overflow-visible border-b border-border pt-[env(safe-area-inset-top,0px)] md:relative md:inset-auto md:z-30 md:pt-0">
+      <div className="flex h-16 min-w-0 items-center justify-between gap-2 px-3 sm:px-4 md:px-6">
         <Link href="/dashboard" className="shrink-0 md:hidden">
           <Image
             src="/vrema_logo.png"
@@ -71,17 +71,29 @@ export function DashboardTopbar({ user }: TopbarProps) {
           <div className="relative" ref={dropdownRef}>
             <button
               type="button"
+              aria-expanded={open}
+              aria-haspopup="menu"
+              aria-controls="dashboard-user-menu"
               onClick={() => setOpen((prev) => !prev)}
               className="flex min-h-12 items-center gap-2 rounded-2xl border border-border bg-white px-2 py-1.5 transition-all active:scale-95 md:hover:bg-card/70 md:min-h-0"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-xs font-bold text-primary">
-                {initials}
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/15 text-xs font-bold text-primary">
+                {user.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- OAuth-URLs & /api/user-avatar
+                  <img src={user.image} alt="" className="h-full w-full object-cover" width={36} height={36} />
+                ) : (
+                  initials
+                )}
               </div>
               <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
             </button>
 
             {open && (
-              <div className="absolute right-0 top-[calc(100%+0.25rem)] z-30 w-56 rounded-2xl glass-panel p-1 shadow-lg">
+              <div
+                id="dashboard-user-menu"
+                role="menu"
+                className="absolute right-0 top-[calc(100%+0.25rem)] z-[100] w-56 rounded-2xl glass-panel p-1 shadow-lg"
+              >
                 <div className="mb-1 border-b border-border px-3 py-2">
                   <p className="truncate text-sm font-semibold">{user.name ?? "Profil"}</p>
                   <p className="truncate text-xs text-muted-foreground">{user.email ?? ""}</p>

@@ -8,6 +8,7 @@ import {
   CreditCard,
   Settings,
   Shield,
+  Rss,
 } from "lucide-react";
 
 export type DashboardNavItem = {
@@ -38,6 +39,7 @@ export function getDashboardNavItems(role: string, plan: string): DashboardNavIt
   if (role === "SUPER_ADMIN") {
     return [
       { href: "/dashboard/partners", label: "Vertriebspartner", icon: Shield, plans: ALL_PLANS },
+      { href: "/dashboard/super-admin/blog", label: "Blog-Manager", icon: Rss, plans: ALL_PLANS },
       ...visible,
     ];
   }

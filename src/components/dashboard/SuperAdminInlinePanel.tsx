@@ -57,7 +57,14 @@ export function SuperAdminInlinePanel({
         <Link href="/dashboard/partners" className="text-primary underline underline-offset-2 hover:text-primary/90">
           /dashboard/partners
         </Link>{" "}
-        unter „Affiliate & Auszahlungen“.
+        unter „Affiliate & Auszahlungen“. Blog-Artikel:{" "}
+        <Link
+          href="/dashboard/super-admin/blog"
+          className="text-primary underline underline-offset-2 hover:text-primary/90"
+        >
+          Blog-Manager
+        </Link>
+        .
       </p>
 
       <div className="mb-4 grid gap-3 md:grid-cols-4">

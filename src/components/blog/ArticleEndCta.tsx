@@ -1,0 +1,29 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+
+export function ArticleEndCta() {
+  return (
+    <aside className="not-prose mt-14 rounded-2xl border border-border bg-gradient-to-br from-primary/12 via-card to-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-8">
+      <p className="text-xs font-semibold uppercase tracking-widest text-primary">VREMA</p>
+      <h2 className="mt-2 text-xl font-bold tracking-tight text-foreground sm:text-2xl">Bereit für die neue Zeiterfassung?</h2>
+      <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+        Starten Sie mit dem kostenlosen Konto — Terminal, Saldo und Team in wenigen Minuten eingerichtet.
+      </p>
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <Link
+          href="/auth/register"
+          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-all hover:bg-primary/90 active:scale-[0.99]"
+        >
+          Jetzt VREMA kostenlos testen
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
+        <Link
+          href="/#pricing"
+          className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-border px-6 text-sm font-medium text-muted-foreground transition-colors hover:border-foreground/20 hover:text-foreground"
+        >
+          Pläne vergleichen
+        </Link>
+      </div>
+    </aside>
+  );
+}

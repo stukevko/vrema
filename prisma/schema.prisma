@@ -55,6 +55,12 @@ enum AffiliateEarningStatus {
   CANCELLED // z. B. Rückerstattung (manuell)
 }
 
+enum BlogPostCategory {
+  UPDATES
+  TUTORIALS
+  KNOWLEDGE
+}
+
 model Affiliate {
   id        String   @id @default(cuid())
   code      String   @unique // Kleinbuchstaben, z. B. ?ref=kevin
@@ -346,4 +352,19 @@ model VacationRequest {
   @@index([companyId, status])
   @@index([companyId, startDate])
   @@index([companyId, endDate])
+}
+
+model BlogPost {
+  id         String           @id @default(cuid())
+  slug       String           @unique
+  title      String
+  teaser     String           @db.Text
+  content    String           @db.Text
+  category   BlogPostCategory
+  youtubeId  String?
+  published  Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+
+  @@index([published, createdAt])
+  @@index([category])
 }
