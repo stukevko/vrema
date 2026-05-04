@@ -254,7 +254,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <details className="group rounded-2xl glass-panel overflow-hidden">
+          <details className="group rounded-2xl glass-panel">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-left marker:content-none [&::-webkit-details-marker]:hidden">
               <div>
                 <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Details</p>

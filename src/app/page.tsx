@@ -251,8 +251,8 @@ export default function LandingPage() {
       />
 
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
-      <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full overflow-hidden border-b border-border glass-nav">
-        <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-2 overflow-hidden px-4">
+      <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full overflow-x-hidden border-b border-border glass-nav">
+        <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-2 overflow-x-hidden px-4">
           <Link href="/" className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none">
             <Image
               src="/vrema_logo.png"
@@ -639,7 +639,7 @@ export default function LandingPage() {
             </span>
           </div>
 
-          <div className="grid min-w-0 max-w-full grid-cols-1 gap-5 md:grid-cols-3">
+          <div className="mt-4 grid min-w-0 max-w-full grid-cols-1 gap-5 pt-1 md:grid-cols-3">
             {PLANS.map((plan, i) => (
               <motion.div
                 key={plan.key}
@@ -647,14 +647,14 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className={`relative max-w-full min-w-0 overflow-hidden rounded-2xl border p-8 shadow-2xl shadow-black/20 transition-all ${
+                className={`relative max-w-full min-w-0 overflow-visible rounded-2xl border p-8 shadow-2xl shadow-black/20 transition-all ${
                   plan.highlight
                     ? "bg-card border-primary/30 shadow-[0_0_40px_rgba(34,197,94,0.07)]"
                     : "bg-card border-border hover:border-white/15"
                 }`}
               >
                 {"badge" in plan && plan.badge && (
-                  <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-emerald-300 text-foreground text-[10px] font-bold uppercase tracking-wider">
+                  <div className="absolute -top-3 left-6 z-10 whitespace-nowrap rounded-full bg-emerald-300 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground shadow-sm">
                     {plan.badge}
                   </div>
                 )}

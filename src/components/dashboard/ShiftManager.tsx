@@ -1244,7 +1244,7 @@ export function ShiftManager({
           </div>
 
           <div className="mt-3 max-h-[75vh] min-w-0 max-w-full overflow-x-auto overflow-y-auto overscroll-contain">
-            <div className="w-full min-w-0 space-y-4 md:min-w-[720px] lg:min-w-[880px]">
+            <div className="w-full min-w-0 space-y-4 py-1 md:min-w-[720px] lg:min-w-[880px]">
               <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground md:grid-cols-[220px_1fr] md:items-center">
                 <div className="hidden font-medium text-foreground md:block">Mitarbeiter</div>
                 <div className="grid grid-cols-9 font-sans">

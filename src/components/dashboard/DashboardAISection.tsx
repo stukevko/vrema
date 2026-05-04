@@ -25,7 +25,7 @@ export function DashboardAISection({ children }: { children: React.ReactNode }) 
   return (
     <details
       ref={ref}
-      className="group overflow-hidden rounded-2xl border border-border bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
+      className="group rounded-2xl border border-border bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-white px-4 py-3 marker:content-none [&::-webkit-details-marker]:hidden sm:px-5 sm:py-4">
         <div className="flex min-w-0 items-center gap-2">

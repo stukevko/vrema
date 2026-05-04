@@ -1,7 +1,8 @@
 /**
  * Idempotent: upsertet die drei Standard-Artikel anhand des Slugs.
- * Ausführen: `npm run blog:seed` (DATABASE_URL erforderlich)
+ * Ausführen: `npm run blog:seed` (DATABASE_URL in `.env` im Projektroot)
  */
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { DEFAULT_BLOG_SEED_ROWS } from "../src/lib/blog/seed-default-posts";
 
