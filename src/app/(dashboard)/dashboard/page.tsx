@@ -5,12 +5,74 @@ import { redirect } from "next/navigation";
 import { TerminalWidget } from "@/components/dashboard/TerminalWidget";
 import { SaldoWidget } from "@/components/dashboard/SaldoWidget";
 import { calculateSaldo } from "@/lib/actions/worklogs";
-import { Users, CalendarDays, Clock, ListChecks, TriangleAlert, ClipboardCheck } from "lucide-react";
+import {
+  Users,
+  CalendarDays,
+  Clock,
+  ListChecks,
+  TriangleAlert,
+  ClipboardCheck,
+  ChevronDown,
+  Target,
+  LogIn,
+} from "lucide-react";
 import Link from "next/link";
 import { CorrectionRequestStatus, EntryStatus, UserRole, VacationStatus } from "@prisma/client";
 import { getSuperAdminMonitoring, getSuperAdminOverview } from "@/lib/actions/super-admin";
 import { SuperAdminInlinePanel } from "@/components/dashboard/SuperAdminInlinePanel";
 import { AIInsights } from "@/components/dashboard/AIInsights";
+import { DashboardAISection } from "@/components/dashboard/DashboardAISection";
+
+type TeamStatsSnapshot = {
+  totalEmployees: number;
+  activeToday: number;
+  pendingVacations: number;
+  absentToday: number;
+  lateToday: number;
+  pendingCorrections: number;
+};
+
+/** Eine klare Leitlinie für Owner/Manager/Super-Admin — weniger „Command Center“, mehr Führung. */
+function managerPrimaryFocus(stats: TeamStatsSnapshot) {
+  if (stats.absentToday > 0) {
+    return {
+      title: `${stats.absentToday} fehlende Anwesenheit${stats.absentToday === 1 ? "" : "en"} heute`,
+      description: "Prüfen Sie Stempelungen und Abwesenheiten im Team, bevor Sie nachjustieren.",
+      href: "/dashboard/reports",
+      cta: "Zu den Berichten",
+    };
+  }
+  if (stats.pendingCorrections > 0) {
+    return {
+      title: `${stats.pendingCorrections} offene Zeitkorrektur${stats.pendingCorrections === 1 ? "" : "en"}`,
+      description: "Freigaben sichern die Nachvollziehbarkeit für Lohn und Prüfung.",
+      href: "/dashboard/reports",
+      cta: "Korrekturen prüfen",
+    };
+  }
+  if (stats.lateToday > 0) {
+    return {
+      title: `${stats.lateToday} verspätete Ankunft${stats.lateToday === 1 ? "" : "en"} heute`,
+      description: "Kurz im Schichtplan oder in den Zeiten gegenprüfen.",
+      href: "/dashboard/planning",
+      cta: "Zur Planung",
+    };
+  }
+  if (stats.pendingVacations > 0) {
+    return {
+      title: `${stats.pendingVacations} Urlaubsantrag${stats.pendingVacations === 1 ? "" : "e"} offen`,
+      description: "Schnelle Entscheidungen entlasten Ihr Team.",
+      href: "/dashboard/vacation",
+      cta: "Anträge bearbeiten",
+    };
+  }
+  return {
+    title: "Heute keine kritischen Hinweise",
+    description: "Planung und Berichte bleiben trotzdem jederzeit griffbereit.",
+    href: "/dashboard/planning",
+    cta: "Planung öffnen",
+  };
+}
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -90,6 +152,8 @@ export default async function DashboardPage() {
     return acc + (end.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins;
   }, 0);
 
+  const focus = teamStats ? managerPrimaryFocus(teamStats) : null;
+
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5 px-2 text-foreground sm:gap-6 sm:px-0 md:gap-8 md:px-0">
       {/* Header */}
@@ -103,14 +167,49 @@ export default async function DashboardPage() {
         </p>
       </div>
 
+      {/* Mitarbeiter: eine klare Primäraktion vor dem restlichen Dashboard */}
+      {role === "EMPLOYEE" && (
+        <div className="order-2 rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card p-5 shadow-sm sm:p-6">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <LogIn className="h-4 w-4" aria-hidden />
+            </span>
+            <div className="min-w-0 flex-1 space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-primary">Jetzt stempeln</p>
+              {activeLog ? (
+                <>
+                  <h2 className="text-base font-bold tracking-tight text-foreground sm:text-lg">Sie sind eingestempelt</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Pausen und Arbeitsende buchen Sie direkt im Terminal unten — ohne Umwege.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-base font-bold tracking-tight text-foreground sm:text-lg">Arbeitsbeginn erfassen</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Tippen Sie im Terminal auf Einstempeln. Der Status erscheint sofort, die Buchung läuft im Hintergrund.
+                  </p>
+                </>
+              )}
+              <a
+                href="#terminal-widget"
+                className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 active:scale-[0.99]"
+              >
+                Zum Terminal
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isSuperAdmin && superAdminCompanies && superAdminMonitoring && (
-        <div className="order-2">
+        <div className="order-3">
           <SuperAdminInlinePanel companies={superAdminCompanies} monitoring={superAdminMonitoring} />
         </div>
       )}
 
       {employeeCount === 0 && (
-        <div className="order-3 rounded-2xl glass-panel p-5 sm:p-8">
+        <div className="order-4 rounded-2xl glass-panel p-5 sm:p-8">
           <div className="flex items-center gap-2 mb-2">
             <ListChecks className="w-4 h-4 text-primary" />
             <p className="font-semibold text-sm">Noch kein Team angelegt</p>
@@ -133,87 +232,117 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Team stats (for owners/managers) — auf Mobil unter Terminal/AI/Saldo (order) */}
-      {teamStats && (
+      {/* Team stats (for owners/managers) — Fokus-Karte + Details für Kennzahlen */}
+      {teamStats && focus && (
         <div className="order-5 space-y-4 md:order-4">
-          <div className="rounded-2xl glass-panel p-5 sm:p-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-xs uppercase tracking-widest text-muted-foreground">Command Center</p>
-                <h2 className="mt-1 text-sm font-semibold tracking-tight">Heute im Blick: Live-Status und offene Aufgaben</h2>
-              </div>
-              <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:max-w-md sm:grid-cols-3">
+          <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card p-5 shadow-sm sm:p-6">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <Target className="h-4 w-4" aria-hidden />
+              </span>
+              <div className="min-w-0 flex-1 space-y-2">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-primary">Heute im Fokus</p>
+                <h2 className="text-base font-bold tracking-tight text-foreground sm:text-lg">{focus.title}</h2>
+                <p className="text-sm text-muted-foreground">{focus.description}</p>
                 <Link
-                  href="/dashboard/planning"
-                  className="flex min-h-12 items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] md:hover:bg-card/70"
+                  href={focus.href}
+                  className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 active:scale-[0.99]"
                 >
-                  Wochenplan
+                  {focus.cta}
                 </Link>
-                <Link
-                  href="/dashboard/reports"
-                  className="flex min-h-12 items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] md:hover:bg-card/70"
-                >
-                  Zeiten
-                </Link>
-                <Link
-                  href="/dashboard/vacation"
-                  className="flex min-h-12 items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] md:hover:bg-card/70"
-                >
-                  Urlaub
-                </Link>
-              </div>
-            </div>
-            <div className="mt-3 grid grid-cols-1 gap-2 text-xs md:grid-cols-2 xl:grid-cols-3">
-              <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] px-3 py-2">
-                <span className="text-muted-foreground">Fehlend heute</span>
-                <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-red-700" : "text-emerald-700"}`}>
-                  {teamStats.absentToday > 0 ? `${teamStats.absentToday} kritisch` : "Keine offenen Ausfälle"}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] px-3 py-2">
-                <span className="text-muted-foreground">Zu spät heute</span>
-                <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-amber-700" : "text-emerald-700"}`}>
-                  {teamStats.lateToday > 0 ? `${teamStats.lateToday} Hinweise` : "Alles pünktlich"}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] px-3 py-2">
-                <span className="text-muted-foreground">Unbestätigte Zeiten</span>
-                <p className={`mt-1 font-semibold ${teamStats.pendingCorrections > 0 ? "text-amber-700" : "text-emerald-700"}`}>
-                  {teamStats.pendingCorrections > 0 ? `${teamStats.pendingCorrections} offen` : "Keine offenen Korrekturen"}
-                </p>
               </div>
             </div>
           </div>
-        <div className="-mx-2 flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-visible pb-2 pt-1 scrollbar-hide md:mx-0 md:grid md:snap-none md:grid-cols-2 md:gap-4 md:overflow-visible md:pb-0 md:pt-0 xl:grid-cols-3 2xl:grid-cols-6">
-          {[
-            { label: "Mitarbeiter gesamt", value: teamStats.totalEmployees, icon: Users, color: "#60a5fa" },
-            { label: "Heute aktiv", value: teamStats.activeToday, icon: Clock, color: "#86efac" },
-            { label: "Urlaubsanträge", value: teamStats.pendingVacations, icon: CalendarDays, color: "#f59e0b" },
-            { label: "Fehlend heute", value: teamStats.absentToday, icon: TriangleAlert, color: "#f87171" },
-            { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24" },
-            { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc" },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="w-[min(88vw,20rem)] shrink-0 snap-center rounded-2xl glass-panel p-5 transition-all sm:p-6 md:w-auto md:min-w-0 md:hover:bg-card/80"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
-                <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
+
+          <details className="group rounded-2xl glass-panel overflow-hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-left marker:content-none [&::-webkit-details-marker]:hidden">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Details</p>
+                <p className="text-sm font-semibold text-foreground">Team & Kennzahlen anzeigen</p>
               </div>
-              <p className="text-3xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+              <ChevronDown
+                className="h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180"
+                aria-hidden
+              />
+            </summary>
+            <div className="space-y-4 border-t border-border px-5 pb-5 pt-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">Kurzzugriff</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Häufig genutzte Bereiche</p>
+                </div>
+                <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:max-w-md sm:grid-cols-3">
+                  <Link
+                    href="/dashboard/planning"
+                    className="flex min-h-12 items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] md:hover:bg-card/70"
+                  >
+                    Wochenplan
+                  </Link>
+                  <Link
+                    href="/dashboard/reports"
+                    className="flex min-h-12 items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] md:hover:bg-card/70"
+                  >
+                    Zeiten
+                  </Link>
+                  <Link
+                    href="/dashboard/vacation"
+                    className="flex min-h-12 items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] md:hover:bg-card/70"
+                  >
+                    Urlaub
+                  </Link>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-2 text-xs md:grid-cols-2 xl:grid-cols-3">
+                <div className="rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+                  <span className="text-muted-foreground">Fehlend heute</span>
+                  <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-red-700" : "text-emerald-700"}`}>
+                    {teamStats.absentToday > 0 ? `${teamStats.absentToday} kritisch` : "Keine offenen Ausfälle"}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+                  <span className="text-muted-foreground">Zu spät heute</span>
+                  <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-amber-700" : "text-emerald-700"}`}>
+                    {teamStats.lateToday > 0 ? `${teamStats.lateToday} Hinweise` : "Alles pünktlich"}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+                  <span className="text-muted-foreground">Unbestätigte Zeiten</span>
+                  <p className={`mt-1 font-semibold ${teamStats.pendingCorrections > 0 ? "text-amber-700" : "text-emerald-700"}`}>
+                    {teamStats.pendingCorrections > 0 ? `${teamStats.pendingCorrections} offen` : "Keine offenen Korrekturen"}
+                  </p>
+                </div>
+              </div>
+              <div className="-mx-2 flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-visible pb-2 pt-1 scrollbar-hide md:mx-0 md:grid md:snap-none md:grid-cols-2 md:gap-4 md:overflow-visible md:pb-0 md:pt-0 xl:grid-cols-3 2xl:grid-cols-6">
+                {[
+                  { label: "Mitarbeiter gesamt", value: teamStats.totalEmployees, icon: Users, color: "#60a5fa" },
+                  { label: "Heute aktiv", value: teamStats.activeToday, icon: Clock, color: "#86efac" },
+                  { label: "Urlaubsanträge", value: teamStats.pendingVacations, icon: CalendarDays, color: "#f59e0b" },
+                  { label: "Fehlend heute", value: teamStats.absentToday, icon: TriangleAlert, color: "#f87171" },
+                  { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24" },
+                  { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc" },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="w-[min(88vw,20rem)] shrink-0 snap-center rounded-2xl glass-panel p-5 transition-all sm:p-6 md:w-auto md:min-w-0 md:hover:bg-card/80"
+                  >
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">{stat.label}</p>
+                      <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
+                    </div>
+                    <p className="text-3xl font-bold" style={{ color: stat.color }}>
+                      {stat.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
+          </details>
         </div>
       )}
 
-      {/* Main grid: Mobil zuerst AI (order), Desktop Terminal → Saldo → AI */}
-      <div className="order-4 flex flex-col gap-5 md:order-5 md:grid md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-        <div className="order-first md:order-3">
-          <AIInsights />
-        </div>
-        <div id="terminal-widget" className="order-2 md:order-1">
+      {/* Main grid: Mobil Terminal → Saldo → AI; Desktop gleiche Reihenfolge im Grid */}
+      <div className="order-6 flex flex-col gap-5 md:order-5 md:grid md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+        <div id="terminal-widget" className="order-1 md:order-1">
           <TerminalWidget
             activeLog={
               activeLog
@@ -228,7 +357,7 @@ export default async function DashboardPage() {
             }
           />
         </div>
-        <div className="order-3 md:order-2">
+        <div className="order-2 md:order-2">
           <SaldoWidget
             workedMinutes={saldo.workedMinutes}
             expectedMinutes={saldo.expectedMinutes}
@@ -236,10 +365,15 @@ export default async function DashboardPage() {
             hasWorkLogs={Boolean(hasAnyWorkLog)}
           />
         </div>
+        <div className="order-3 md:order-3">
+          <DashboardAISection>
+            <AIInsights />
+          </DashboardAISection>
+        </div>
       </div>
 
       {/* Today summary */}
-      <div className="order-6 rounded-2xl glass-panel p-5 transition-all sm:p-8 md:hover:bg-card/80">
+      <div className="order-7 rounded-2xl glass-panel p-5 transition-all sm:p-8 md:hover:bg-card/80">
         <div className="mb-4 flex items-center justify-between gap-2">
           <h2 className="font-semibold">Heute</h2>
           <span className="text-sm text-primary tabular-nums font-bold">
@@ -289,7 +423,7 @@ export default async function DashboardPage() {
 
       {/* Business plan CTA */}
       {plan === "STARTER" && (
-        <div className="order-7 flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div className="order-8 flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:p-8">
           <div className="min-w-0">
             <p className="text-sm font-semibold">PDF-Export & Lohnbüro-Versand freischalten</p>
             <p className="mt-1 text-xs text-muted-foreground">Upgrade auf Business für vollständige Berichte.</p>

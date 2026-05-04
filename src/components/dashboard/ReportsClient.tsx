@@ -1083,7 +1083,12 @@ export function ReportsClient({
 
           <div className="space-y-2">
             {correctionRequests.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Aktuell liegen keine Korrekturanträge vor.</p>
+              <div className="rounded-2xl border border-dashed border-border bg-card/50 px-4 py-6 text-center">
+                <p className="text-sm text-muted-foreground">Noch keine Korrekturanträge in diesem Bereich.</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Korrekturen können Sie oben im Formular einreichen, sobald eine Buchung angepasst werden muss.
+                </p>
+              </div>
             ) : (
               correctionRequests.map((req) => (
                 <div key={req.id} className="rounded-2xl border border-border bg-card p-4 text-xs shadow-[0_20px_50px_rgba(0,0,0,0.04)]">

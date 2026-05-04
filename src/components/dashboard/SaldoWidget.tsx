@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface SaldoWidgetProps {
@@ -35,8 +36,14 @@ export function SaldoWidget({
       <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
         <h2 className="mb-3 text-lg font-semibold">Stunden-Saldo</h2>
         <p className="text-sm text-muted-foreground">
-          Noch keine erfassten Zeiten. Nutzen Sie das Terminal, um zu starten.
+          Noch keine erfassten Zeiten. Stempeln Sie einmal, damit hier Soll und Ist sichtbar werden.
         </p>
+        <Link
+          href="#terminal-widget"
+          className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-primary px-4 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 active:scale-[0.99] sm:w-auto"
+        >
+          Zum Terminal
+        </Link>
       </div>
     );
   }

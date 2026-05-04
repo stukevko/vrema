@@ -39,9 +39,14 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
 
   if (requests.length === 0) {
     return (
-      <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-        <Clock className="w-8 h-8 text-muted-foreground/60 mx-auto mb-3" />
-        <p className="text-sm text-muted-foreground">Keine Urlaubsanträge vorhanden.</p>
+      <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+        <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground/60" aria-hidden />
+        <p className="text-sm font-medium text-foreground">Keine Anträge in dieser Liste</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {canApprove
+            ? "Sobald Teammitglieder Anträge stellen, erscheinen sie hier."
+            : "Nutzen Sie das Antragsformular auf dieser Seite — Zeitraum und Grund genügen."}
+        </p>
       </div>
     );
   }

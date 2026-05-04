@@ -1,6 +1,5 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getMockDashboardAIInsights } from "@/lib/ai/mock";
 import type { AIInsightItem } from "@/lib/ai/types";
@@ -10,6 +9,18 @@ const levelStyles: Record<AIInsightItem["level"], string> = {
   warning: "text-amber-700",
   success: "text-emerald-700",
 };
+
+function InsightRowSkeleton() {
+  return (
+    <div className="flex gap-3 border-b border-border/60 py-3 last:border-0">
+      <div className="mt-0.5 h-4 w-4 shrink-0 rounded bg-muted animate-pulse" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <div className="h-3.5 w-full max-w-[95%] rounded-md bg-muted animate-pulse" />
+        <div className="h-3.5 w-full max-w-[78%] rounded-md bg-muted animate-pulse" />
+      </div>
+    </div>
+  );
+}
 
 export function AIInsights() {
   const [items, setItems] = useState<AIInsightItem[]>([]);
@@ -29,35 +40,33 @@ export function AIInsights() {
   }, []);
 
   return (
-    <section className="relative rounded-2xl p-[1px] bg-gradient-to-r from-violet-300/40 via-sky-300/30 to-emerald-300/40">
-      <div className="rounded-2xl border border-border bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-violet-100/80 text-violet-700">
-            <Sparkles className="h-4 w-4" />
-          </span>
-          <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">VREMA AI</p>
-            <h3 className="text-sm font-semibold text-foreground">Intelligente Hinweise</h3>
-          </div>
-        </div>
+    <div className="px-4 pb-4 pt-2 sm:px-5 sm:pb-5">
+      <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+        Keine Rechts- oder Lohnberatung. Inhalte können unvollständig sein — bitte immer mit Ihren eigenen Unterlagen
+        abgleichen.
+      </p>
 
-        {loading ? (
-          <div className="space-y-2">
-            <div className="h-4 rounded-full bg-muted animate-pulse" />
-            <div className="h-4 rounded-full bg-muted animate-pulse w-11/12" />
-            <div className="h-4 rounded-full bg-muted animate-pulse w-10/12" />
-          </div>
-        ) : (
-          <ul className="space-y-4">
-            {items.map((item) => (
-              <li key={item.id} className="border-b border-border/60 py-1 text-sm leading-relaxed last:border-0 last:pb-0 sm:border-0 sm:py-0">
-                <span className={`font-medium ${levelStyles[item.level]}`}>✨</span>{" "}
-                <span className="text-foreground">{item.text}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </section>
+      {loading ? (
+        <ul className="space-y-0" aria-busy="true" aria-label="Hinweise werden geladen">
+          {[0, 1, 2].map((k) => (
+            <li key={k}>
+              <InsightRowSkeleton />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <ul className="space-y-0">
+          {items.map((item) => (
+            <li
+              key={item.id}
+              className="border-b border-border/60 py-3 text-sm leading-relaxed last:border-0 last:pb-0 sm:border-0 sm:py-2"
+            >
+              <span className={`font-medium ${levelStyles[item.level]}`}>✨</span>{" "}
+              <span className="text-foreground">{item.text}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

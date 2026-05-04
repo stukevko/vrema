@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { motion } from "framer-motion";
 import { toggleEmployeeActive } from "@/lib/actions/team";
+import Link from "next/link";
 import { Crown, ShieldCheck, User, PowerOff, Power } from "lucide-react";
 import clsx from "clsx";
 
@@ -38,9 +39,22 @@ export function TeamList({
 
   if (members.length === 0) {
     return (
-      <div className="rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-10 text-center">
-        <User className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-        <p className="text-sm text-muted-foreground">Noch keine Mitarbeiter vorhanden.</p>
+      <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:p-10">
+        <User className="mx-auto mb-3 h-8 w-8 text-muted-foreground" aria-hidden />
+        <p className="text-sm font-medium text-foreground">Noch keine Mitarbeiter</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {canManage
+            ? "Laden Sie Kolleginnen und Kollegen per E-Mail ein — das Formular finden Sie rechts auf dieser Seite."
+            : "Ihre Firma hat noch keine Mitarbeitenden angelegt. Bitte wenden Sie sich an eine Administratorin."}
+        </p>
+        {canManage && (
+          <Link
+            href="#invite"
+            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90"
+          >
+            Zum Einladungsformular
+          </Link>
+        )}
       </div>
     );
   }
