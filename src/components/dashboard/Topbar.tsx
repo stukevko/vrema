@@ -40,7 +40,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
 
   return (
     <header className="glass-nav fixed inset-x-0 top-0 z-[60] border-b border-border pt-[env(safe-area-inset-top,0px)] md:relative md:inset-auto md:z-30 md:pt-0">
-      <div className="flex h-16 items-center justify-between gap-2 px-3 sm:px-4 md:px-6">
+      <div className="flex h-16 min-w-0 items-center justify-between gap-2 overflow-hidden px-3 sm:px-4 md:px-6">
         <Link href="/dashboard" className="shrink-0 md:hidden">
           <Image
             src="/vrema_logo.png"
@@ -54,7 +54,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
 
         <div className="hidden md:block md:flex-1" />
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 sm:gap-3">
           {user.role === "SUPER_ADMIN" && (
             <span className="hidden rounded-full border border-amber-300/40 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-700 sm:inline-flex">
               Super Admin

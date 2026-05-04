@@ -243,7 +243,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div className="relative min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-background text-foreground">
       <Script
         id="ld-json-vrema"
         type="application/ld+json"
@@ -251,9 +251,9 @@ export default function LandingPage() {
       />
 
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-border glass-nav">
-        <div className="w-full max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center shrink-0 py-1">
+      <nav className="fixed inset-x-0 top-0 z-50 overflow-x-hidden border-b border-border glass-nav">
+        <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-2 px-4">
+          <Link href="/" className="flex min-w-0 shrink-0 items-center py-1">
             <Image
               src="/vrema_logo.png"
               alt="VREMA"
@@ -269,13 +269,13 @@ export default function LandingPage() {
             <a href="#pricing" className="hover:text-foreground transition-colors">Preise</a>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link href="/auth/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-xl hover:bg-card">
+          <div className="flex min-w-0 flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:flex-nowrap sm:gap-3">
+            <Link href="/auth/login" className="whitespace-nowrap text-sm text-muted-foreground transition-colors hover:text-foreground px-3 py-1.5 rounded-xl hover:bg-card">
               Anmelden
             </Link>
             <Link
               href="/auth/register"
-              className="text-sm px-4 py-2 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-foreground font-semibold hover:bg-card/70 transition-all"
+              className="whitespace-nowrap text-sm px-4 py-2 rounded-xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-foreground font-semibold hover:bg-card/70 transition-all"
             >
               Registrieren
             </Link>
@@ -285,14 +285,15 @@ export default function LandingPage() {
 
       {/* ── HERO ────────────────────────────────────────────────────────────── */}
       <section className="relative border-b border-slate-100 pt-32 pb-16">
-        <div className="w-full max-w-7xl mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="mx-auto w-full max-w-7xl min-w-0 overflow-x-hidden px-4">
+          <div className="grid min-w-0 items-center gap-12 lg:grid-cols-2">
 
             {/* Left: Text */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7 }}
+              className="min-w-0"
             >
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-white text-foreground text-xs mb-8">
                 <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />
@@ -340,7 +341,7 @@ export default function LandingPage() {
                 ))}
               </div>
 
-              <div className="flex items-center gap-6 mt-8 text-xs text-muted-foreground uppercase tracking-widest">
+              <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs uppercase tracking-widest text-muted-foreground">
                 <span>DSGVO-konform</span>
                 <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                 <span>Made in Germany</span>
@@ -354,6 +355,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, x: 30, scale: 0.97 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
+              className="min-w-0 overflow-x-hidden"
             >
               <TerminalWindow title="vrema — zsh — 120×36">
                 <div className="space-y-1 min-h-[260px]">
@@ -412,19 +414,19 @@ export default function LandingPage() {
 
       {/* ── STATS BAR ───────────────────────────────────────────────────────── */}
       <section className="border-y border-border py-10">
-        <div className="w-full max-w-7xl mx-auto px-4 grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mx-auto grid w-full min-w-0 max-w-7xl grid-cols-2 gap-8 px-4 sm:grid-cols-3 lg:grid-cols-5">
           {STATS.map((s) => <AnimatedStat key={s.label} {...s} />)}
         </div>
       </section>
 
       {/* ── FEATURES ────────────────────────────────────────────────────────── */}
       <section id="features" className="border-b border-slate-100 py-24">
-        <div className="w-full max-w-7xl mx-auto px-4">
+        <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-16"
+            className="mb-16 min-w-0"
           >
             <p className="text-xs text-muted-foreground uppercase tracking-widest mb-4">01 / Features</p>
             <h2 className="text-4xl md:text-5xl font-bold leading-tight text-foreground">
@@ -462,7 +464,7 @@ export default function LandingPage() {
 
       {/* ── AI TEASER ───────────────────────────────────────────────────────── */}
       <section className="border-b border-slate-100 py-20">
-        <div className="w-full max-w-7xl mx-auto px-4">
+        <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="relative rounded-2xl p-[1px] bg-gradient-to-r from-violet-300/40 via-sky-300/30 to-emerald-300/40">
             <div className="rounded-2xl bg-white border border-slate-100 p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
               <div className="flex flex-wrap items-center justify-between gap-4">
@@ -487,12 +489,13 @@ export default function LandingPage() {
 
       {/* ── PHILOSOPHY ──────────────────────────────────────────────────────── */}
       <section className="border-t border-border py-24">
-        <div className="w-full max-w-7xl mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
+          <div className="grid min-w-0 items-center gap-16 lg:grid-cols-2">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              className="min-w-0"
             >
             <p className="text-xs text-primary uppercase tracking-widest mb-4">02 / Philosophie</p>
               <h2 className="text-4xl md:text-5xl font-black leading-tight mb-6">
@@ -527,6 +530,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              className="min-w-0 overflow-x-hidden"
             >
               <TerminalWindow title="whoami — KevkoStudio">
                 <div className="space-y-4">
@@ -563,12 +567,12 @@ export default function LandingPage() {
 
       {/* ── PRICING ─────────────────────────────────────────────────────────── */}
       <section id="pricing" className="border-t border-border py-24">
-        <div className="w-full max-w-7xl mx-auto px-4">
+        <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-12"
+            className="mb-12 min-w-0"
           >
             <p className="text-xs text-primary uppercase tracking-widest mb-4">03 / Preise</p>
             <h2 className="text-4xl md:text-5xl font-black mb-4">Starten.</h2>
@@ -724,11 +728,12 @@ export default function LandingPage() {
 
       {/* ── CTA ─────────────────────────────────────────────────────────────── */}
       <section className="border-t border-border py-24">
-        <div className="w-full max-w-7xl mx-auto px-4">
+        <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
+            className="min-w-0"
           >
             <TerminalWindow title="vrema — System-Transformation starten">
               <div className="py-8 text-center space-y-6">
@@ -762,7 +767,7 @@ export default function LandingPage() {
       </section>
 
       <section className="border-t border-border py-16">
-        <div className="w-full max-w-7xl mx-auto rounded-2xl glass-panel p-8 px-4 sm:px-8">
+        <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden rounded-2xl glass-panel p-8 px-4 sm:px-8">
           <h3 className="text-2xl font-bold">Werde VREMA-Partner</h3>
           <p className="mt-2 text-muted-foreground">
             Du kennst Betriebe, die eine moderne Zeiterfassung brauchen? Empfiehl VREMA und erhalte bis zu 15€ pro
@@ -782,7 +787,7 @@ export default function LandingPage() {
 
       {/* ── FOOTER ──────────────────────────────────────────────────────────── */}
       <footer className="border-t border-border py-10">
-        <div className="w-full max-w-7xl mx-auto px-4 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+        <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col items-start justify-between gap-6 overflow-x-hidden px-4 md:flex-row md:items-center">
           <div className="flex items-center gap-3">
             <Image
               src="/vrema_logo.png"
@@ -797,7 +802,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 text-xs text-muted-foreground">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
             <button
               onClick={() => setModal("impressum")}
               className="hover:text-foreground transition-colors cursor-pointer"

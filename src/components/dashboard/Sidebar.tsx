@@ -26,7 +26,7 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
   const visibleItems = getDashboardNavItems(role, plan);
 
   return (
-    <aside className="hidden h-screen w-72 shrink-0 flex-col border-r border-border glass-nav md:flex md:w-80">
+    <aside className="hidden w-72 shrink-0 flex-col border-r border-border glass-nav md:flex md:h-[100dvh] md:max-h-[100dvh] md:w-80 md:min-h-0">
       <Link
         href="/dashboard"
         className="group flex flex-col items-center border-b border-border px-4 py-4 text-center transition-colors md:px-5 md:py-4 md:hover:bg-muted/25"

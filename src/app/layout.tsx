@@ -92,7 +92,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="de">
+    <html lang="de" className="min-h-0 w-full overflow-x-hidden">
       <head>
         {/* Statische Assets aus /public — gleiche URLs wie PWA-Manifest */}
         <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
@@ -101,7 +101,9 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground overflow-x-hidden`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} min-h-[100dvh] w-full min-w-0 antialiased bg-background text-foreground`}
+      >
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
