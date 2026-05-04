@@ -252,7 +252,7 @@ export default function LandingPage() {
 
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-border glass-nav">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="w-full max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center shrink-0 py-1">
             <Image
               src="/vrema_logo.png"
@@ -284,8 +284,8 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ────────────────────────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-16 px-6 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative border-b border-slate-100 pt-32 pb-16">
+        <div className="w-full max-w-7xl mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
 
             {/* Left: Text */}
@@ -411,15 +411,15 @@ export default function LandingPage() {
       </section>
 
       {/* ── STATS BAR ───────────────────────────────────────────────────────── */}
-      <section className="py-10 px-6 border-y border-border">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
+      <section className="border-y border-border py-10">
+        <div className="w-full max-w-7xl mx-auto px-4 grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
           {STATS.map((s) => <AnimatedStat key={s.label} {...s} />)}
         </div>
       </section>
 
       {/* ── FEATURES ────────────────────────────────────────────────────────── */}
-      <section id="features" className="py-24 px-6 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto">
+      <section id="features" className="border-b border-slate-100 py-24">
+        <div className="w-full max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -461,8 +461,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── AI TEASER ───────────────────────────────────────────────────────── */}
-      <section className="py-20 px-6 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto">
+      <section className="border-b border-slate-100 py-20">
+        <div className="w-full max-w-7xl mx-auto px-4">
           <div className="relative rounded-2xl p-[1px] bg-gradient-to-r from-violet-300/40 via-sky-300/30 to-emerald-300/40">
             <div className="rounded-2xl bg-white border border-slate-100 p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
               <div className="flex flex-wrap items-center justify-between gap-4">
@@ -486,8 +486,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── PHILOSOPHY ──────────────────────────────────────────────────────── */}
-      <section className="py-24 px-6 border-t border-border">
-        <div className="max-w-7xl mx-auto">
+      <section className="border-t border-border py-24">
+        <div className="w-full max-w-7xl mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -562,8 +562,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ─────────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-24 px-6 border-t border-border">
-        <div className="max-w-7xl mx-auto">
+      <section id="pricing" className="border-t border-border py-24">
+        <div className="w-full max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -723,8 +723,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ─────────────────────────────────────────────────────────────── */}
-      <section className="py-24 px-6 border-t border-border">
-        <div className="max-w-4xl mx-auto">
+      <section className="border-t border-border py-24">
+        <div className="w-full max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -761,8 +761,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-16 px-6 border-t border-border">
-        <div className="max-w-4xl mx-auto rounded-2xl glass-panel p-8">
+      <section className="border-t border-border py-16">
+        <div className="w-full max-w-7xl mx-auto rounded-2xl glass-panel p-8 px-4 sm:px-8">
           <h3 className="text-2xl font-bold">Werde VREMA-Partner</h3>
           <p className="mt-2 text-muted-foreground">
             Du kennst Betriebe, die eine moderne Zeiterfassung brauchen? Empfiehl VREMA und erhalte bis zu 15€ pro
@@ -781,8 +781,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ──────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-border py-10 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <footer className="border-t border-border py-10">
+        <div className="w-full max-w-7xl mx-auto px-4 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <div className="flex items-center gap-3">
             <Image
               src="/vrema_logo.png"
