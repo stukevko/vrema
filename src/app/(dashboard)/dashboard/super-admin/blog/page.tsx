@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { getBlogPostAdmin, listAllBlogPostsAdmin } from "@/lib/actions/blog-admin";
+import { getBlogPostByIdForAdmin, listBlogPostsForAdmin } from "@/lib/data/blog-admin-read";
 import { BlogAdminPanel } from "@/components/super-admin/BlogAdminPanel";
 
 export default async function SuperAdminBlogPage({
@@ -18,8 +18,8 @@ export default async function SuperAdminBlogPage({
   const editId = typeof sp.edit === "string" ? sp.edit : undefined;
   const isNew = sp.new === "1" || sp.new === "true";
 
-  const posts = await listAllBlogPostsAdmin();
-  const editingPost = editId && !isNew ? await getBlogPostAdmin(editId) : null;
+  const posts = await listBlogPostsForAdmin();
+  const editingPost = editId && !isNew ? await getBlogPostByIdForAdmin(editId) : null;
 
   if (editId && !isNew && !editingPost) {
     redirect("/dashboard/super-admin/blog");

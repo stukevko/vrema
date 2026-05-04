@@ -18,27 +18,6 @@ async function requireSuperAdmin() {
 
 const CATEGORIES = [BlogPostCategory.UPDATES, BlogPostCategory.TUTORIALS, BlogPostCategory.KNOWLEDGE] as const;
 
-export async function listAllBlogPostsAdmin() {
-  await requireSuperAdmin();
-  return db.blogPost.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      teaser: true,
-      category: true,
-      youtubeId: true,
-      published: true,
-    },
-  });
-}
-
-export async function getBlogPostAdmin(id: string) {
-  await requireSuperAdmin();
-  return db.blogPost.findUnique({ where: { id } });
-}
-
 export async function createBlogPostAction(formData: FormData): Promise<string> {
   await requireSuperAdmin();
 
