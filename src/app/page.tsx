@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
@@ -153,21 +153,13 @@ const PLANS = [
   },
 ];
 
-// ─── Counter animation ────────────────────────────────────────────────────────
+// ─── Stats display ────────────────────────────────────────────────────────────
 function AnimatedStat({ value, label }: { value: string; label: string }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 10 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5 }}
-      className="text-center"
-    >
+    <div className="text-center transition-all duration-300">
       <p className="text-2xl md:text-3xl font-bold text-primary">{value}</p>
       <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest">{label}</p>
-    </motion.div>
+    </div>
   );
 }
 
@@ -246,7 +238,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full max-w-full flex-col overflow-x-hidden overscroll-x-none bg-background text-foreground selection:bg-primary/10">
+    <div className="relative flex min-h-[100dvh] w-full max-w-full flex-col overflow-x-hidden overscroll-x-none bg-slate-50 text-foreground selection:bg-primary/10">
       <Script
         id="ld-json-vrema"
         type="application/ld+json"
@@ -348,12 +340,7 @@ export default function LandingPage() {
           <div className="grid min-w-0 max-w-full items-center gap-12 lg:grid-cols-2">
 
             {/* Left: Text */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              className="min-w-0 max-w-full"
-            >
+            <div className="min-w-0 max-w-full transition-all duration-300">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-white text-foreground text-xs mb-8">
                 <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />
                 VREMA - Intelligente Zeiterfassung
@@ -407,15 +394,10 @@ export default function LandingPage() {
                 <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                 <span>Kein Outsourcing</span>
               </div>
-            </motion.div>
+            </div>
 
             {/* Right: Terminal */}
-            <motion.div
-              initial={{ opacity: 0, y: 16, scale: 0.99 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="min-w-0 max-w-full overflow-x-hidden"
-            >
+            <div className="min-w-0 max-w-full overflow-x-hidden transition-all duration-300">
               <TerminalWindow title="vrema — zsh — 120×36">
                 <div className="min-h-[260px] min-w-0 max-w-full space-y-1 break-words">
                   {displayed.map((line, i) => {
@@ -423,10 +405,8 @@ export default function LandingPage() {
                     const isSuccess = line.startsWith("✓");
                     const isInfo = line.startsWith("→");
                     return (
-                      <motion.div
+                      <div
                         key={i}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
                         className={
                           isCmd ? "text-foreground" :
                           isSuccess ? "text-primary" :
@@ -435,7 +415,7 @@ export default function LandingPage() {
                         }
                       >
                         {line}
-                      </motion.div>
+                      </div>
                     );
                   })}
                   {!done && (
@@ -466,7 +446,7 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -481,32 +461,23 @@ export default function LandingPage() {
       {/* ── FEATURES ────────────────────────────────────────────────────────── */}
       <section id="features" className="w-full max-w-full border-b border-slate-200 bg-white py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16 min-w-0"
-          >
+          <div className="mb-16 min-w-0 transition-all duration-300">
             <p className="text-xs text-muted-foreground uppercase tracking-widest mb-4">01 / Features</p>
             <h2 className="max-w-full hyphens-auto break-words text-4xl font-bold leading-tight text-foreground md:text-5xl">
               Modulare Funktionen fuer
               <br />
               <span className="text-muted-foreground">eine verlaessliche Zeitwirtschaft.</span>
             </h2>
-          </motion.div>
+          </div>
 
           <div className="grid min-w-0 max-w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((feature, i) => (
-              <motion.div
+            {FEATURES.map((feature) => (
+              <div
                 key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="max-w-full min-w-0 rounded-2xl border border-border bg-card p-7 shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all md:hover:bg-muted/50"
+                className="max-w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300 md:hover:bg-muted/50"
               >
                 <div className="flex min-w-0 max-w-full items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-white">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white">
                     <feature.icon className="h-5 w-5 text-foreground" />
                   </div>
                   <div className="min-w-0 max-w-full">
@@ -515,7 +486,7 @@ export default function LandingPage() {
                     <p className="hyphens-auto break-words text-sm leading-relaxed text-muted-foreground">{feature.desc}</p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -525,7 +496,7 @@ export default function LandingPage() {
       <section className="w-full max-w-full border-b border-slate-200 bg-slate-50 py-20">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="relative max-w-full rounded-2xl bg-gradient-to-r from-violet-300/40 via-sky-300/30 to-emerald-300/40 p-[1px]">
-            <div className="max-w-full rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-8">
+            <div className="max-w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
               <div className="flex min-w-0 max-w-full flex-col flex-wrap items-stretch justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="min-w-0 max-w-full">
                   <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">02 / Core Intelligence</p>
@@ -550,12 +521,7 @@ export default function LandingPage() {
       <section className="w-full max-w-full border-t border-slate-200 bg-white py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="grid min-w-0 max-w-full items-center gap-16 lg:grid-cols-2">
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="min-w-0 max-w-full"
-            >
+            <div className="min-w-0 max-w-full transition-all duration-300">
             <p className="text-xs text-primary uppercase tracking-widest mb-4">02 / Philosophie</p>
               <h2 className="mb-6 max-w-full hyphens-auto break-words text-4xl font-black leading-tight md:text-5xl">
                 Kein Großkonzern.
@@ -573,7 +539,7 @@ export default function LandingPage() {
                   { num: "02", title: "Transparent & Fair", desc: "Feste Preise, klare Meilensteine, keine versteckten Kosten." },
                   { num: "03", title: "Lokale Verwurzelung", desc: "Speyer, Rhein-Neckar, Pfalz. Ein Handschlag zählt mehr als jedes SLA." },
                 ].map((item) => (
-                  <div key={item.num} className="flex max-w-full min-w-0 gap-4 rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+                  <div key={item.num} className="flex max-w-full min-w-0 gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <span className="mt-0.5 shrink-0 text-sm font-bold text-primary">{item.num}</span>
                     <div className="min-w-0 max-w-full">
                       <p className="mb-1 hyphens-auto break-words text-sm font-semibold">{item.title}</p>
@@ -582,15 +548,10 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
 
             {/* Terminal: founder card */}
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="min-w-0 max-w-full overflow-x-hidden"
-            >
+            <div className="min-w-0 max-w-full overflow-x-hidden transition-all duration-300">
               <TerminalWindow title="whoami — KevkoStudio">
                 <div className="space-y-4">
                   <div className="text-muted-foreground">
@@ -603,7 +564,7 @@ export default function LandingPage() {
                   </div>
                   <div className="grid grid-cols-3 gap-3 mt-4">
                     {[{ v: "10+", l: "Jahre" }, { v: "Full", l: "Stack" }, { v: "5★", l: "Feedback" }].map((s) => (
-                      <div key={s.l} className="text-center p-2 rounded-xl bg-white/[0.03] border border-border">
+                      <div key={s.l} className="rounded-xl border border-slate-200 bg-white p-2 text-center shadow-sm">
                         <p className="text-primary font-bold text-lg">{s.v}</p>
                         <p className="text-muted-foreground text-xs">{s.l}</p>
                       </div>
@@ -619,7 +580,7 @@ export default function LandingPage() {
                   </div>
                 </div>
               </TerminalWindow>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -627,19 +588,14 @@ export default function LandingPage() {
       {/* ── PRICING ─────────────────────────────────────────────────────────── */}
       <section id="pricing" className="w-full max-w-full border-t border-slate-200 bg-slate-50 py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-12 min-w-0"
-          >
+          <div className="mb-12 min-w-0 transition-all duration-300">
             <p className="text-xs text-primary uppercase tracking-widest mb-4">03 / Preise</p>
             <h2 className="mb-4 max-w-full hyphens-auto break-words text-4xl font-black md:text-5xl">Starten.</h2>
             <p className="text-muted-foreground">Kostenlos testen. Keine Kosten. Keine Verpflichtungen.</p>
             <p className="mt-2 text-sm text-muted-foreground">
               Egal ob 5 oder 50 Mitarbeiter - ein Preis. Keine versteckten Kosten pro Nutzer.
             </p>
-          </motion.div>
+          </div>
 
           <div className="mb-10 grid gap-3 md:grid-cols-3">
             <div className="rounded-2xl glass-panel p-4">
@@ -686,17 +642,13 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-4 grid min-w-0 max-w-full grid-cols-1 gap-5 pt-1 md:grid-cols-3">
-            {PLANS.map((plan, i) => (
-              <motion.div
+            {PLANS.map((plan) => (
+              <div
                 key={plan.key}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`relative max-w-full min-w-0 overflow-visible rounded-2xl border p-8 shadow-2xl shadow-black/20 transition-all ${
+                className={`relative max-w-full min-w-0 overflow-visible rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 ${
                   plan.highlight
-                    ? "bg-card border-primary/30 shadow-[0_0_40px_rgba(34,197,94,0.07)]"
-                    : "bg-card border-border hover:border-white/15"
+                    ? "border-primary/30"
+                    : "hover:border-slate-300"
                 }`}
               >
                 {"badge" in plan && plan.badge && (
@@ -717,12 +669,9 @@ export default function LandingPage() {
                       <p className="text-muted-foreground text-xs mt-1">individuell</p>
                     </div>
                   ) : (
-                    <motion.div
+                    <div
                       key={yearly ? "y" : "m"}
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                      className="mb-6"
+                      className="mb-6 transition-all duration-300"
                     >
                       <div className="flex items-end gap-1">
                         <span className="text-4xl font-black">
@@ -735,7 +684,7 @@ export default function LandingPage() {
                           = {(plan.yearlyPrice! * 12)}€/Jahr · spare {((plan.monthlyPrice! - plan.yearlyPrice!) * 12)}€
                         </p>
                       )}
-                    </motion.div>
+                    </div>
                   )}
                 </AnimatePresence>
 
@@ -763,12 +712,12 @@ export default function LandingPage() {
                   className={`block w-full text-center py-3 rounded-2xl font-bold text-sm transition-all ${
                     plan.highlight
                       ? "bg-primary text-foreground hover:bg-primary/90"
-                      : "bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-muted-foreground hover:bg-card/70"
+                      : "bg-card border border-slate-200 text-muted-foreground shadow-sm hover:bg-card/70"
                   }`}
                 >
                   {plan.key === "ENTERPRISE" ? "$ kontakt --plan enterprise" : `$ start --plan ${plan.key.toLowerCase()}`}
                 </Link>
-              </motion.div>
+              </div>
             ))}
           </div>
 
@@ -788,12 +737,7 @@ export default function LandingPage() {
       {/* ── CTA ─────────────────────────────────────────────────────────────── */}
       <section className="w-full max-w-full border-t border-slate-200 bg-white py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="min-w-0 max-w-full"
-          >
+          <div className="min-w-0 max-w-full transition-all duration-300">
             <TerminalWindow title="vrema — System-Transformation starten">
               <div className="py-8 text-center space-y-6">
                 <p className="text-xs text-primary uppercase tracking-widest">03 / Starten</p>
@@ -821,7 +765,7 @@ export default function LandingPage() {
                 </div>
               </div>
             </TerminalWindow>
-          </motion.div>
+          </div>
         </div>
       </section>
 
