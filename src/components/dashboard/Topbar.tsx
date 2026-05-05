@@ -39,7 +39,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
     : user.email?.[0]?.toUpperCase() ?? "?";
 
   return (
-    <header className="glass-nav fixed inset-x-0 top-0 z-[60] overflow-visible border-b border-border pt-[env(safe-area-inset-top,0px)] md:relative md:inset-auto md:z-30 md:pt-0">
+    <header className="fixed inset-x-0 top-0 z-[60] overflow-visible bg-transparent pt-[env(safe-area-inset-top,0px)] md:relative md:inset-auto md:z-30 md:pt-0">
       <div className="flex h-16 min-w-0 items-center justify-between gap-2 px-3 sm:px-4 md:px-6">
         <Link href="/dashboard" className="shrink-0 md:hidden">
           <Image
