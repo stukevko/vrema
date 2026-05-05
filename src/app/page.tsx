@@ -809,45 +809,45 @@ export default function LandingPage() {
           <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-300">
             <button
               onClick={() => setModal("impressum")}
-              className="cursor-pointer transition-colors hover:text-white"
+              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-slate-300 transition-colors hover:text-white"
             >
               Impressum
             </button>
             <button
               onClick={() => setModal("datenschutz")}
-              className="cursor-pointer transition-colors hover:text-white"
+              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-slate-300 transition-colors hover:text-white"
             >
               Datenschutz
             </button>
             <button
               onClick={() => setModal("widerruf")}
-              className="cursor-pointer transition-colors hover:text-white"
+              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-slate-300 transition-colors hover:text-white"
             >
               Widerruf
             </button>
             <button
               onClick={() => setModal("cookies")}
-              className="cursor-pointer transition-colors hover:text-white"
+              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-slate-300 transition-colors hover:text-white"
             >
               Cookies
             </button>
             <button
               onClick={() => setModal("agb")}
-              className="cursor-pointer transition-colors hover:text-white"
+              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-slate-300 transition-colors hover:text-white"
             >
               AGB
             </button>
             <button
               onClick={() => setModal("avv")}
-              className="cursor-pointer transition-colors hover:text-white"
+              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-slate-300 transition-colors hover:text-white"
             >
               AVV
             </button>
-            <Link href="/blog" className="transition-colors hover:text-white">
+            <Link href="/blog" className="text-xs text-slate-300 transition-colors hover:text-white">
               Insights
             </Link>
-            <a href="#pricing" className="transition-colors hover:text-white">Preise</a>
-            <Link href="/partner" className="transition-colors hover:text-white">
+            <a href="#pricing" className="text-xs text-slate-300 transition-colors hover:text-white">Preise</a>
+            <Link href="/partner" className="text-xs text-slate-300 transition-colors hover:text-white">
               Partner werden
             </Link>
           </div>
