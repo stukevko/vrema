@@ -5,7 +5,6 @@ import { signIn } from "next-auth/react";
 import { signIn as signInWithWebAuthn } from "next-auth/webauthn";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
 import { Fingerprint, Loader2, Mail, Lock } from "lucide-react";
 import { resendVerificationLink } from "@/lib/actions/auth";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
@@ -91,17 +90,13 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
+    <div className="public-page flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
         <div className="mb-10">
           <AuthBrandLogo />
         </div>
 
-        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="public-card rounded-2xl p-8">
           <h1 className="text-xl font-bold mb-1">Willkommen zurück</h1>
           <p className="text-muted-foreground text-sm mb-8">Melden Sie sich mit Ihren Zugangsdaten an.</p>
 
@@ -173,7 +168,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-primary text-foreground font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all disabled:opacity-60"
+              className="btn-primary-solid flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold disabled:opacity-60"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               Anmelden
@@ -183,7 +178,7 @@ function LoginForm() {
               type="button"
               onClick={handlePasskeyLogin}
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-card backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.04)] text-foreground font-semibold flex items-center justify-center gap-2 hover:bg-card/80 transition-colors disabled:opacity-60"
+              className="btn-secondary-outline flex w-full items-center justify-center gap-2 rounded-xl py-3 font-semibold disabled:opacity-60"
             >
               <Fingerprint className="w-4 h-4" />
               Mit Passkey anmelden
@@ -204,7 +199,7 @@ function LoginForm() {
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
       <ToastContainer toasts={toasts} remove={remove} />
     </div>
   );

@@ -164,6 +164,40 @@ button[class] {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Public (non-dashboard) surfaces: unified enterprise hierarchy. */
+.public-page {
+  min-height: 100dvh;
+  background: hsl(210 40% 98%);
+}
+
+.public-card {
+  border: 1px solid hsl(214 32% 91%);
+  background: hsl(0 0% 100%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.btn-primary-solid {
+  border: 1px solid hsl(var(--primary) / 0.2);
+  background: hsl(var(--primary));
+  color: hsl(var(--foreground));
+  transition: background-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+}
+
+.btn-primary-solid:hover {
+  background: hsl(var(--primary) / 0.9);
+}
+
+.btn-secondary-outline {
+  border: 1px solid hsl(214 32% 91%);
+  background: hsl(0 0% 100%);
+  color: hsl(var(--foreground));
+  transition: background-color 220ms ease, border-color 220ms ease;
+}
+
+.btn-secondary-outline:hover {
+  background: hsl(var(--secondary));
+}
+
 button[class*="bg-primary"] {
   background-image: linear-gradient(to bottom, hsl(var(--primary) / 0.96), hsl(var(--primary) / 0.88));
   box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.2);

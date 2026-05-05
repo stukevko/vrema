@@ -33,13 +33,13 @@ export default function PartnerLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+    <div className="public-page flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-10">
           <AuthBrandLogo />
         </div>
 
-        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="public-card rounded-2xl p-8">
           <h1 className="text-xl font-bold mb-1">Partner Login</h1>
           <p className="text-muted-foreground text-sm mb-8">Melden Sie sich mit Ihrem Partnerzugang an.</p>
 
@@ -76,7 +76,7 @@ export default function PartnerLoginPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-primary text-foreground font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] transition-all disabled:opacity-60"
+              className="btn-primary-solid flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold disabled:opacity-60"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               Einloggen
