@@ -14,7 +14,6 @@ import {
 } from "@/lib/actions/worklogs";
 import { sendPayrollReportEmail } from "@/lib/actions/emails";
 import { minutesToDecimalHours, workedMinutes } from "@/lib/time/payroll";
-import { getMockReportAnalysis } from "@/lib/ai/mock";
 import type { AIReportAnalysisPayload } from "@/lib/ai/types";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -73,6 +72,29 @@ function formatMins(mins: number) {
 function durationMins(row: LogRow) {
   if (!row.clockOut) return null;
   return workedMinutes({ clockIn: row.clockIn, clockOut: row.clockOut, breakMins: row.breakMins });
+}
+
+function buildReportAnalysisFromFacts(params: {
+  month: string;
+  totalMinutes: number;
+  totalEntries: number;
+  avgBreakMins: number;
+  correctionNeeds: number;
+}): AIReportAnalysisPayload {
+  const totalHours = minutesToDecimalHours(params.totalMinutes, 2);
+  const avgBreakLabel = `${Math.round(params.avgBreakMins)} Min`;
+
+  return {
+    generatedAt: new Date().toISOString(),
+    summary:
+      `Für ${params.month} wurden ${totalHours} Stunden in ${params.totalEntries} Einträgen dokumentiert. ` +
+      `Die durchschnittliche Pausendauer liegt bei ${avgBreakLabel}, mit ${params.correctionNeeds} Korrekturbedarfen im Zeitraum.`,
+    highlights: [
+      `Gesamtstunden: ${totalHours} h`,
+      `Durchschnittliche Pausendauer: ${avgBreakLabel}`,
+      `Korrekturbedarfe im Zeitraum: ${params.correctionNeeds}`,
+    ],
+  };
 }
 
 function decimalHoursDE(minutes: number): string {
@@ -796,15 +818,25 @@ export function ReportsClient({
     if (isAIAnalyzing) return;
     setIsAIAnalyzing(true);
     try {
-      const analysis = await getMockReportAnalysis({
+      const finishedLogs = logs.filter((log) => log.clockOut);
+      const avgBreakMins =
+        finishedLogs.length === 0
+          ? 0
+          : finishedLogs.reduce((sum, log) => sum + Math.max(0, log.breakMins), 0) / finishedLogs.length;
+      const correctionNeeds = logs.filter(
+        (log) => log.status === "MANUAL_ADJUSTED" || (log.note?.includes("MANAGER_EDIT") ?? false)
+      ).length;
+      const analysis = buildReportAnalysisFromFacts({
         month,
         totalMinutes,
         totalEntries: logs.length,
+        avgBreakMins,
+        correctionNeeds,
       });
       setAIAnalysis(analysis);
-      show("KI-Analyse erfolgreich erstellt.", "success");
+      show("Datenbasierte System-Analyse erfolgreich erstellt.", "success");
     } catch (err: unknown) {
-      show(err instanceof Error ? err.message : "Die KI-Analyse konnte nicht erstellt werden. Bitte erneut versuchen.", "error");
+      show(err instanceof Error ? err.message : "Die System-Analyse konnte nicht erstellt werden. Bitte erneut versuchen.", "error");
     } finally {
       setIsAIAnalyzing(false);
     }
@@ -857,7 +889,7 @@ export function ReportsClient({
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              {isAIAnalyzing ? "KI analysiert..." : "KI-Analyse"}
+              {isAIAnalyzing ? "System analysiert..." : "System-Analyse"}
             </button>
             <button
               type="button"
@@ -936,7 +968,7 @@ export function ReportsClient({
               </span>
               <div>
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">VREMA AI</p>
-                <h3 className="text-sm font-semibold">Smart-Report-Analyse</h3>
+                <h3 className="text-sm font-semibold">Datenbasierte System-Analyse</h3>
               </div>
             </div>
 

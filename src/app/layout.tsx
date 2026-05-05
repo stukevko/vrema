@@ -44,6 +44,12 @@ export const metadata: Metadata = {
     "KevkoStudio",
   ],
   metadataBase: resolveMetadataBase(),
+  themeColor: "#ffffff",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "VREMA",
+  },
   alternates: {
     canonical: "/",
   },

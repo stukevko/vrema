@@ -19,7 +19,9 @@ import {
   QrCode,
   BarChart3,
   Zap,
+  Menu,
 } from "lucide-react";
+import { Drawer } from "vaul";
 
 // ─── Typing animation hook ───────────────────────────────────────────────────
 function useTypewriter(lines: string[], speed = 45, pauseMs = 900) {
@@ -174,6 +176,7 @@ export default function LandingPage() {
   const [yearly, setYearly] = useState(false);
   const [terminalReady, setTerminalReady] = useState(false);
   const [modal, setModal] = useState<"impressum" | "datenschutz" | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const TERMINAL_LINES = [
     "$ vrema login --company muster-gmbh",
@@ -273,13 +276,7 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <div className="flex min-w-0 max-w-[55%] flex-shrink-0 flex-wrap items-center justify-end gap-x-1.5 gap-y-1 sm:max-w-none sm:gap-3">
-            <Link
-              href="/blog"
-              className="shrink-0 rounded-xl px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-card hover:text-foreground md:hidden"
-            >
-              Insights
-            </Link>
+          <div className="hidden min-w-0 max-w-[55%] flex-shrink-0 flex-wrap items-center justify-end gap-x-1.5 gap-y-1 sm:max-w-none sm:gap-3 md:flex">
             <Link
               href="/auth/login"
               className="max-w-full break-words text-right text-sm text-muted-foreground transition-colors hover:text-foreground px-2 py-1.5 rounded-xl hover:bg-card sm:px-3 md:whitespace-nowrap"
@@ -293,6 +290,55 @@ export default function LandingPage() {
               Registrieren
             </Link>
           </div>
+          <button
+            type="button"
+            aria-label="Menü öffnen"
+            onClick={() => setMobileNavOpen(true)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-white text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-colors active:scale-95 md:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <Drawer.Root open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+            <Drawer.Portal>
+              <Drawer.Overlay className="fixed inset-0 z-[120] bg-black/45" />
+              <Drawer.Content className="fixed inset-x-0 bottom-0 z-[121] rounded-t-[28px] border border-border bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.18)] outline-none">
+                <Drawer.Handle className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-muted-foreground/35" />
+                <Drawer.Title className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Menü</Drawer.Title>
+                <nav className="mt-4 space-y-2">
+                  <a
+                    href="#pricing"
+                    onClick={() => setMobileNavOpen(false)}
+                    className="flex min-h-12 items-center rounded-2xl border border-border px-4 text-base font-medium text-foreground"
+                  >
+                    Preise
+                  </a>
+                  <Link
+                    href="/blog"
+                    onClick={() => setMobileNavOpen(false)}
+                    className="flex min-h-12 items-center rounded-2xl border border-border px-4 text-base font-medium text-foreground"
+                  >
+                    Insights
+                  </Link>
+                </nav>
+                <div className="mt-5 space-y-2">
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setMobileNavOpen(false)}
+                    className="flex min-h-12 w-full items-center justify-center rounded-2xl border border-border bg-card px-4 text-sm font-semibold text-foreground"
+                  >
+                    Anmelden
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    onClick={() => setMobileNavOpen(false)}
+                    className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-primary px-4 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20"
+                  >
+                    Registrieren
+                  </Link>
+                </div>
+              </Drawer.Content>
+            </Drawer.Portal>
+          </Drawer.Root>
         </div>
       </nav>
 

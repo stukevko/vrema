@@ -39,7 +39,7 @@ export function DashboardAISection({ children }: { children: React.ReactNode }) 
                 Beta
               </span>
             </div>
-            <p className="text-sm font-semibold text-foreground">Experimentelle Vorschau</p>
+            <p className="text-sm font-semibold text-foreground">Datenbasierte System-Analyse</p>
           </div>
         </div>
         <ChevronDown

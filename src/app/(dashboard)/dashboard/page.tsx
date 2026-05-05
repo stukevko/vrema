@@ -22,6 +22,7 @@ import { getSuperAdminMonitoring, getSuperAdminOverview } from "@/lib/actions/su
 import { SuperAdminInlinePanel } from "@/components/dashboard/SuperAdminInlinePanel";
 import { AIInsights } from "@/components/dashboard/AIInsights";
 import { DashboardAISection } from "@/components/dashboard/DashboardAISection";
+import { getDashboardAIInsights } from "@/lib/ai/engine";
 
 type TeamStatsSnapshot = {
   totalEmployees: number;
@@ -153,6 +154,7 @@ export default async function DashboardPage() {
   }, 0);
 
   const focus = teamStats ? managerPrimaryFocus(teamStats) : null;
+  const aiInsights = await getDashboardAIInsights(companyId);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5 px-2 text-foreground sm:gap-6 sm:px-0 md:gap-8 md:px-0">
@@ -367,7 +369,7 @@ export default async function DashboardPage() {
         </div>
         <div className="order-3 md:order-3">
           <DashboardAISection>
-            <AIInsights />
+            <AIInsights initialPayload={aiInsights} />
           </DashboardAISection>
         </div>
       </div>
