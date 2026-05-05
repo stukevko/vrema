@@ -2,14 +2,14 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  --background: 0 0% 100%;
+  --background: 210 40% 98%;
   --card: 0 0% 100%;
   --popover: 0 0% 100%;
-  --primary: 150 100% 35%;
+  --primary: 148 85% 42%;
   --secondary: 210 20% 97%;
   --accent: 210 20% 97%;
-  --border: 210 40% 96%;
-  --ring: 150 100% 35%;
+  --border: 214 32% 91%;
+  --ring: 148 85% 42%;
   --radius: 1.25rem;
   --foreground: 222 47% 11%;
   --muted: 214 20% 92%;
@@ -17,14 +17,14 @@
 }
 
 .dark {
-  --background: 0 0% 100%;
+  --background: 210 40% 98%;
   --card: 0 0% 100%;
   --popover: 0 0% 100%;
-  --primary: 150 100% 35%;
+  --primary: 148 85% 42%;
   --secondary: 210 20% 97%;
   --accent: 210 20% 97%;
-  --border: 210 40% 96%;
-  --ring: 150 100% 35%;
+  --border: 214 32% 91%;
+  --ring: 148 85% 42%;
   --radius: 1.25rem;
   --foreground: 222 47% 11%;
   --muted: 214 20% 92%;
@@ -93,7 +93,7 @@
 .premium-card {
   border: 1px solid hsl(var(--border));
   background: hsl(var(--card));
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
   transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
 }
 
@@ -103,17 +103,17 @@
 }
 
 .glass-nav {
-  background: hsl(0 0% 100% / 0.72);
+  background: hsl(0 0% 100% / 0.86);
   backdrop-filter: blur(16px);
-  border: 1px solid hsl(var(--border));
-  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06);
+  border: 1px solid hsl(214 32% 91%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .glass-panel {
-  background: linear-gradient(180deg, hsl(0 0% 100% / 0.95), hsl(0 0% 100% / 0.9));
+  background: hsl(var(--card));
   backdrop-filter: blur(18px);
-  border: 1px solid hsl(var(--border));
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
+  border: 1px solid hsl(214 32% 91%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .lucide {

@@ -254,7 +254,7 @@ export default function LandingPage() {
       />
 
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
-      <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full overflow-x-hidden border-b border-border glass-nav">
+      <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full overflow-x-hidden border-b border-slate-200 glass-nav">
         <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-2 overflow-x-hidden px-4">
           <Link href="/" className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none">
             <Image
@@ -343,7 +343,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ────────────────────────────────────────────────────────────── */}
-      <section className="relative w-full max-w-full border-b border-slate-100 pt-32 pb-16">
+      <section className="relative w-full max-w-full border-b border-slate-200 bg-white pt-32 pb-16">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="grid min-w-0 max-w-full items-center gap-12 lg:grid-cols-2">
 
@@ -472,14 +472,14 @@ export default function LandingPage() {
       </section>
 
       {/* ── STATS BAR ───────────────────────────────────────────────────────── */}
-      <section className="w-full max-w-full border-y border-border py-10">
+      <section className="w-full max-w-full border-y border-slate-200 bg-slate-50 py-10">
         <div className="mx-auto grid w-full min-w-0 max-w-7xl grid-cols-2 gap-8 px-4 sm:grid-cols-3 lg:grid-cols-5">
           {STATS.map((s) => <AnimatedStat key={s.label} {...s} />)}
         </div>
       </section>
 
       {/* ── FEATURES ────────────────────────────────────────────────────────── */}
-      <section id="features" className="w-full max-w-full border-b border-slate-100 py-24">
+      <section id="features" className="w-full max-w-full border-b border-slate-200 bg-white py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -522,7 +522,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── AI TEASER ───────────────────────────────────────────────────────── */}
-      <section className="w-full max-w-full border-b border-slate-100 py-20">
+      <section className="w-full max-w-full border-b border-slate-200 bg-slate-50 py-20">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="relative max-w-full rounded-2xl bg-gradient-to-r from-violet-300/40 via-sky-300/30 to-emerald-300/40 p-[1px]">
             <div className="max-w-full rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-8">
@@ -547,7 +547,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PHILOSOPHY ──────────────────────────────────────────────────────── */}
-      <section className="w-full max-w-full border-t border-border py-24">
+      <section className="w-full max-w-full border-t border-slate-200 bg-white py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="grid min-w-0 max-w-full items-center gap-16 lg:grid-cols-2">
             <motion.div
@@ -625,7 +625,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ─────────────────────────────────────────────────────────── */}
-      <section id="pricing" className="w-full max-w-full border-t border-border py-24">
+      <section id="pricing" className="w-full max-w-full border-t border-slate-200 bg-slate-50 py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -786,7 +786,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ─────────────────────────────────────────────────────────────── */}
-      <section className="w-full max-w-full border-t border-border py-24">
+      <section className="w-full max-w-full border-t border-slate-200 bg-white py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
@@ -825,7 +825,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="w-full max-w-full border-t border-border py-16">
+      <section className="w-full max-w-full border-t border-slate-200 bg-slate-50 py-16">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden rounded-2xl glass-panel p-8 px-4 sm:px-8">
           <h3 className="max-w-full hyphens-auto break-words text-2xl font-bold">Werde VREMA-Partner</h3>
           <p className="mt-2 hyphens-auto break-words text-muted-foreground">
@@ -845,7 +845,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ──────────────────────────────────────────────────────────── */}
-      <footer className="w-full max-w-full border-t border-border py-10">
+      <footer className="w-full max-w-full border-t border-slate-900 bg-slate-950 py-10 text-slate-300">
         <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col items-start justify-between gap-6 overflow-x-hidden px-4 md:flex-row md:items-center">
           <div className="flex min-w-0 max-w-full items-center gap-3">
             <Image
@@ -857,46 +857,46 @@ export default function LandingPage() {
               className="-my-1 h-auto w-full max-w-[120px] object-contain opacity-90 sm:max-w-[140px] md:max-h-11 md:max-w-[160px]"
             />
             <div className="min-w-0 max-w-full">
-              <span className="block hyphens-auto break-words text-sm font-bold">VREMA</span>
-              <span className="mt-0.5 block text-[10px] text-muted-foreground">Intelligente Zeiterfassung</span>
+              <span className="block hyphens-auto break-words text-sm font-bold text-slate-100">VREMA</span>
+              <span className="mt-0.5 block text-[10px] text-slate-400">Intelligente Zeiterfassung</span>
             </div>
           </div>
 
-          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-300">
             <button
               onClick={() => setModal("impressum")}
-              className="hover:text-foreground transition-colors cursor-pointer"
+              className="cursor-pointer transition-colors hover:text-white"
             >
               Impressum
             </button>
             <button
               onClick={() => setModal("datenschutz")}
-              className="hover:text-foreground transition-colors cursor-pointer"
+              className="cursor-pointer transition-colors hover:text-white"
             >
               Datenschutz
             </button>
-            <Link href="/widerruf" className="hover:text-foreground transition-colors">
+            <Link href="/widerruf" className="transition-colors hover:text-white">
               Widerruf
             </Link>
-            <Link href="/cookies" className="hover:text-foreground transition-colors">
+            <Link href="/cookies" className="transition-colors hover:text-white">
               Cookies
             </Link>
-            <Link href="/agb" className="hover:text-foreground transition-colors">
+            <Link href="/agb" className="transition-colors hover:text-white">
               AGB
             </Link>
-            <Link href="/avv" className="hover:text-foreground transition-colors">
+            <Link href="/avv" className="transition-colors hover:text-white">
               AVV
             </Link>
-            <Link href="/blog" className="hover:text-foreground transition-colors">
+            <Link href="/blog" className="transition-colors hover:text-white">
               Insights
             </Link>
-            <a href="#pricing" className="hover:text-foreground transition-colors">Preise</a>
-            <Link href="/partner" className="hover:text-foreground transition-colors">
+            <a href="#pricing" className="transition-colors hover:text-white">Preise</a>
+            <Link href="/partner" className="transition-colors hover:text-white">
               Partner werden
             </Link>
           </div>
 
-          <p className="text-xs text-muted-foreground">© 2026 VREMA – Intelligente Zeiterfassung</p>
+          <p className="text-xs text-slate-400">© 2026 VREMA – Intelligente Zeiterfassung</p>
         </div>
       </footer>
 
