@@ -76,8 +76,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return {
             id: user.id,
             email: user.email,
+            // Keep JWT payload intentionally small to avoid oversized Set-Cookie headers behind proxies.
             name: user.name,
-            image: user.image,
+            image: null,
             companyId: user.companyId,
             role: user.role as string,
             plan: user.company?.plan as string,
@@ -131,6 +132,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.affiliateId = (user as { affiliateId?: string }).affiliateId ?? token.affiliateId;
         token.accountType = (user as { accountType?: "user" | "affiliate" }).accountType ?? token.accountType;
       }
+      // Remove non-essential default claims to keep auth cookie compact.
+      (token as Record<string, unknown>).picture = undefined;
       return token;
     },
     async session({ session, token }) {
