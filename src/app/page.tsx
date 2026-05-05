@@ -167,7 +167,7 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 export default function LandingPage() {
   const [yearly, setYearly] = useState(false);
   const [terminalReady, setTerminalReady] = useState(false);
-  const [modal, setModal] = useState<"impressum" | "datenschutz" | null>(null);
+  const [modal, setModal] = useState<"impressum" | "datenschutz" | "widerruf" | "cookies" | "agb" | "avv" | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const TERMINAL_LINES = [
@@ -819,18 +819,30 @@ export default function LandingPage() {
             >
               Datenschutz
             </button>
-            <Link href="/widerruf" className="transition-colors hover:text-white">
+            <button
+              onClick={() => setModal("widerruf")}
+              className="cursor-pointer transition-colors hover:text-white"
+            >
               Widerruf
-            </Link>
-            <Link href="/cookies" className="transition-colors hover:text-white">
+            </button>
+            <button
+              onClick={() => setModal("cookies")}
+              className="cursor-pointer transition-colors hover:text-white"
+            >
               Cookies
-            </Link>
-            <Link href="/agb" className="transition-colors hover:text-white">
+            </button>
+            <button
+              onClick={() => setModal("agb")}
+              className="cursor-pointer transition-colors hover:text-white"
+            >
               AGB
-            </Link>
-            <Link href="/avv" className="transition-colors hover:text-white">
+            </button>
+            <button
+              onClick={() => setModal("avv")}
+              className="cursor-pointer transition-colors hover:text-white"
+            >
               AVV
-            </Link>
+            </button>
             <Link href="/blog" className="transition-colors hover:text-white">
               Insights
             </Link>
@@ -876,7 +888,19 @@ export default function LandingPage() {
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/90" />
                   </div>
                   <span className="text-xs text-muted-foreground font-sans tracking-wider">
-                    vrema — {modal === "impressum" ? "impressum.txt" : "datenschutz.txt"}
+                    vrema — {
+                      modal === "impressum"
+                        ? "impressum.txt"
+                        : modal === "datenschutz"
+                        ? "datenschutz.txt"
+                        : modal === "widerruf"
+                        ? "widerruf.txt"
+                        : modal === "cookies"
+                        ? "cookies.txt"
+                        : modal === "agb"
+                        ? "agb.txt"
+                        : "avv.txt"
+                    }
                   </span>
                   <span className="w-6" aria-hidden />
                 </div>
@@ -912,7 +936,7 @@ export default function LandingPage() {
                         </Link>
                       </div>
                     </>
-                  ) : (
+                  ) : modal === "datenschutz" ? (
                     <>
                       <div className="text-primary text-xs uppercase tracking-widest mb-2">
                         # datenschutz — DSGVO-Erklärung
@@ -935,6 +959,88 @@ export default function LandingPage() {
                       </div>
                       <div className="pt-3 text-xs">
                         <Link href="/datenschutz" className="text-primary hover:underline">
+                          Vollständige Seite öffnen
+                        </Link>
+                      </div>
+                    </>
+                  ) : modal === "widerruf" ? (
+                    <>
+                      <div className="text-primary text-xs uppercase tracking-widest mb-2">
+                        # widerruf — Hinweise für Verbraucher
+                      </div>
+                      <div className="space-y-3 text-xs leading-5 text-muted-foreground">
+                        <p>
+                          Für digitale Leistungen gelten die gesetzlichen Widerrufsrechte gemäß den jeweils
+                          anwendbaren Verbraucherschutzvorschriften.
+                        </p>
+                        <p>
+                          Die genaue Frist, Form und Ausübung des Widerrufs sowie Mustertexte finden Sie auf der
+                          vollständigen Widerrufsseite.
+                        </p>
+                      </div>
+                      <div className="pt-3 text-xs">
+                        <Link href="/widerruf" className="text-primary hover:underline">
+                          Vollständige Seite öffnen
+                        </Link>
+                      </div>
+                    </>
+                  ) : modal === "cookies" ? (
+                    <>
+                      <div className="text-primary text-xs uppercase tracking-widest mb-2">
+                        # cookies — Einsatz & Optionen
+                      </div>
+                      <div className="space-y-3 text-xs leading-5 text-muted-foreground">
+                        <p>
+                          Wir verwenden technisch notwendige Cookies für Authentifizierung, Sicherheit und
+                          Sitzungsverwaltung.
+                        </p>
+                        <p>
+                          Details zu Kategorien, Speicherdauer und Widerspruchsmöglichkeiten finden Sie auf der
+                          vollständigen Cookies-Seite.
+                        </p>
+                      </div>
+                      <div className="pt-3 text-xs">
+                        <Link href="/cookies" className="text-primary hover:underline">
+                          Vollständige Seite öffnen
+                        </Link>
+                      </div>
+                    </>
+                  ) : modal === "agb" ? (
+                    <>
+                      <div className="text-primary text-xs uppercase tracking-widest mb-2">
+                        # agb — Vertragsgrundlagen
+                      </div>
+                      <div className="space-y-3 text-xs leading-5 text-muted-foreground">
+                        <p>
+                          Unsere Allgemeinen Geschäftsbedingungen regeln Leistungen, Laufzeiten, Kündigung,
+                          Haftungsrahmen und weitere Vertragsbedingungen.
+                        </p>
+                        <p>
+                          Bitte lesen Sie die vollständige Fassung vor Abschluss eines Vertrags.
+                        </p>
+                      </div>
+                      <div className="pt-3 text-xs">
+                        <Link href="/agb" className="text-primary hover:underline">
+                          Vollständige Seite öffnen
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-primary text-xs uppercase tracking-widest mb-2">
+                        # avv — Auftragsverarbeitung
+                      </div>
+                      <div className="space-y-3 text-xs leading-5 text-muted-foreground">
+                        <p>
+                          Die AVV beschreibt datenschutzrechtliche Rollen, technische und organisatorische Maßnahmen
+                          sowie Pflichten im Rahmen der Auftragsverarbeitung.
+                        </p>
+                        <p>
+                          Die vollständigen Vertragsinhalte und Anlagen finden Sie auf der AVV-Seite.
+                        </p>
+                      </div>
+                      <div className="pt-3 text-xs">
+                        <Link href="/avv" className="text-primary hover:underline">
                           Vollständige Seite öffnen
                         </Link>
                       </div>
