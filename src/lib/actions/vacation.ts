@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
 import { revalidatePath } from "next/cache";
 import { sendVacationStatusEmail } from "@/lib/actions/emails";
-import { AbsenceType, VacationStatus } from "@prisma/client";
+import { AbsenceRequestStatus, AbsenceType, VacationStatus } from "@prisma/client";
 
 export async function requestVacation(data: {
   startDate: Date;
@@ -25,6 +25,18 @@ export async function requestVacation(data: {
       endDate: data.endDate,
       days,
       reason: data.reason,
+    },
+  });
+  await db.absence.create({
+    data: {
+      userId,
+      orgId: companyId,
+      type: AbsenceType.VACATION,
+      start: data.startDate,
+      end: data.endDate,
+      status: AbsenceRequestStatus.REQUESTED,
+      reason: data.reason,
+      sourceVacationRequestId: request.id,
     },
   });
 
@@ -56,6 +68,20 @@ export async function requestSickLeave(data: {
       reason: data.note?.trim() || null,
     },
   });
+  await db.absence.create({
+    data: {
+      userId,
+      orgId: companyId,
+      type: AbsenceType.SICK,
+      start: data.startDate,
+      end: data.endDate,
+      status: AbsenceRequestStatus.APPROVED,
+      reason: data.note?.trim() || null,
+      sourceVacationRequestId: request.id,
+      reviewedById: userId,
+      reviewedAt: new Date(),
+    },
+  });
 
   revalidatePath("/dashboard/vacation");
   revalidatePath("/dashboard/planning");
@@ -81,6 +107,14 @@ export async function approveVacation(requestId: string) {
     include: {
       user: { select: { name: true, email: true } },
       approvedBy: { select: { name: true } },
+    },
+  });
+  await db.absence.updateMany({
+    where: { sourceVacationRequestId: requestId },
+    data: {
+      status: AbsenceRequestStatus.APPROVED,
+      reviewedById: userId,
+      reviewedAt: new Date(),
     },
   });
 
@@ -117,6 +151,14 @@ export async function rejectVacation(requestId: string) {
     include: {
       user: { select: { name: true, email: true } },
       approvedBy: { select: { name: true } },
+    },
+  });
+  await db.absence.updateMany({
+    where: { sourceVacationRequestId: requestId },
+    data: {
+      status: AbsenceRequestStatus.REJECTED,
+      reviewedById: userId,
+      reviewedAt: new Date(),
     },
   });
 
@@ -182,12 +224,38 @@ export async function getVacationConflictDaysForPlanning() {
       absenceType: true,
     },
   });
+  const absences = await db.absence.findMany({
+    where: tenantWhere(companyId, {
+      status: AbsenceRequestStatus.APPROVED,
+      end: { gte: now },
+      start: { lte: horizonEnd },
+    }),
+    select: {
+      userId: true,
+      start: true,
+      end: true,
+      type: true,
+    },
+  });
 
   const conflicts = new Map<string, "VACATION" | "SICK">();
   for (const req of requests) {
     const conflictType: "VACATION" | "SICK" = req.absenceType === AbsenceType.SICK ? "SICK" : "VACATION";
     const cursor = new Date(req.startDate);
     const end = new Date(req.endDate);
+    while (cursor <= end) {
+      const key = `${req.userId}-${cursor.getDay()}`;
+      const existing = conflicts.get(key);
+      if (existing !== "SICK") {
+        conflicts.set(key, conflictType);
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+  for (const req of absences) {
+    const conflictType: "VACATION" | "SICK" = req.type === AbsenceType.SICK ? "SICK" : "VACATION";
+    const cursor = new Date(req.start);
+    const end = new Date(req.end);
     while (cursor <= end) {
       const key = `${req.userId}-${cursor.getDay()}`;
       const existing = conflicts.get(key);

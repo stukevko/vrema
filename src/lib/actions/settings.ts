@@ -69,3 +69,20 @@ export async function changePassword(data: {
 
   revalidatePath("/dashboard/settings");
 }
+
+export async function setTerminalPin(data: { pin: string }) {
+  const { userId, companyId } = await requireTenant();
+  const pin = data.pin.trim();
+  if (!/^\d{4}$/.test(pin)) {
+    throw new Error("PIN muss genau 4 Ziffern enthalten.");
+  }
+  const terminalPinHash = await bcrypt.hash(pin, 12);
+  await db.user.update({
+    where: tenantWhere(companyId, { id: userId }),
+    data: {
+      terminalPinHash,
+      terminalPin: null,
+    },
+  });
+  revalidatePath("/dashboard/settings");
+}

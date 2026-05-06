@@ -3,10 +3,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CalendarClock, FileText, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, CalendarClock, FileText, Settings, LogOut, LifeBuoy } from "lucide-react";
 import { signOut } from "next-auth/react";
 import clsx from "clsx";
 import { getDashboardNavItems } from "./dashboard-nav-config";
+import { useEffect, useState, useTransition } from "react";
+import { createSupportTicket, getMyUnreadSupportRepliesCount, markMySupportRepliesSeen } from "@/lib/actions/support";
 
 /** Nur Mobil (< md): Daumen-Zone, vier Kernrouten — kein Hamburger, Rest über Einstellungen/Dashboard. */
 const MOBILE_NAV_ITEMS = [
@@ -24,6 +26,28 @@ interface SidebarProps {
 export function DashboardSidebar({ role, plan }: SidebarProps) {
   const pathname = usePathname();
   const visibleItems = getDashboardNavItems(role, plan);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [type, setType] = useState<"BUG" | "QUESTION" | "FEATURE">("QUESTION");
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [unreadReplies, setUnreadReplies] = useState(0);
+
+  useEffect(() => {
+    let mounted = true;
+    void (async () => {
+      try {
+        const count = await getMyUnreadSupportRepliesCount();
+        if (mounted) setUnreadReplies(count);
+      } catch {
+        if (mounted) setUnreadReplies(0);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <aside className="hidden w-72 shrink-0 flex-col border-r border-border glass-nav md:flex md:h-[100dvh] md:max-h-[100dvh] md:w-80 md:min-h-0">
@@ -77,6 +101,27 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
       <div className="border-t border-border p-4">
         <button
           type="button"
+          onClick={() => {
+            setSupportOpen(true);
+            if (unreadReplies > 0) {
+              startTransition(async () => {
+                await markMySupportRepliesSeen();
+                setUnreadReplies(0);
+              });
+            }
+          }}
+          className="mb-2 flex min-h-11 w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-muted-foreground transition-all active:scale-95 md:hover:bg-card/70 md:hover:text-foreground"
+        >
+          <LifeBuoy className="h-4 w-4 shrink-0" />
+          Support
+          {unreadReplies > 0 ? (
+            <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-foreground">
+              {unreadReplies}
+            </span>
+          ) : null}
+        </button>
+        <button
+          type="button"
           onClick={() => signOut({ callbackUrl: "/" })}
           className="flex min-h-11 w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-muted-foreground transition-all active:scale-95 md:hover:bg-red-100 md:hover:text-red-500"
         >
@@ -84,6 +129,71 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
           Abmelden
         </button>
       </div>
+      {supportOpen && (
+        <div className="fixed inset-0 z-[120] flex items-end bg-black/40 p-4 md:items-center md:justify-center">
+          <div className="w-full rounded-2xl border border-border bg-card p-5 shadow-xl md:max-w-md">
+            <h3 className="text-base font-semibold">Support-Ticket erstellen</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Wir melden uns im Dashboard mit einer Antwort zurück.</p>
+            {unreadReplies > 0 ? (
+              <p className="mt-2 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
+                Du hast {unreadReplies} neue Antwort{unreadReplies === 1 ? "" : "en"} auf dein Ticket.
+              </p>
+            ) : null}
+            <div className="mt-3 space-y-2">
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as "BUG" | "QUESTION" | "FEATURE")}
+                className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm"
+              >
+                <option value="QUESTION">Frage</option>
+                <option value="BUG">Bug melden</option>
+                <option value="FEATURE">Feature-Wunsch</option>
+              </select>
+              <input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Betreff"
+                className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm"
+              />
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Beschreibe dein Anliegen..."
+                className="h-28 w-full resize-none rounded-xl border border-border bg-white px-3 py-2 text-sm"
+              />
+            </div>
+            {feedback ? <p className="mt-2 text-xs text-muted-foreground">{feedback}</p> : null}
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-xl border border-border px-3 py-2 text-xs"
+                onClick={() => setSupportOpen(false)}
+              >
+                Abbrechen
+              </button>
+              <button
+                type="button"
+                disabled={isPending}
+                className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-foreground disabled:opacity-60"
+                onClick={() =>
+                  startTransition(async () => {
+                    try {
+                      await createSupportTicket({ subject, message, type });
+                      setFeedback("Ticket wurde erstellt.");
+                      setSubject("");
+                      setMessage("");
+                    } catch (err) {
+                      setFeedback(err instanceof Error ? err.message : "Erstellen fehlgeschlagen.");
+                    }
+                  })
+                }
+              >
+                {isPending ? "Sende..." : "Ticket senden"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

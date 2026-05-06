@@ -17,7 +17,7 @@ import {
   LogIn,
 } from "lucide-react";
 import Link from "next/link";
-import { CorrectionRequestStatus, EntryStatus, UserRole, VacationStatus } from "@prisma/client";
+import { AbsenceRequestStatus, CorrectionRequestStatus, EntryStatus, UserRole, VacationStatus } from "@prisma/client";
 import { getSuperAdminMonitoring, getSuperAdminOverview } from "@/lib/actions/super-admin";
 import { SuperAdminInlinePanel } from "@/components/dashboard/SuperAdminInlinePanel";
 import { AIInsights } from "@/components/dashboard/AIInsights";
@@ -120,10 +120,11 @@ export default async function DashboardPage() {
   const isSuperAdmin = role === "SUPER_ADMIN" || session.user.id === process.env.SUPER_ADMIN_USER_ID;
   let teamStats = null;
   if (role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN") {
-    const [totalEmployees, activeToday, pendingVacations, absentToday, lateToday, pendingCorrections] = await Promise.all([
+    const [totalEmployees, activeToday, pendingVacations, pendingAbsenceRequests, absentToday, lateToday, pendingCorrections] = await Promise.all([
       db.user.count({ where: tenantWhere(companyId, { isActive: true }) }),
       db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: today }, clockOut: null }) }),
       db.vacationRequest.count({ where: tenantWhere(companyId, { status: VacationStatus.PENDING }) }),
+      db.absence.count({ where: tenantWhere(companyId, { status: AbsenceRequestStatus.REQUESTED }) }),
       db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: today }, status: EntryStatus.ABSENT }) }),
       db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: today }, status: EntryStatus.LATE }) }),
       db.workLogCorrectionRequest.count({
@@ -133,7 +134,7 @@ export default async function DashboardPage() {
     teamStats = {
       totalEmployees,
       activeToday,
-      pendingVacations,
+      pendingVacations: pendingVacations + pendingAbsenceRequests,
       absentToday,
       lateToday,
       pendingCorrections,

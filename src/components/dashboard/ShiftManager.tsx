@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Drawer } from "vaul";
 import { applyStandardWeek, clearShiftForDay, copyWeekToAllMembers, setShiftForDay } from "@/lib/actions/team";
+import { CornerDownRight } from "lucide-react";
 
 type Member = {
   id: string;
@@ -22,9 +23,7 @@ type ShiftRow = {
 const DAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 /** Mobile: volle Wochentagsnamen für bessere Lesbarkeit. */
 const MOBILE_DAY_NAMES = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"] as const;
-/** Reihenfolge Wochentag-Dropdown in der Timeline (Mo–So). */
-const TIMELINE_WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
-const TIMELINE_START_HOUR = 6;
+const TIMELINE_START_HOUR = 0;
 const TIMELINE_END_HOUR = 24;
 const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
 const TIMELINE_SNAP_MINUTES = 15;
@@ -40,8 +39,11 @@ function formatHours(totalMinutes: number) {
   return `${hours.toFixed(1)}h`;
 }
 
-function formatHourRange(start: string, end: string) {
-  return `${start.slice(0, 5)}-${end.slice(0, 5)}`;
+function shiftDurationMinutes(start: string, end: string) {
+  const startMinutes = toMinutes(start);
+  const endMinutes = toMinutes(end);
+  if (startMinutes === null || endMinutes === null || startMinutes === endMinutes) return 0;
+  return endMinutes > startMinutes ? endMinutes - startMinutes : 24 * 60 - startMinutes + endMinutes;
 }
 
 function minutesToHHMM(total: number) {
@@ -85,8 +87,12 @@ export function ShiftManager({
   /** Mobil: nur Einfach-Planer. Desktop: Einfach-Planer oder Timeline. */
   const [viewMode, setViewMode] = useState<"simple" | "timeline">("simple");
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<1 | 2 | 3>(1);
-  const [timelineDay, setTimelineDay] = useState(1);
+  const [timelineDate, setTimelineDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [neededStaff, setNeededStaff] = useState(2);
+  const timelineDay = useMemo(() => {
+    const parsed = new Date(`${timelineDate}T12:00:00`);
+    return Number.isNaN(parsed.getTime()) ? 1 : parsed.getDay();
+  }, [timelineDate]);
   const [coverageSlotMinutes] = useState<60>(60);
   const [dragDraft, setDragDraft] = useState<{
     userId: string;
@@ -180,7 +186,13 @@ export function ShiftManager({
     const start = toMinutes(startTime);
     const end = toMinutes(endTime);
     if (start === null || end === null) return true;
-    return end <= start;
+    return end === start;
+  }, [startTime, endTime]);
+  const crossesMidnight = useMemo(() => {
+    const start = toMinutes(startTime);
+    const end = toMinutes(endTime);
+    if (start === null || end === null) return false;
+    return end < start;
   }, [startTime, endTime]);
   const plannedDaysCount = useMemo(() => userPrimaryShiftByDay.size, [userPrimaryShiftByDay]);
   const missingWeekdays = useMemo(
@@ -190,10 +202,7 @@ export function ShiftManager({
   const weeklyMinutes = useMemo(
     () =>
       userShifts.reduce((sum, shift) => {
-        const start = toMinutes(shift.startTime);
-        const end = toMinutes(shift.endTime);
-        if (start === null || end === null || end <= start) return sum;
-        return sum + (end - start);
+        return sum + shiftDurationMinutes(shift.startTime, shift.endTime);
       }, 0),
     [userShifts]
   );
@@ -225,10 +234,12 @@ export function ShiftManager({
     [selectedUserId, conflictTypeByCell]
   );
   const timelineRows = useMemo(() => {
+    const previousDay = (timelineDay + 6) % 7;
     return members.map((m) => {
       const shift = shiftByUserAndDay.get(`${m.id}-${selectedWeekIndex}-${timelineDay}`);
+      const previousShift = shiftByUserAndDay.get(`${m.id}-${selectedWeekIndex}-${previousDay}`);
       const conflict = conflictTypeByCell.get(`${m.id}-${timelineDay}`);
-      return { member: m, shift, conflict };
+      return { member: m, shift, previousShift, conflict };
     });
   }, [members, shiftByUserAndDay, conflictTypeByCell, timelineDay, selectedWeekIndex]);
   const timelineCoverage = useMemo(() => {
@@ -241,11 +252,24 @@ export function ShiftManager({
       const slotEnd = Math.min(slotStart + coverageSlotMinutes, TIMELINE_END_HOUR * 60);
       let assigned = 0;
       for (const row of timelineRows) {
-        if (!row.shift || row.conflict) continue;
-        const start = toMinutes(row.shift.startTime);
-        const end = toMinutes(row.shift.endTime);
-        if (start === null || end === null) continue;
-        if (start < slotEnd && end > slotStart) assigned += 1;
+        if (row.conflict) continue;
+        const segments: Array<{ start: number; end: number }> = [];
+        if (row.previousShift) {
+          const prevStart = toMinutes(row.previousShift.startTime);
+          const prevEnd = toMinutes(row.previousShift.endTime);
+          if (prevStart !== null && prevEnd !== null && prevEnd < prevStart) {
+            segments.push({ start: 0, end: prevEnd });
+          }
+        }
+        if (row.shift) {
+          const start = toMinutes(row.shift.startTime);
+          const end = toMinutes(row.shift.endTime);
+          if (start !== null && end !== null) {
+            if (end > start) segments.push({ start, end });
+            if (end < start) segments.push({ start, end: 24 * 60 });
+          }
+        }
+        if (segments.some((segment) => segment.start < slotEnd && segment.end > slotStart)) assigned += 1;
       }
       slots.push({
         label: minutesToHHMM(slotStart),
@@ -409,7 +433,7 @@ export function ShiftManager({
   const applyDayFromInputs = (dayOfWeek: number) => {
     if (!selectedUserId) return;
     if (hasInvalidRange) {
-      setMessage("Endzeit muss nach der Startzeit liegen.");
+      setMessage("Start- und Endzeit dürfen nicht identisch sein.");
       return;
     }
     if (selectedUserVacationDays.has(dayOfWeek)) {
@@ -440,7 +464,7 @@ export function ShiftManager({
   const submitStandardWeek = () => {
     if (!selectedUserId) return;
     if (hasInvalidRange) {
-      setMessage("Endzeit muss nach der Startzeit liegen.");
+      setMessage("Start- und Endzeit dürfen nicht identisch sein.");
       return;
     }
     setMessage(null);
@@ -549,6 +573,9 @@ export function ShiftManager({
               <span className="text-xl font-bold tabular-nums text-foreground">{endTime.slice(0, 5)}</span>
             </button>
           </div>
+          {crossesMidnight ? (
+            <p className="text-xs font-medium text-primary">Nachtschicht erkannt: Ende am Folgetag (+1 Tag).</p>
+          ) : null}
         </div>
 
         <div className="grid grid-cols-1 gap-4">
@@ -591,7 +618,7 @@ export function ShiftManager({
         </div>
       </div>
       {hasInvalidRange && (
-        <p className="mt-3 text-sm font-medium text-amber-300">Bitte gültige Zeit wählen: Ende muss später als Start sein.</p>
+        <p className="mt-3 text-sm font-medium text-amber-300">Bitte gültige Zeit wählen: Start und Ende dürfen nicht gleich sein.</p>
       )}
 
       <div className="mt-5 grid grid-cols-1 gap-4">
@@ -951,7 +978,7 @@ export function ShiftManager({
                   </div>
 
                   {hasInvalidRange && (
-                    <p className="text-sm font-medium text-amber-600">Ende muss nach Start liegen.</p>
+                    <p className="text-sm font-medium text-amber-600">Start und Ende dürfen nicht gleich sein.</p>
                   )}
                 </div>
 
@@ -1048,6 +1075,9 @@ export function ShiftManager({
           Auf alle übertragen
         </button>
       </div>
+      {crossesMidnight ? (
+        <p className="mt-2 text-xs font-medium text-primary">Hinweis: Schicht endet am Folgetag (+1 Tag).</p>
+      ) : null}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <p className="text-[11px] text-muted-foreground">Tipp: Zeit oben einstellen und Tage direkt antippen. Erneuter Klick mit gleicher Zeit löscht den Tag.</p>
         {selectedUserVacationDays.size > 0 && (
@@ -1068,7 +1098,7 @@ export function ShiftManager({
         </div>
       </div>
       {hasInvalidRange && (
-        <p className="mt-2 text-xs text-amber-300">Bitte gültige Zeit wählen: Ende muss später als Start sein.</p>
+        <p className="mt-2 text-xs text-amber-300">Bitte gültige Zeit wählen: Start und Ende dürfen nicht gleich sein.</p>
       )}
 
       <div className="mt-3 flex flex-wrap items-stretch gap-2 text-xs">
@@ -1199,19 +1229,15 @@ export function ShiftManager({
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             <div>
               <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Wochentag
+                Datum
               </span>
-              <select
-                value={timelineDay}
-                onChange={(e) => setTimelineDay(Number(e.target.value))}
+              <input
+                type="date"
+                value={timelineDate}
+                onChange={(e) => setTimelineDate(e.target.value)}
                 className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-base sm:min-h-11 sm:text-sm"
-              >
-                {TIMELINE_WEEKDAY_ORDER.map((d) => (
-                  <option key={d} value={d}>
-                    {DAY_LABELS[d]}
-                  </option>
-                ))}
-              </select>
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">Wochentag: {DAY_LABELS[timelineDay]}</p>
             </div>
             <div>
               <label
@@ -1244,11 +1270,11 @@ export function ShiftManager({
           </div>
 
           <div className="mt-3 max-h-[75vh] min-w-0 max-w-full overflow-x-auto overflow-y-auto overscroll-contain">
-            <div className="w-full min-w-0 space-y-4 py-1 md:min-w-[720px] lg:min-w-[880px]">
+            <div className="w-full min-w-[1200px] space-y-4 py-1 lg:min-w-[1400px]">
               <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground md:grid-cols-[220px_1fr] md:items-center">
                 <div className="hidden font-medium text-foreground md:block">Mitarbeiter</div>
-                <div className="grid grid-cols-9 font-sans">
-                  {Array.from({ length: 9 }).map((_, idx) => {
+                <div className="grid grid-cols-12 font-sans">
+                  {Array.from({ length: 12 }).map((_, idx) => {
                     const hour = TIMELINE_START_HOUR + idx * 2;
                     return (
                       <span key={hour} className="text-center text-[10px] sm:text-[11px]">
@@ -1262,9 +1288,22 @@ export function ShiftManager({
               {timelineRows.map((row) => {
                 const shiftStart = row.shift ? toMinutes(row.shift.startTime) : null;
                 const shiftEnd = row.shift ? toMinutes(row.shift.endTime) : null;
+                const overnightCurrent = shiftStart !== null && shiftEnd !== null && shiftEnd < shiftStart;
+                const previousStart = row.previousShift ? toMinutes(row.previousShift.startTime) : null;
+                const previousEnd = row.previousShift ? toMinutes(row.previousShift.endTime) : null;
+                const overnightCarry =
+                  previousStart !== null && previousEnd !== null && previousEnd < previousStart ? previousEnd : null;
                 const draftForRow = dragDraft?.userId === row.member.id ? dragDraft : null;
-                const visualStart = draftForRow?.startMinute ?? shiftStart;
-                const visualEnd = draftForRow?.endMinute ?? shiftEnd;
+                const visualStart =
+                  draftForRow?.startMinute ??
+                  (shiftStart ?? (overnightCarry !== null ? 0 : null));
+                const visualEnd =
+                  draftForRow?.endMinute ??
+                  (shiftStart !== null && shiftEnd !== null
+                    ? overnightCurrent
+                      ? TIMELINE_END_HOUR * 60
+                      : shiftEnd
+                    : overnightCarry);
                 const leftPct =
                   visualStart === null
                     ? 0
@@ -1274,6 +1313,12 @@ export function ShiftManager({
                     ? 0
                     : (Math.max(0, Math.min(visualEnd, TIMELINE_END_HOUR * 60) - Math.max(visualStart, TIMELINE_START_HOUR * 60)) / TIMELINE_TOTAL_MINUTES) * 100;
                 const initials = (row.member.name ?? row.member.email).slice(0, 2).toUpperCase();
+                const barLabel =
+                  visualStart !== null && visualEnd !== null
+                    ? `${minutesToHHMM(visualStart)}-${minutesToHHMM(visualEnd)}${
+                        draftForRow ? "" : overnightCurrent ? " (+1 Tag)" : row.shift ? "" : " (vom Vortag)"
+                      }`
+                    : "Frei";
                 return (
                   <div
                     key={row.member.id}
@@ -1341,50 +1386,59 @@ export function ShiftManager({
                           {row.conflict === "SICK" ? "Krank (gesperrt)" : "Urlaub (gesperrt)"}
                         </div>
                       ) : widthPct > 0 ? (
-                        <div
-                          className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg border border-primary/60 bg-primary/40 px-2 text-[11px] text-emerald-100 active:cursor-grabbing ${
-                            activeDrag?.userId === row.member.id
-                              ? "shadow-lg shadow-black/40 transition-none"
-                              : "transition-[left,width] duration-100 ease-out"
-                          }`}
-                          style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-                          title={`${minutesToHHMM(visualStart ?? TIMELINE_START_HOUR * 60)}-${minutesToHHMM(visualEnd ?? TIMELINE_START_HOUR * 60)}`}
-                          onPointerDown={(e) => {
-                            if (e.pointerType === "mouse" && e.button !== 0) return;
-                            if (!row.shift || row.conflict) return;
-                            const lane = (e.currentTarget as HTMLElement).closest("[data-timeline-lane]");
-                            if (!(lane instanceof HTMLElement)) return;
-                            const sm = toMinutes(row.shift.startTime);
-                            const em = toMinutes(row.shift.endTime);
-                            if (sm === null || em === null) return;
-                            e.stopPropagation();
-                            beginTimelineDrag(e.clientX, lane, row.member.id, "move", sm, em, e.pointerId);
-                          }}
-                        >
-                          {!activeDrag && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startTransition(async () => {
-                                  await clearShiftForDay({
-                                    userId: row.member.id,
-                                    weekIndex: selectedWeekIndex,
-                                    dayOfWeek: timelineDay,
-                                  });
-                                });
-                              }}
-                              className="absolute -right-1 -top-1 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-300/40 bg-red-500/90 text-sm text-foreground opacity-100 md:h-7 md:w-7 md:text-xs md:opacity-0 md:transition-opacity md:group-hover:opacity-100"
-                              title="Schicht löschen"
+                        <>
+                          {!draftForRow && overnightCurrent && shiftEnd !== null ? (
+                            <div
+                              className="absolute top-1.5 bottom-1.5 z-[9] flex items-center gap-1 rounded-lg border border-emerald-300/50 bg-emerald-300/35 px-2 text-[10px] font-semibold text-emerald-900"
+                              style={{ left: "0%", width: `${(shiftEnd / TIMELINE_TOTAL_MINUTES) * 100}%` }}
+                              title={`Next Day ${minutesToHHMM(0)}-${minutesToHHMM(shiftEnd)}`}
                             >
-                              ×
-                            </button>
-                          )}
-                          {formatHourRange(
-                            minutesToHHMM(visualStart ?? TIMELINE_START_HOUR * 60),
-                            minutesToHHMM(visualEnd ?? TIMELINE_START_HOUR * 60)
-                          )}
-                        </div>
+                              <CornerDownRight className="h-3 w-3" />
+                              <span>Next Day</span>
+                            </div>
+                          ) : null}
+                          <div
+                            className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg border border-primary/60 bg-primary/40 px-2 text-[11px] text-emerald-100 active:cursor-grabbing ${
+                              activeDrag?.userId === row.member.id
+                                ? "shadow-lg shadow-black/40 transition-none"
+                                : "transition-[left,width] duration-100 ease-out"
+                            }`}
+                            style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                            title={barLabel}
+                            onPointerDown={(e) => {
+                              if (e.pointerType === "mouse" && e.button !== 0) return;
+                              if (!row.shift || row.conflict) return;
+                              const lane = (e.currentTarget as HTMLElement).closest("[data-timeline-lane]");
+                              if (!(lane instanceof HTMLElement)) return;
+                              const sm = toMinutes(row.shift.startTime);
+                              const em = toMinutes(row.shift.endTime);
+                              if (sm === null || em === null) return;
+                              e.stopPropagation();
+                              beginTimelineDrag(e.clientX, lane, row.member.id, "move", sm, em, e.pointerId);
+                            }}
+                          >
+                            {!activeDrag && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startTransition(async () => {
+                                    await clearShiftForDay({
+                                      userId: row.member.id,
+                                      weekIndex: selectedWeekIndex,
+                                      dayOfWeek: timelineDay,
+                                    });
+                                  });
+                                }}
+                                className="absolute -right-1 -top-1 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-300/40 bg-red-500/90 text-sm text-foreground opacity-100 md:h-7 md:w-7 md:text-xs md:opacity-0 md:transition-opacity md:group-hover:opacity-100"
+                                title="Schicht löschen"
+                              >
+                                ×
+                              </button>
+                            )}
+                            {barLabel}
+                          </div>
+                        </>
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-[11px] text-muted-foreground">Frei</div>
                       )}

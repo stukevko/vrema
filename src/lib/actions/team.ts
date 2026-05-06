@@ -8,6 +8,73 @@ import { sendWelcomeEmail } from "@/lib/actions/emails";
 import { getWeekCycleIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 import { randomBytes } from "crypto";
 
+const MINUTES_PER_DAY = 24 * 60;
+const DAYS_PER_WEEK = 7;
+const MINUTES_PER_WEEK = MINUTES_PER_DAY * DAYS_PER_WEEK;
+
+function parseTimeToMinutes(value: string) {
+  if (!/^\d{2}:\d{2}$/.test(value)) return null;
+  const [h, m] = value.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  if (h < 0 || h > 23 || m < 0 || m > 59) return null;
+  return h * 60 + m;
+}
+
+function shiftToInterval(dayOfWeek: number, startTime: string, endTime: string) {
+  const startMinute = parseTimeToMinutes(startTime);
+  const endMinute = parseTimeToMinutes(endTime);
+  if (startMinute === null || endMinute === null) return null;
+  if (startMinute === endMinute) return null;
+  const absoluteStart = dayOfWeek * MINUTES_PER_DAY + startMinute;
+  const absoluteEnd =
+    dayOfWeek * MINUTES_PER_DAY + (endMinute <= startMinute ? endMinute + MINUTES_PER_DAY : endMinute);
+  return { start: absoluteStart, end: absoluteEnd };
+}
+
+function intervalsOverlap(a: { start: number; end: number }, b: { start: number; end: number }) {
+  return a.start < b.end && b.start < a.end;
+}
+
+async function assertNoShiftOverlap(input: {
+  companyId: string;
+  userId: string;
+  weekIndex: number;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  ignoredShiftId?: string;
+  ignoreSameDay?: boolean;
+}) {
+  const candidate = shiftToInterval(input.dayOfWeek, input.startTime, input.endTime);
+  if (!candidate) {
+    throw new Error("Ungültige Schichtzeit. Start und Ende dürfen nicht identisch sein.");
+  }
+  const existing = await db.shift.findMany({
+    where: {
+      ...tenantWhere(input.companyId, {
+        userId: input.userId,
+        weekIndex: input.weekIndex,
+      }),
+      ...(input.ignoreSameDay ? { dayOfWeek: { not: input.dayOfWeek } } : {}),
+      ...(input.ignoredShiftId ? { id: { not: input.ignoredShiftId } } : {}),
+    },
+    select: { id: true, dayOfWeek: true, startTime: true, endTime: true },
+  });
+
+  for (const row of existing) {
+    const interval = shiftToInterval(row.dayOfWeek, row.startTime, row.endTime);
+    if (!interval) continue;
+    const variants = [
+      interval,
+      { start: interval.start + MINUTES_PER_WEEK, end: interval.end + MINUTES_PER_WEEK },
+      { start: interval.start - MINUTES_PER_WEEK, end: interval.end - MINUTES_PER_WEEK },
+    ];
+    if (variants.some((v) => intervalsOverlap(candidate, v))) {
+      throw new Error("Schicht überschneidet sich mit einer bestehenden Schicht dieses Mitarbeiters.");
+    }
+  }
+}
+
 export async function inviteEmployeeForCompany(
   companyId: string,
   data: {
@@ -33,6 +100,7 @@ export async function inviteEmployeeForCompany(
       email: data.email.toLowerCase().trim(),
       password: hashedPassword,
       emailVerified: new Date(),
+      terminalPin,
       terminalPinHash,
       role: data.role ?? "EMPLOYEE",
       weeklyHours: data.weeklyHours ?? 40,
@@ -147,6 +215,15 @@ export async function upsertShift(input: {
   if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
     throw new Error("Ungültiges Zeitformat. Erwartet HH:MM.");
   }
+  await assertNoShiftOverlap({
+    companyId,
+    userId: input.userId,
+    weekIndex,
+    dayOfWeek: input.dayOfWeek,
+    startTime,
+    endTime,
+    ignoreSameDay: true,
+  });
 
   await db.shift.upsert({
     where: {
@@ -208,6 +285,17 @@ export async function applyStandardWeek(input: {
   }
 
   const weekdays = [1, 2, 3, 4, 5];
+  for (const dayOfWeek of weekdays) {
+    await assertNoShiftOverlap({
+      companyId,
+      userId: input.userId,
+      weekIndex,
+      dayOfWeek,
+      startTime,
+      endTime,
+      ignoreSameDay: true,
+    });
+  }
   await db.$transaction(
     weekdays.map((dayOfWeek) =>
       db.shift.upsert({
@@ -255,6 +343,14 @@ export async function setShiftForDay(input: {
   if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
     throw new Error("Ungültiges Zeitformat. Erwartet HH:MM.");
   }
+  await assertNoShiftOverlap({
+    companyId,
+    userId: input.userId,
+    weekIndex,
+    dayOfWeek: input.dayOfWeek,
+    startTime,
+    endTime,
+  });
 
   await db.$transaction([
     db.shift.deleteMany({

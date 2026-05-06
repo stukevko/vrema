@@ -21,6 +21,7 @@ import {
   Rss,
 } from "lucide-react";
 import { ProfileAvatarForm } from "@/components/dashboard/ProfileAvatarForm";
+import { TerminalPinForm } from "@/components/dashboard/TerminalPinForm";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -117,6 +118,14 @@ export default async function SettingsPage() {
           <h2 className="font-semibold text-sm text-foreground uppercase tracking-widest font-sans">Sicherheit</h2>
         </div>
         <PasskeySecurityForm />
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Lock className="w-4 h-4 text-muted-foreground" />
+          <h2 className="font-semibold text-sm text-foreground uppercase tracking-widest font-sans">Terminal-PIN</h2>
+        </div>
+        <TerminalPinForm />
       </section>
     </div>
   );

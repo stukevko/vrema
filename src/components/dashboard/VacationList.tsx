@@ -7,7 +7,7 @@ import { Check, X, Clock } from "lucide-react";
 
 type VacationRequest = {
   id: string;
-  absenceType?: "VACATION" | "SICK";
+  absenceType?: "VACATION" | "SICK" | "OTHER";
   startDate: Date;
   endDate: Date;
   days: number;
@@ -71,7 +71,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                 {new Date(req.endDate).toLocaleDateString("de-DE")}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {req.days} Tage · {req.absenceType === "SICK" ? "Krank" : "Urlaub"}
+                {req.days} Tage · {req.absenceType === "SICK" ? "Krank" : req.absenceType === "OTHER" ? "Abwesenheit" : "Urlaub"}
               </p>
               {req.reason && (
                 <p className={`text-xs mt-1 truncate ${req.absenceType === "SICK" ? "text-red-700" : "text-muted-foreground"}`}>

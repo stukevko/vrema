@@ -19,6 +19,7 @@ enum BillingInterval {
 
 enum UserRole {
   SUPER_ADMIN
+  SUPPORT
   COMPANY_OWNER
   MANAGER
   EMPLOYEE
@@ -33,6 +34,25 @@ enum VacationStatus {
 enum AbsenceType {
   VACATION
   SICK
+  OTHER
+}
+
+enum AbsenceRequestStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+}
+
+enum TicketStatus {
+  OPEN
+  PENDING
+  CLOSED
+}
+
+enum TicketType {
+  BUG
+  QUESTION
+  FEATURE
 }
 
 enum EntryStatus {
@@ -136,6 +156,8 @@ model Company {
   shifts            Shift[]
   workLogAudits     WorkLogAudit[]
   inviteLinks       InviteLink[]
+  tickets           Ticket[]
+  absences          Absence[]
 
   @@index([slug])
   @@index([affiliateId])
@@ -168,6 +190,7 @@ model User {
   role            UserRole  @default(EMPLOYEE)
   employeeNumber  String?
   phone           String?
+  terminalPin     String?
   terminalPinHash String?
   weeklyHours     Float     @default(40)
   vacationDays    Int       @default(25)
@@ -187,9 +210,57 @@ model User {
   workSchedules    WorkSchedule[]
   shifts           Shift[]
   workLogAudits    WorkLogAudit[]
+  tickets          Ticket[]
+  absenceRequests  Absence[] @relation("AbsenceRequester")
+  reviewedAbsences Absence[] @relation("AbsenceReviewer")
 
   @@index([companyId])
   @@index([email])
+}
+
+model Ticket {
+  id           String       @id @default(cuid())
+  userId       String
+  orgId        String
+  subject      String
+  message      String       @db.Text
+  status       TicketStatus @default(OPEN)
+  type         TicketType   @default(QUESTION)
+  response     String?      @db.Text
+  userSeenResponseAt DateTime?
+  respondedBy  String?
+  respondedAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Company @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, status, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Absence {
+  id                      String               @id @default(cuid())
+  userId                   String
+  orgId                    String
+  type                     AbsenceType
+  start                    DateTime
+  end                      DateTime
+  status                   AbsenceRequestStatus @default(REQUESTED)
+  reason                   String?
+  sourceVacationRequestId  String?             @unique
+  reviewedById             String?
+  reviewedAt               DateTime?
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+
+  user       User    @relation("AbsenceRequester", fields: [userId], references: [id], onDelete: Cascade)
+  org        Company @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  reviewedBy User?   @relation("AbsenceReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, status, start, end])
+  @@index([userId, start, end])
 }
 
 model Authenticator {

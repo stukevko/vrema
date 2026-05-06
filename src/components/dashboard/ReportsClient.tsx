@@ -933,7 +933,7 @@ export function ReportsClient({
               ) : (
                 <Lock className="w-3.5 h-3.5" />
               )}
-              DATEV Lohn-Export
+              DATEV-Lohnexport (CSV)
             </button>
           </div>
         </div>
