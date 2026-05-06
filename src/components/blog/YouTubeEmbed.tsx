@@ -11,7 +11,7 @@ export function YouTubeEmbed({
   if (!videoId) {
     return (
       <figure className="my-8 not-prose w-full">
-        <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-dashed border-border bg-gradient-to-br from-muted/80 to-card shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-dashed border-slate-200/70 bg-gradient-to-br from-muted/80 to-card shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-white/90 shadow-sm">
               <svg viewBox="0 0 24 24" className="h-7 w-7 text-muted-foreground" fill="currentColor" aria-hidden>
@@ -33,7 +33,7 @@ export function YouTubeEmbed({
 
   return (
     <figure className="my-8 not-prose w-full">
-      <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border bg-black shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
+      <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-200/70 bg-black shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
         <iframe
           src={src}
           title={title}

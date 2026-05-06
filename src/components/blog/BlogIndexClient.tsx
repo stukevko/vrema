@@ -51,8 +51,8 @@ export function BlogIndexClient({ posts }: { posts: PublicBlogCard[] }) {
     <>
       <div className="mx-auto w-full max-w-7xl px-4 pb-6 pt-4 sm:pb-8 sm:pt-6">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Product Journal</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">VREMA Insights</h1>
-        <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl">VREMA Insights</h1>
+        <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
           Updates, Tutorials und kuratiertes Wissen — transparent begleiten wir die Weiterentwicklung von VREMA.
         </p>
 
@@ -67,7 +67,7 @@ export function BlogIndexClient({ posts }: { posts: PublicBlogCard[] }) {
               className={`min-h-10 rounded-full border px-4 py-2 text-sm font-medium transition-all active:scale-[0.98] ${
                 filter === f.id
                   ? "border-primary bg-primary text-foreground shadow-sm"
-                  : "border-border bg-card text-muted-foreground hover:border-foreground/15 hover:text-foreground"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
               }`}
             >
               {f.label}
@@ -81,7 +81,7 @@ export function BlogIndexClient({ posts }: { posts: PublicBlogCard[] }) {
           <article key={post.slug}>
             <Link
               href={`/blog/${post.slug}`}
-              className="group flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all hover:border-primary/25 hover:shadow-[0_24px_56px_rgba(0,0,0,0.07)]"
+              className="group flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all duration-300 hover:border-primary/25"
             >
               <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-muted to-card">
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -104,11 +104,11 @@ export function BlogIndexClient({ posts }: { posts: PublicBlogCard[] }) {
                 >
                   {BLOG_CATEGORY_LABELS[post.category]}
                 </span>
-                <h2 className="mt-3 text-lg font-bold leading-snug tracking-tight text-foreground group-hover:text-primary md:text-xl">
+                <h2 className="mt-3 text-lg font-bold leading-snug tracking-tight text-slate-900 group-hover:text-primary md:text-xl">
                   {post.title}
                 </h2>
-                <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-muted-foreground">{post.teaser}</p>
-                <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+                <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-slate-600">{post.teaser}</p>
+                <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
                   <Calendar className="h-3.5 w-3.5 shrink-0" aria-hidden />
                   <time dateTime={post.date}>{formatDate(post.date)}</time>
                 </div>

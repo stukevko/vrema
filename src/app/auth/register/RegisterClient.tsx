@@ -231,7 +231,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
               className="btn-primary-solid flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold disabled:opacity-60"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-              Konto erstellen
+              {isPending ? "Lädt..." : "Konto erstellen"}
             </button>
           </form>
 

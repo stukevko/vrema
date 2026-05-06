@@ -171,7 +171,7 @@ function LoginForm() {
               className="btn-primary-solid flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold disabled:opacity-60"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-              Anmelden
+              {isPending ? "Lädt..." : "Anmelden"}
             </button>
 
             <button
@@ -181,7 +181,7 @@ function LoginForm() {
               className="btn-secondary-outline flex w-full items-center justify-center gap-2 rounded-xl py-3 font-semibold disabled:opacity-60"
             >
               <Fingerprint className="w-4 h-4" />
-              Mit Passkey anmelden
+              {isPending ? "Lädt..." : "Mit Passkey anmelden"}
             </button>
           </form>
 

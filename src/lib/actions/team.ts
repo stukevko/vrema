@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "@/lib/actions/emails";
 import { getWeekCycleIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
+import { randomBytes } from "crypto";
 
 export async function inviteEmployeeForCompany(
   companyId: string,
@@ -377,4 +378,41 @@ export async function getShiftCycleWeeks() {
     select: { shiftCycleWeeks: true },
   });
   return normalizeCycleWeeks(company?.shiftCycleWeeks);
+}
+
+export async function createTeamInviteLink(role: "USER" | "MANAGER" = "USER") {
+  const { companyId, role: actorRole } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(actorRole)) {
+    throw new Error("Keine Berechtigung.");
+  }
+
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14);
+  let code = "";
+  for (let i = 0; i < 5; i += 1) {
+    const part = randomBytes(5).toString("base64url").slice(0, 8).toLowerCase();
+    const candidate = `${part.slice(0, 4)}-${part.slice(4)}`;
+    const exists = await db.inviteLink.findUnique({ where: { code: candidate }, select: { id: true } });
+    if (!exists) {
+      code = candidate;
+      break;
+    }
+  }
+  if (!code) throw new Error("Einladungslink konnte nicht erstellt werden.");
+
+  await db.inviteLink.create({
+    data: {
+      code,
+      role,
+      orgId: companyId,
+      expiresAt,
+    },
+  });
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? "https://vrema.app";
+  return {
+    url: `${appUrl.replace(/\/$/, "")}/join/${code}`,
+    code,
+    expiresAt,
+    role,
+  };
 }

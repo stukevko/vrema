@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getTeamMembers } from "@/lib/actions/team";
 import { TeamList } from "@/components/dashboard/TeamList";
 import { InviteForm } from "@/components/dashboard/InviteForm";
+import { TeamInviteLinkCard } from "@/components/dashboard/TeamInviteLinkCard";
 import { Users } from "lucide-react";
 
 export default async function TeamPage() {
@@ -41,8 +42,9 @@ export default async function TeamPage() {
 
         {/* Invite form – takes 1/3, only for owners/managers */}
         {canManage && (
-          <div>
+          <div className="space-y-4">
             <InviteForm />
+            <TeamInviteLinkCard />
           </div>
         )}
       </div>

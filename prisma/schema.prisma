@@ -61,6 +61,11 @@ enum BlogPostCategory {
   KNOWLEDGE
 }
 
+enum InviteRole {
+  USER
+  MANAGER
+}
+
 model Affiliate {
   id        String   @id @default(cuid())
   code      String   @unique // Kleinbuchstaben, z. B. ?ref=kevin
@@ -130,9 +135,25 @@ model Company {
   workSchedules     WorkSchedule[]
   shifts            Shift[]
   workLogAudits     WorkLogAudit[]
+  inviteLinks       InviteLink[]
 
   @@index([slug])
   @@index([affiliateId])
+}
+
+model InviteLink {
+  id        String     @id @default(cuid())
+  code      String     @unique
+  role      InviteRole @default(USER)
+  orgId     String
+  expiresAt DateTime
+  usedCount Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  org Company @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, expiresAt])
 }
 
 model User {
