@@ -63,6 +63,38 @@ export async function sendWelcomeEmail(data: {
   );
 }
 
+// ── Team invite welcome (self-chosen password) ───────────────────────────────
+export async function sendTeamInviteWelcomeEmail(data: {
+  recipientName: string;
+  recipientEmail: string;
+  companyName: string;
+}) {
+  const dashboardUrl = `${APP_URL}/dashboard/welcome`;
+
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;background:#0b0b0b;color:#f4f4f5;padding:20px;">
+      <div style="max-width:560px;margin:0 auto;background:#111;border:1px solid #1f1f1f;border-radius:14px;padding:26px;">
+        <p style="margin:0 0 8px;color:#22c55e;font-size:12px;letter-spacing:.08em;text-transform:uppercase;">Team-Einladung bestätigt</p>
+        <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;">Willkommen im Team von ${data.companyName}!</h1>
+        <p style="margin:0 0 18px;color:#a1a1aa;line-height:1.6;">
+          Hi ${data.recipientName}, dein VREMA-Zugang wurde erfolgreich angelegt.
+          Deine Arbeitszeiterfassung ist jetzt bereit.
+        </p>
+        <p style="margin:0 0 8px;color:#a1a1aa;font-size:13px;">Konto: ${data.recipientEmail}</p>
+        <a href="${dashboardUrl}" style="display:inline-block;margin-top:12px;padding:11px 18px;background:#22c55e;color:#03120a;text-decoration:none;font-weight:700;border-radius:10px;">
+          Zum Startbereich
+        </a>
+      </div>
+    </div>
+  `;
+
+  await send(
+    data.recipientEmail,
+    `Willkommen im Team von ${data.companyName} - VREMA`,
+    html
+  );
+}
+
 // ── Password Reset ────────────────────────────────────────────────────────────
 export async function sendPasswordResetEmail(
   recipientEmail: string,

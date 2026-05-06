@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { generateVerificationToken } from "@/lib/actions/auth";
-import { sendVerificationEmail } from "@/lib/actions/emails";
+import { sendTeamInviteWelcomeEmail, sendVerificationEmail } from "@/lib/actions/emails";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
           role: inviteRole,
           expiresAt: { gt: new Date() },
         },
-        select: { id: true, orgId: true, role: true, usedCount: true, maxUses: true },
+        select: { id: true, orgId: true, role: true, usedCount: true, maxUses: true, org: { select: { name: true } } },
       });
 
       const usageExceeded = invite?.maxUses !== null && invite !== null && invite.usedCount >= invite.maxUses;
@@ -98,6 +98,13 @@ export async function POST(req: NextRequest) {
           where: { id: invite.id },
           data: { usedCount: { increment: 1 } },
         });
+      });
+
+      // Keep mail logic aligned with standard registration: send an email right after persistence.
+      await sendTeamInviteWelcomeEmail({
+        recipientName: normalizedName,
+        recipientEmail: normalizedEmail,
+        companyName: invite.org.name,
       });
 
       return NextResponse.json({ success: true }, { status: 201 });
