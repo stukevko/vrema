@@ -31,13 +31,20 @@ type Props = {
   initialPlan: string;
   refCode: string;
   affiliatePartnerName: string | null;
+  inviteContext: {
+    code: string;
+    orgId: string;
+    role: "USER" | "MANAGER";
+    orgName: string;
+  } | null;
 };
 
-export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: Props) {
+export function RegisterClient({ initialPlan, refCode, affiliatePartnerName, inviteContext }: Props) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const plan = initialPlan;
+  const isInviteFlow = inviteContext !== null;
 
   const [resolvedCode, setResolvedCode] = useState(() => refCode.trim().toLowerCase());
   const [resolvedName, setResolvedName] = useState<string | null>(affiliatePartnerName);
@@ -107,12 +114,17 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            name: data.get("name"),
+            name: isInviteFlow
+              ? `${String(data.get("firstName") ?? "").trim()} ${String(data.get("lastName") ?? "").trim()}`.trim()
+              : data.get("name"),
             email: data.get("email"),
             password: data.get("password"),
-            companyName: data.get("companyName"),
+            companyName: isInviteFlow ? undefined : data.get("companyName"),
             plan,
             affiliateCode: resolvedCode || undefined,
+            inviteCode: inviteContext?.code,
+            inviteOrgId: inviteContext?.orgId,
+            inviteRole: inviteContext?.role,
           }),
         });
 
@@ -130,7 +142,10 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
         }
         clearRefCookie();
 
-        router.push("/auth/login?registered=1");
+        const loginTarget = isInviteFlow
+          ? `/auth/login?registered=1&callbackUrl=${encodeURIComponent("/dashboard/welcome")}`
+          : "/auth/login?registered=1";
+        router.push(loginTarget);
       } catch {
         setError("Ein unerwarteter Fehler ist aufgetreten.");
       }
@@ -145,9 +160,15 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
         </div>
 
         <div className="public-card rounded-2xl p-8">
-          <h1 className="text-xl font-bold mb-1">Konto erstellen</h1>
-          <p className="text-muted-foreground text-sm mb-2">14 Tage kostenlos testen. Kartenprüfung im Onboarding.</p>
-          {resolvedCode ? (
+          <h1 className="text-xl font-bold mb-1">
+            {isInviteFlow ? `Registrierung als ${inviteContext?.role === "MANAGER" ? "Manager" : "Mitarbeiter"}` : "Konto erstellen"}
+          </h1>
+          <p className="text-muted-foreground text-sm mb-2">
+            {isInviteFlow
+              ? `Sie registrieren sich für ${inviteContext?.orgName}.`
+              : "14 Tage kostenlos testen. Kartenprüfung im Onboarding."}
+          </p>
+          {!isInviteFlow && resolvedCode ? (
             <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
               Empfohlen durch unseren Partner
               {resolvedName ? (
@@ -158,39 +179,72 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName }: P
               <span className="block text-[10px] text-muted-foreground font-sans mt-1">{resolvedCode}</span>
             </p>
           ) : null}
-          {plan !== "STARTER" && (
+          {!isInviteFlow && plan !== "STARTER" && (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-6">
               Plan: {plan}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-            <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">Ihr Name</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  placeholder="Max Mustermann"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
-                />
+            {isInviteFlow ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block">Vorname</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      name="firstName"
+                      required
+                      placeholder="Max"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block">Nachname</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      name="lastName"
+                      required
+                      placeholder="Mustermann"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">Firmenname</label>
-              <div className="relative">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  name="companyName"
-                  required
-                  placeholder="Musterfirma GmbH"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
-                />
-              </div>
-            </div>
+            ) : (
+              <>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block">Ihr Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      placeholder="Max Mustermann"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block">Firmenname</label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      name="companyName"
+                      required
+                      placeholder="Musterfirma GmbH"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
             <div>
               <label className="text-xs text-muted-foreground mb-1.5 block">E-Mail</label>
               <div className="relative">

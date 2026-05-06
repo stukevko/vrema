@@ -18,7 +18,8 @@ function LoginForm() {
   const [showResend, setShowResend] = useState(false);
   const { toasts, show, remove } = useToast();
   const searchParams = useSearchParams();
-  const callbackUrl = "/dashboard";
+  const requestedCallback = searchParams.get("callbackUrl") ?? "";
+  const callbackUrl = requestedCallback.startsWith("/") ? requestedCallback : "/dashboard";
   const registered = searchParams.get("registered") === "1";
   const verified = searchParams.get("verified") === "1";
   const verifyError = searchParams.get("error");

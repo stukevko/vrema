@@ -148,6 +148,7 @@ model InviteLink {
   orgId     String
   expiresAt DateTime
   usedCount Int        @default(0)
+  maxUses   Int?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 

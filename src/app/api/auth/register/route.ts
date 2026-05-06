@@ -8,10 +8,11 @@ const MIN_PASSWORD_LENGTH = 8;
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, companyName, plan, affiliateCode } = await req.json();
+    const { name, email, password, companyName, plan, affiliateCode, inviteCode, inviteOrgId, inviteRole } = await req.json();
+    const isInviteFlow = typeof inviteCode === "string" && inviteCode.trim().length > 0;
 
     // ── Input validation ────────────────────────────────────────────────────
-    if (!name || !email || !password || !companyName) {
+    if (!name || !email || !password || (!isInviteFlow && !companyName)) {
       return NextResponse.json(
         { error: "Alle Felder sind erforderlich." },
         { status: 400 }
@@ -43,19 +44,72 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Slug generation ─────────────────────────────────────────────────────
-    const baseSlug = companyName
+    // ── Hash password (cost factor 12) ──────────────────────────────────────
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // ── Invite flow: attach user to existing company ────────────────────────
+    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedName = String(name).trim();
+
+    if (isInviteFlow) {
+      if (
+        typeof inviteOrgId !== "string" ||
+        !inviteOrgId.trim() ||
+        (inviteRole !== "USER" && inviteRole !== "MANAGER")
+      ) {
+        return NextResponse.json(
+          { error: "Einladungsdaten sind unvollständig oder ungültig." },
+          { status: 400 }
+        );
+      }
+
+      const normalizedInviteCode = inviteCode.trim().toLowerCase();
+      const invite = await db.inviteLink.findFirst({
+        where: {
+          code: normalizedInviteCode,
+          orgId: inviteOrgId.trim(),
+          role: inviteRole,
+          expiresAt: { gt: new Date() },
+        },
+        select: { id: true, orgId: true, role: true, usedCount: true, maxUses: true },
+      });
+
+      const usageExceeded = invite?.maxUses !== null && invite !== null && invite.usedCount >= invite.maxUses;
+      if (!invite || usageExceeded) {
+        return NextResponse.json(
+          { error: "Dieser Einladungs-Link ist leider abgelaufen oder wurde zu oft verwendet." },
+          { status: 400 }
+        );
+      }
+
+      await db.$transaction(async (tx) => {
+        await tx.user.create({
+          data: {
+            name: normalizedName,
+            email: normalizedEmail,
+            password: hashedPassword,
+            role: invite.role === "MANAGER" ? "MANAGER" : "EMPLOYEE",
+            companyId: invite.orgId,
+            emailVerified: new Date(),
+          },
+        });
+
+        await tx.inviteLink.update({
+          where: { id: invite.id },
+          data: { usedCount: { increment: 1 } },
+        });
+      });
+
+      return NextResponse.json({ success: true }, { status: 201 });
+    }
+
+    // ── Standard flow: create company + owner ───────────────────────────────
+    const baseSlug = String(companyName)
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "")
       .slice(0, 50);
     const uniqueSlug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
-
-    // ── Hash password (cost factor 12) ──────────────────────────────────────
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // ── Create company + owner atomically ───────────────────────────────────
-    const normalizedEmail = email.toLowerCase().trim();
 
     let resolvedAffiliateId: string | undefined;
     if (typeof affiliateCode === "string" && affiliateCode.trim()) {
@@ -80,7 +134,7 @@ export async function POST(req: NextRequest) {
         affiliateId: resolvedAffiliateId,
         users: {
           create: {
-            name: name.trim(),
+            name: normalizedName,
             email: normalizedEmail,
             password: hashedPassword,   // ← stored on User, not Account
             role: "COMPANY_OWNER",
@@ -93,7 +147,7 @@ export async function POST(req: NextRequest) {
     const baseUrl = process.env.AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin;
     const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
     await sendVerificationEmail({
-      recipientName: name.trim(),
+      recipientName: normalizedName,
       recipientEmail: normalizedEmail,
       verifyUrl,
     });

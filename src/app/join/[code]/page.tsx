@@ -17,12 +17,8 @@ export default async function JoinPage({ params }: Props) {
   if (!invite) notFound();
 
   const expired = invite.expiresAt.getTime() < Date.now();
-  if (!expired) {
-    await db.inviteLink.update({
-      where: { id: invite.id },
-      data: { usedCount: { increment: 1 } },
-    });
-  }
+  const usageExceeded = invite.maxUses !== null && invite.usedCount >= invite.maxUses;
+  const unavailable = expired || usageExceeded;
 
   return (
     <main className="public-page flex items-center justify-center px-4 py-12">
@@ -32,9 +28,9 @@ export default async function JoinPage({ params }: Props) {
         <p className="mt-2 text-sm text-slate-600">
           Rolle: {invite.role === "MANAGER" ? "Manager" : "Mitarbeiter"}
         </p>
-        {expired ? (
+        {unavailable ? (
           <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            Dieser Link ist abgelaufen.
+            Dieser Einladungs-Link ist leider abgelaufen oder wurde zu oft verwendet.
           </p>
         ) : (
           <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
@@ -43,12 +39,18 @@ export default async function JoinPage({ params }: Props) {
         )}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/auth/register"
-            className="btn-primary-solid inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold"
-          >
-            Kostenlos registrieren
-          </Link>
+          {unavailable ? (
+            <span className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-5 text-sm font-semibold text-slate-500">
+              Link nicht mehr gültig
+            </span>
+          ) : (
+            <Link
+              href={`/auth/register?code=${encodeURIComponent(invite.code)}&org=${encodeURIComponent(invite.orgId)}&role=${encodeURIComponent(invite.role)}`}
+              className="btn-primary-solid inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold"
+            >
+              Kostenlos registrieren
+            </Link>
+          )}
           <Link
             href="/auth/login"
             className="btn-secondary-outline inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold"
