@@ -106,6 +106,7 @@ export default function RootLayout({
   return (
     <html lang="de" className="min-h-0 w-full overflow-x-hidden">
       <head>
+        <meta charSet="utf-8" />
         {/* Statische Assets aus /public — gleiche URLs wie PWA-Manifest */}
         <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />

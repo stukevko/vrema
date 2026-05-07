@@ -139,6 +139,7 @@ export async function getTeamMembers() {
       weeklyHours: true,
       vacationDays: true,
       employeeNumber: true,
+      hourlyWage: true,
       createdAt: true,
     },
     orderBy: [{ role: "asc" }, { name: "asc" }],
@@ -211,6 +212,36 @@ export async function updateEmployeeNumber(userId: string, employeeNumberRaw: st
   });
 
   revalidatePath("/dashboard/team");
+}
+
+export async function updateEmployeeHourlyWage(userId: string, hourlyWageRaw: string) {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
+    throw new Error("Keine Berechtigung.");
+  }
+  const trimmed = hourlyWageRaw.trim().replace(",", ".");
+  const member = await db.user.findFirst({
+    where: tenantWhere(companyId, { id: userId }),
+    select: { id: true },
+  });
+  if (!member) throw new Error("Mitarbeiter nicht gefunden.");
+
+  let hourlyWage: number | null = null;
+  if (trimmed.length > 0) {
+    const n = Number.parseFloat(trimmed);
+    if (!Number.isFinite(n) || n < 0) {
+      throw new Error("Ungültiger Stundenlohn.");
+    }
+    hourlyWage = Math.round(n * 100) / 100;
+  }
+
+  await db.user.update({
+    where: { id: userId },
+    data: { hourlyWage },
+  });
+
+  revalidatePath("/dashboard/team");
+  revalidatePath("/dashboard/planning");
 }
 
 export async function getShifts() {

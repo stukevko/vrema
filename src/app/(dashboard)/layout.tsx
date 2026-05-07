@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { DashboardLayoutClient } from "@/components/dashboard/DashboardLayoutClient";
 import { db } from "@/lib/db";
+import { getMyUnreadSupportRepliesCount, countOpenSupportTicketsForSuperAdmin } from "@/lib/actions/support";
 
 export default async function DashboardLayout({
   children,
@@ -31,8 +32,27 @@ export default async function DashboardLayout({
     }
   }
 
+  let supportUnreadCount = 0;
+  let superOpenTickets = 0;
+  try {
+    supportUnreadCount = await getMyUnreadSupportRepliesCount();
+  } catch {
+    supportUnreadCount = 0;
+  }
+  try {
+    superOpenTickets = await countOpenSupportTicketsForSuperAdmin();
+  } catch {
+    superOpenTickets = 0;
+  }
+
   return (
-    <DashboardLayoutClient role={session.user.role ?? "EMPLOYEE"} plan={session.user.plan ?? "STARTER"} user={session.user}>
+    <DashboardLayoutClient
+      role={session.user.role ?? "EMPLOYEE"}
+      plan={session.user.plan ?? "STARTER"}
+      user={session.user}
+      supportUnreadCount={supportUnreadCount}
+      initialSuperOpenTickets={superOpenTickets}
+    >
       {children}
     </DashboardLayoutClient>
   );

@@ -1,28 +1,33 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import {
-  listSupportTicketsForSuperAdmin,
-  replyToSupportTicketFormAction,
+  listOrgSupportTicketsForManagers,
+  replyToOrgSupportTicketFormAction,
 } from "@/lib/actions/support";
 import { ticketStatusDe, ticketTypeDe } from "@/lib/support/ticket-labels";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { Inbox } from "lucide-react";
 import { TicketStatus } from "@prisma/client";
 
-export default async function SuperAdminTicketsPage() {
+export default async function OrgAdminSupportPage() {
   const session = await auth();
-  const isSuperAdmin =
-    session?.user?.role === "SUPER_ADMIN" || session?.user?.id === process.env.SUPER_ADMIN_USER_ID;
-  if (!isSuperAdmin) redirect("/dashboard");
+  if (!session?.user?.companyId) redirect("/auth/login");
+  const role = session.user.role ?? "EMPLOYEE";
+  if (role === "SUPER_ADMIN") {
+    redirect("/dashboard/super-admin/tickets");
+  }
+  if (!["COMPANY_OWNER", "MANAGER"].includes(role)) {
+    redirect("/dashboard/support");
+  }
 
-  const tickets = await listSupportTicketsForSuperAdmin();
+  const tickets = await listOrgSupportTicketsForManagers();
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 px-1 sm:px-0">
       <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <h1 className="text-2xl font-bold">Support-Tickets (System)</h1>
+        <h1 className="text-2xl font-bold">Support – Team</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Alle Mandanten. Enthält eine Antwort, wird der Status automatisch auf „Beantwortet“ gesetzt (sonst gewählter Status).
+          Tickets deiner Organisation bearbeiten. Mit Antwort wird der Status automatisch auf „Beantwortet“ gesetzt.
         </p>
       </div>
 
@@ -31,38 +36,32 @@ export default async function SuperAdminTicketsPage() {
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
             <Inbox className="mx-auto h-8 w-8 text-muted-foreground" />
             <p className="mt-3 text-sm font-medium text-foreground">Keine Tickets</p>
-            <p className="mt-1 text-sm text-muted-foreground">Dein Postfach ist leer – gute Arbeit!</p>
+            <p className="mt-1 text-sm text-muted-foreground">Sobald Mitarbeitende schreiben, erscheinen die Anfragen hier.</p>
           </div>
         ) : (
           tickets.map((ticket) => (
             <form
               key={ticket.id}
-              action={replyToSupportTicketFormAction}
+              action={replyToOrgSupportTicketFormAction}
               className="rounded-2xl border border-border bg-card p-4 shadow-sm"
             >
               <input type="hidden" name="ticketId" value={ticket.id} />
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium">{ticketTypeDe(ticket.type)}</span>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px]">{ticketTypeDe(ticket.type)}</span>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-[11px]">{ticketStatusDe(ticket.status)}</span>
-                <span className="text-xs text-muted-foreground">{ticket.org.name}</span>
               </div>
               <p className="mt-2 text-sm font-semibold">{ticket.subject}</p>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{ticket.message}</p>
+              <p className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">{ticket.message}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Von {ticket.user.name ?? ticket.user.email} · {new Date(ticket.createdAt).toLocaleString("de-DE")}
               </p>
               {ticket.response ? (
-                <div className="mt-3 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm whitespace-pre-wrap">
-                  <span className="text-[11px] font-medium text-muted-foreground">Aktuelle Antwort: </span>
+                <div className="mt-3 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm whitespace-pre-wrap">
+                  <span className="text-[11px] font-medium text-muted-foreground">Bisherige Antwort: </span>
                   {ticket.response}
-                  {ticket.respondedAt ? (
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      {new Date(ticket.respondedAt).toLocaleString("de-DE")}
-                    </p>
-                  ) : null}
                 </div>
               ) : null}
-              <div className="mt-3 grid gap-2 md:grid-cols-[180px_1fr_auto] md:items-end">
+              <div className="mt-3 grid gap-2 md:grid-cols-[160px_1fr_auto] md:items-end">
                 <div>
                   <label className="text-[11px] text-muted-foreground">Status (ohne neue Antwort)</label>
                   <select
@@ -76,14 +75,14 @@ export default async function SuperAdminTicketsPage() {
                     <option value={TicketStatus.CLOSED}>Gelöst</option>
                   </select>
                 </div>
-                <div>
-                  <label className="text-[11px] text-muted-foreground">Antwort an Mitarbeiter (neu geändert → Status „Beantwortet“)</label>
+                <div className="md:col-span-1">
+                  <label className="text-[11px] text-muted-foreground">Antwort an Mitarbeiter</label>
                   <textarea
                     name="response"
                     rows={3}
-                    placeholder="Antwort an den Mitarbeiter…"
-                    className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm"
                     defaultValue={ticket.response ?? ""}
+                    placeholder="Antwort schreiben…"
+                    className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm"
                   />
                 </div>
                 <FormSubmitButton

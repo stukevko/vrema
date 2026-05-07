@@ -347,11 +347,11 @@ export default function LandingPage() {
               </div>
 
               <h1 className="mb-6 max-w-full hyphens-auto break-words text-4xl font-bold leading-[1.1] tracking-tight text-foreground md:text-6xl">
-                VREMA: Die intelligente Infrastruktur fuer Ihre Personalzeitwirtschaft.
+                VREMA: Die intelligente Infrastruktur für Ihre Personalzeitwirtschaft.
               </h1>
 
               <p className="mb-10 max-w-full hyphens-auto break-words text-lg leading-relaxed text-muted-foreground md:max-w-xl">
-                Digitale Zeiterfassung, Auswertung und Compliance in einer konsistenten Plattform fuer Unternehmen mit
+                Digitale Zeiterfassung, Auswertung und Compliance in einer konsistenten Plattform für Unternehmen mit
                 professionellen Prozessen.
               </p>
 
@@ -464,7 +464,7 @@ export default function LandingPage() {
           <div className="mb-16 min-w-0 transition-all duration-300">
             <p className="text-xs text-muted-foreground uppercase tracking-widest mb-4">01 / Features</p>
             <h2 className="max-w-full hyphens-auto break-words text-4xl font-bold leading-tight text-foreground md:text-5xl">
-              Modulare Funktionen fuer
+              Modulare Funktionen für
               <br />
               <span className="text-muted-foreground">eine verlaessliche Zeitwirtschaft.</span>
             </h2>
@@ -501,7 +501,7 @@ export default function LandingPage() {
                 <div className="min-w-0 max-w-full">
                   <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">02 / Core Intelligence</p>
                   <h3 className="max-w-full hyphens-auto break-words text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-                    KI-gestuetzte Analyse fuer operative Entscheidungen.
+                    KI-gestützte Analyse für operative Entscheidungen.
                   </h3>
                   <p className="mt-3 max-w-full hyphens-auto break-words text-sm text-muted-foreground md:max-w-3xl">
                     VREMA AI erkennt Muster in Arbeitszeiten, weist auf Auffaelligkeiten hin und unterstuetzt eine

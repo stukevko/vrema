@@ -47,7 +47,7 @@ export function TerminalPinForm() {
   return (
     <div className="space-y-4 rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
       <p className="text-sm text-muted-foreground">
-        4-stellige PIN fuers Terminal. Die PIN wird nur als Hash gespeichert.
+        4-stellige PIN fürs Terminal. Die PIN wird nur als Hash gespeichert.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <input
@@ -67,7 +67,7 @@ export function TerminalPinForm() {
           pattern="\d{4}"
           value={confirmPin}
           onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ""))}
-          placeholder="PIN bestaetigen"
+          placeholder="PIN bestätigen"
           className="min-h-12 rounded-xl border border-border bg-white px-4 py-2.5 text-base tracking-[0.25em] sm:text-sm"
         />
       </div>

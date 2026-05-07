@@ -49,9 +49,25 @@ export default async function ReportsPage({
 
   const userIds = Array.from(new Set(logs.map((l) => l.user.id)));
 
-  const [monthShifts, absences] = await Promise.all([
+  const monthKeyDb = `${year}-${String(month + 1).padStart(2, "0")}`;
+
+  const wageWhere =
+    isManager && userIds.length > 0
+      ? { id: { in: userIds } }
+      : !isManager
+        ? { id: userId }
+        : {};
+
+  const shiftAndAbsenceUserFilter =
+    userIds.length > 0
+      ? { userId: { in: userIds } }
+      : isManager
+        ? { userId: { in: [] as string[] } }
+        : { userId };
+
+  const [monthShifts, absences, timesheetAcks, wageRows] = await Promise.all([
     db.shift.findMany({
-      where: tenantWhere(companyId, { userId: { in: userIds } }),
+      where: tenantWhere(companyId, shiftAndAbsenceUserFilter),
       select: { userId: true, weekIndex: true, dayOfWeek: true, startTime: true, endTime: true },
     }),
     db.vacationRequest.findMany({
@@ -59,10 +75,20 @@ export default async function ReportsPage({
         status: VacationStatus.APPROVED,
         endDate: { gte: start },
         startDate: { lt: endExclusive },
-        userId: { in: userIds },
+        ...shiftAndAbsenceUserFilter,
       }),
       select: { userId: true, startDate: true, endDate: true, absenceType: true },
     }),
+    db.timesheetAcknowledgment.findMany({
+      where: tenantWhere(companyId, { monthKey: monthKeyDb }),
+      select: { userId: true, confirmedAt: true },
+    }),
+    Object.keys(wageWhere).length > 0
+      ? db.user.findMany({
+          where: tenantWhere(companyId, wageWhere),
+          select: { id: true, hourlyWage: true },
+        })
+      : Promise.resolve([] as Array<{ id: string; hourlyWage: number | null }>),
   ]);
 
   const monthlySollMinutesByUser: Record<string, number> = {};
@@ -111,6 +137,13 @@ export default async function ReportsPage({
   // Total stats
   const totalMinutes = sumWorkedMinutes(logs);
 
+  const hourlyWageByUserId: Record<string, number | null> = Object.fromEntries(
+    wageRows.map((w) => [w.id, w.hourlyWage])
+  );
+  const timesheetAcknowledgedAtByUserId: Record<string, string> = Object.fromEntries(
+    timesheetAcks.map((a) => [a.userId, a.confirmedAt.toISOString()])
+  );
+
   return (
     <ReportsClient
       logs={logs.map((l) => ({
@@ -147,6 +180,9 @@ export default async function ReportsPage({
         status: r.status as "PENDING" | "APPROVED" | "REJECTED",
         reviewerName: r.reviewedBy?.name ?? r.reviewedBy?.email ?? null,
       }))}
+      currentUserId={userId}
+      hourlyWageByUserId={hourlyWageByUserId}
+      timesheetAcknowledgedAtByUserId={timesheetAcknowledgedAtByUserId}
     />
   );
 }

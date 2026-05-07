@@ -27,7 +27,7 @@ export default async function TeamAbsencesPage() {
       <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
         <h1 className="text-2xl font-bold">Team-Abwesenheiten</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Zentrale Freigabe fuer Urlaub, Krankmeldungen und sonstige Abwesenheiten.
+          Zentrale Freigabe für Urlaub, Krankmeldungen und sonstige Abwesenheiten.
         </p>
       </div>
 

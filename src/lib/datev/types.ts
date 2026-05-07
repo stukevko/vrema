@@ -4,7 +4,7 @@ export type DatevExportConfig = {
   beraterNummer?: string;
   mandantenNummer?: string;
   abrechnungsMonat: string; // Beispiel: 2026-04
-  waehrung?: string; // Standard: EUR
+  währung?: string; // Standard: EUR
 };
 
 export type DatevExportRow = {

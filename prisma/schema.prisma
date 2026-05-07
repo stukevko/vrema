@@ -2,6 +2,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// PostgreSQL speichert Text als UTF-8 (Server-Encoding). Kein separates utf8mb4 wie bei MySQL nötig.
 datasource db {
   provider = "postgresql"
 }
@@ -46,13 +47,15 @@ enum AbsenceRequestStatus {
 enum TicketStatus {
   OPEN
   PENDING
-  CLOSED
+  CLOSED // endgültig gelöst / archiviert (ohne Antwort möglich)
+  RESOLVED // beantwortet – Antwort an Mitarbeiter gesendet
 }
 
 enum TicketType {
   BUG
   QUESTION
   FEATURE
+  FEEDBACK
 }
 
 enum EntryStatus {
@@ -195,6 +198,8 @@ model User {
   image           String?
   role            UserRole  @default(EMPLOYEE)
   employeeNumber  String?
+  /// Brutto-Stundenlohn (EUR), optional – für Lohn-Schätzung im Planer und in Berichten
+  hourlyWage      Float?
   phone           String?
   terminalPin     String?
   terminalPinHash String?
@@ -219,10 +224,24 @@ model User {
   tickets          Ticket[]
   absenceRequests  Absence[] @relation("AbsenceRequester")
   reviewedAbsences Absence[] @relation("AbsenceReviewer")
+  timesheetAcknowledgments TimesheetAcknowledgment[]
 
   @@index([companyId])
   @@index([email])
   @@unique([companyId, employeeNumber])
+}
+
+model TimesheetAcknowledgment {
+  id          String   @id @default(cuid())
+  userId      String
+  companyId   String
+  monthKey    String
+  confirmedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, monthKey])
+  @@index([companyId, monthKey])
 }
 
 model Ticket {

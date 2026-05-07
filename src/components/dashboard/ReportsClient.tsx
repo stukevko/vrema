@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FileText, Mail, Clock, Lock, Download, FileSpreadsheet, Sparkles, Loader2 } from "lucide-react";
+import { FileText, Mail, Clock, Lock, Download, FileSpreadsheet, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
 import { useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -13,6 +13,7 @@ import {
 } from "@/lib/actions/worklogs";
 import { sendPayrollReportEmail } from "@/lib/actions/emails";
 import { exportDatevCsvAction } from "@/lib/actions/reports";
+import { confirmTimesheetMonth } from "@/lib/actions/timesheet";
 import { minutesToDecimalHours, workedMinutes } from "@/lib/time/payroll";
 import type { AIReportAnalysisPayload } from "@/lib/ai/types";
 import jsPDF from "jspdf";
@@ -63,6 +64,9 @@ interface Props {
     status: CorrectionRequestStatus;
     reviewerName: string | null;
   }>;
+  currentUserId: string;
+  hourlyWageByUserId: Record<string, number | null>;
+  timesheetAcknowledgedAtByUserId: Record<string, string>;
 }
 
 function formatMins(mins: number) {
@@ -243,6 +247,9 @@ export function ReportsClient({
   monthlySollMinutesByUser,
   absences,
   correctionRequests,
+  currentUserId,
+  hourlyWageByUserId,
+  timesheetAcknowledgedAtByUserId,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -250,6 +257,7 @@ export function ReportsClient({
   const { toasts, show, remove } = useToast();
   const [isSaving, startTransition] = useTransition();
   const [isRoutePending, startRouteTransition] = useTransition();
+  const [isAckPending, startAckTransition] = useTransition();
   const [showPayrollModal, setShowPayrollModal] = useState(false);
   const [payrollEmail, setPayrollEmail] = useState("");
   const [requestMode, setRequestMode] = useState<"existing" | "new">("existing");
@@ -285,7 +293,26 @@ export function ReportsClient({
     )
   ).size;
   const avgHoursPerDay = productiveDays > 0 ? minutesToDecimalHours(totalMinutes / productiveDays, 2) : "0.00";
-  const indicativeCosts = Number.parseFloat(totalHoursDecimal) * 29;
+  const payrollGrossEuro = useMemo(() => {
+    let t = 0;
+    for (const log of logs) {
+      const w = hourlyWageByUserId[log.userId];
+      if (w == null || w <= 0) continue;
+      const d = durationMins(log);
+      if (d == null || d <= 0) continue;
+      t += (d / 60) * w;
+    }
+    return t;
+  }, [logs, hourlyWageByUserId]);
+  const hasWageData = payrollGrossEuro > 0;
+  const indicativeCostsFallback = Number.parseFloat(totalHoursDecimal) * 29;
+  const costSummaryLabel = hasWageData ? "Brutto-Lohn (geschätzt)" : "Personalkosten (indikativ)";
+  const costSummaryValue = hasWageData
+    ? new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(Math.round(payrollGrossEuro))
+    : `${new Intl.NumberFormat("de-DE").format(Math.round(indicativeCostsFallback))} €`;
+  const costSummaryNote = hasWageData
+    ? "Ist-Stunden × hinterlegter Stundenlohn (Brutto, ohne Zuschläge)"
+    : "Kein Stundenlohn im Team hinterlegt – Kalkulation mit 29 €/h";
   const monthOptions = useMemo(() => {
     const base = new Date();
     return Array.from({ length: 12 }, (_, index) => {
@@ -470,6 +497,18 @@ export function ReportsClient({
       doc.setTextColor(120, 120, 120);
       doc.text(`Seite ${sectionIndex + 1} von ${users.length}`, pageWidth - 12, pageHeight - 6, { align: "right" });
       doc.setTextColor(15, 15, 15);
+      const ackIso = timesheetAcknowledgedAtByUserId[first.userId];
+      if (ackIso) {
+        const ackDate = new Date(ackIso);
+        doc.setFontSize(8);
+        doc.setTextColor(45, 110, 65);
+        doc.text(
+          `Digitale Monatsbestätigung Mitarbeiter: ${formatDateDE(ackDate)} ${formatTimeCsv(ackDate)} (${DISPLAY_TIME_ZONE})`,
+          11,
+          signY + 11
+        );
+        doc.setTextColor(15, 15, 15);
+      }
     });
 
     const safeMonth = month.replace(/\s+/g, "_").replace(/[^\w\-]/g, "");
@@ -962,7 +1001,7 @@ export function ReportsClient({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
           {[
             { label: "Gesamtstunden", value: `${totalHoursDecimal} h`, tone: "text-foreground", note: "Zusammenfassung der monatlichen Arbeitszeiten" },
-            { label: "Personalkosten (indikativ)", value: `${new Intl.NumberFormat("de-DE").format(Math.round(indicativeCosts))} €`, tone: "text-foreground", note: "Kalkulationsbasis: 29 €/h" },
+            { label: costSummaryLabel, value: costSummaryValue, tone: "text-foreground", note: costSummaryNote },
             { label: "Ø Stunden pro Arbeitstag", value: `${avgHoursPerDay} h`, tone: "text-muted-foreground", note: `${productiveDays} Arbeitstage erfasst` },
             { label: "Zeiteinträge", value: String(logs.length), tone: "text-muted-foreground", note: "Anzahl erfasster Buchungen im Monat" },
           ].map((s) => (
@@ -979,6 +1018,47 @@ export function ReportsClient({
             </motion.div>
           ))}
         </div>
+
+        <div className="rounded-2xl border border-emerald-200/60 bg-emerald-50/40 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                <CheckCircle2 className="h-5 w-5" aria-hidden />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Monats-Stundenzettel</p>
+                <h3 className="mt-1 text-base font-semibold text-foreground">Eigene Stunden bestätigen</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Einmal pro Monat bestätigen – der Zeitstempel erscheint in deinem Abschnitt im PDF-Export (Nachweis für die Personalakte).
+                </p>
+                {timesheetAcknowledgedAtByUserId[currentUserId] ? (
+                  <p className="mt-4 text-sm font-medium text-emerald-800">
+                    Bestätigt am {formatDateDE(new Date(timesheetAcknowledgedAtByUserId[currentUserId]))} um{" "}
+                    {formatTimeCsv(new Date(timesheetAcknowledgedAtByUserId[currentUserId]))} ({DISPLAY_TIME_ZONE})
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={isAckPending}
+                    onClick={() => {
+                      startAckTransition(async () => {
+                        try {
+                          await confirmTimesheetMonth(monthKey);
+                          show("Stunden für den Monat bestätigt.", "success");
+                          router.refresh();
+                        } catch (err: unknown) {
+                          show(err instanceof Error ? err.message : "Bestätigung fehlgeschlagen.", "error");
+                        }
+                      });
+                    }}
+                    className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-semibold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 disabled:opacity-60"
+                  >
+                    {isAckPending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+                    {isAckPending ? "Speichere…" : "Stunden bestätigen"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
 
         {(isAIAnalyzing || aiAnalysis) && (
           <div className="rounded-2xl border border-violet-100 bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">

@@ -1,6 +1,6 @@
 # VREMA GO LIVE
 
-Dieses Runbook ist fuer den Moment gedacht, in dem du auf der VM den Schalter umlegst.
+Dieses Runbook ist für den Moment gedacht, in dem du auf der VM den Schalter umlegst.
 
 ## 1) Vorbereitung auf der VM
 

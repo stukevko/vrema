@@ -63,7 +63,12 @@ export default async function PlanningPage() {
           <p className="mt-1 text-sm text-muted-foreground">Schichtplanung für Team und Soll/Ist-Basis.</p>
         </div>
         <ShiftManager
-          members={members.map((m) => ({ id: m.id, name: m.name, email: m.email }))}
+          members={members.map((m) => ({
+            id: m.id,
+            name: m.name,
+            email: m.email,
+            hourlyWage: m.hourlyWage ?? null,
+          }))}
           shifts={shifts}
           shiftCycleWeeks={shiftCycleWeeks}
           vacationConflictDays={vacationConflictDays}

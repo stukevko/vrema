@@ -3,12 +3,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Drawer } from "vaul";
 import { applyStandardWeek, clearShiftForDay, copyWeekToAllMembers, setShiftForDay } from "@/lib/actions/team";
-import { CornerDownRight } from "lucide-react";
+import { buildComplianceFlagsByShiftId } from "@/lib/planning/compliance";
+import { AlarmClock, Coffee, CornerDownRight } from "lucide-react";
 
 type Member = {
   id: string;
   name: string | null;
   email: string;
+  hourlyWage?: number | null;
 };
 
 type ShiftRow = {
@@ -249,6 +251,26 @@ export function ShiftManager({
       return { member: m, shift, previousShift, conflict };
     });
   }, [members, shiftByUserAndDay, conflictTypeByCell, timelineDay, selectedWeekIndex]);
+  const complianceByShiftId = useMemo(
+    () => buildComplianceFlagsByShiftId(shifts, selectedWeekIndex),
+    [shifts, selectedWeekIndex]
+  );
+  const plannedPayrollWeek = useMemo(() => {
+    let euro = 0;
+    let coveredMinutes = 0;
+    let totalMinutesAll = 0;
+    for (const s of shifts) {
+      if (s.weekIndex !== selectedWeekIndex) continue;
+      const dur = shiftDurationMinutes(s.startTime, s.endTime);
+      totalMinutesAll += dur;
+      const wage = members.find((m) => m.id === s.userId)?.hourlyWage;
+      if (wage != null && wage > 0) {
+        euro += (dur / 60) * wage;
+        coveredMinutes += dur;
+      }
+    }
+    return { euro, coveredMinutes, totalMinutesAll };
+  }, [shifts, selectedWeekIndex, members]);
   const companyDefaultShift = useMemo(() => {
     const counts = new Map<string, { startTime: string; endTime: string; count: number }>();
     for (const shift of shifts) {
@@ -743,6 +765,24 @@ export function ShiftManager({
             <span className="mt-2 block text-lg font-semibold tabular-nums text-foreground/90">
               {planned ? `${planned.startTime.slice(0, 5)} – ${planned.endTime.slice(0, 5)}` : "Frei – antippen zum Planen"}
             </span>
+            {planned ? (() => {
+              const cf = complianceByShiftId.get(planned.id);
+              if (!cf || (!cf.pauseRisk && !cf.restRisk)) return null;
+              return (
+                <span className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground" aria-hidden>
+                  {cf.pauseRisk ? (
+                    <span title="Über 6h Soll: Pause prüfen">
+                      <Coffee className="h-4 w-4 shrink-0 text-red-500" aria-hidden />
+                    </span>
+                  ) : null}
+                  {cf.restRisk ? (
+                    <span title="Weniger als 11h Ruhezeit möglich">
+                      <AlarmClock className="h-4 w-4 shrink-0 text-orange-600" aria-hidden />
+                    </span>
+                  ) : null}
+                </span>
+              );
+            })() : null}
             {recentDayAction?.dayOfWeek === idx && (
               <span className={`mt-2 block text-sm font-semibold ${recentDayAction.action === "saved" ? "text-primary" : "text-red-400"}`}>
                 {recentDayAction.action === "saved" ? "Gespeichert" : "Gelöscht"}
@@ -1213,6 +1253,26 @@ export function ShiftManager({
                 ? `${userPrimaryShiftByDay.get(idx)?.startTime}-${userPrimaryShiftByDay.get(idx)?.endTime}`
                 : "frei"}
             </span>
+            {(() => {
+              const pl = userPrimaryShiftByDay.get(idx);
+              if (!pl) return null;
+              const cf = complianceByShiftId.get(pl.id);
+              if (!cf || (!cf.pauseRisk && !cf.restRisk)) return null;
+              return (
+                <span className="mt-1 flex items-center gap-1">
+                  {cf.pauseRisk ? (
+                    <span title="Über 6h: Pause prüfen">
+                      <Coffee className="h-3 w-3 text-red-500" aria-hidden />
+                    </span>
+                  ) : null}
+                  {cf.restRisk ? (
+                    <span title="Ruhezeit unter 11 Stunden">
+                      <AlarmClock className="h-3 w-3 text-orange-600" aria-hidden />
+                    </span>
+                  ) : null}
+                </span>
+              );
+            })()}
             {recentDayAction?.dayOfWeek === idx && (
               <span className={`mt-1 block text-[10px] ${recentDayAction.action === "saved" ? "text-primary" : "text-red-700"}`}>
                 {recentDayAction.action === "saved" ? "Gespeichert" : "Gelöscht"}
@@ -1373,6 +1433,7 @@ export function ShiftManager({
                       }`
                     : "Frei";
                 const tradeOpen = Boolean(row.shift?.isOpenForTrade && row.shift?.tradeStatus !== "NONE");
+                const rowCompliance = row.shift ? complianceByShiftId.get(row.shift.id) : null;
                 return (
                   <div
                     key={row.member.id}
@@ -1476,6 +1537,16 @@ export function ShiftManager({
                             }}
                           >
                             {tradeOpen ? <span className="mr-1 text-[10px]">🔄</span> : null}
+                            {rowCompliance?.pauseRisk ? (
+                              <span className="mr-0.5 inline-flex shrink-0" title="Über 6h Soll: Pause prüfen">
+                                <Coffee className="h-3.5 w-3.5 text-red-200" aria-hidden />
+                              </span>
+                            ) : null}
+                            {rowCompliance?.restRisk ? (
+                              <span className="mr-0.5 inline-flex shrink-0" title="Ruhezeit unter 11 Stunden">
+                                <AlarmClock className="h-3.5 w-3.5 text-amber-200" aria-hidden />
+                              </span>
+                            ) : null}
                             {!activeDrag && (
                               <button
                                 type="button"
@@ -1702,6 +1773,32 @@ export function ShiftManager({
           </div>
         </div>
       ) : null}
+
+      <div className="mt-4 space-y-2 rounded-xl border border-border bg-background px-3 py-3 text-[11px] text-muted-foreground">
+        <p className="font-semibold text-foreground">Compliance-Radar · Budget</p>
+        <div className="flex flex-wrap gap-3">
+          <span className="inline-flex items-center gap-1">
+            <Coffee className="h-3.5 w-3.5 text-red-500" aria-hidden />
+            Schicht &gt;6h: 30-Min-Pause prüfen (nur Sollzeit im Plan)
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <AlarmClock className="h-3.5 w-3.5 text-orange-600" aria-hidden />
+            &lt;11h Ruhe zwischen aufeinanderfolgenden Schichten (Mo–So, Zykluswoche {selectedWeekIndex})
+          </span>
+        </div>
+        <p className="text-[10px] text-amber-800/85">Hinweis: keine Rechtsberatung – vor Veröffentlichung prüfen.</p>
+        <div className="flex flex-wrap items-baseline justify-between gap-2 border-t border-border pt-2">
+          <span className="text-foreground">Geplante Brutto-Lohnkosten (Woche {selectedWeekIndex})</span>
+          <span className="font-sans tabular-nums font-semibold text-foreground">
+            {plannedPayrollWeek.coveredMinutes > 0
+              ? new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(plannedPayrollWeek.euro)
+              : "—"}
+          </span>
+        </div>
+        {plannedPayrollWeek.totalMinutesAll > 0 && plannedPayrollWeek.coveredMinutes < plannedPayrollWeek.totalMinutesAll ? (
+          <p className="text-[10px]">Es werden nur Schichten mit hinterlegtem Stundenlohn summiert (Team · €/Std).</p>
+        ) : null}
+      </div>
     </section>
   );
 }
