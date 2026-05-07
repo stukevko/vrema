@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { decideAbsence } from "@/lib/actions/absence";
 import { db } from "@/lib/db";
+import { CalendarX2 } from "lucide-react";
+import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 
 export default async function TeamAbsencesPage() {
   const session = await auth();
@@ -31,7 +33,11 @@ export default async function TeamAbsencesPage() {
 
       <div className="space-y-3">
         {absences.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">Keine Abwesenheiten vorhanden.</div>
+          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
+            <CalendarX2 className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="mt-3 text-sm font-medium text-foreground">Keine Abwesenheiten vorhanden</p>
+            <p className="mt-1 text-sm text-muted-foreground">Aktuell ist alles ruhig im Team.</p>
+          </div>
         ) : (
           absences.map((item) => (
             <form
@@ -55,30 +61,27 @@ export default async function TeamAbsencesPage() {
               </p>
               {item.reason ? <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p> : null}
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button
-                  type="submit"
+                <FormSubmitButton
                   name="status"
                   value="APPROVED"
-                  className="rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary"
-                >
-                  Genehmigen
-                </button>
-                <button
-                  type="submit"
+                  label="Genehmigen"
+                  pendingLabel="Speichere..."
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary disabled:opacity-60"
+                />
+                <FormSubmitButton
                   name="status"
                   value="REJECTED"
-                  className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700"
-                >
-                  Ablehnen
-                </button>
-                <button
-                  type="submit"
+                  label="Ablehnen"
+                  pendingLabel="Speichere..."
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-60"
+                />
+                <FormSubmitButton
                   name="status"
                   value="REQUESTED"
-                  className="rounded-xl border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground"
-                >
-                  Offen lassen
-                </button>
+                  label="Offen lassen"
+                  pendingLabel="Speichere..."
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground disabled:opacity-60"
+                />
               </div>
             </form>
           ))

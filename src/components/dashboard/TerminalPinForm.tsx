@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { KeyRound, Loader2 } from "lucide-react";
 import { setTerminalPin } from "@/lib/actions/settings";
+import { ToastContainer, useToast } from "@/components/ui/Toast";
 
 export function TerminalPinForm() {
   const [pin, setPin] = useState("");
@@ -10,16 +11,21 @@ export function TerminalPinForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { toasts, show, remove } = useToast();
 
   const submit = () => {
     setError(null);
     setSuccess(null);
     if (!/^\d{4}$/.test(pin)) {
-      setError("PIN muss genau 4 Ziffern haben.");
+      const message = "PIN muss genau 4 Ziffern haben.";
+      setError(message);
+      show(message, "error");
       return;
     }
     if (pin !== confirmPin) {
-      setError("PIN-Eingaben stimmen nicht überein.");
+      const message = "PIN-Eingaben stimmen nicht überein.";
+      setError(message);
+      show(message, "error");
       return;
     }
 
@@ -27,10 +33,13 @@ export function TerminalPinForm() {
       try {
         await setTerminalPin({ pin });
         setSuccess("Terminal-PIN wurde sicher gespeichert.");
+        show("Terminal-PIN erfolgreich aktualisiert.", "success");
         setPin("");
         setConfirmPin("");
       } catch (err) {
-        setError(err instanceof Error ? err.message : "PIN konnte nicht gespeichert werden.");
+        const message = err instanceof Error ? err.message : "PIN konnte nicht gespeichert werden.";
+        setError(message);
+        show(message, "error");
       }
     });
   };
@@ -73,6 +82,7 @@ export function TerminalPinForm() {
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
         PIN speichern
       </button>
+      <ToastContainer toasts={toasts} remove={remove} />
     </div>
   );
 }

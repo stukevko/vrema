@@ -6,6 +6,7 @@ import { ReportsClient } from "@/components/dashboard/ReportsClient";
 import { VacationStatus } from "@prisma/client";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
 import { sumWorkedMinutes } from "@/lib/time/payroll";
+import { getMonthBoundsUtc } from "@/lib/time/timezone";
 
 export default async function ReportsPage({
   searchParams,
@@ -18,6 +19,7 @@ export default async function ReportsPage({
   const { companyId, id: userId } = session.user as { companyId: string; id: string };
   const plan = session.user.plan ?? "STARTER";
   const role = session.user.role ?? "EMPLOYEE";
+  const canDatevExport = role === "COMPANY_OWNER" || role === "SUPER_ADMIN";
   const company = await db.company.findUnique({
     where: { id: companyId },
     select: { name: true, shiftCycleWeeks: true },
@@ -30,8 +32,7 @@ export default async function ReportsPage({
   const year = monthMatch ? Number.parseInt(monthMatch[1], 10) : now.getFullYear();
   const month = monthMatch ? Number.parseInt(monthMatch[2], 10) - 1 : now.getMonth(); // 0-based
 
-  const start = new Date(year, month, 1);
-  const end = new Date(year, month + 1, 0, 23, 59, 59);
+  const { start, endExclusive } = getMonthBoundsUtc(year, month + 1, "Europe/Berlin");
 
   // Managers see all; employees see own
   const isManager = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
@@ -39,7 +40,7 @@ export default async function ReportsPage({
   const logs = await db.workLog.findMany({
     where: tenantWhere(companyId, {
       ...(isManager ? {} : { userId }),
-      clockIn: { gte: start, lte: end },
+      clockIn: { gte: start, lt: endExclusive },
     }),
     include: { user: { select: { id: true, name: true, email: true, employeeNumber: true, weeklyHours: true } } },
     orderBy: { clockIn: "desc" },
@@ -57,7 +58,7 @@ export default async function ReportsPage({
       where: tenantWhere(companyId, {
         status: VacationStatus.APPROVED,
         endDate: { gte: start },
-        startDate: { lte: end },
+        startDate: { lt: endExclusive },
         userId: { in: userIds },
       }),
       select: { userId: true, startDate: true, endDate: true, absenceType: true },
@@ -66,7 +67,8 @@ export default async function ReportsPage({
 
   const monthlySollMinutesByUser: Record<string, number> = {};
   const dayCountsByWeekdayAndWeek = new Map<string, number>();
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+  const loopEnd = new Date(endExclusive.getTime() - 1);
+  for (let d = new Date(start); d <= loopEnd; d.setDate(d.getDate() + 1)) {
     const wd = d.getDay();
     const weekIndex = getWeekCycleIndex(new Date(d), company?.shiftCycleWeeks);
     const key = `${weekIndex}-${wd}`;
@@ -124,10 +126,11 @@ export default async function ReportsPage({
         note: l.note,
       }))}
       totalMinutes={totalMinutes}
-      month={`${start.toLocaleString("de-DE", { month: "long" })} ${year}`}
+      month={`${start.toLocaleString("de-DE", { month: "long", timeZone: "Europe/Berlin" })} ${year}`}
       monthKey={`${year}-${String(month + 1).padStart(2, "0")}`}
       plan={plan}
       isManager={isManager}
+      canDatevExport={canDatevExport}
       companyName={companyName}
       monthlySollMinutesByUser={monthlySollMinutesByUser}
       absences={normalizedAbsences}

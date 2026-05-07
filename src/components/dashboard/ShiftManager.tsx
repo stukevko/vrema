@@ -18,6 +18,9 @@ type ShiftRow = {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
+  isOpenForTrade?: boolean;
+  tradeStatus?: "NONE" | "OPEN" | "PENDING_APPROVAL";
+  tradeRequestedBy?: string | null;
 };
 
 const DAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -55,6 +58,10 @@ function minutesToHHMM(total: number) {
 
 function snapMinutes(total: number) {
   return Math.round(total / TIMELINE_SNAP_MINUTES) * TIMELINE_SNAP_MINUTES;
+}
+
+function shiftKey(startTime: string, endTime: string) {
+  return `${startTime}-${endTime}`;
 }
 
 function scrollFieldIntoView(e: React.FocusEvent<HTMLElement>) {
@@ -242,6 +249,41 @@ export function ShiftManager({
       return { member: m, shift, previousShift, conflict };
     });
   }, [members, shiftByUserAndDay, conflictTypeByCell, timelineDay, selectedWeekIndex]);
+  const companyDefaultShift = useMemo(() => {
+    const counts = new Map<string, { startTime: string; endTime: string; count: number }>();
+    for (const shift of shifts) {
+      const key = shiftKey(shift.startTime, shift.endTime);
+      const current = counts.get(key);
+      if (current) current.count += 1;
+      else counts.set(key, { startTime: shift.startTime, endTime: shift.endTime, count: 1 });
+    }
+    const best = Array.from(counts.values()).sort((a, b) => b.count - a.count)[0];
+    return best ? { startTime: best.startTime, endTime: best.endTime } : { startTime: "09:00", endTime: "17:00" };
+  }, [shifts]);
+  const lastUsedShiftByUser = useMemo(() => {
+    const map = new Map<string, { startTime: string; endTime: string; weekIndex: number; dayOfWeek: number }>();
+    for (const shift of shifts) {
+      const existing = map.get(shift.userId);
+      if (
+        !existing ||
+        shift.weekIndex > existing.weekIndex ||
+        (shift.weekIndex === existing.weekIndex && shift.dayOfWeek >= existing.dayOfWeek)
+      ) {
+        map.set(shift.userId, {
+          startTime: shift.startTime,
+          endTime: shift.endTime,
+          weekIndex: shift.weekIndex,
+          dayOfWeek: shift.dayOfWeek,
+        });
+      }
+    }
+    return map;
+  }, [shifts]);
+  const getSuggestedShiftForUser = (userId: string) => {
+    const last = lastUsedShiftByUser.get(userId);
+    if (last) return { startTime: last.startTime, endTime: last.endTime };
+    return companyDefaultShift;
+  };
   const timelineCoverage = useMemo(() => {
     const slots: Array<{ label: string; assigned: number; needed: number; isGap: boolean }> = [];
     for (
@@ -334,7 +376,14 @@ export function ShiftManager({
     const relative = Math.max(0, Math.min(1, offsetX / rect.width));
     const minuteAtPointer = snapMinutes(TIMELINE_START_HOUR * 60 + relative * TIMELINE_TOTAL_MINUTES);
     const defaultStart = originStartMinute ?? minuteAtPointer;
-    const defaultEnd = originEndMinute ?? Math.min(TIMELINE_END_HOUR * 60, defaultStart + 8 * 60);
+    const suggestion = getSuggestedShiftForUser(userId);
+    const suggestionStart = toMinutes(suggestion.startTime);
+    const suggestionEnd = toMinutes(suggestion.endTime);
+    const suggestionDuration =
+      suggestionStart !== null && suggestionEnd !== null
+        ? shiftDurationMinutes(suggestion.startTime, suggestion.endTime)
+        : 8 * 60;
+    const defaultEnd = originEndMinute ?? Math.min(TIMELINE_END_HOUR * 60, defaultStart + suggestionDuration);
     const initialDraft =
       mode === "create"
         ? { userId, startMinute: minuteAtPointer, endMinute: minuteAtPointer + TIMELINE_SNAP_MINUTES }
@@ -397,18 +446,22 @@ export function ShiftManager({
       const draft = dragDraftRef.current;
       const snap = dragSnapshotRef.current;
       if (draft && draft.userId === activeDrag.userId) {
+        const unchangedCreate =
+          activeDrag.mode === "create" &&
+          draft.endMinute - draft.startMinute <= TIMELINE_SNAP_MINUTES;
         const unchangedMove =
           activeDrag.mode === "move" &&
           snap &&
           draft.startMinute === snap.start &&
           draft.endMinute === snap.end;
-        if (unchangedMove) {
+        if (unchangedMove || unchangedCreate) {
           const member = members.find((m) => m.id === activeDrag.userId);
+          const suggested = getSuggestedShiftForUser(activeDrag.userId);
           setShiftEdit({
             userId: activeDrag.userId,
             label: member?.name ?? member?.email ?? "Mitarbeiter",
-            startTime: minutesToHHMM(draft.startMinute),
-            endTime: minutesToHHMM(draft.endMinute),
+            startTime: unchangedCreate ? suggested.startTime : minutesToHHMM(draft.startMinute),
+            endTime: unchangedCreate ? suggested.endTime : minutesToHHMM(draft.endMinute),
           });
         } else {
           saveTimelineShift(activeDrag.userId, draft.startMinute, draft.endMinute);
@@ -1319,6 +1372,7 @@ export function ShiftManager({
                         draftForRow ? "" : overnightCurrent ? " (+1 Tag)" : row.shift ? "" : " (vom Vortag)"
                       }`
                     : "Frei";
+                const tradeOpen = Boolean(row.shift?.isOpenForTrade && row.shift?.tradeStatus !== "NONE");
                 return (
                   <div
                     key={row.member.id}
@@ -1398,7 +1452,11 @@ export function ShiftManager({
                             </div>
                           ) : null}
                           <div
-                            className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg border border-primary/60 bg-primary/40 px-2 text-[11px] text-emerald-100 active:cursor-grabbing ${
+                            className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg px-2 text-[11px] active:cursor-grabbing ${
+                              tradeOpen
+                                ? "border-amber-400 bg-amber-200/70 text-amber-900"
+                                : "border-primary/60 bg-primary/40 text-emerald-100"
+                            } ${
                               activeDrag?.userId === row.member.id
                                 ? "shadow-lg shadow-black/40 transition-none"
                                 : "transition-[left,width] duration-100 ease-out"
@@ -1417,6 +1475,7 @@ export function ShiftManager({
                               beginTimelineDrag(e.clientX, lane, row.member.id, "move", sm, em, e.pointerId);
                             }}
                           >
+                            {tradeOpen ? <span className="mr-1 text-[10px]">🔄</span> : null}
                             {!activeDrag && (
                               <button
                                 type="button"
@@ -1517,6 +1576,37 @@ export function ShiftManager({
           aria-modal="true"
           onPointerDown={(e) => {
             if (e.target === e.currentTarget) setShiftEdit(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              let s = toMinutes(shiftEdit.startTime);
+              let en = toMinutes(shiftEdit.endTime);
+              if (s === null || en === null || en === s) {
+                setMessage("Ungültige Zeitspanne.");
+                return;
+              }
+              s = snapMinutes(s);
+              const rawEnd = en < s ? en + 24 * 60 : en;
+              const snappedEnd = Math.max(s + TIMELINE_SNAP_MINUTES, snapMinutes(rawEnd));
+              const endTimeValue = minutesToHHMM(snappedEnd >= 24 * 60 ? snappedEnd - 24 * 60 : snappedEnd);
+              setMessage(null);
+              startTransition(async () => {
+                try {
+                  await setShiftForDay({
+                    userId: shiftEdit.userId,
+                    weekIndex: selectedWeekIndex,
+                    dayOfWeek: timelineDay,
+                    startTime: minutesToHHMM(s),
+                    endTime: endTimeValue,
+                  });
+                  setShiftEdit(null);
+                  setMessage("Schicht gespeichert.");
+                } catch (err: unknown) {
+                  setMessage(err instanceof Error ? err.message : "Speichern fehlgeschlagen.");
+                }
+              });
+            }
           }}
         >
           <div className="max-h-[min(88dvh,640px)] w-full max-w-full overflow-y-auto rounded-t-3xl border border-b-0 border-border bg-card px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 shadow-[0_-12px_40px_rgba(0,0,0,0.18)] sm:max-h-[90vh] md:max-h-none md:max-w-sm md:rounded-2xl md:border md:pb-5 md:shadow-[0_20px_50px_rgba(0,0,0,0.04)]">

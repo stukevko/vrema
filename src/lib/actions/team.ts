@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "@/lib/actions/emails";
 import { getWeekCycleIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 import { randomBytes } from "crypto";
+import { ShiftTradeStatus } from "@prisma/client";
 
 const MINUTES_PER_DAY = 24 * 60;
 const DAYS_PER_WEEK = 7;
@@ -179,6 +180,39 @@ export async function toggleEmployeeActive(userId: string) {
   revalidatePath("/dashboard/team");
 }
 
+export async function updateEmployeeNumber(userId: string, employeeNumberRaw: string) {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
+    throw new Error("Keine Berechtigung.");
+  }
+  const employeeNumber = employeeNumberRaw.trim();
+  const member = await db.user.findFirst({
+    where: tenantWhere(companyId, { id: userId }),
+    select: { id: true },
+  });
+  if (!member) throw new Error("Mitarbeiter nicht gefunden.");
+
+  if (employeeNumber.length > 0) {
+    const duplicate = await db.user.findFirst({
+      where: tenantWhere(companyId, {
+        employeeNumber,
+        id: { not: userId },
+      }),
+      select: { id: true },
+    });
+    if (duplicate) {
+      throw new Error("Diese Personalnummer ist im Unternehmen bereits vergeben.");
+    }
+  }
+
+  await db.user.update({
+    where: { id: userId },
+    data: { employeeNumber: employeeNumber.length > 0 ? employeeNumber : null },
+  });
+
+  revalidatePath("/dashboard/team");
+}
+
 export async function getShifts() {
   const { companyId, role } = await requireTenant();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) return [];
@@ -192,6 +226,9 @@ export async function getShifts() {
       dayOfWeek: true,
       startTime: true,
       endTime: true,
+      isOpenForTrade: true,
+      tradeStatus: true,
+      tradeRequestedBy: true,
     },
     orderBy: [{ userId: "asc" }, { weekIndex: "asc" }, { dayOfWeek: "asc" }, { startTime: "asc" }],
   });
@@ -367,6 +404,9 @@ export async function setShiftForDay(input: {
         dayOfWeek: input.dayOfWeek,
         startTime,
         endTime,
+        isOpenForTrade: false,
+        tradeStatus: ShiftTradeStatus.NONE,
+        tradeRequestedBy: null,
       },
     }),
   ]);
@@ -405,13 +445,173 @@ export async function getMyShifts() {
     where: tenantWhere(companyId, { userId, weekIndex: currentWeekIndex }),
     select: {
       id: true,
+      userId: true,
       weekIndex: true,
       dayOfWeek: true,
       startTime: true,
       endTime: true,
+      isOpenForTrade: true,
+      tradeStatus: true,
+      tradeRequestedBy: true,
     },
     orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
   });
+}
+
+export async function toggleShiftTradeOffer(shiftId: string, makeOpen: boolean) {
+  const { companyId, userId, role } = await requireTenant();
+  if (!["EMPLOYEE", "MANAGER", "COMPANY_OWNER", "SUPER_ADMIN"].includes(role)) {
+    throw new Error("Keine Berechtigung.");
+  }
+  const shift = await db.shift.findFirst({
+    where: tenantWhere(companyId, { id: shiftId, userId }),
+    select: { id: true, userId: true },
+  });
+  if (!shift) throw new Error("Schicht nicht gefunden.");
+  await db.shift.update({
+    where: { id: shift.id },
+    data: makeOpen
+      ? { isOpenForTrade: true, tradeStatus: ShiftTradeStatus.OPEN, tradeRequestedBy: null }
+      : { isOpenForTrade: false, tradeStatus: ShiftTradeStatus.NONE, tradeRequestedBy: null },
+  });
+  revalidatePath("/dashboard/planning");
+  revalidatePath("/dashboard");
+}
+
+export async function getOpenShiftTradesForMyRole() {
+  const { companyId, userId } = await requireTenant();
+  const me = await db.user.findFirst({
+    where: tenantWhere(companyId, { id: userId }),
+    select: { role: true, isActive: true },
+  });
+  if (!me || !me.isActive) return [];
+  const trades = await db.shift.findMany({
+    where: tenantWhere(companyId, {
+      isOpenForTrade: true,
+      tradeStatus: ShiftTradeStatus.OPEN,
+      userId: { not: userId },
+      user: { role: me.role, isActive: true },
+    }),
+    include: {
+      user: { select: { name: true, email: true, role: true } },
+    },
+    orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
+    take: 40,
+  });
+  return trades.map((s) => ({
+    id: s.id,
+    userId: s.userId,
+    ownerName: s.user.name ?? s.user.email,
+    dayOfWeek: s.dayOfWeek,
+    startTime: s.startTime,
+    endTime: s.endTime,
+    tradeStatus: s.tradeStatus,
+    tradeRequestedBy: s.tradeRequestedBy,
+  }));
+}
+
+export async function requestShiftTradeTakeover(shiftId: string) {
+  const { companyId, userId } = await requireTenant();
+  const me = await db.user.findFirst({
+    where: tenantWhere(companyId, { id: userId }),
+    select: { role: true, isActive: true },
+  });
+  if (!me || !me.isActive) throw new Error("Benutzer nicht aktiv.");
+
+  const shift = await db.shift.findFirst({
+    where: tenantWhere(companyId, { id: shiftId }),
+    include: { user: { select: { role: true, isActive: true } } },
+  });
+  if (!shift) throw new Error("Schicht nicht gefunden.");
+  if (shift.userId === userId) throw new Error("Eigene Schicht kann nicht übernommen werden.");
+  if (!shift.isOpenForTrade || shift.tradeStatus !== ShiftTradeStatus.OPEN) throw new Error("Schicht ist nicht offen für Tausch.");
+  if (!shift.user.isActive || shift.user.role !== me.role) {
+    throw new Error("Diese Schicht ist nur für Mitarbeitende derselben Rolle verfügbar.");
+  }
+
+  await db.shift.update({
+    where: { id: shift.id },
+    data: {
+      tradeStatus: ShiftTradeStatus.PENDING_APPROVAL,
+      tradeRequestedBy: userId,
+      isOpenForTrade: true,
+    },
+  });
+  revalidatePath("/dashboard/planning");
+  revalidatePath("/dashboard");
+}
+
+export async function getPendingTradeApprovals() {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) return [];
+  const rows = await db.shift.findMany({
+    where: tenantWhere(companyId, { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL }),
+    include: {
+      user: { select: { name: true, email: true } },
+      company: { select: { users: { select: { id: true, name: true, email: true } } } },
+    },
+    orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
+  });
+  return rows.map((row) => {
+    const requester = row.company.users.find((u) => u.id === row.tradeRequestedBy);
+    return {
+      id: row.id,
+      dayOfWeek: row.dayOfWeek,
+      startTime: row.startTime,
+      endTime: row.endTime,
+      fromName: row.user.name ?? row.user.email,
+      requestedByName: requester?.name ?? requester?.email ?? "Unbekannt",
+      requestedById: row.tradeRequestedBy,
+      userId: row.userId,
+    };
+  });
+}
+
+export async function countPendingShiftTradeApprovals() {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) return 0;
+  return db.shift.count({
+    where: tenantWhere(companyId, { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL }),
+  });
+}
+
+export async function decideShiftTradeApproval(shiftId: string, approve: boolean) {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
+    throw new Error("Keine Berechtigung.");
+  }
+  const shift = await db.shift.findFirst({
+    where: tenantWhere(companyId, { id: shiftId, tradeStatus: ShiftTradeStatus.PENDING_APPROVAL }),
+    include: {
+      user: { select: { role: true } },
+      company: { select: { users: { select: { id: true, role: true, isActive: true } } } },
+    },
+  });
+  if (!shift) throw new Error("Anfrage nicht gefunden.");
+  if (!shift.tradeRequestedBy) throw new Error("Kein Übernehmer hinterlegt.");
+  const requester = shift.company.users.find((u) => u.id === shift.tradeRequestedBy);
+  if (!requester || !requester.isActive || requester.role !== shift.user.role) {
+    throw new Error("Übernehmer ist nicht mehr berechtigt.");
+  }
+
+  if (!approve) {
+    await db.shift.update({
+      where: { id: shift.id },
+      data: { tradeStatus: ShiftTradeStatus.OPEN, tradeRequestedBy: null, isOpenForTrade: true },
+    });
+  } else {
+    await db.shift.update({
+      where: { id: shift.id },
+      data: {
+        userId: shift.tradeRequestedBy,
+        isOpenForTrade: false,
+        tradeStatus: ShiftTradeStatus.NONE,
+        tradeRequestedBy: null,
+      },
+    });
+  }
+  revalidatePath("/dashboard/planning");
+  revalidatePath("/dashboard");
 }
 
 export async function copyWeekToAllMembers(sourceUserId: string) {

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import type { AIInsightItem, AIInsightsPayload } from "@/lib/ai/types";
+import { getDayBoundsUtc } from "@/lib/time/timezone";
 
 type DashboardFacts = {
   breakViolationEmployees: number;
@@ -32,10 +33,12 @@ function workedMinutes(clockIn: Date, clockOut: Date | null, breakMins: number) 
 
 async function loadDashboardFacts(companyId: string): Promise<DashboardFacts> {
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const { start: todayStartBerlinUtc } = getDayBoundsUtc("Europe/Berlin", now);
+  const berlinNow = todayStartBerlinUtc;
+  const monthStart = new Date(berlinNow.getFullYear(), berlinNow.getMonth(), 1);
+  const monthEnd = new Date(berlinNow.getFullYear(), berlinNow.getMonth() + 1, 1);
 
-  const weekStart = startOfWeekMonday(now);
+  const weekStart = startOfWeekMonday(berlinNow);
   const weekEnd = addDays(weekStart, 7);
   const prevWeekStart = addDays(weekStart, -7);
 

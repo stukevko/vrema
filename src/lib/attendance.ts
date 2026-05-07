@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
 import { randomUUID } from "crypto";
+import { getDayBoundsUtc } from "@/lib/time/timezone";
 
 function parseShiftTimeToDate(baseDate: Date, hhmm: string) {
   const [hRaw, mRaw] = hhmm.split(":");
@@ -13,11 +14,7 @@ function parseShiftTimeToDate(baseDate: Date, hhmm: string) {
 }
 
 function getDayBounds(now: Date) {
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
-  return { start, end };
+  return getDayBoundsUtc("Europe/Berlin", now);
 }
 
 export type AbsentJobReport = {

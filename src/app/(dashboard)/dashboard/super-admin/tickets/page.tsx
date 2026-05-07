@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { listSupportTicketsForSuperAdmin, replyToSupportTicket } from "@/lib/actions/support";
+import { Inbox } from "lucide-react";
+import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 
 export default async function SuperAdminTicketsPage() {
   const session = await auth();
@@ -19,7 +21,11 @@ export default async function SuperAdminTicketsPage() {
 
       <div className="space-y-3">
         {tickets.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">Keine Tickets offen.</div>
+          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
+            <Inbox className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="mt-3 text-sm font-medium text-foreground">Keine Tickets offen</p>
+            <p className="mt-1 text-sm text-muted-foreground">Dein Postfach ist leer - gute Arbeit!</p>
+          </div>
         ) : (
           tickets.map((ticket) => (
             <form
@@ -56,9 +62,11 @@ export default async function SuperAdminTicketsPage() {
                   placeholder="Antwort an das Team..."
                   className="rounded-xl border border-border bg-white px-3 py-2 text-sm"
                 />
-                <button type="submit" className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-foreground">
-                  Speichern
-                </button>
+                <FormSubmitButton
+                  label="Speichern"
+                  pendingLabel="Speichere..."
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-foreground disabled:opacity-60"
+                />
               </div>
             </form>
           ))

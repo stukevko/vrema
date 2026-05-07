@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/tenant-guard";
 import { sendVacationStatusEmail } from "@/lib/actions/emails";
 import type { AbsenceRequestStatus, VacationStatus } from "@prisma/client";
+import { countBerlinCalendarDaysInclusive } from "@/lib/time/timezone";
 
 export async function listAbsencesForManagers() {
   const { companyId, role } = await requireTenant();
@@ -67,7 +68,7 @@ export async function decideAbsence(input: {
       status: input.status === "APPROVED" ? "APPROVED" : "REJECTED",
       startDate: updated.start,
       endDate: updated.end,
-      days: Math.max(1, Math.ceil((updated.end.getTime() - updated.start.getTime()) / (1000 * 60 * 60 * 24)) + 1),
+      days: countBerlinCalendarDaysInclusive(updated.start, updated.end),
       approvedByName: updated.reviewedBy?.name ?? "Manager",
     });
   }

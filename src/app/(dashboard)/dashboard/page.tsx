@@ -17,12 +17,20 @@ import {
   LogIn,
 } from "lucide-react";
 import Link from "next/link";
-import { AbsenceRequestStatus, CorrectionRequestStatus, EntryStatus, UserRole, VacationStatus } from "@prisma/client";
+import {
+  AbsenceRequestStatus,
+  CorrectionRequestStatus,
+  EntryStatus,
+  ShiftTradeStatus,
+  UserRole,
+  VacationStatus,
+} from "@prisma/client";
 import { getSuperAdminMonitoring, getSuperAdminOverview } from "@/lib/actions/super-admin";
 import { SuperAdminInlinePanel } from "@/components/dashboard/SuperAdminInlinePanel";
 import { AIInsights } from "@/components/dashboard/AIInsights";
 import { DashboardAISection } from "@/components/dashboard/DashboardAISection";
 import { getDashboardAIInsights } from "@/lib/ai/engine";
+import { formatBerlinDate, formatBerlinTime, getBerlinNowHour, getDayBoundsUtc } from "@/lib/time/timezone";
 
 type TeamStatsSnapshot = {
   totalEmployees: number;
@@ -31,6 +39,7 @@ type TeamStatsSnapshot = {
   absentToday: number;
   lateToday: number;
   pendingCorrections: number;
+  pendingTradeApprovals: number;
 };
 
 /** Eine klare Leitlinie für Owner/Manager/Super-Admin — weniger „Command Center“, mehr Führung. */
@@ -49,6 +58,14 @@ function managerPrimaryFocus(stats: TeamStatsSnapshot) {
       description: "Freigaben sichern die Nachvollziehbarkeit für Lohn und Prüfung.",
       href: "/dashboard/reports",
       cta: "Korrekturen prüfen",
+    };
+  }
+  if (stats.pendingTradeApprovals > 0) {
+    return {
+      title: `${stats.pendingTradeApprovals} Schicht-Tausch${stats.pendingTradeApprovals === 1 ? "" : "e"} warten auf Freigabe`,
+      description: "Prüfen Sie offene Übernahme-Anfragen, bevor die Schicht startet.",
+      href: "/dashboard/planning",
+      cta: "Tausch prüfen",
     };
   }
   if (stats.lateToday > 0) {
@@ -108,10 +125,9 @@ export default async function DashboardPage() {
   });
 
   // Today's work logs
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const { start: todayStart, end: todayEnd } = getDayBoundsUtc("Europe/Berlin");
   const todayLogs = await db.workLog.findMany({
-    where: tenantWhere(companyId, { userId, clockIn: { gte: today } }),
+    where: tenantWhere(companyId, { userId, clockIn: { gte: todayStart, lte: todayEnd } }),
     orderBy: { clockIn: "desc" },
   });
 
@@ -120,16 +136,17 @@ export default async function DashboardPage() {
   const isSuperAdmin = role === "SUPER_ADMIN" || session.user.id === process.env.SUPER_ADMIN_USER_ID;
   let teamStats = null;
   if (role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN") {
-    const [totalEmployees, activeToday, pendingVacations, pendingAbsenceRequests, absentToday, lateToday, pendingCorrections] = await Promise.all([
+    const [totalEmployees, activeToday, pendingVacations, pendingAbsenceRequests, absentToday, lateToday, pendingCorrections, pendingTradeApprovals] = await Promise.all([
       db.user.count({ where: tenantWhere(companyId, { isActive: true }) }),
-      db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: today }, clockOut: null }) }),
+      db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, clockOut: null }) }),
       db.vacationRequest.count({ where: tenantWhere(companyId, { status: VacationStatus.PENDING }) }),
-      db.absence.count({ where: tenantWhere(companyId, { status: AbsenceRequestStatus.REQUESTED }) }),
-      db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: today }, status: EntryStatus.ABSENT }) }),
-      db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: today }, status: EntryStatus.LATE }) }),
+      db.absence.count({ where: { orgId: companyId, status: AbsenceRequestStatus.REQUESTED } }),
+      db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, status: EntryStatus.ABSENT }) }),
+      db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, status: EntryStatus.LATE }) }),
       db.workLogCorrectionRequest.count({
         where: tenantWhere(companyId, { status: CorrectionRequestStatus.PENDING }),
       }),
+      db.shift.count({ where: tenantWhere(companyId, { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL }) }),
     ]);
     teamStats = {
       totalEmployees,
@@ -138,6 +155,7 @@ export default async function DashboardPage() {
       absentToday,
       lateToday,
       pendingCorrections,
+      pendingTradeApprovals,
     };
   }
 
@@ -149,6 +167,8 @@ export default async function DashboardPage() {
   const saldo = await calculateSaldo(userId);
 
   // Today's worked time
+  const now = new Date();
+  const berlinHour = getBerlinNowHour(now);
   const todayWorkedMins = todayLogs.reduce((acc, log) => {
     const end = log.clockOut ?? new Date();
     return acc + (end.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins;
@@ -162,17 +182,29 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="order-1 shrink-0 rounded-2xl glass-panel p-5 sm:p-8">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          Guten {new Date().getHours() < 12 ? "Morgen" : new Date().getHours() < 18 ? "Tag" : "Abend"},{" "}
+          Guten {berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"},{" "}
           {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {new Date().toLocaleDateString("de-DE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          {formatBerlinDate(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </p>
       </div>
 
       {/* Mitarbeiter: eine klare Primäraktion vor dem restlichen Dashboard */}
       {role === "EMPLOYEE" && (
-        <div className="order-2 rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card p-5 shadow-sm sm:p-6">
+        <div className="order-2 rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card p-4 shadow-sm sm:p-6">
+          <div className="mb-3 grid grid-cols-2 gap-2 md:hidden">
+            <div className="rounded-xl border border-border bg-white px-3 py-2">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Status</p>
+              <p className="text-sm font-semibold">{activeLog ? "Eingestempelt" : "Ausgestempelt"}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-white px-3 py-2">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Heute</p>
+              <p className="text-sm font-semibold tabular-nums">
+                {Math.floor(todayWorkedMins / 60)}h {Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m
+              </p>
+            </div>
+          </div>
           <div className="flex items-start gap-3">
             <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
               <LogIn className="h-4 w-4" aria-hidden />
@@ -248,7 +280,7 @@ export default async function DashboardPage() {
                 <h2 className="text-base font-bold tracking-tight text-foreground sm:text-lg">{focus.title}</h2>
                 <p className="text-sm text-muted-foreground">{focus.description}</p>
                 <Link
-                  href={focus.href}
+                  href={focus.href + (focus.href === "/dashboard/planning" && teamStats.pendingTradeApprovals > 0 ? "#shift-trade-approvals" : "")}
                   className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 active:scale-[0.99]"
                 >
                   {focus.cta}
@@ -256,6 +288,17 @@ export default async function DashboardPage() {
               </div>
             </div>
           </div>
+          {teamStats.pendingTradeApprovals > 0 && (
+            <Link
+              href="/dashboard/planning#shift-trade-approvals"
+              className="block rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 shadow-sm transition-colors hover:bg-amber-100/70"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-700">Offene Aufgaben</p>
+              <p className="mt-1 text-base font-bold text-amber-900">
+                {teamStats.pendingTradeApprovals} Tauschanfragen warten auf deine Freigabe
+              </p>
+            </Link>
+          )}
 
           <details className="group rounded-2xl glass-panel">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-left marker:content-none [&::-webkit-details-marker]:hidden">
@@ -405,10 +448,10 @@ export default async function DashboardPage() {
                   <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-muted-foreground/30" : "bg-primary animate-pulse"}`} />
                     <span className="text-sm text-foreground">
-                      {new Date(log.clockIn).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+                      {formatBerlinTime(new Date(log.clockIn), { hour: "2-digit", minute: "2-digit" })}
                       {" — "}
                       {log.clockOut
-                        ? new Date(log.clockOut).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
+                        ? formatBerlinTime(new Date(log.clockOut), { hour: "2-digit", minute: "2-digit" })
                         : "läuft..."}
                     </span>
                   </div>

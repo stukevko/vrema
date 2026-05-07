@@ -5,6 +5,12 @@ import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
 import { revalidatePath } from "next/cache";
 import { sendVacationStatusEmail } from "@/lib/actions/emails";
 import { AbsenceRequestStatus, AbsenceType, VacationStatus } from "@prisma/client";
+import {
+  berlinDateKeyToDayOfWeek,
+  countBerlinCalendarDaysInclusive,
+  getBerlinDayBoundsUtc,
+  listBerlinDateKeysInclusive,
+} from "@/lib/time/timezone";
 
 export async function requestVacation(data: {
   startDate: Date;
@@ -12,17 +18,19 @@ export async function requestVacation(data: {
   reason?: string;
 }) {
   const { userId, companyId } = await requireTenant();
-
-  const diffTime = Math.abs(data.endDate.getTime() - data.startDate.getTime());
-  const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  const startBounds = getBerlinDayBoundsUtc(data.startDate);
+  const endBounds = getBerlinDayBoundsUtc(data.endDate);
+  const normalizedStartDate = startBounds.start;
+  const normalizedEndDate = endBounds.end;
+  const days = countBerlinCalendarDaysInclusive(normalizedStartDate, normalizedEndDate);
 
   const request = await db.vacationRequest.create({
     data: {
       companyId,
       userId,
       absenceType: AbsenceType.VACATION,
-      startDate: data.startDate,
-      endDate: data.endDate,
+      startDate: normalizedStartDate,
+      endDate: normalizedEndDate,
       days,
       reason: data.reason,
     },
@@ -32,8 +40,8 @@ export async function requestVacation(data: {
       userId,
       orgId: companyId,
       type: AbsenceType.VACATION,
-      start: data.startDate,
-      end: data.endDate,
+      start: normalizedStartDate,
+      end: normalizedEndDate,
       status: AbsenceRequestStatus.REQUESTED,
       reason: data.reason,
       sourceVacationRequestId: request.id,
@@ -51,17 +59,19 @@ export async function requestSickLeave(data: {
   note?: string;
 }) {
   const { userId, companyId } = await requireTenant();
-
-  const diffTime = Math.abs(data.endDate.getTime() - data.startDate.getTime());
-  const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  const startBounds = getBerlinDayBoundsUtc(data.startDate);
+  const endBounds = getBerlinDayBoundsUtc(data.endDate);
+  const normalizedStartDate = startBounds.start;
+  const normalizedEndDate = endBounds.end;
+  const days = countBerlinCalendarDaysInclusive(normalizedStartDate, normalizedEndDate);
 
   const request = await db.vacationRequest.create({
     data: {
       companyId,
       userId,
       absenceType: AbsenceType.SICK,
-      startDate: data.startDate,
-      endDate: data.endDate,
+      startDate: normalizedStartDate,
+      endDate: normalizedEndDate,
       days,
       status: VacationStatus.APPROVED,
       approvedAt: new Date(),
@@ -73,8 +83,8 @@ export async function requestSickLeave(data: {
       userId,
       orgId: companyId,
       type: AbsenceType.SICK,
-      start: data.startDate,
-      end: data.endDate,
+      start: normalizedStartDate,
+      end: normalizedEndDate,
       status: AbsenceRequestStatus.APPROVED,
       reason: data.note?.trim() || null,
       sourceVacationRequestId: request.id,
@@ -210,12 +220,14 @@ export async function getVacationConflictDaysForPlanning() {
   const now = new Date();
   const horizonEnd = new Date(now);
   horizonEnd.setDate(horizonEnd.getDate() + 120);
+  const nowStart = getBerlinDayBoundsUtc(now).start;
+  const horizonEndDay = getBerlinDayBoundsUtc(horizonEnd).end;
 
   const requests = await db.vacationRequest.findMany({
     where: tenantWhere(companyId, {
       status: VacationStatus.APPROVED,
-      endDate: { gte: now },
-      startDate: { lte: horizonEnd },
+      endDate: { gte: nowStart },
+      startDate: { lte: horizonEndDay },
     }),
     select: {
       userId: true,
@@ -225,11 +237,12 @@ export async function getVacationConflictDaysForPlanning() {
     },
   });
   const absences = await db.absence.findMany({
-    where: tenantWhere(companyId, {
+    where: {
+      orgId: companyId,
       status: AbsenceRequestStatus.APPROVED,
-      end: { gte: now },
-      start: { lte: horizonEnd },
-    }),
+      end: { gte: nowStart },
+      start: { lte: horizonEndDay },
+    },
     select: {
       userId: true,
       start: true,
@@ -241,28 +254,24 @@ export async function getVacationConflictDaysForPlanning() {
   const conflicts = new Map<string, "VACATION" | "SICK">();
   for (const req of requests) {
     const conflictType: "VACATION" | "SICK" = req.absenceType === AbsenceType.SICK ? "SICK" : "VACATION";
-    const cursor = new Date(req.startDate);
-    const end = new Date(req.endDate);
-    while (cursor <= end) {
-      const key = `${req.userId}-${cursor.getDay()}`;
+    const dateKeys = listBerlinDateKeysInclusive(req.startDate, req.endDate);
+    for (const dateKey of dateKeys) {
+      const key = `${req.userId}-${berlinDateKeyToDayOfWeek(dateKey)}`;
       const existing = conflicts.get(key);
       if (existing !== "SICK") {
         conflicts.set(key, conflictType);
       }
-      cursor.setDate(cursor.getDate() + 1);
     }
   }
   for (const req of absences) {
     const conflictType: "VACATION" | "SICK" = req.type === AbsenceType.SICK ? "SICK" : "VACATION";
-    const cursor = new Date(req.start);
-    const end = new Date(req.end);
-    while (cursor <= end) {
-      const key = `${req.userId}-${cursor.getDay()}`;
+    const dateKeys = listBerlinDateKeysInclusive(req.start, req.end);
+    for (const dateKey of dateKeys) {
+      const key = `${req.userId}-${berlinDateKeyToDayOfWeek(dateKey)}`;
       const existing = conflicts.get(key);
       if (existing !== "SICK") {
         conflicts.set(key, conflictType);
       }
-      cursor.setDate(cursor.getDate() + 1);
     }
   }
 

@@ -12,6 +12,7 @@ import {
   ensureWorkLogAuditTable,
   writeWorkLogAudit,
 } from "@/lib/worklogs/clock-core";
+import { getMonthBoundsUtc } from "@/lib/time/timezone";
 
 export async function clockIn() {
   const { userId, companyId } = await requireTenant();
@@ -238,13 +239,12 @@ export async function getMonthlyWorkLogs(year: number, month: number, targetUser
     throw new Error("Keine Berechtigung.");
   }
 
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 0, 23, 59, 59);
+  const { start, endExclusive } = getMonthBoundsUtc(year, month, "Europe/Berlin");
 
   return db.workLog.findMany({
     where: tenantWhere(companyId, {
       userId: target,
-      clockIn: { gte: start, lte: end },
+      clockIn: { gte: start, lt: endExclusive },
     }),
     orderBy: { clockIn: "desc" },
   });

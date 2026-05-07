@@ -9,6 +9,7 @@ import clsx from "clsx";
 import { getDashboardNavItems } from "./dashboard-nav-config";
 import { useEffect, useState, useTransition } from "react";
 import { createSupportTicket, getMyUnreadSupportRepliesCount, markMySupportRepliesSeen } from "@/lib/actions/support";
+import { countPendingShiftTradeApprovals } from "@/lib/actions/team";
 
 /** Nur Mobil (< md): Daumen-Zone, vier Kernrouten — kein Hamburger, Rest über Einstellungen/Dashboard. */
 const MOBILE_NAV_ITEMS = [
@@ -33,6 +34,8 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [unreadReplies, setUnreadReplies] = useState(0);
+  const [pendingTradeApprovals, setPendingTradeApprovals] = useState(0);
+  const canManageTrades = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
 
   useEffect(() => {
     let mounted = true;
@@ -48,6 +51,22 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!canManageTrades) return;
+    let mounted = true;
+    void (async () => {
+      try {
+        const count = await countPendingShiftTradeApprovals();
+        if (mounted) setPendingTradeApprovals(count);
+      } catch {
+        if (mounted) setPendingTradeApprovals(0);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [canManageTrades]);
 
   return (
     <aside className="hidden w-72 shrink-0 flex-col border-r border-border glass-nav md:flex md:h-[100dvh] md:max-h-[100dvh] md:w-80 md:min-h-0">
@@ -93,6 +112,12 @@ export function DashboardSidebar({ role, plan }: SidebarProps) {
             >
               <item.icon className="h-4 w-4 shrink-0" />
               {item.label}
+              {item.href === "/dashboard/planning" && canManageTrades && pendingTradeApprovals > 0 ? (
+                <span
+                  className="ml-auto inline-flex h-2.5 w-2.5 rounded-full bg-amber-500"
+                  title={`${pendingTradeApprovals} Tauschanfragen warten`}
+                />
+              ) : null}
             </Link>
           );
         })}

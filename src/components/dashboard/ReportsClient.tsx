@@ -1,8 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FileText, Mail, Clock, Lock, Download, FileSpreadsheet, Sparkles } from "lucide-react";
-import * as Dialog from "@radix-ui/react-dialog";
+import { FileText, Mail, Clock, Lock, Download, FileSpreadsheet, Sparkles, Loader2 } from "lucide-react";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
 import { useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -13,12 +12,14 @@ import {
   updateWorkLogByManager,
 } from "@/lib/actions/worklogs";
 import { sendPayrollReportEmail } from "@/lib/actions/emails";
+import { exportDatevCsvAction } from "@/lib/actions/reports";
 import { minutesToDecimalHours, workedMinutes } from "@/lib/time/payroll";
 import type { AIReportAnalysisPayload } from "@/lib/ai/types";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 type CorrectionRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
+const DISPLAY_TIME_ZONE = "Europe/Berlin";
 
 type LogRow = {
   id: string;
@@ -40,6 +41,7 @@ interface Props {
   monthKey: string;
   plan: string;
   isManager: boolean;
+  canDatevExport: boolean;
   companyName: string;
   monthlySollMinutesByUser: Record<string, number>;
   absences: Array<{
@@ -80,9 +82,32 @@ function buildReportAnalysisFromFacts(params: {
   totalEntries: number;
   avgBreakMins: number;
   correctionNeeds: number;
+  logs: LogRow[];
 }): AIReportAnalysisPayload {
   const totalHours = minutesToDecimalHours(params.totalMinutes, 2);
   const avgBreakLabel = `${Math.round(params.avgBreakMins)} Min`;
+  const weekdayLoad = new Map<number, number>();
+  let breakRiskCount = 0;
+  for (const log of params.logs) {
+    const inAt = new Date(log.clockIn);
+    const weekday = inAt.getDay();
+    const dur = durationMins(log) ?? 0;
+    weekdayLoad.set(weekday, (weekdayLoad.get(weekday) ?? 0) + Math.max(0, dur));
+    if (dur >= 360 && log.breakMins < 30) breakRiskCount += 1;
+  }
+  const peakDay = Array.from(weekdayLoad.entries()).sort((a, b) => b[1] - a[1])[0];
+  const dayLabel = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"][
+    peakDay?.[0] ?? 1
+  ];
+  const tips = [
+    `Kapazitäts-Tipp: Höchste Auslastung am ${dayLabel} erkannt${peakDay ? ` (${minutesToDecimalHours(peakDay[1], 1)}h)` : ""}. Prüfen Sie dort die Schichtverteilung.`,
+    breakRiskCount > 0
+      ? `Compliance-Tipp: ${breakRiskCount} Schichten mit möglichem Pausenverstoß erkannt. Planen Sie für diese Teams feste Pausenfenster ein.`
+      : "Compliance-Tipp: Keine kritischen Pausenverstöße erkannt. Halten Sie die aktuelle Pausenstruktur stabil.",
+    params.correctionNeeds > 0
+      ? `Prozess-Tipp: ${params.correctionNeeds} Korrekturbedarfe im Zeitraum. Zielwert < 3 durch klarere Schicht-Startregeln.`
+      : "Prozess-Tipp: Sehr saubere Datenlage ohne Korrekturbedarf. Nutzen Sie das als Standard für alle Abteilungen.",
+  ];
 
   return {
     generatedAt: new Date().toISOString(),
@@ -93,6 +118,7 @@ function buildReportAnalysisFromFacts(params: {
       `Gesamtstunden: ${totalHours} h`,
       `Durchschnittliche Pausendauer: ${avgBreakLabel}`,
       `Korrekturbedarfe im Zeitraum: ${params.correctionNeeds}`,
+      ...tips,
     ],
   };
 }
@@ -110,7 +136,12 @@ function toCsvCell(value: string | number) {
 }
 
 function formatDateDE(value: Date) {
-  return value.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return value.toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: DISPLAY_TIME_ZONE,
+  });
 }
 
 /** Striktes TT.MM.JJJJ für Lohn-/DATEV-Exporte (unabhängig von Browser-Locale-Details). */
@@ -122,7 +153,12 @@ function formatDateCsv(value: Date) {
 }
 
 function formatTimeCsv(value: Date) {
-  return value.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", hour12: false });
+  return value.toLocaleTimeString("de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: DISPLAY_TIME_ZONE,
+  });
 }
 
 function employeeNumberOrFallback(log: LogRow) {
@@ -132,15 +168,18 @@ function employeeNumberOrFallback(log: LogRow) {
 
 function formatForDateTimeLocal(iso: string) {
   const d = new Date(iso);
-  const pad = (v: number) => String(v).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function defaultDatevAbrechnungsmonatMMYYYY() {
-  const now = new Date();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const yyyy = now.getFullYear();
-  return `${mm}/${yyyy}`;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: DISPLAY_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
+  const map: Record<string, string> = {};
+  for (const part of parts) if (part.type !== "literal") map[part.type] = part.value;
+  return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
 }
 
 /** PDF-Kopf: Mandantenname oder neutraler VREMA-Titel (ohne Hersteller-Branding in der Kopfzeile). */
@@ -199,6 +238,7 @@ export function ReportsClient({
   monthKey,
   plan,
   isManager,
+  canDatevExport,
   companyName,
   monthlySollMinutesByUser,
   absences,
@@ -211,7 +251,6 @@ export function ReportsClient({
   const [isSaving, startTransition] = useTransition();
   const [isRoutePending, startRouteTransition] = useTransition();
   const [showPayrollModal, setShowPayrollModal] = useState(false);
-  const [showDatevModal, setShowDatevModal] = useState(false);
   const [payrollEmail, setPayrollEmail] = useState("");
   const [requestMode, setRequestMode] = useState<"existing" | "new">("existing");
   const [requestLogId, setRequestLogId] = useState("");
@@ -230,16 +269,21 @@ export function ReportsClient({
 
   const lockedMsg = () => show("Upgrade erforderlich", "info");
 
-  // DATEV-Konfiguration (später aus Company-Settings; aktuell lokal im Client-State)
-  const [beraterNummer, setBeraterNummer] = useState("");
-  const [mandantenNummer, setMandantenNummer] = useState("");
-  const [abrechnungsMonat, setAbrechnungsMonat] = useState(() => defaultDatevAbrechnungsmonatMMYYYY());
   const [isDatevDownloading, setIsDatevDownloading] = useState(false);
   const [isAIAnalyzing, setIsAIAnalyzing] = useState(false);
   const [aiAnalysis, setAIAnalysis] = useState<AIReportAnalysisPayload | null>(null);
   const hasBusinessAccess = plan === "BUSINESS" || plan === "ENTERPRISE";
   const totalHoursDecimal = minutesToDecimalHours(totalMinutes, 2);
-  const productiveDays = new Set(logs.map((log) => new Date(log.clockIn).toDateString())).size;
+  const productiveDays = new Set(
+    logs.map((log) =>
+      new Date(log.clockIn).toLocaleDateString("de-DE", {
+        timeZone: DISPLAY_TIME_ZONE,
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    )
+  ).size;
   const avgHoursPerDay = productiveDays > 0 ? minutesToDecimalHours(totalMinutes / productiveDays, 2) : "0.00";
   const indicativeCosts = Number.parseFloat(totalHoursDecimal) * 29;
   const monthOptions = useMemo(() => {
@@ -247,7 +291,7 @@ export function ReportsClient({
     return Array.from({ length: 12 }, (_, index) => {
       const d = new Date(base.getFullYear(), base.getMonth() - index, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const label = d.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+      const label = d.toLocaleDateString("de-DE", { month: "long", year: "numeric", timeZone: DISPLAY_TIME_ZONE });
       return { key, label: label.charAt(0).toUpperCase() + label.slice(1) };
     });
   }, []);
@@ -618,63 +662,35 @@ export function ReportsClient({
     URL.revokeObjectURL(url);
   };
 
-  const buildDatevCsv = (config: { beraterNummer: string; mandantenNummer: string; abrechnungsMonat: string }) => {
-    // Basis: gleicher Lohn-CSV wie User-Export (Datum TT.MM.JJJJ; Stunden mit Komma).
-    // DATEV: Berater-, Mandantennummer und Abrechnungsmonat als erste Spalten (Stammdaten vor Personaldaten).
-    const baseCsv = buildCsv();
-    const separator = ";";
-    const [headerLine, ...dataLines] = baseCsv.split("\n");
-
-    const headerPrefix = ["Beraternummer", "Mandantennummer", "Abrechnungsmonat"]
-      .map((v) => toCsvCell(v))
-      .join(separator);
-
-    const prefixValues = [config.beraterNummer, config.mandantenNummer, config.abrechnungsMonat]
-      .map((v) => toCsvCell(v))
-      .join(separator);
-
-    return [
-      `${headerPrefix}${separator}${headerLine}`,
-      ...dataLines
-        .filter((l) => l.trim().length > 0)
-        .map((line) => `${prefixValues}${separator}${line}`),
-    ].join("\n");
-  };
-
-  const exportDatevLohnCsv = () => {
-    const csv = buildDatevCsv({
-      beraterNummer: beraterNummer.trim(),
-      mandantenNummer: mandantenNummer.trim(),
-      abrechnungsMonat: abrechnungsMonat.trim(),
-    });
-
-    const bom = "\uFEFF";
-    const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    const safeDatevMonth = abrechnungsMonat.replace(/\//g, "-").replace(/\s+/g, "_").replace(/[^\w\-]/g, "");
-    link.href = url;
-    link.download = `vrema-datev-lohn-${safeDatevMonth || "monat"}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const confirmDatevExport = () => {
-    const m = abrechnungsMonat.trim();
-    if (!m) {
-      show("Bitte einen Abrechnungsmonat angeben.", "error");
-      return;
+  const handleDatevExport = async () => {
+    if (!canDatevExport || isDatevDownloading) return;
+    const inconsistencies = logs.filter((log) => {
+      const dur = durationMins(log) ?? 0;
+      return dur >= 360 && log.breakMins < 30;
+    }).length;
+    if (inconsistencies > 0) {
+      const proceed = window.confirm(
+        `Achtung: Es gibt ${inconsistencies} Unstimmigkeiten in diesem Monat. Trotzdem exportieren?`
+      );
+      if (!proceed) return;
     }
-
     setIsDatevDownloading(true);
+    show("DATEV-Export wird vorbereitet...", "info");
     try {
-      exportDatevLohnCsv();
-      show("DATEV-CSV wurde heruntergeladen.", "success");
-      setShowDatevModal(false);
+      const { csv, fileName, rowsCount } = await exportDatevCsvAction(monthKey);
+      const bom = "\uFEFF";
+      const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      show(`DATEV-CSV wurde heruntergeladen (${rowsCount} Zeilen).`, "success");
     } catch (err: unknown) {
-      show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
+      show(err instanceof Error ? err.message : "DATEV-Export fehlgeschlagen.", "error");
     } finally {
       setIsDatevDownloading(false);
     }
@@ -832,6 +848,7 @@ export function ReportsClient({
         totalEntries: logs.length,
         avgBreakMins,
         correctionNeeds,
+        logs,
       });
       setAIAnalysis(analysis);
       show("Datenbasierte System-Analyse erfolgreich erstellt.", "success");
@@ -921,19 +938,22 @@ export function ReportsClient({
             />
             <button
               type="button"
-              onClick={hasBusinessAccess ? () => setShowDatevModal(true) : lockedMsg}
+              onClick={canDatevExport ? handleDatevExport : () => show("Nur Owner/Admin dürfen DATEV exportieren.", "error")}
+              disabled={isDatevDownloading}
               className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 md:min-h-0 md:w-auto ${
-                hasBusinessAccess
+                canDatevExport
                   ? "border-border bg-white text-foreground md:hover:bg-muted/50"
                   : "cursor-pointer border border-border bg-card text-muted-foreground md:hover:bg-muted/50"
               }`}
             >
-              {hasBusinessAccess ? (
-                <FileText className="w-3.5 h-3.5" />
+              {isDatevDownloading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : canDatevExport ? (
+                <FileText className="h-3.5 w-3.5" />
               ) : (
-                <Lock className="w-3.5 h-3.5" />
+                <Lock className="h-3.5 w-3.5" />
               )}
-              DATEV-Lohnexport (CSV)
+              {isDatevDownloading ? "DATEV wird erstellt..." : "DATEV-Lohnexport (CSV)"}
             </button>
           </div>
         </div>
@@ -1542,63 +1562,6 @@ export function ReportsClient({
         </div>
       )}
 
-      <Dialog.Root open={showDatevModal} onOpenChange={setShowDatevModal}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-white/70 px-4" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-            <Dialog.Title className="text-base font-semibold">DATEV Lohn-Export</Dialog.Title>
-            <p className="mt-1 text-xs text-muted-foreground">
-              CSV mit Berater-/Mandantenbezug und Abrechnungsmonat; Spalten für Lohnarten 001/002, Datum TT.MM.JJJJ und
-              Dezimalstunden im deutschen Format (Komma). Ohne Standortdaten, ohne interne Status-Codes.
-            </p>
-
-            <label className="mt-4 block text-xs text-muted-foreground">Beraternummer</label>
-            <input
-              type="text"
-              value={beraterNummer}
-              onChange={(e) => setBeraterNummer(e.target.value)}
-              placeholder="z.B. 12345"
-              className="mt-1 w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
-            />
-
-            <label className="mt-4 block text-xs text-muted-foreground">Mandantennummer</label>
-            <input
-              type="text"
-              value={mandantenNummer}
-              onChange={(e) => setMandantenNummer(e.target.value)}
-              placeholder="z.B. 67890"
-              className="mt-1 w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
-            />
-
-            <label className="mt-4 block text-xs text-muted-foreground">Abrechnungsmonat</label>
-            <input
-              type="text"
-              value={abrechnungsMonat}
-              onChange={(e) => setAbrechnungsMonat(e.target.value)}
-              placeholder="04/2026"
-              className="mt-1 w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
-            />
-
-            <div className="mt-4 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowDatevModal(false)}
-                className="rounded-xl border border-border px-3 py-2 text-xs text-foreground md:hover:bg-card/70 transition-all active:scale-95"
-              >
-                Abbrechen
-              </button>
-              <button
-                type="button"
-                onClick={confirmDatevExport}
-                disabled={isDatevDownloading}
-                className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-foreground md:hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-60"
-              >
-                {isDatevDownloading ? "Generiere..." : "Jetzt generieren & herunterladen"}
-              </button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
     </>
   );
 }

@@ -1,11 +1,12 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { toggleEmployeeActive } from "@/lib/actions/team";
+import { toggleEmployeeActive, updateEmployeeNumber } from "@/lib/actions/team";
 import Link from "next/link";
-import { Crown, ShieldCheck, User, PowerOff, Power } from "lucide-react";
+import { Crown, ShieldCheck, User, PowerOff, Power, Save } from "lucide-react";
 import clsx from "clsx";
+import { ToastContainer, useToast } from "@/components/ui/Toast";
 
 type Member = {
   id: string;
@@ -36,6 +37,15 @@ export function TeamList({
   currentUserId: string;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [employeeNumberDrafts, setEmployeeNumberDrafts] = useState<Record<string, string>>({});
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const { toasts, show, remove } = useToast();
+
+  useEffect(() => {
+    const next: Record<string, string> = {};
+    for (const member of members) next[member.id] = member.employeeNumber ?? "";
+    setEmployeeNumberDrafts(next);
+  }, [members]);
 
   if (members.length === 0) {
     return (
@@ -64,9 +74,10 @@ export function TeamList({
       {/* Desktop */}
       <div className="hidden sm:block">
         <div className="grid grid-cols-12 gap-3 border-b border-border px-5 py-3 text-xs font-sans uppercase tracking-widest text-muted-foreground">
-          <span className="col-span-5">Mitarbeiter</span>
-          <span className="col-span-3">Rolle</span>
+          <span className="col-span-4">Mitarbeiter</span>
+          <span className="col-span-2">Rolle</span>
           <span className="col-span-2 text-right">Std/Woche</span>
+          <span className="col-span-2">Personalnummer</span>
           <span className="col-span-2" />
         </div>
 
@@ -86,7 +97,7 @@ export function TeamList({
                   !member.isActive && "opacity-40"
                 )}
               >
-                <div className="col-span-5 flex min-w-0 items-center gap-3">
+                <div className="col-span-4 flex min-w-0 items-center gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-sm font-bold text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
                     {(member.name ?? member.email)[0].toUpperCase()}
                   </div>
@@ -99,13 +110,58 @@ export function TeamList({
                   </div>
                 </div>
 
-                <div className="col-span-3 flex items-center gap-1.5">
+                <div className="col-span-2 flex items-center gap-1.5">
                   <meta.Icon className={clsx("h-3.5 w-3.5 shrink-0", meta.color)} />
                   <span className={clsx("font-sans text-xs", meta.color)}>{meta.label}</span>
                 </div>
 
                 <div className="col-span-2 text-right">
                   <span className="font-sans text-sm text-foreground">{member.weeklyHours}h</span>
+                </div>
+
+                <div className="col-span-2">
+                  {canManage ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        value={employeeNumberDrafts[member.id] ?? ""}
+                        onChange={(e) =>
+                          setEmployeeNumberDrafts((prev) => ({ ...prev, [member.id]: e.target.value }))
+                        }
+                        placeholder="z. B. 10042"
+                        className="h-9 w-full rounded-lg border border-border bg-white px-2 text-xs text-foreground"
+                      />
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() =>
+                          startTransition(async () => {
+                            try {
+                              await updateEmployeeNumber(member.id, employeeNumberDrafts[member.id] ?? "");
+                              setFeedback("Personalnummer gespeichert.");
+                              show("Personalnummer erfolgreich gespeichert.", "success");
+                            } catch (err) {
+                              const message = err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
+                              setFeedback(message);
+                              show(message, "error");
+                            }
+                          })
+                        }
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-card/80"
+                        title="Personalnummer speichern"
+                      >
+                        <Save className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground">{member.employeeNumber ?? "—"}</span>
+                      {!member.employeeNumber && (
+                        <span className="rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700">
+                          FEHLT
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="col-span-2 flex justify-end">
@@ -182,10 +238,57 @@ export function TeamList({
                 <span className={clsx("font-medium", meta.color)}>{meta.label}</span>
                 <span className="ml-auto tabular-nums text-foreground">{member.weeklyHours} Std./Woche</span>
               </div>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Personalnummer</span>
+                {canManage ? (
+                  <>
+                    <input
+                      value={employeeNumberDrafts[member.id] ?? ""}
+                      onChange={(e) =>
+                        setEmployeeNumberDrafts((prev) => ({ ...prev, [member.id]: e.target.value }))
+                      }
+                      placeholder="z. B. 10042"
+                      className="h-10 flex-1 rounded-lg border border-border bg-white px-3 text-sm text-foreground"
+                    />
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() =>
+                        startTransition(async () => {
+                          try {
+                            await updateEmployeeNumber(member.id, employeeNumberDrafts[member.id] ?? "");
+                            setFeedback("Personalnummer gespeichert.");
+                            show("Personalnummer erfolgreich gespeichert.", "success");
+                          } catch (err) {
+                            const message = err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
+                            setFeedback(message);
+                            show(message, "error");
+                          }
+                        })
+                      }
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground"
+                      title="Personalnummer speichern"
+                    >
+                      <Save className="h-4 w-4" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm text-foreground">{member.employeeNumber ?? "—"}</span>
+                    {!member.employeeNumber && (
+                      <span className="rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700">
+                        FEHLT
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </motion.div>
           );
         })}
       </div>
+      {feedback && <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">{feedback}</p>}
+      <ToastContainer toasts={toasts} remove={remove} />
     </div>
   );
 }
