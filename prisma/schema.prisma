@@ -420,6 +420,7 @@ model Shift {
   weekIndex Int      @default(1) // 1..3 within configured cycle
   startTime String   // "08:00"
   endTime   String   // "17:00"
+  breakDuration Int  @default(0) // Minuten
   isOpenForTrade Boolean @default(false)
   tradeStatus ShiftTradeStatus @default(NONE)
   tradeRequestedBy String?

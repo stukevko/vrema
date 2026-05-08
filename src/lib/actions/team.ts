@@ -134,6 +134,7 @@ export async function getTeamMembers() {
       id: true,
       name: true,
       email: true,
+      image: true,
       role: true,
       isActive: true,
       weeklyHours: true,
@@ -257,6 +258,7 @@ export async function getShifts() {
       dayOfWeek: true,
       startTime: true,
       endTime: true,
+      breakDuration: true,
       isOpenForTrade: true,
       tradeStatus: true,
       tradeRequestedBy: true,
@@ -399,6 +401,7 @@ export async function setShiftForDay(input: {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
+  breakDuration?: number;
 }) {
   const { companyId, role } = await requireTenant();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
@@ -408,6 +411,7 @@ export async function setShiftForDay(input: {
   const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
   const startTime = input.startTime.trim();
   const endTime = input.endTime.trim();
+  const breakDuration = Math.max(0, Math.min(180, Math.floor(input.breakDuration ?? 0)));
   if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
     throw new Error("Ungültiges Zeitformat. Erwartet HH:MM.");
   }
@@ -435,6 +439,7 @@ export async function setShiftForDay(input: {
         dayOfWeek: input.dayOfWeek,
         startTime,
         endTime,
+        breakDuration,
         isOpenForTrade: false,
         tradeStatus: ShiftTradeStatus.NONE,
         tradeRequestedBy: null,
@@ -481,6 +486,7 @@ export async function getMyShifts() {
       dayOfWeek: true,
       startTime: true,
       endTime: true,
+      breakDuration: true,
       isOpenForTrade: true,
       tradeStatus: true,
       tradeRequestedBy: true,
@@ -653,7 +659,7 @@ export async function copyWeekToAllMembers(sourceUserId: string) {
 
   const sourceShifts = await db.shift.findMany({
     where: tenantWhere(companyId, { userId: sourceUserId }),
-    select: { weekIndex: true, dayOfWeek: true, startTime: true, endTime: true },
+    select: { weekIndex: true, dayOfWeek: true, startTime: true, endTime: true, breakDuration: true },
     orderBy: [{ weekIndex: "asc" }, { dayOfWeek: "asc" }, { startTime: "asc" }],
   });
 
@@ -687,6 +693,7 @@ export async function copyWeekToAllMembers(sourceUserId: string) {
             dayOfWeek: s.dayOfWeek,
             startTime: s.startTime,
             endTime: s.endTime,
+            breakDuration: s.breakDuration,
           })),
         });
       }
@@ -696,6 +703,25 @@ export async function copyWeekToAllMembers(sourceUserId: string) {
   revalidatePath("/dashboard/team");
   revalidatePath("/dashboard/planning");
   return { copiedTo: targets.length };
+}
+
+export async function setShiftBreakDuration(shiftId: string, breakDurationRaw: number) {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
+    throw new Error("Keine Berechtigung.");
+  }
+  const breakDuration = Math.max(0, Math.min(180, Math.floor(breakDurationRaw || 0)));
+  const shift = await db.shift.findFirst({
+    where: tenantWhere(companyId, { id: shiftId }),
+    select: { id: true },
+  });
+  if (!shift) throw new Error("Schicht nicht gefunden.");
+  await db.shift.update({
+    where: { id: shiftId },
+    data: { breakDuration },
+  });
+  revalidatePath("/dashboard/planning");
+  revalidatePath("/dashboard/team");
 }
 
 export async function getShiftCycleWeeks() {

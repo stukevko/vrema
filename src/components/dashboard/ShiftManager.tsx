@@ -2,14 +2,25 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Drawer } from "vaul";
-import { applyStandardWeek, clearShiftForDay, copyWeekToAllMembers, setShiftForDay } from "@/lib/actions/team";
+import {
+  applyStandardWeek,
+  clearShiftForDay,
+  copyWeekToAllMembers,
+  setShiftBreakDuration,
+  setShiftForDay,
+  toggleShiftTradeOffer,
+} from "@/lib/actions/team";
 import { buildComplianceFlagsByShiftId } from "@/lib/planning/compliance";
 import { AlarmClock, Coffee, CornerDownRight, Info, Plus } from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
 
 type Member = {
   id: string;
   name: string | null;
   email: string;
+  role?: string | null;
+  image?: string | null;
+  weeklyHours?: number;
   hourlyWage?: number | null;
 };
 
@@ -20,6 +31,7 @@ type ShiftRow = {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
+  breakDuration?: number;
   isOpenForTrade?: boolean;
   tradeStatus?: "NONE" | "OPEN" | "PENDING_APPROVAL";
   tradeRequestedBy?: string | null;
@@ -51,6 +63,10 @@ function shiftDurationMinutes(start: string, end: string) {
   return endMinutes > startMinutes ? endMinutes - startMinutes : 24 * 60 - startMinutes + endMinutes;
 }
 
+function shiftNetDurationMinutes(start: string, end: string, breakDuration = 0) {
+  return Math.max(0, shiftDurationMinutes(start, end) - Math.max(0, breakDuration));
+}
+
 function minutesToHHMM(total: number) {
   const normalized = Math.max(0, Math.min(24 * 60, total));
   const h = Math.floor(normalized / 60);
@@ -79,6 +95,13 @@ function dateForCycleDay(weekIndex: number, dayOfWeek: number) {
   const d = new Date(monday);
   d.setDate(monday.getDate() + (weekIndex - 1) * 7 + dayOrderMonFirst(dayOfWeek));
   return d;
+}
+
+function getRoleShiftBarTone(role?: string | null) {
+  if (role === "MANAGER") return "border-blue-300/70 bg-blue-100/55 text-blue-800";
+  if (role === "COMPANY_OWNER") return "border-violet-300/70 bg-violet-100/55 text-violet-800";
+  if (role === "SUPER_ADMIN") return "border-fuchsia-300/70 bg-fuchsia-100/55 text-fuchsia-800";
+  return "border-emerald-300/70 bg-emerald-100/55 text-emerald-800";
 }
 
 function scrollFieldIntoView(e: React.FocusEvent<HTMLElement>) {
@@ -134,7 +157,7 @@ export function ShiftManager({
   const dragSnapshotRef = useRef<{ start: number; end: number } | null>(null);
   const [activeDrag, setActiveDrag] = useState<{
     userId: string;
-    mode: "create" | "move";
+    mode: "create" | "move" | "resize-start" | "resize-end";
     anchorMinute: number;
     originStartMinute: number;
     originEndMinute: number;
@@ -143,6 +166,21 @@ export function ShiftManager({
     pointerId: number;
   } | null>(null);
   const [recentDayAction, setRecentDayAction] = useState<{ dayOfWeek: number; action: "saved" | "deleted" } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    shiftId: string;
+    userId: string;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    breakDuration: number;
+  } | null>(null);
+  const [contextMenuIndex, setContextMenuIndex] = useState(0);
+  const [flashAssignedKey, setFlashAssignedKey] = useState<string | null>(null);
+  const [gapSuggestions, setGapSuggestions] = useState<
+    Array<{ userId: string; name: string; role: string; reason: string; startTime: string; endTime: string }>
+  >([]);
   /** Mobil: „+“ öffnet Bottom-Sheet statt nur Mini-Zellen. */
   const [simpleAddSheetOpen, setSimpleAddSheetOpen] = useState(false);
   const [simpleSheetDay, setSimpleSheetDay] = useState(1);
@@ -298,7 +336,7 @@ export function ShiftManager({
     let totalMinutesAll = 0;
     for (const s of shifts) {
       if (s.weekIndex !== selectedWeekIndex) continue;
-      const dur = shiftDurationMinutes(s.startTime, s.endTime);
+      const dur = shiftNetDurationMinutes(s.startTime, s.endTime, s.breakDuration ?? 0);
       totalMinutesAll += dur;
       const wage = members.find((m) => m.id === s.userId)?.hourlyWage;
       if (wage != null && wage > 0) {
@@ -390,6 +428,72 @@ export function ShiftManager({
     []
   );
 
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = () => setContextMenu(null);
+    window.addEventListener("click", close);
+    window.addEventListener("contextmenu", close);
+    return () => {
+      window.removeEventListener("click", close);
+      window.removeEventListener("contextmenu", close);
+    };
+  }, [contextMenu]);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    const onKey = (e: KeyboardEvent) => {
+      const itemCount = 4;
+      if (e.key === "Escape") {
+        setContextMenu(null);
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setContextMenuIndex((v) => (v + 1) % itemCount);
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setContextMenuIndex((v) => (v - 1 + itemCount) % itemCount);
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const actions = [0, 1, 2, 3];
+        const idx = actions[contextMenuIndex] ?? 0;
+        if (idx === 0) {
+          const nextDay = (contextMenu.dayOfWeek + 1) % 7;
+          startTransition(async () => {
+            await setShiftForDay({
+              userId: contextMenu.userId,
+              weekIndex: selectedWeekIndex,
+              dayOfWeek: nextDay,
+              startTime: contextMenu.startTime,
+              endTime: contextMenu.endTime,
+              breakDuration: contextMenu.breakDuration,
+            });
+          });
+        }
+        if (idx === 1) {
+          startTransition(async () => {
+            await toggleShiftTradeOffer(contextMenu.shiftId, true);
+          });
+        }
+        if (idx === 2) {
+          startTransition(async () => {
+            await setShiftBreakDuration(contextMenu.shiftId, 30);
+          });
+        }
+        if (idx === 3) {
+          startTransition(async () => {
+            await setShiftBreakDuration(contextMenu.shiftId, 45);
+          });
+        }
+        setContextMenu(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [contextMenu, contextMenuIndex, selectedWeekIndex]);
+
   const saveTimelineShift = (userId: string, startMinute: number, endMinute: number) => {
     const conflict = conflictTypeByCell.get(`${userId}-${timelineDay}`);
     if (conflict) {
@@ -419,11 +523,73 @@ export function ShiftManager({
     });
   };
 
+  const suggestAutofillForFirstGap = () => {
+    if (!firstCriticalSlot) return;
+    const slotStart = toMinutes(firstCriticalSlot);
+    if (slotStart === null) return;
+    const slotEnd = Math.min(TIMELINE_END_HOUR * 60, slotStart + coverageSlotMinutes);
+    const roleWeight: Record<string, number> = {
+      EMPLOYEE: 3,
+      MANAGER: 2,
+      COMPANY_OWNER: 1,
+      SUPER_ADMIN: 0,
+    };
+
+    const suggestions = members
+      .map((m) => {
+        const shift = shiftByUserAndDay.get(`${m.id}-${selectedWeekIndex}-${timelineDay}`);
+        const prevShift = shiftByUserAndDay.get(`${m.id}-${selectedWeekIndex}-${(timelineDay + 6) % 7}`);
+        const conflict = conflictTypeByCell.get(`${m.id}-${timelineDay}`);
+        if (conflict) return null;
+
+        const start = shift ? toMinutes(shift.startTime) : null;
+        const end = shift ? toMinutes(shift.endTime) : null;
+        const coversGap = start !== null && end !== null && start < slotEnd && (end > start ? end : TIMELINE_END_HOUR * 60) > slotStart;
+        if (coversGap) return null;
+
+        let restOk = true;
+        if (prevShift) {
+          const ps = toMinutes(prevShift.startTime);
+          const pe = toMinutes(prevShift.endTime);
+          if (ps !== null && pe !== null) {
+            const prevEnd = pe < ps ? pe : pe;
+            const gapToSlot = slotStart - prevEnd;
+            restOk = gapToSlot >= 11 * 60;
+          }
+        }
+        const role = m.role ?? "EMPLOYEE";
+        const weeklyTarget = Math.max(0, Math.round((m.weeklyHours ?? 40) * 60));
+        const weeklyIst = shifts
+          .filter((s) => s.userId === m.id && s.weekIndex === selectedWeekIndex)
+          .reduce((sum, s) => sum + shiftNetDurationMinutes(s.startTime, s.endTime, s.breakDuration ?? 0), 0);
+        const deficit = Math.max(0, weeklyTarget - weeklyIst);
+        const score = (restOk ? 10 : 0) + (roleWeight[role] ?? 0) + deficit / 60;
+        const reason = restOk
+          ? `Rolle: ${role}, Defizit: ${(deficit / 60).toFixed(1)}h`
+          : `Rolle: ${role}, Ruhezeit prüfen, Defizit: ${(deficit / 60).toFixed(1)}h`;
+        return {
+          userId: m.id,
+          name: m.name ?? m.email,
+          role,
+          reason,
+          score,
+          startTime: minutesToHHMM(slotStart),
+          endTime: minutesToHHMM(slotEnd),
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => Boolean(x))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map(({ score: _score, ...rest }) => rest);
+
+    setGapSuggestions(suggestions);
+  };
+
   const beginTimelineDrag = (
     clientX: number,
     laneEl: HTMLElement,
     userId: string,
-    mode: "create" | "move",
+    mode: "create" | "move" | "resize-start" | "resize-end",
     originStartMinute?: number,
     originEndMinute?: number,
     pointerId = 0
@@ -447,7 +613,7 @@ export function ShiftManager({
       mode === "create"
         ? { userId, startMinute: minuteAtPointer, endMinute: minuteAtPointer + TIMELINE_SNAP_MINUTES }
         : { userId, startMinute: defaultStart, endMinute: defaultEnd };
-    dragSnapshotRef.current = mode === "move" ? { start: defaultStart, end: defaultEnd } : null;
+    dragSnapshotRef.current = mode !== "create" ? { start: defaultStart, end: defaultEnd } : null;
 
     setActiveDrag({
       userId,
@@ -479,7 +645,7 @@ export function ShiftManager({
         const start = Math.min(activeDrag.anchorMinute, pointerMinute);
         const end = Math.max(activeDrag.anchorMinute + TIMELINE_SNAP_MINUTES, pointerMinute);
         next = { userId: activeDrag.userId, startMinute: start, endMinute: Math.min(TIMELINE_END_HOUR * 60, end) };
-      } else {
+      } else if (activeDrag.mode === "move") {
         const duration = activeDrag.originEndMinute - activeDrag.originStartMinute;
         const delta = pointerMinute - activeDrag.anchorMinute;
         const rawStart = activeDrag.originStartMinute + delta;
@@ -488,6 +654,22 @@ export function ShiftManager({
           userId: activeDrag.userId,
           startMinute: clampedStart,
           endMinute: clampedStart + duration,
+        };
+      } else if (activeDrag.mode === "resize-start") {
+        const maxStart = activeDrag.originEndMinute - TIMELINE_SNAP_MINUTES;
+        const clampedStart = Math.max(TIMELINE_START_HOUR * 60, Math.min(maxStart, pointerMinute));
+        next = {
+          userId: activeDrag.userId,
+          startMinute: clampedStart,
+          endMinute: activeDrag.originEndMinute,
+        };
+      } else {
+        const minEnd = activeDrag.originStartMinute + TIMELINE_SNAP_MINUTES;
+        const clampedEnd = Math.min(TIMELINE_END_HOUR * 60, Math.max(minEnd, pointerMinute));
+        next = {
+          userId: activeDrag.userId,
+          startMinute: activeDrag.originStartMinute,
+          endMinute: clampedEnd,
         };
       }
       dragDraftRef.current = next;
@@ -513,6 +695,11 @@ export function ShiftManager({
           snap &&
           draft.startMinute === snap.start &&
           draft.endMinute === snap.end;
+        const unchangedResize =
+          (activeDrag.mode === "resize-start" || activeDrag.mode === "resize-end") &&
+          snap &&
+          draft.startMinute === snap.start &&
+          draft.endMinute === snap.end;
         if (unchangedMove || unchangedCreate) {
           const member = members.find((m) => m.id === activeDrag.userId);
           const suggested = getSuggestedShiftForUser(activeDrag.userId);
@@ -523,7 +710,7 @@ export function ShiftManager({
             startTime: unchangedCreate ? suggested.startTime : minutesToHHMM(draft.startMinute),
             endTime: unchangedCreate ? suggested.endTime : minutesToHHMM(draft.endMinute),
           });
-        } else {
+        } else if (!unchangedResize) {
           saveTimelineShift(activeDrag.userId, draft.startMinute, draft.endMinute);
         }
       }
@@ -749,8 +936,9 @@ export function ShiftManager({
               const member = members.find((m) => m.id === shift.userId);
               const compliance = complianceByShiftId.get(shift.id);
               const minutes = shiftDurationMinutes(shift.startTime, shift.endTime);
+              const netMinutes = shiftNetDurationMinutes(shift.startTime, shift.endTime, shift.breakDuration ?? 0);
               const wage = member?.hourlyWage ?? null;
-              const cost = wage != null && wage > 0 ? (minutes / 60) * wage : null;
+              const cost = wage != null && wage > 0 ? (netMinutes / 60) * wage : null;
               return (
                 <button
                   key={shift.id}
@@ -784,7 +972,7 @@ export function ShiftManager({
                       </span>
                     ) : null}
                     <span className="inline-flex items-center gap-1 text-foreground">
-                      Kosten:{" "}
+                      Netto/Kosten: {Math.max(0, netMinutes)} Min ·{" "}
                       {cost != null
                         ? new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(cost)
                         : "—"}
@@ -1344,11 +1532,50 @@ export function ShiftManager({
           </div>
           <div className="mt-2 flex justify-end">
             {firstCriticalSlot ? (
-              <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 sm:text-[11px]">
+              <button
+                type="button"
+                onClick={suggestAutofillForFirstGap}
+                className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 underline-offset-2 hover:underline sm:text-[11px]"
+              >
                 Erste Lücke ab {firstCriticalSlot}
-              </span>
+              </button>
             ) : null}
           </div>
+          {gapSuggestions.length > 0 ? (
+            <div className="mt-2 rounded-xl border border-border bg-background px-3 py-2">
+              <p className="text-[11px] font-semibold text-foreground">Autofill-Vorschläge (Top 3)</p>
+              <div className="mt-2 space-y-1.5">
+                {gapSuggestions.map((s) => (
+                  <div key={s.userId} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-white px-2.5 py-2 text-xs">
+                    <div>
+                      <p className="font-medium text-foreground">{s.name}</p>
+                      <p className="text-muted-foreground">{s.startTime}-{s.endTime} · {s.reason}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        startTransition(async () => {
+                          await setShiftForDay({
+                            userId: s.userId,
+                            weekIndex: selectedWeekIndex,
+                            dayOfWeek: timelineDay,
+                            startTime: s.startTime,
+                            endTime: s.endTime,
+                            breakDuration: 0,
+                          });
+                        });
+                        setFlashAssignedKey(`${s.userId}-${timelineDay}`);
+                        window.setTimeout(() => setFlashAssignedKey(null), 1200);
+                      }}
+                      className="rounded-md border border-primary/35 bg-primary/15 px-2 py-1 font-medium text-primary"
+                    >
+                      Einplanen
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           <div className="mt-3 max-h-[75vh] min-w-0 max-w-full overflow-x-auto overflow-y-auto overscroll-contain">
             <div className="w-full min-w-[1200px] space-y-4 py-1 lg:min-w-[1400px]">
@@ -1402,6 +1629,12 @@ export function ShiftManager({
                     : "Frei";
                 const tradeOpen = Boolean(row.shift?.isOpenForTrade && row.shift?.tradeStatus !== "NONE");
                 const rowCompliance = row.shift ? complianceByShiftId.get(row.shift.id) : null;
+                const liveDuration =
+                  draftForRow && draftForRow.endMinute > draftForRow.startMinute
+                    ? draftForRow.endMinute - draftForRow.startMinute
+                    : null;
+                const livePauseRisk = liveDuration !== null ? liveDuration > 6 * 60 : Boolean(rowCompliance?.pauseRisk);
+                const roleTone = getRoleShiftBarTone(row.member.role);
                 return (
                   <div
                     key={row.member.id}
@@ -1409,9 +1642,13 @@ export function ShiftManager({
                   >
                     <div className="flex min-h-12 items-center rounded-2xl border border-border bg-white px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] md:min-h-0 md:px-4 md:py-4">
                       <span className="inline-flex min-w-0 items-center gap-2 text-sm text-foreground">
-                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-foreground md:h-7 md:w-7 md:text-[11px]">
-                          {initials}
-                        </span>
+                        <Avatar
+                          src={row.member.image}
+                          fallback={initials}
+                          alt={row.member.name ?? row.member.email}
+                          className="h-9 w-9 md:h-7 md:w-7"
+                          fallbackClassName="text-[10px] md:text-[9px]"
+                        />
                         <span className="truncate text-[15px] font-medium">{row.member.name ?? row.member.email}</span>
                       </span>
                     </div>
@@ -1481,15 +1718,13 @@ export function ShiftManager({
                             </div>
                           ) : null}
                           <div
-                            className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg px-2 text-[11px] active:cursor-grabbing ${
-                              tradeOpen
-                                ? "border-amber-400 bg-amber-200/70 text-amber-900"
-                                : "border-primary/60 bg-primary/40 text-emerald-100"
+                            className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg border px-2 text-[11px] backdrop-blur-[2px] active:cursor-grabbing ${
+                              tradeOpen ? "border-amber-400 bg-amber-200/70 text-amber-900" : roleTone
                             } ${
                               activeDrag?.userId === row.member.id
                                 ? "shadow-lg shadow-black/40 transition-none"
                                 : "transition-[left,width] duration-100 ease-out"
-                            }`}
+                            } ${flashAssignedKey === `${row.member.id}-${timelineDay}` ? "ring-2 ring-primary/70 animate-pulse" : ""}`}
                             style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
                             title={barLabel}
                             onPointerDown={(e) => {
@@ -1500,12 +1735,51 @@ export function ShiftManager({
                               const sm = toMinutes(row.shift.startTime);
                               const em = toMinutes(row.shift.endTime);
                               if (sm === null || em === null) return;
+                              const target = e.target as HTMLElement;
+                              const isResizeStart = Boolean(target.closest("[data-resize-handle='start']"));
+                              const isResizeEnd = Boolean(target.closest("[data-resize-handle='end']"));
+                              const mode = isResizeStart ? "resize-start" : isResizeEnd ? "resize-end" : "move";
                               e.stopPropagation();
-                              beginTimelineDrag(e.clientX, lane, row.member.id, "move", sm, em, e.pointerId);
+                              beginTimelineDrag(e.clientX, lane, row.member.id, mode, sm, em, e.pointerId);
+                            }}
+                            onContextMenu={(e) => {
+                              if (!row.shift) return;
+                              e.preventDefault();
+                              setContextMenu({
+                                x: e.clientX,
+                                y: e.clientY,
+                                shiftId: row.shift.id,
+                                userId: row.member.id,
+                                dayOfWeek: timelineDay,
+                                startTime: row.shift.startTime,
+                                endTime: row.shift.endTime,
+                                breakDuration: row.shift.breakDuration ?? 0,
+                              });
+                              setContextMenuIndex(0);
                             }}
                           >
+                            <span
+                              data-resize-handle="start"
+                              className="absolute left-0 top-0 bottom-0 hidden w-3 cursor-ew-resize items-center justify-center md:flex"
+                            >
+                              <span className="pointer-events-none grid-cols-1 gap-0.5 md:grid opacity-0 transition-opacity group-hover:opacity-90">
+                                <span className="h-1 w-0.5 rounded bg-current/80" />
+                                <span className="h-1 w-0.5 rounded bg-current/80" />
+                                <span className="h-1 w-0.5 rounded bg-current/80" />
+                              </span>
+                            </span>
+                            <span
+                              data-resize-handle="end"
+                              className="absolute right-0 top-0 bottom-0 hidden w-3 cursor-ew-resize items-center justify-center md:flex"
+                            >
+                              <span className="pointer-events-none grid-cols-1 gap-0.5 md:grid opacity-0 transition-opacity group-hover:opacity-90">
+                                <span className="h-1 w-0.5 rounded bg-current/80" />
+                                <span className="h-1 w-0.5 rounded bg-current/80" />
+                                <span className="h-1 w-0.5 rounded bg-current/80" />
+                              </span>
+                            </span>
                             {tradeOpen ? <span className="mr-1 text-[10px]">🔄</span> : null}
-                            {rowCompliance?.pauseRisk ? (
+                            {livePauseRisk ? (
                               <span className="mr-0.5 inline-flex shrink-0" title="Über 6h Soll: Pause prüfen">
                                 <Coffee className="h-3.5 w-3.5 text-red-200" aria-hidden />
                               </span>
@@ -1546,6 +1820,69 @@ export function ShiftManager({
               })}
             </div>
           </div>
+          {contextMenu ? (
+            <div
+              className="fixed z-[160] min-w-[170px] rounded-lg border border-border bg-white p-1 shadow-[0_16px_40px_rgba(0,0,0,0.2)]"
+              style={{ left: contextMenu.x, top: contextMenu.y }}
+            >
+              <button
+                type="button"
+                className={`block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted ${contextMenuIndex === 0 ? "bg-muted" : ""}`}
+                onClick={() => {
+                  const nextDay = (contextMenu.dayOfWeek + 1) % 7;
+                  startTransition(async () => {
+                    await setShiftForDay({
+                      userId: contextMenu.userId,
+                      weekIndex: selectedWeekIndex,
+                      dayOfWeek: nextDay,
+                      startTime: contextMenu.startTime,
+                      endTime: contextMenu.endTime,
+                      breakDuration: contextMenu.breakDuration,
+                    });
+                  });
+                  setContextMenu(null);
+                }}
+              >
+                Duplizieren
+              </button>
+              <button
+                type="button"
+                className={`block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted ${contextMenuIndex === 1 ? "bg-muted" : ""}`}
+                onClick={() => {
+                  startTransition(async () => {
+                    await toggleShiftTradeOffer(contextMenu.shiftId, true);
+                  });
+                  setContextMenu(null);
+                }}
+              >
+                Tausch anfragen
+              </button>
+              <button
+                type="button"
+                className={`block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted ${contextMenuIndex === 2 ? "bg-muted" : ""}`}
+                onClick={() => {
+                  startTransition(async () => {
+                    await setShiftBreakDuration(contextMenu.shiftId, 30);
+                  });
+                  setContextMenu(null);
+                }}
+              >
+                30 Min Pause
+              </button>
+              <button
+                type="button"
+                className={`block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted ${contextMenuIndex === 3 ? "bg-muted" : ""}`}
+                onClick={() => {
+                  startTransition(async () => {
+                    await setShiftBreakDuration(contextMenu.shiftId, 45);
+                  });
+                  setContextMenu(null);
+                }}
+              >
+                45 Min Pause
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
     </>

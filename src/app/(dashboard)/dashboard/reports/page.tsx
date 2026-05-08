@@ -68,7 +68,7 @@ export default async function ReportsPage({
   const [monthShifts, absences, timesheetAcks, wageRows] = await Promise.all([
     db.shift.findMany({
       where: tenantWhere(companyId, shiftAndAbsenceUserFilter),
-      select: { userId: true, weekIndex: true, dayOfWeek: true, startTime: true, endTime: true },
+      select: { userId: true, weekIndex: true, dayOfWeek: true, startTime: true, endTime: true, breakDuration: true },
     }),
     db.vacationRequest.findMany({
       where: tenantWhere(companyId, {
@@ -108,8 +108,9 @@ export default async function ReportsPage({
       if ([sh, sm, eh, em].some(Number.isNaN)) return sum;
       const mins = eh * 60 + em - (sh * 60 + sm);
       if (mins <= 0) return sum;
+      const netMins = Math.max(0, mins - (s.breakDuration ?? 0));
       const key = `${s.weekIndex}-${s.dayOfWeek}`;
-      return sum + mins * (dayCountsByWeekdayAndWeek.get(key) ?? 0);
+      return sum + netMins * (dayCountsByWeekdayAndWeek.get(key) ?? 0);
     }, 0);
     monthlySollMinutesByUser[userId] = total;
   }

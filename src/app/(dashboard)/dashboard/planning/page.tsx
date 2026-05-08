@@ -67,6 +67,9 @@ export default async function PlanningPage() {
             id: m.id,
             name: m.name,
             email: m.email,
+            role: m.role,
+            image: m.image ?? null,
+            weeklyHours: m.weeklyHours,
             hourlyWage: m.hourlyWage ?? null,
           }))}
           shifts={shifts}
