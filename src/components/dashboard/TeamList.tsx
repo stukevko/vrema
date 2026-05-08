@@ -2,7 +2,12 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { toggleEmployeeActive, updateEmployeeHourlyWage, updateEmployeeNumber } from "@/lib/actions/team";
+import {
+  toggleEmployeeActive,
+  updateEmployeeHourlyWage,
+  updateEmployeeNumber,
+  updateEmployeePlanningWorkArea,
+} from "@/lib/actions/team";
 import Link from "next/link";
 import { Crown, ShieldCheck, User, PowerOff, Power, Save } from "lucide-react";
 import clsx from "clsx";
@@ -18,6 +23,7 @@ type Member = {
   vacationDays: number;
   employeeNumber: string | null;
   hourlyWage: number | null;
+  planningWorkArea: string | null;
   createdAt: Date;
 };
 
@@ -83,10 +89,13 @@ export function TeamList({
         <div className="grid grid-cols-12 gap-3 border-b border-border px-5 py-3 text-xs font-sans uppercase tracking-widest text-muted-foreground">
           <span className="col-span-3">Mitarbeiter</span>
           <span className="col-span-2">Rolle</span>
+          <span className="col-span-1" title="Außenbereich für Wetter-Hinweise im Planer">
+            Außen
+          </span>
           <span className="col-span-1 text-right">Std/W</span>
           <span className="col-span-2">€/Std</span>
           <span className="col-span-2">Personalnr.</span>
-          <span className="col-span-2" />
+          <span className="col-span-1" />
         </div>
 
         <div className="divide-y divide-white/[0.04]">
@@ -121,6 +130,34 @@ export function TeamList({
                 <div className="col-span-2 flex items-center gap-1.5">
                   <meta.Icon className={clsx("h-3.5 w-3.5 shrink-0", meta.color)} />
                   <span className={clsx("font-sans text-xs", meta.color)}>{meta.label}</span>
+                </div>
+
+                <div className="col-span-1">
+                  {canManage ? (
+                    <select
+                      value={member.planningWorkArea ?? ""}
+                      onChange={(e) =>
+                        startTransition(async () => {
+                          try {
+                            await updateEmployeePlanningWorkArea(member.id, e.target.value);
+                            show("Planungsbereich gespeichert.", "success");
+                          } catch (err) {
+                            show(err instanceof Error ? err.message : "Fehler.", "error");
+                          }
+                        })
+                      }
+                      className="h-9 w-full max-w-[5.5rem] rounded-lg border border-border bg-white px-1 text-[10px] text-foreground"
+                      aria-label="Planung Außenbereich"
+                    >
+                      <option value="">Innen</option>
+                      <option value="OUTDOOR">Außen</option>
+                      <option value="TERRACE">Terrasse</option>
+                    </select>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">
+                      {!member.planningWorkArea ? "Innen" : member.planningWorkArea === "TERRACE" ? "Terr." : "Außen"}
+                    </span>
+                  )}
                 </div>
 
                 <div className="col-span-1 text-right">
@@ -217,7 +254,7 @@ export function TeamList({
                   )}
                 </div>
 
-                <div className="col-span-2 flex justify-end">
+                <div className="col-span-1 flex justify-end">
                   {canManage && !isSelf && (
                     <button
                       type="button"
@@ -333,6 +370,34 @@ export function TeamList({
                       : member.hourlyWage != null
                         ? `${member.hourlyWage.toFixed(2)} €`
                         : "—"}
+                  </span>
+                )}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Planung</span>
+                {canManage ? (
+                  <select
+                    value={member.planningWorkArea ?? ""}
+                    onChange={(e) =>
+                      startTransition(async () => {
+                        try {
+                          await updateEmployeePlanningWorkArea(member.id, e.target.value);
+                          show("Planungsbereich gespeichert.", "success");
+                        } catch (err) {
+                          show(err instanceof Error ? err.message : "Fehler.", "error");
+                        }
+                      })
+                    }
+                    className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-white px-2 text-sm text-foreground"
+                    aria-label="Außenbereich Planung"
+                  >
+                    <option value="">Innen</option>
+                    <option value="OUTDOOR">Außen</option>
+                    <option value="TERRACE">Terrasse</option>
+                  </select>
+                ) : (
+                  <span className="text-sm text-foreground">
+                    {!member.planningWorkArea ? "Innen" : member.planningWorkArea === "TERRACE" ? "Terrasse" : "Außen"}
                   </span>
                 )}
               </div>

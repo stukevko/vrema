@@ -12,6 +12,9 @@ interface Props {
     plan: string;
     logoUrl: string | null;
     shiftCycleWeeks: number;
+    locationZip: string | null;
+    locationCity: string | null;
+    estimatedWeeklyRevenue: number | null;
   };
 }
 
@@ -29,9 +32,17 @@ export function CompanySettingsForm({ company }: Props) {
 
     startTransition(async () => {
       try {
+        const revRaw = String(fd.get("estimatedWeeklyRevenue") ?? "").trim();
+        const estimatedWeeklyRevenue = revRaw === "" ? null : Number(revRaw);
         await updateCompanySettings({
           name: fd.get("name") as string,
           shiftCycleWeeks: Number(shiftCycleWeeks),
+          locationZip: String(fd.get("locationZip") ?? "").trim() || null,
+          locationCity: String(fd.get("locationCity") ?? "").trim() || null,
+          estimatedWeeklyRevenue:
+            estimatedWeeklyRevenue != null && Number.isFinite(estimatedWeeklyRevenue)
+              ? estimatedWeeklyRevenue
+              : null,
         });
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
@@ -79,6 +90,54 @@ export function CompanySettingsForm({ company }: Props) {
             />
           </div>
         </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="min-w-0">
+            <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
+              PLZ (Wetter)
+            </label>
+            <input
+              name="locationZip"
+              type="text"
+              defaultValue={company.locationZip ?? ""}
+              placeholder="z. B. 10115"
+              className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
+            />
+          </div>
+          <div className="min-w-0">
+            <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
+              Ort (falls keine PLZ)
+            </label>
+            <input
+              name="locationCity"
+              type="text"
+              defaultValue={company.locationCity ?? ""}
+              placeholder="z. B. Berlin"
+              className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
+            />
+          </div>
+        </div>
+        <p className="text-[10px] text-muted-foreground -mt-2 font-sans">
+          Für Wetter im Planer: OpenWeatherMap-API-Key in OPENWEATHER_API_KEY (Server). PLZ hat Vorrang vor Ort.
+        </p>
+
+        <div className="min-w-0">
+          <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
+            Geschätzter Wochenumsatz (EUR, optional)
+          </label>
+          <input
+            name="estimatedWeeklyRevenue"
+            type="number"
+            min={0}
+            step={100}
+            defaultValue={company.estimatedWeeklyRevenue != null ? String(company.estimatedWeeklyRevenue) : ""}
+            placeholder="z. B. 25000"
+            className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
+          />
+          <p className="text-[10px] text-muted-foreground mt-1 font-sans">
+            Wird mit geplanten Lohnkosten verglichen (&gt;35 % Lohnquote → Hinweis im Dashboard).
+          </p>
+        </div>
+
         <div>
           <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
             Schichtzyklus (Wochen)

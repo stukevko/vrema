@@ -20,6 +20,8 @@ import {
   BarChart3,
   Zap,
   Menu,
+  ExternalLink,
+  X,
 } from "lucide-react";
 import { Drawer } from "vaul";
 
@@ -875,100 +877,94 @@ export default function LandingPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full min-w-0 max-w-lg"
             >
-              <div className="rounded-2xl overflow-hidden glass-panel">
-                {/* Title bar */}
-                <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setModal(null)}
-                      aria-label="Fenster schließen"
-                      className="w-2.5 h-2.5 rounded-full bg-red-400/90 hover:brightness-110 transition-all"
-                    />
-                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/90" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/90" />
-                  </div>
-                  <span className="text-xs text-muted-foreground font-sans tracking-wider">
-                    vrema — {
-                      modal === "impressum"
-                        ? "impressum.txt"
-                        : modal === "datenschutz"
-                        ? "datenschutz.txt"
-                        : modal === "widerruf"
-                        ? "widerruf.txt"
-                        : modal === "cookies"
-                        ? "cookies.txt"
-                        : modal === "agb"
-                        ? "agb.txt"
-                        : "avv.txt"
-                    }
-                  </span>
-                  <span className="w-6" aria-hidden />
+              <div className="max-h-[85vh] overflow-y-auto rounded-3xl border border-white/60 bg-white/80 shadow-2xl backdrop-blur-md">
+                <div className="relative border-b border-slate-200/70 px-6 py-5 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setModal(null)}
+                    aria-label="Dialog schließen"
+                    className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-slate-600 transition-colors hover:bg-white"
+                  >
+                    <X className="h-4 w-4" aria-hidden />
+                  </button>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    {modal === "impressum"
+                      ? "Impressum"
+                      : modal === "datenschutz"
+                      ? "Datenschutz"
+                      : modal === "widerruf"
+                      ? "Widerruf"
+                      : modal === "cookies"
+                      ? "Cookies"
+                      : modal === "agb"
+                      ? "AGB"
+                      : "AVV"}
+                  </h3>
                 </div>
 
-                {/* Content */}
-                <div className="p-6 font-sans text-sm space-y-4">
+                <div className="space-y-5 p-6 text-sm leading-relaxed">
                   {modal === "impressum" ? (
                     <>
-                      <div className="text-primary text-xs uppercase tracking-widest mb-2">
-                        # impressum — Angaben gemäß § 5 TMG
+                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                        Angaben gemäß § 5 TMG
                       </div>
                       {[
-                        ["name", "Kevin Konkin · KevkoStudio"],
-                        ["address", "Kolbstr. 5 · 67346 Speyer · Deutschland"],
-                        ["email", "kontakt@kevko.studio"],
-                        ["tel", "+49 176 84844803"],
+                        ["Name", "Kevin Konkin · KevkoStudio"],
+                        ["Adresse", "Kolbstr. 5 · 67346 Speyer · Deutschland"],
+                        ["E-Mail", "kontakt@kevko.studio"],
+                        ["Telefon", "+49 176 84844803"],
                         ["§ 19 UStG", "Kleinunternehmer — keine Umsatzsteuer-ID"],
                         ["§ 55 RStV", "Kevin Konkin, Kolbstr. 5, 67346 Speyer"],
                       ].map(([key, val]) => (
                         <div key={key} className="flex gap-3">
-                          <span className="text-muted-foreground shrink-0 w-24 text-right">{key}:</span>
-                          <span className="text-muted-foreground">{val}</span>
+                          <span className="w-24 shrink-0 text-right text-slate-500">{key}:</span>
+                          <span className="text-slate-900">{val}</span>
                         </div>
                       ))}
-                      <div className="pt-3 border-t border-border text-muted-foreground text-xs leading-relaxed">
-                        # Trotz sorgfältiger Kontrolle keine Haftung für externe Links.
+                      <div className="border-t border-slate-200 pt-3 text-xs leading-relaxed text-slate-500">
+                        Trotz sorgfältiger Kontrolle keine Haftung für externe Links.
                         <br />
-                        # Für verlinkte Seiten sind deren Betreiber verantwortlich.
+                        Für verlinkte Seiten sind deren Betreiber verantwortlich.
                       </div>
                       <div className="pt-3 text-xs">
-                        <Link href="/impressum" className="text-primary hover:underline">
-                          Vollständige Seite öffnen
+                        <Link href="/impressum" className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline">
+                          Vollständige Seite öffnen <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                       </div>
                     </>
                   ) : modal === "datenschutz" ? (
                     <>
-                      <div className="text-primary text-xs uppercase tracking-widest mb-2">
-                        # datenschutz — DSGVO-Erklärung
+                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                        DSGVO-Erklärung
                       </div>
                       {[
                         ["1. Verantwortlich", "Kevin Konkin (KevkoStudio), Kolbstr. 5, 67346 Speyer"],
-                        ["kontakt", "kontakt@kevko.studio"],
+                        ["Kontakt", "kontakt@kevko.studio"],
                         ["2. Erhebung", "Nur soweit nötig für Website & Vrema-Dienste"],
                         ["3. Rechtsgrundlage", "Art. 6 Abs. 1 lit. b, c, f DSGVO"],
                         ["4. Ihre Rechte", "Auskunft · Berichtigung · Löschung · Widerspruch"],
                         ["Anfragen", "kontakt@kevko.studio"],
                       ].map(([key, val]) => (
                         <div key={key} className="flex gap-3">
-                          <span className="text-muted-foreground shrink-0 w-32 text-right text-xs leading-5">{key}:</span>
-                          <span className="text-muted-foreground text-xs leading-5">{val}</span>
+                          <span className="w-32 shrink-0 text-right text-xs leading-5 text-slate-500">{key}:</span>
+                          <span className="text-xs leading-5 text-slate-900">{val}</span>
                         </div>
                       ))}
-                      <div className="pt-3 border-t border-border text-muted-foreground text-xs">
-                        # Datenübertragbarkeit & Einschränkung der Verarbeitung auf Anfrage.
+                      <div className="border-t border-slate-200 pt-3 text-xs text-slate-500">
+                        Datenübertragbarkeit & Einschränkung der Verarbeitung auf Anfrage.
                       </div>
                       <div className="pt-3 text-xs">
-                        <Link href="/datenschutz" className="text-primary hover:underline">
-                          Vollständige Seite öffnen
+                        <Link href="/datenschutz" className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline">
+                          Vollständige Seite öffnen <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                       </div>
                     </>
                   ) : modal === "widerruf" ? (
                     <>
-                      <div className="text-primary text-xs uppercase tracking-widest mb-2">
-                        # widerruf — Hinweise für Verbraucher
+                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                        Hinweise für Verbraucher
                       </div>
-                      <div className="space-y-3 text-xs leading-5 text-muted-foreground">
+                      <div className="space-y-3 text-xs leading-relaxed text-slate-900">
                         <p>
                           Für digitale Leistungen gelten die gesetzlichen Widerrufsrechte gemäß den jeweils
                           anwendbaren Verbraucherschutzvorschriften.
@@ -979,17 +975,17 @@ export default function LandingPage() {
                         </p>
                       </div>
                       <div className="pt-3 text-xs">
-                        <Link href="/widerruf" className="text-primary hover:underline">
-                          Vollständige Seite öffnen
+                        <Link href="/widerruf" className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline">
+                          Vollständige Seite öffnen <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                       </div>
                     </>
                   ) : modal === "cookies" ? (
                     <>
-                      <div className="text-primary text-xs uppercase tracking-widest mb-2">
-                        # cookies — Einsatz & Optionen
+                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                        Einsatz & Optionen
                       </div>
-                      <div className="space-y-3 text-xs leading-5 text-muted-foreground">
+                      <div className="space-y-3 text-xs leading-relaxed text-slate-900">
                         <p>
                           Wir verwenden technisch notwendige Cookies für Authentifizierung, Sicherheit und
                           Sitzungsverwaltung.
@@ -1000,17 +996,17 @@ export default function LandingPage() {
                         </p>
                       </div>
                       <div className="pt-3 text-xs">
-                        <Link href="/cookies" className="text-primary hover:underline">
-                          Vollständige Seite öffnen
+                        <Link href="/cookies" className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline">
+                          Vollständige Seite öffnen <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                       </div>
                     </>
                   ) : modal === "agb" ? (
                     <>
-                      <div className="text-primary text-xs uppercase tracking-widest mb-2">
-                        # agb — Vertragsgrundlagen
+                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                        Vertragsgrundlagen
                       </div>
-                      <div className="space-y-3 text-xs leading-5 text-muted-foreground">
+                      <div className="space-y-3 text-xs leading-relaxed text-slate-900">
                         <p>
                           Unsere Allgemeinen Geschäftsbedingungen regeln Leistungen, Laufzeiten, Kündigung,
                           Haftungsrahmen und weitere Vertragsbedingungen.
@@ -1020,17 +1016,17 @@ export default function LandingPage() {
                         </p>
                       </div>
                       <div className="pt-3 text-xs">
-                        <Link href="/agb" className="text-primary hover:underline">
-                          Vollständige Seite öffnen
+                        <Link href="/agb" className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline">
+                          Vollständige Seite öffnen <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="text-primary text-xs uppercase tracking-widest mb-2">
-                        # avv — Auftragsverarbeitung
+                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                        Auftragsverarbeitung
                       </div>
-                      <div className="space-y-3 text-xs leading-5 text-muted-foreground">
+                      <div className="space-y-3 text-xs leading-relaxed text-slate-900">
                         <p>
                           Die AVV beschreibt datenschutzrechtliche Rollen, technische und organisatorische Maßnahmen
                           sowie Pflichten im Rahmen der Auftragsverarbeitung.
@@ -1040,23 +1036,18 @@ export default function LandingPage() {
                         </p>
                       </div>
                       <div className="pt-3 text-xs">
-                        <Link href="/avv" className="text-primary hover:underline">
-                          Vollständige Seite öffnen
+                        <Link href="/avv" className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline">
+                          Vollständige Seite öffnen <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                       </div>
                     </>
                   )}
-
-                  <div className="pt-2 flex items-center gap-1 text-muted-foreground">
-                    <span>$</span>
-                    <Cursor show />
-                  </div>
                 </div>
               </div>
 
               {/* Click outside hint */}
-              <p className="text-center text-xs text-muted-foreground font-sans mt-3">
-                Klick außerhalb oder auf den roten Punkt zum Schließen
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                Klick außerhalb zum Schließen
               </p>
             </motion.div>
           </motion.div>

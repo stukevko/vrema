@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import type { AIInsightItem, AIInsightsPayload } from "@/lib/ai/types";
 import { getDayBoundsUtc } from "@/lib/time/timezone";
+import { getFiscalHealthCheck } from "@/lib/planning/intelligence";
 
 type DashboardFacts = {
   breakViolationEmployees: number;
@@ -106,6 +107,28 @@ export async function getDashboardAIInsights(companyId: string): Promise<AIInsig
   const previousBase = Math.max(1, facts.previousWeekMinutes);
   const trendDeltaPct = ((facts.currentWeekMinutes - facts.previousWeekMinutes) / previousBase) * 100;
 
+  const fiscal = await getFiscalHealthCheck(companyId, new Date());
+  if (fiscal.hasData && fiscal.overBudget && fiscal.laborShare != null) {
+    const pct = Math.round(fiscal.laborShare * 100);
+    const peak = fiscal.peakDayLabel && fiscal.peakDayEuro != null
+      ? ` Höchste Tages-Lohnlast: ${fiscal.peakDayLabel} (~${fiscal.peakDayEuro.toFixed(0)} €).`
+      : "";
+    const shiftsHint =
+      fiscal.shiftCountOverBudget > 0
+        ? ` ${fiscal.shiftCountOverBudget} geplante Schicht(en) liegen deutlich über dem pro-Schicht-Ziel.`
+        : "";
+    items.push({
+      id: "fiscal-labor-share",
+      level: "warning",
+      text: `Achtung: Lohnquote ca. ${pct} % der geschätzten Wochenumsätze (Ziel &lt; 35 %).${peak}${shiftsHint}`,
+      actionLabel: "Plan optimieren",
+      actionHref:
+        fiscal.peakDayOfWeek != null
+          ? `/dashboard/planning?focus=cost-peak&day=${fiscal.peakDayOfWeek}${fiscal.weekIndex != null ? `&week=${fiscal.weekIndex}` : ""}`
+          : `/dashboard/planning?focus=cost-peak${fiscal.weekIndex != null ? `&week=${fiscal.weekIndex}` : ""}`,
+    });
+  }
+
   if (trendDeltaPct > 10) {
     items.push({
       id: "high-utilization",
@@ -149,3 +172,5 @@ export async function getDashboardAIInsights(companyId: string): Promise<AIInsig
     items,
   };
 }
+
+export { getFiscalHealthCheck } from "@/lib/planning/intelligence";

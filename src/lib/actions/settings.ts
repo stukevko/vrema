@@ -17,6 +17,9 @@ export async function getCompanySettings() {
       plan: true,
       logoUrl: true,
       shiftCycleWeeks: true,
+      locationZip: true,
+      locationCity: true,
+      estimatedWeeklyRevenue: true,
     },
   });
 }
@@ -24,12 +27,20 @@ export async function getCompanySettings() {
 export async function updateCompanySettings(data: {
   name?: string;
   shiftCycleWeeks?: number;
+  locationZip?: string | null;
+  locationCity?: string | null;
+  estimatedWeeklyRevenue?: number | null;
 }) {
   const { companyId, role } = await requireTenant();
 
   if (role !== "COMPANY_OWNER" && role !== "SUPER_ADMIN") {
     throw new Error("Keine Berechtigung.");
   }
+
+  const revenue =
+    data.estimatedWeeklyRevenue != null && Number.isFinite(data.estimatedWeeklyRevenue)
+      ? Math.max(0, data.estimatedWeeklyRevenue)
+      : undefined;
 
   await db.company.update({
     where: { id: companyId },
@@ -38,10 +49,19 @@ export async function updateCompanySettings(data: {
       ...(typeof data.shiftCycleWeeks === "number" && Number.isFinite(data.shiftCycleWeeks)
         ? { shiftCycleWeeks: Math.min(3, Math.max(1, Math.floor(data.shiftCycleWeeks))) }
         : {}),
+      ...(data.locationZip !== undefined
+        ? { locationZip: data.locationZip?.trim() ? data.locationZip.trim() : null }
+        : {}),
+      ...(data.locationCity !== undefined
+        ? { locationCity: data.locationCity?.trim() ? data.locationCity.trim() : null }
+        : {}),
+      ...(revenue !== undefined ? { estimatedWeeklyRevenue: revenue } : {}),
     },
   });
 
   revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard/planning");
+  revalidatePath("/dashboard");
 }
 
 export async function changePassword(data: {

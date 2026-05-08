@@ -1,6 +1,7 @@
 "use client";
 
 import type { AIInsightItem, AIInsightsPayload } from "@/lib/ai/types";
+import Link from "next/link";
 
 const levelStyles: Record<AIInsightItem["level"], string> = {
   info: "text-muted-foreground",
@@ -26,6 +27,16 @@ export function AIInsights({ initialPayload }: { initialPayload: AIInsightsPaylo
           >
             <span className={`font-medium ${levelStyles[item.level]}`}>✨</span>{" "}
             <span className="text-foreground">{item.text}</span>
+            {item.actionLabel && item.actionHref ? (
+              <div className="mt-2">
+                <Link
+                  href={item.actionHref}
+                  className="inline-flex rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/15"
+                >
+                  {item.actionLabel}
+                </Link>
+              </div>
+            ) : null}
           </li>
         ))}
       </ul>

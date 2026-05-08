@@ -71,6 +71,7 @@ export default async function PlanningPage() {
             image: m.image ?? null,
             weeklyHours: m.weeklyHours,
             hourlyWage: m.hourlyWage ?? null,
+            planningWorkArea: m.planningWorkArea ?? null,
           }))}
           shifts={shifts}
           shiftCycleWeeks={shiftCycleWeeks}
@@ -87,12 +88,40 @@ export default async function PlanningPage() {
                     {trade.requestedByName} möchte Schicht von {trade.fromName} übernehmen ({DAY_LABELS[trade.dayOfWeek]}{" "}
                     {trade.startTime}-{trade.endTime})
                   </p>
+                  {trade.intel ? (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                          trade.intel.badge === "green"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : trade.intel.badge === "amber"
+                              ? "bg-amber-100 text-amber-900"
+                              : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {trade.intel.badge === "green"
+                          ? "Rechtlich sicher & kostenneutral"
+                          : trade.intel.badge === "amber"
+                            ? "Freigabe möglich: Kosten- oder Soll-Hinweis"
+                            : "Freigabe gesperrt: Konflikt"}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">{trade.intel.managerLine}</span>
+                    </div>
+                  ) : null}
+                  {trade.intel?.detailLines?.length ? (
+                    <ul className="mt-1 list-inside list-disc text-[11px] text-muted-foreground">
+                      {trade.intel.detailLines.map((line, i) => (
+                        <li key={`${trade.id}-d-${i}`}>{line}</li>
+                      ))}
+                    </ul>
+                  ) : null}
                   <div className="mt-2 flex gap-2">
                     <FormSubmitButton
                       name="approve"
                       value="true"
                       label="Bestätigen"
                       pendingLabel="Speichere..."
+                      disabled={Boolean(trade.intel && !trade.intel.legalOk)}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/15 px-3 py-1.5 text-xs font-semibold text-primary disabled:opacity-60"
                     />
                     <FormSubmitButton

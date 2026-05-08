@@ -4,6 +4,8 @@ export interface AIInsightItem {
   id: string;
   level: AIInsightLevel;
   text: string;
+  actionLabel?: string;
+  actionHref?: string;
 }
 
 export interface AIInsightsPayload {

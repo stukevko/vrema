@@ -150,12 +150,19 @@ model Company {
   isActive          Boolean         @default(true)
   logoUrl           String?
   shiftCycleWeeks   Int             @default(1)
+  /// PLZ für Wetter & lokaler Kontext (optional)
+  locationZip       String?
+  /// Ort für Wetter, falls keine PLZ (optional)
+  locationCity      String?
+  /// Geschätzter Wochenumsatz (EUR) für Lohnquoten-Kennzahlen – optional
+  estimatedWeeklyRevenue Float?
   affiliateId       String?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
   affiliate         Affiliate?      @relation(fields: [affiliateId], references: [id], onDelete: SetNull)
   affiliateEarnings AffiliateEarning[]
+  weatherCache      WeatherCache?
 
   users             User[]
   workLogs          WorkLog[]
@@ -170,6 +177,19 @@ model Company {
 
   @@index([slug])
   @@index([affiliateId])
+}
+
+/// OpenWeather-Antwort pro Firma, max. alle 3h aktualisiert
+model WeatherCache {
+  id         String   @id @default(cuid())
+  companyId  String   @unique
+  queryKey   String
+  payload    Json
+  fetchedAt  DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([fetchedAt])
 }
 
 model InviteLink {
@@ -200,6 +220,8 @@ model User {
   employeeNumber  String?
   /// Brutto-Stundenlohn (EUR), optional – für Lohn-Schätzung im Planer und in Berichten
   hourlyWage      Float?
+  /// Planung: OUTDOOR | TERRACE für Wetter-Hinweise im Außenbereich; leer = Innen
+  planningWorkArea String?
   phone           String?
   terminalPin     String?
   terminalPinHash String?

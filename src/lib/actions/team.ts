@@ -8,6 +8,8 @@ import { sendWelcomeEmail } from "@/lib/actions/emails";
 import { getWeekCycleIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 import { randomBytes } from "crypto";
 import { ShiftTradeStatus } from "@prisma/client";
+import { evaluateShiftTradeProposal } from "@/lib/planning/intelligence";
+import type { TradeApprovalIntel } from "@/lib/planning/intelligence";
 
 const MINUTES_PER_DAY = 24 * 60;
 const DAYS_PER_WEEK = 7;
@@ -141,10 +143,32 @@ export async function getTeamMembers() {
       vacationDays: true,
       employeeNumber: true,
       hourlyWage: true,
+      planningWorkArea: true,
       createdAt: true,
     },
     orderBy: [{ role: "asc" }, { name: "asc" }],
   });
+}
+
+export async function updateEmployeePlanningWorkArea(userId: string, raw: string) {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
+    throw new Error("Keine Berechtigung.");
+  }
+  const v = raw.trim().toUpperCase();
+  const normalized = v === "OUTDOOR" || v === "TERRACE" ? v : null;
+  const member = await db.user.findFirst({
+    where: tenantWhere(companyId, { id: userId }),
+    select: { id: true },
+  });
+  if (!member) throw new Error("Mitarbeiter nicht gefunden.");
+
+  await db.user.update({
+    where: { id: userId },
+    data: { planningWorkArea: normalized },
+  });
+  revalidatePath("/dashboard/team");
+  revalidatePath("/dashboard/planning");
 }
 
 export async function inviteEmployee(data: {
@@ -578,7 +602,19 @@ export async function requestShiftTradeTakeover(shiftId: string) {
   revalidatePath("/dashboard");
 }
 
-export async function getPendingTradeApprovals() {
+export async function getPendingTradeApprovals(): Promise<
+  Array<{
+    id: string;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    fromName: string;
+    requestedByName: string;
+    requestedById: string | null;
+    userId: string;
+    intel: TradeApprovalIntel | null;
+  }>
+> {
   const { companyId, role } = await requireTenant();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) return [];
   const rows = await db.shift.findMany({
@@ -589,7 +625,7 @@ export async function getPendingTradeApprovals() {
     },
     orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
   });
-  return rows.map((row) => {
+  const base = rows.map((row) => {
     const requester = row.company.users.find((u) => u.id === row.tradeRequestedBy);
     return {
       id: row.id,
@@ -602,6 +638,8 @@ export async function getPendingTradeApprovals() {
       userId: row.userId,
     };
   });
+  const intelList = await Promise.all(base.map((b) => evaluateShiftTradeProposal(companyId, b.id)));
+  return base.map((b, i) => ({ ...b, intel: intelList[i] ?? null }));
 }
 
 export async function countPendingShiftTradeApprovals() {
@@ -637,6 +675,15 @@ export async function decideShiftTradeApproval(shiftId: string, approve: boolean
       data: { tradeStatus: ShiftTradeStatus.OPEN, tradeRequestedBy: null, isOpenForTrade: true },
     });
   } else {
+    const intel = await evaluateShiftTradeProposal(companyId, shift.id);
+    if (!intel) {
+      throw new Error("Automatische Prüfung fehlgeschlagen. Bitte später erneut versuchen.");
+    }
+    if (!intel.legalOk) {
+      throw new Error(
+        "Tausch nicht freigegeben: Ruhezeit oder Überschneidung für den Übernehmer. Bitte ablehnen oder Plan anpassen."
+      );
+    }
     await db.shift.update({
       where: { id: shift.id },
       data: {

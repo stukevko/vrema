@@ -11,7 +11,9 @@ import {
   toggleShiftTradeOffer,
 } from "@/lib/actions/team";
 import { buildComplianceFlagsByShiftId } from "@/lib/planning/compliance";
-import { AlarmClock, Coffee, CornerDownRight, Info, Plus } from "lucide-react";
+import { AlarmClock, Coffee, CornerDownRight, Info, Plus, CloudSun, CloudRain, Cloud, Sun, HelpCircle } from "lucide-react";
+import type { DailyWeatherForecast } from "@/lib/external/weather";
+import { isRainLikeCondition } from "@/lib/external/weather";
 import { Avatar } from "@/components/ui/avatar";
 
 type Member = {
@@ -22,6 +24,8 @@ type Member = {
   image?: string | null;
   weeklyHours?: number;
   hourlyWage?: number | null;
+  /** OUTDOOR | TERRACE für Regen-Hinweise */
+  planningWorkArea?: string | null;
 };
 
 type ShiftRow = {
@@ -38,6 +42,7 @@ type ShiftRow = {
 };
 
 const DAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const WEEK_SHORT_MON = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] as const;
 /** Mobile: volle Wochentagsnamen für bessere Lesbarkeit. */
 const MOBILE_DAY_NAMES = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"] as const;
 const TIMELINE_START_HOUR = 0;
@@ -67,6 +72,13 @@ function shiftNetDurationMinutes(start: string, end: string, breakDuration = 0) 
   return Math.max(0, shiftDurationMinutes(start, end) - Math.max(0, breakDuration));
 }
 
+function addMinutesToHHMM(value: string, delta: number) {
+  const m = toMinutes(value);
+  if (m === null) return value;
+  const next = (m + delta + 24 * 60) % (24 * 60);
+  return minutesToHHMM(next);
+}
+
 function minutesToHHMM(total: number) {
   const normalized = Math.max(0, Math.min(24 * 60, total));
   const h = Math.floor(normalized / 60);
@@ -84,6 +96,32 @@ function shiftKey(startTime: string, endTime: string) {
 
 function dayOrderMonFirst(dayOfWeek: number) {
   return (dayOfWeek + 6) % 7;
+}
+
+/** timelineDay (So=0…Sa=6) → Index 0=Mo in Wetter-Woche */
+function monWeekIndexFromTimelineDay(timelineDayJs: number) {
+  return timelineDayJs === 0 ? 6 : timelineDayJs - 1;
+}
+
+function isoFromDate(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function addDaysToDate(d: Date, days: number) {
+  const x = new Date(d);
+  x.setDate(x.getDate() + days);
+  return x;
+}
+
+function weatherIconForDay(day: DailyWeatherForecast | null, className: string) {
+  if (!day) return <HelpCircle className={className} aria-hidden />;
+  if (day.condition === "RAIN" || day.condition === "SNOW") return <CloudRain className={className} aria-hidden />;
+  if (day.condition === "CLEAR") return <Sun className={className} aria-hidden />;
+  if (day.condition === "CLOUDS") return <Cloud className={className} aria-hidden />;
+  return <CloudSun className={className} aria-hidden />;
 }
 
 function dateForCycleDay(weekIndex: number, dayOfWeek: number) {
@@ -178,6 +216,21 @@ export function ShiftManager({
   } | null>(null);
   const [contextMenuIndex, setContextMenuIndex] = useState(0);
   const [flashAssignedKey, setFlashAssignedKey] = useState<string | null>(null);
+  const [selectedShiftIds, setSelectedShiftIds] = useState<string[]>([]);
+  const [timelineFocusedUserId, setTimelineFocusedUserId] = useState<string | null>(null);
+  const [copiedShift, setCopiedShift] = useState<{ startTime: string; endTime: string; breakDuration: number } | null>(null);
+  const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
+  const [bulkAnchor, setBulkAnchor] = useState<{ userId: string; absoluteStart: number } | null>(null);
+  const [bulkUndo, setBulkUndo] = useState<{
+    label: string;
+    items: Array<{ userId: string; weekIndex: number; dayOfWeek: number; startTime: string; endTime: string; breakDuration: number }>;
+  } | null>(null);
+  const [bulkUndoDeadlineMs, setBulkUndoDeadlineMs] = useState<number | null>(null);
+  const [undoNowMs, setUndoNowMs] = useState(() => Date.now());
+  const [weatherWeek, setWeatherWeek] = useState<Array<DailyWeatherForecast | null>>([]);
+  const [weatherMondayIso, setWeatherMondayIso] = useState<string | null>(null);
+  const [weatherFetchErr, setWeatherFetchErr] = useState<string | null>(null);
+  const [costPeakFocusDay, setCostPeakFocusDay] = useState<number | null>(null);
   const [gapSuggestions, setGapSuggestions] = useState<
     Array<{ userId: string; name: string; role: string; reason: string; startTime: string; endTime: string }>
   >([]);
@@ -225,12 +278,63 @@ export function ShiftManager({
   }, []);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("focus") !== "cost-peak") return;
+    const weekParam = Number(params.get("week"));
+    const targetWeek: 1 | 2 | 3 =
+      weekParam === 2 ? 2 : weekParam === 3 ? 3 : 1;
+    setSelectedWeekIndex(targetWeek);
+    const dayParam = Number(params.get("day"));
+    if (Number.isInteger(dayParam) && dayParam >= 0 && dayParam <= 6) {
+      setCostPeakFocusDay(dayParam);
+      const d = dateForCycleDay(targetWeek, dayParam);
+      setTimelineDate(isoFromDate(d));
+    }
+    setViewMode("timeline");
+    setMessage("Kosten-Peak-Fokus aktiv: betroffene Schichten werden hervorgehoben.");
+  }, []);
+
+  useEffect(() => {
     if (!mobileStartPickerOpen) setMobileStartPickerCustom(false);
   }, [mobileStartPickerOpen]);
 
   useEffect(() => {
     if (!mobileEndPickerOpen) setMobileEndPickerCustom(false);
   }, [mobileEndPickerOpen]);
+
+  useEffect(() => {
+    const anchor =
+      viewMode === "timeline"
+        ? timelineDate.slice(0, 10)
+        : isoFromDate(dateForCycleDay(selectedWeekIndex, mobileSelectedDay));
+    let cancelled = false;
+    setWeatherFetchErr(null);
+    fetch(`/api/planning/weather?anchorDate=${encodeURIComponent(anchor)}`)
+      .then((r) => r.json())
+      .then((data: { week?: Array<DailyWeatherForecast | null>; mondayIso?: string; error?: string | null }) => {
+        if (cancelled) return;
+        if (data.error === "no_api_key") {
+          setWeatherFetchErr("Wetter: OPENWEATHER_API_KEY fehlt.");
+          setWeatherWeek([]);
+          setWeatherMondayIso(null);
+          return;
+        }
+        if (data.error === "no_location") {
+          setWeatherFetchErr(null);
+          setWeatherWeek([]);
+          setWeatherMondayIso(null);
+          return;
+        }
+        setWeatherWeek(Array.isArray(data.week) ? data.week : []);
+        setWeatherMondayIso(typeof data.mondayIso === "string" ? data.mondayIso : null);
+      })
+      .catch(() => {
+        if (!cancelled) setWeatherFetchErr("Wetter: Abruf fehlgeschlagen.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [viewMode, timelineDate, selectedWeekIndex, mobileSelectedDay]);
 
   const userShifts = useMemo(
     () =>
@@ -311,6 +415,40 @@ export function ShiftManager({
       return { member: m, shift, previousShift, conflict };
     });
   }, [members, shiftByUserAndDay, conflictTypeByCell, timelineDay, selectedWeekIndex]);
+  const timelineWxDay = useMemo(() => {
+    const idx = monWeekIndexFromTimelineDay(timelineDay);
+    return weatherWeek[idx] ?? null;
+  }, [timelineDay, weatherWeek]);
+  const expensiveShiftIdsByDay = useMemo(() => {
+    const byDay = new Map<number, Array<{ id: string; cost: number }>>();
+    const wageByUser = new Map(members.map((m) => [m.id, m.hourlyWage ?? null]));
+    for (const s of shifts) {
+      if (s.weekIndex !== selectedWeekIndex) continue;
+      const wage = wageByUser.get(s.userId);
+      if (!wage || wage <= 0) continue;
+      const cost = (shiftNetDurationMinutes(s.startTime, s.endTime, s.breakDuration ?? 0) / 60) * wage;
+      const arr = byDay.get(s.dayOfWeek) ?? [];
+      arr.push({ id: s.id, cost });
+      byDay.set(s.dayOfWeek, arr);
+    }
+    const out = new Map<number, Set<string>>();
+    for (const [day, items] of byDay) {
+      if (items.length === 0) {
+        out.set(day, new Set());
+        continue;
+      }
+      const avg = items.reduce((sum, i) => sum + i.cost, 0) / items.length;
+      out.set(
+        day,
+        new Set(items.filter((i) => i.cost > avg * 1.2).map((i) => i.id))
+      );
+    }
+    return out;
+  }, [members, shifts, selectedWeekIndex]);
+  const mobileWxDay = useMemo(() => {
+    const idx = monWeekIndexFromTimelineDay(mobileSelectedDay);
+    return weatherWeek[idx] ?? null;
+  }, [mobileSelectedDay, weatherWeek]);
   const complianceByShiftId = useMemo(
     () => buildComplianceFlagsByShiftId(shifts, selectedWeekIndex),
     [shifts, selectedWeekIndex]
@@ -427,6 +565,22 @@ export function ShiftManager({
     () => Array.from({ length: TIMELINE_END_HOUR - TIMELINE_START_HOUR }, (_, i) => TIMELINE_START_HOUR + i + 1),
     []
   );
+  const selectedShifts = useMemo(
+    () => shifts.filter((s) => selectedShiftIds.includes(s.id)),
+    [shifts, selectedShiftIds]
+  );
+
+  useEffect(() => {
+    if (!bulkUndo) return;
+    const t = window.setTimeout(() => setBulkUndo(null), 5000);
+    return () => window.clearTimeout(t);
+  }, [bulkUndo]);
+
+  useEffect(() => {
+    if (!bulkUndo) return;
+    const t = window.setInterval(() => setUndoNowMs(Date.now()), 100);
+    return () => window.clearInterval(t);
+  }, [bulkUndo]);
 
   useEffect(() => {
     if (!contextMenu) return;
@@ -493,6 +647,87 @@ export function ShiftManager({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [contextMenu, contextMenuIndex, selectedWeekIndex]);
+
+  useEffect(() => {
+    if (!(renderDesktopTree && viewMode === "timeline")) return;
+    const onKey = (e: KeyboardEvent) => {
+      const accel = e.metaKey || e.ctrlKey;
+      if (!accel) {
+        if (e.key === "Escape") {
+          setSelectedShiftIds([]);
+          setBulkMenuOpen(false);
+          return;
+        }
+        if ((e.key === "Delete" || e.key === "Backspace") && selectedShiftIds.length > 0) {
+          const targets = shifts.filter((s) => selectedShiftIds.includes(s.id));
+          const undoItems = targets.map((s) => ({
+            userId: s.userId,
+            weekIndex: s.weekIndex,
+            dayOfWeek: s.dayOfWeek,
+            startTime: s.startTime,
+            endTime: s.endTime,
+            breakDuration: s.breakDuration ?? 0,
+          }));
+          startTransition(async () => {
+            await Promise.all(
+              targets.map((s) => clearShiftForDay({ userId: s.userId, weekIndex: s.weekIndex, dayOfWeek: s.dayOfWeek }))
+            );
+          });
+          setBulkUndo({ label: "Schichten gelöscht", items: undoItems });
+          setBulkUndoDeadlineMs(Date.now() + 5000);
+          setSelectedShiftIds([]);
+          setBulkMenuOpen(false);
+          e.preventDefault();
+        }
+        if ((e.key === "m" || e.key === "M") && selectedShiftIds.length > 0) {
+          setBulkMenuOpen(true);
+          e.preventDefault();
+        }
+        return;
+      }
+      const key = e.key.toLowerCase();
+      if (key === "c") {
+        if (selectedShifts.length === 0) return;
+        const first = selectedShifts[0];
+        setCopiedShift({
+          startTime: first.startTime,
+          endTime: first.endTime,
+          breakDuration: first.breakDuration ?? 0,
+        });
+        setMessage("Schicht kopiert.");
+        e.preventDefault();
+      }
+      if (key === "v") {
+        if (!copiedShift || !timelineFocusedUserId) return;
+        startTransition(async () => {
+          await setShiftForDay({
+            userId: timelineFocusedUserId,
+            weekIndex: selectedWeekIndex,
+            dayOfWeek: timelineDay,
+            startTime: copiedShift.startTime,
+            endTime: copiedShift.endTime,
+            breakDuration: copiedShift.breakDuration,
+          });
+        });
+        setFlashAssignedKey(`${timelineFocusedUserId}-${timelineDay}`);
+        window.setTimeout(() => setFlashAssignedKey(null), 1200);
+        setMessage("Schicht eingefügt.");
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [
+    renderDesktopTree,
+    viewMode,
+    shifts,
+    selectedShiftIds,
+    copiedShift,
+    timelineFocusedUserId,
+    selectedShifts,
+    selectedWeekIndex,
+    timelineDay,
+  ]);
 
   const saveTimelineShift = (userId: string, startMinute: number, endMinute: number) => {
     const conflict = conflictTypeByCell.get(`${userId}-${timelineDay}`);
@@ -886,6 +1121,7 @@ export function ShiftManager({
           <div className="flex min-w-max gap-2 px-1">
             {mobileOrderedDays.map((idx) => {
               const isActive = idx === mobileSelectedDay;
+              const weatherDay = weatherWeek[monWeekIndexFromTimelineDay(idx)] ?? null;
               const shiftCount = mobileDayShifts.length > 0 && idx === mobileSelectedDay
                 ? mobileDayShifts.length
                 : shifts.filter((s) => s.weekIndex === selectedWeekIndex && s.dayOfWeek === idx).length;
@@ -904,6 +1140,14 @@ export function ShiftManager({
                 >
                   <span className="block text-[10px] font-semibold uppercase tracking-wide">{DAY_LABELS[idx]}</span>
                   <span className="block text-[11px] font-medium tabular-nums">{dateLabel}</span>
+                  <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                    {weatherIconForDay(weatherDay, "h-3.5 w-3.5")}
+                    {weatherDay ? (
+                      <span className="tabular-nums">{Math.round(weatherDay.maxTempC)}°</span>
+                    ) : (
+                      <span>N/A</span>
+                    )}
+                  </span>
                   <span className="block text-[10px] text-muted-foreground">{shiftCount} Sch.</span>
                 </button>
               );
@@ -935,10 +1179,12 @@ export function ShiftManager({
             mobileDayShifts.map((shift) => {
               const member = members.find((m) => m.id === shift.userId);
               const compliance = complianceByShiftId.get(shift.id);
-              const minutes = shiftDurationMinutes(shift.startTime, shift.endTime);
               const netMinutes = shiftNetDurationMinutes(shift.startTime, shift.endTime, shift.breakDuration ?? 0);
               const wage = member?.hourlyWage ?? null;
               const cost = wage != null && wage > 0 ? (netMinutes / 60) * wage : null;
+              const mobileWeatherConflict =
+                Boolean(mobileWxDay && isRainLikeCondition(mobileWxDay.condition)) &&
+                (member?.planningWorkArea === "OUTDOOR" || member?.planningWorkArea === "TERRACE");
               return (
                 <button
                   key={shift.id}
@@ -952,7 +1198,14 @@ export function ShiftManager({
                       endTime: shift.endTime,
                     })
                   }
-                  className="w-full rounded-2xl border border-border bg-background px-4 py-4 text-left active:bg-muted/40"
+                  title={
+                    mobileWeatherConflict
+                      ? "Wetter-Konflikt: Hohe Regenwahrscheinlichkeit für Außenbereich."
+                      : undefined
+                  }
+                  className={`w-full rounded-2xl border border-border bg-background px-4 py-4 text-left active:bg-muted/40 ${
+                    mobileWeatherConflict ? "ring-2 ring-sky-500/80 animate-pulse" : ""
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <span className="text-lg font-bold tabular-nums text-foreground">
@@ -1507,6 +1760,11 @@ export function ShiftManager({
                 className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-base sm:min-h-11 sm:text-sm"
               />
               <p className="mt-1 text-[11px] text-muted-foreground">Wochentag: {DAY_LABELS[timelineDay]}</p>
+              {selectedShiftIds.length > 1 ? (
+                <span className="mt-1 inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                  {selectedShiftIds.length} Schichten ausgewählt
+                </span>
+              ) : null}
             </div>
             <div>
               <label
@@ -1577,6 +1835,63 @@ export function ShiftManager({
             </div>
           ) : null}
 
+          {weatherMondayIso ? (
+            <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-[220px_1fr] md:items-end">
+              <div className="hidden md:block" />
+              <div className="flex flex-wrap justify-end gap-1.5">
+                {WEEK_SHORT_MON.map((label, i) => {
+                  const d = addDaysToDate(new Date(`${weatherMondayIso}T12:00:00`), i);
+                  const iso = isoFromDate(d);
+                  const w = weatherWeek[i] ?? null;
+                  const active = iso === timelineDate.slice(0, 10);
+                  return (
+                    <button
+                      key={`wx-${iso}`}
+                      type="button"
+                      onClick={() => setTimelineDate(iso)}
+                      className={`flex min-w-[3.25rem] flex-col items-center rounded-xl border px-1.5 py-1 text-[10px] transition-colors ${
+                        active ? "border-primary/50 bg-primary/10 text-primary" : "border-border bg-white/80 text-foreground"
+                      }`}
+                    >
+                      <span className="font-semibold">{label}</span>
+                      {w ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`https://openweathermap.org/img/wn/${w.iconCode}@2x.png`}
+                            alt=""
+                            className="h-7 w-7"
+                          />
+                          <span className="tabular-nums font-medium">{w.maxTempC}°</span>
+                        </>
+                      ) : (
+                        <>
+                          <HelpCircle className="mt-0.5 h-6 w-6 text-muted-foreground/50" aria-hidden />
+                          <span className="font-medium text-muted-foreground">N/A</span>
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+          {weatherFetchErr ? (
+            <p className="mt-1 text-right text-[10px] text-muted-foreground">{weatherFetchErr}</p>
+          ) : null}
+          {costPeakFocusDay != null && timelineDay === costPeakFocusDay ? (
+            <div className="mt-2 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
+              <span>Kosten-Peak-Fokus aktiv: Betroffene Schichten sind hervorgehoben.</span>
+              <button
+                type="button"
+                onClick={() => setCostPeakFocusDay(null)}
+                className="rounded-md border border-amber-300 bg-white px-2 py-0.5 font-semibold"
+              >
+                Filter aus
+              </button>
+            </div>
+          ) : null}
+
           <div className="mt-3 max-h-[75vh] min-w-0 max-w-full overflow-x-auto overflow-y-auto overscroll-contain">
             <div className="w-full min-w-[1200px] space-y-4 py-1 lg:min-w-[1400px]">
               <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground md:grid-cols-[220px_1fr] md:items-center">
@@ -1594,6 +1909,13 @@ export function ShiftManager({
               </div>
 
               {timelineRows.map((row) => {
+                const weatherConflict =
+                  Boolean(timelineWxDay && isRainLikeCondition(timelineWxDay.condition)) &&
+                  (row.member.planningWorkArea === "OUTDOOR" || row.member.planningWorkArea === "TERRACE");
+                const costPeakFocusActive = costPeakFocusDay != null && timelineDay === costPeakFocusDay;
+                const expensiveSet = expensiveShiftIdsByDay.get(timelineDay) ?? new Set<string>();
+                const costPeakAffected = Boolean(row.shift && expensiveSet.has(row.shift.id));
+
                 const shiftStart = row.shift ? toMinutes(row.shift.startTime) : null;
                 const shiftEnd = row.shift ? toMinutes(row.shift.endTime) : null;
                 const overnightCurrent = shiftStart !== null && shiftEnd !== null && shiftEnd < shiftStart;
@@ -1724,12 +2046,55 @@ export function ShiftManager({
                               activeDrag?.userId === row.member.id
                                 ? "shadow-lg shadow-black/40 transition-none"
                                 : "transition-[left,width] duration-100 ease-out"
-                            } ${flashAssignedKey === `${row.member.id}-${timelineDay}` ? "ring-2 ring-primary/70 animate-pulse" : ""}`}
+                            } ${flashAssignedKey === `${row.member.id}-${timelineDay}` ? "ring-2 ring-primary/70 animate-pulse" : ""} ${
+                              row.shift && selectedShiftIds.includes(row.shift.id) ? "ring-2 ring-blue-500/80" : ""
+                            } ${weatherConflict ? "ring-2 ring-sky-500/90 animate-pulse" : ""} ${
+                              costPeakFocusActive && !costPeakAffected ? "opacity-30 [filter:grayscale(35%)]" : ""
+                            } ${costPeakFocusActive && costPeakAffected ? "ring-2 ring-amber-500/90 animate-pulse" : ""}`}
                             style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-                            title={barLabel}
+                            title={
+                              weatherConflict
+                                ? `${barLabel} — Wetter-Konflikt: Hohe Regenwahrscheinlichkeit für Außenbereich.`
+                                : costPeakFocusActive && costPeakAffected
+                                  ? `${barLabel} — Kosten-Peak: überdurchschnittliche Lohnkosten.`
+                                  : barLabel
+                            }
                             onPointerDown={(e) => {
                               if (e.pointerType === "mouse" && e.button !== 0) return;
                               if (!row.shift || row.conflict) return;
+                              setTimelineFocusedUserId(row.member.id);
+                              const shiftStartAbs = row.shift.dayOfWeek * 24 * 60 + (toMinutes(row.shift.startTime) ?? 0);
+                              if (e.shiftKey) {
+                                if (bulkAnchor && bulkAnchor.userId === row.member.id) {
+                                  const [minAbs, maxAbs] = [Math.min(bulkAnchor.absoluteStart, shiftStartAbs), Math.max(bulkAnchor.absoluteStart, shiftStartAbs)];
+                                  const rangeIds = shifts
+                                    .filter((s) => s.userId === row.member.id && s.weekIndex === selectedWeekIndex)
+                                    .filter((s) => {
+                                      const abs = s.dayOfWeek * 24 * 60 + (toMinutes(s.startTime) ?? 0);
+                                      return abs >= minAbs && abs <= maxAbs;
+                                    })
+                                    .map((s) => s.id);
+                                  setSelectedShiftIds(rangeIds);
+                                } else {
+                                  const rowIds = shifts
+                                    .filter((s) => s.userId === row.member.id && s.weekIndex === selectedWeekIndex)
+                                    .map((s) => s.id);
+                                  setSelectedShiftIds(rowIds);
+                                }
+                                setBulkAnchor({ userId: row.member.id, absoluteStart: shiftStartAbs });
+                                e.stopPropagation();
+                                return;
+                              }
+                              if (e.metaKey || e.ctrlKey) {
+                                e.stopPropagation();
+                                setSelectedShiftIds((prev) =>
+                                  prev.includes(row.shift!.id) ? prev.filter((id) => id !== row.shift!.id) : [...prev, row.shift!.id]
+                                );
+                                setBulkAnchor({ userId: row.member.id, absoluteStart: shiftStartAbs });
+                                return;
+                              }
+                              setSelectedShiftIds([row.shift.id]);
+                              setBulkAnchor({ userId: row.member.id, absoluteStart: shiftStartAbs });
                               const lane = (e.currentTarget as HTMLElement).closest("[data-timeline-lane]");
                               if (!(lane instanceof HTMLElement)) return;
                               const sm = toMinutes(row.shift.startTime);
@@ -1808,11 +2173,13 @@ export function ShiftManager({
                                 ×
                               </button>
                             )}
-                            {barLabel}
+                            <span className="font-semibold drop-shadow-[0_1px_1px_rgba(255,255,255,0.25)]">{barLabel}</span>
                           </div>
                         </>
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-[11px] text-muted-foreground">Frei</div>
+                        <div className="absolute inset-1 flex items-center justify-center rounded-lg border border-dashed border-muted-foreground/35 text-[11px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                          Frei
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1881,6 +2248,130 @@ export function ShiftManager({
               >
                 45 Min Pause
               </button>
+            </div>
+          ) : null}
+          {selectedShiftIds.length > 0 && (bulkMenuOpen || selectedShiftIds.length > 1) ? (
+            <div className="fixed bottom-24 right-6 z-[160] min-w-[220px] rounded-xl border border-border bg-white/95 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur">
+              <p className="px-2 py-1 text-[11px] font-semibold text-foreground">{selectedShiftIds.length} Schichten gewählt</p>
+              <button
+                type="button"
+                className="block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted"
+                onClick={() => {
+                  const targets = shifts.filter((s) => selectedShiftIds.includes(s.id));
+                  const undoItems = targets.map((s) => ({
+                    userId: s.userId,
+                    weekIndex: s.weekIndex,
+                    dayOfWeek: s.dayOfWeek,
+                    startTime: s.startTime,
+                    endTime: s.endTime,
+                    breakDuration: s.breakDuration ?? 0,
+                  }));
+                  startTransition(async () => {
+                    await Promise.all(
+                      targets.map((s) =>
+                        clearShiftForDay({ userId: s.userId, weekIndex: s.weekIndex, dayOfWeek: s.dayOfWeek })
+                      )
+                    );
+                  });
+                  setBulkUndo({ label: "Schichten gelöscht", items: undoItems });
+                  setBulkUndoDeadlineMs(Date.now() + 5000);
+                  setSelectedShiftIds([]);
+                  setBulkMenuOpen(false);
+                }}
+              >
+                Alle löschen
+              </button>
+              <button
+                type="button"
+                className="block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted"
+                onClick={() => {
+                  const targets = shifts.filter((s) => selectedShiftIds.includes(s.id));
+                  const undoItems = targets.map((s) => ({
+                    userId: s.userId,
+                    weekIndex: s.weekIndex,
+                    dayOfWeek: s.dayOfWeek,
+                    startTime: s.startTime,
+                    endTime: s.endTime,
+                    breakDuration: s.breakDuration ?? 0,
+                  }));
+                  startTransition(async () => {
+                    await Promise.all(
+                      targets.map((s) =>
+                        setShiftForDay({
+                          userId: s.userId,
+                          weekIndex: s.weekIndex,
+                          dayOfWeek: s.dayOfWeek,
+                          startTime: addMinutesToHHMM(s.startTime, 60),
+                          endTime: addMinutesToHHMM(s.endTime, 60),
+                          breakDuration: s.breakDuration ?? 0,
+                        })
+                      )
+                    );
+                  });
+                  setBulkUndo({ label: "Schichten verschoben", items: undoItems });
+                  setBulkUndoDeadlineMs(Date.now() + 5000);
+                  setSelectedShiftIds([]);
+                  setBulkMenuOpen(false);
+                }}
+              >
+                Alle um 1 Std verschieben
+              </button>
+              <button
+                type="button"
+                className="block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted"
+                onClick={() => {
+                  const targets = shifts.filter((s) => selectedShiftIds.includes(s.id));
+                  startTransition(async () => {
+                    await Promise.all(targets.map((s) => setShiftBreakDuration(s.id, 30)));
+                  });
+                  setSelectedShiftIds([]);
+                  setBulkMenuOpen(false);
+                }}
+              >
+                Allen 30 Min Pause hinzufügen
+              </button>
+            </div>
+          ) : null}
+          {bulkUndo ? (
+            <div className="fixed bottom-7 right-6 z-[170] rounded-xl border border-border bg-white/95 px-3 py-2 text-xs shadow-[0_14px_36px_rgba(0,0,0,0.2)] backdrop-blur">
+              <span className="mr-3 text-foreground">{bulkUndo.label}</span>
+              <button
+                type="button"
+                className="font-semibold text-primary underline underline-offset-2"
+                onClick={() => {
+                  const restore = bulkUndo.items;
+                  startTransition(async () => {
+                    await Promise.all(
+                      restore.map((s) =>
+                        setShiftForDay({
+                          userId: s.userId,
+                          weekIndex: s.weekIndex,
+                          dayOfWeek: s.dayOfWeek,
+                          startTime: s.startTime,
+                          endTime: s.endTime,
+                          breakDuration: s.breakDuration,
+                        })
+                      )
+                    );
+                  });
+                  setBulkUndo(null);
+                  setBulkUndoDeadlineMs(null);
+                }}
+              >
+                Aktion rückgängig machen
+              </button>
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-100"
+                  style={{
+                    width: `${
+                      bulkUndoDeadlineMs
+                        ? Math.max(0, Math.min(100, ((bulkUndoDeadlineMs - undoNowMs) / 5000) * 100))
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
             </div>
           ) : null}
         </div>
