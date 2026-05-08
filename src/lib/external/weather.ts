@@ -1,16 +1,7 @@
 import { db } from "@/lib/db";
+import type { DailyWeatherForecast, WeatherConditionKind } from "@/lib/weather/shared";
 
 const CACHE_MS = 3 * 60 * 60 * 1000;
-
-export type WeatherConditionKind = "RAIN" | "SNOW" | "CLOUDS" | "CLEAR" | "OTHER";
-
-export type DailyWeatherForecast = {
-  date: string;
-  maxTempC: number;
-  condition: WeatherConditionKind;
-  openWeatherMain: string;
-  iconCode: string;
-};
 
 type OwmListItem = {
   dt: number;
@@ -51,10 +42,6 @@ function mapMainToCondition(main: string): WeatherConditionKind {
 function rankCondition(a: WeatherConditionKind, b: WeatherConditionKind): WeatherConditionKind {
   const order: WeatherConditionKind[] = ["RAIN", "SNOW", "OTHER", "CLOUDS", "CLEAR"];
   return order.indexOf(a) <= order.indexOf(b) ? a : b;
-}
-
-export function isRainLikeCondition(c: WeatherConditionKind): boolean {
-  return c === "RAIN" || c === "SNOW";
 }
 
 function aggregateForecast(list: OwmListItem[]): DailyWeatherForecast[] {

@@ -12,8 +12,8 @@ import {
 } from "@/lib/actions/team";
 import { buildComplianceFlagsByShiftId } from "@/lib/planning/compliance";
 import { AlarmClock, Coffee, CornerDownRight, Info, Plus, CloudSun, CloudRain, Cloud, Sun, HelpCircle } from "lucide-react";
-import type { DailyWeatherForecast } from "@/lib/external/weather";
-import { isRainLikeCondition } from "@/lib/external/weather";
+import type { DailyWeatherForecast } from "@/lib/weather/shared";
+import { isRainLikeCondition } from "@/lib/weather/shared";
 import { Avatar } from "@/components/ui/avatar";
 
 type Member = {
