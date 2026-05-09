@@ -16,6 +16,8 @@ async function main() {
   });
 
   if (existingCompany) {
+    await prisma.shiftTaskList.deleteMany({ where: { companyId: existingCompany.id } });
+    await prisma.taskTemplate.deleteMany({ where: { companyId: existingCompany.id } });
     await prisma.vacationRequest.deleteMany({ where: { companyId: existingCompany.id } });
     await prisma.workLog.deleteMany({ where: { companyId: existingCompany.id } });
     await prisma.user.deleteMany({ where: { companyId: existingCompany.id } });
@@ -98,6 +100,23 @@ async function main() {
   const max = users[2];
   const sophie = users[3];
   const luca = users[4];
+
+  await prisma.taskTemplate.create({
+    data: {
+      companyId: company.id,
+      name: "Schlussdienst Bar",
+      isDefault: true,
+      items: {
+        create: [
+          { title: "Kaffeemaschine reinigen", sortOrder: 0 },
+          { title: "Gläser / Spülmaschine", sortOrder: 1 },
+          { title: "Theke desinfizieren", sortOrder: 2 },
+          { title: "Müll & Recycling", sortOrder: 3 },
+          { title: "Kasse & Übergabe", sortOrder: 4 },
+        ],
+      },
+    },
+  });
 
   await prisma.vacationRequest.createMany({
     data: [

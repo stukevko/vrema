@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import type { EntryStatus } from "@prisma/client";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
+import { generateTaskListForShiftCore } from "@/lib/shift-tasks/generate-task-list";
 import { randomUUID } from "crypto";
 
 const LATE_GRACE_MINUTES = 15;
@@ -96,7 +97,7 @@ export async function createClockInEntry(params: {
   const shift = await db.shift.findFirst({
     where: tenantWhere(companyId, { userId, dayOfWeek, weekIndex }),
     orderBy: { startTime: "asc" },
-    select: { startTime: true, endTime: true },
+    select: { id: true, startTime: true, endTime: true },
   });
 
   let status: EntryStatus = "ON_TIME";
@@ -144,6 +145,12 @@ export async function createClockInEntry(params: {
     );
     return created;
   });
+
+  if (shift?.id) {
+    await generateTaskListForShiftCore({ companyId, shiftId: shift.id }).catch(() => {
+      /* Checklisten sind optional; Clock-In darf nicht fehlschlagen */
+    });
+  }
 
   return { log, warning: null as string | null };
 }

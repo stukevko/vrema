@@ -12,6 +12,7 @@ import {
   LifeBuoy,
   ClipboardCheck,
   MessagesSquare,
+  ListTodo,
 } from "lucide-react";
 
 export type DashboardNavItem = {
@@ -28,6 +29,7 @@ const BASE_NAV: DashboardNavItem[] = [
   { href: "/dashboard/team", label: "Team", icon: Users, plans: ALL_PLANS },
   { href: "/dashboard/team/absences", label: "Abwesenheiten", icon: ClipboardCheck, plans: ALL_PLANS },
   { href: "/dashboard/planning", label: "Planung", icon: CalendarClock, plans: ALL_PLANS },
+  { href: "/dashboard/tasks", label: "Schicht-Tasks", icon: ListTodo, plans: ALL_PLANS },
   { href: "/dashboard/vacation", label: "Urlaub", icon: CalendarDays, plans: ALL_PLANS },
   { href: "/dashboard/reports", label: "Berichte", icon: FileText, plans: ALL_PLANS },
   { href: "/dashboard/support", label: "Hilfe & Support", icon: LifeBuoy, plans: ALL_PLANS },
@@ -47,6 +49,7 @@ export function getDashboardNavItems(role: string, plan: string): DashboardNavIt
     if (!item.plans.includes(plan)) return false;
     if (item.href === "/dashboard/billing" && role === "EMPLOYEE") return false;
     if (item.href === "/dashboard/team/absences" && role === "EMPLOYEE") return false;
+    if (item.href === "/dashboard/tasks" && role === "EMPLOYEE") return false;
     return true;
   });
 

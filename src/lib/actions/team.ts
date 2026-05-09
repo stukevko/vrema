@@ -38,7 +38,7 @@ function intervalsOverlap(a: { start: number; end: number }, b: { start: number;
   return a.start < b.end && b.start < a.end;
 }
 
-async function assertNoShiftOverlap(input: {
+export async function assertNoShiftOverlap(input: {
   companyId: string;
   userId: string;
   weekIndex: number;
@@ -283,6 +283,8 @@ export async function getShifts() {
       startTime: true,
       endTime: true,
       breakDuration: true,
+      isDraft: true,
+      staffingRole: true,
       isOpenForTrade: true,
       tradeStatus: true,
       tradeRequestedBy: true,
@@ -502,7 +504,7 @@ export async function getMyShifts() {
   });
   const currentWeekIndex = getWeekCycleIndex(new Date(), company?.shiftCycleWeeks);
   return db.shift.findMany({
-    where: tenantWhere(companyId, { userId, weekIndex: currentWeekIndex }),
+    where: tenantWhere(companyId, { userId, weekIndex: currentWeekIndex, isDraft: false }),
     select: {
       id: true,
       userId: true,
@@ -525,7 +527,7 @@ export async function toggleShiftTradeOffer(shiftId: string, makeOpen: boolean) 
     throw new Error("Keine Berechtigung.");
   }
   const shift = await db.shift.findFirst({
-    where: tenantWhere(companyId, { id: shiftId, userId }),
+    where: tenantWhere(companyId, { id: shiftId, userId, isDraft: false }),
     select: { id: true, userId: true },
   });
   if (!shift) throw new Error("Schicht nicht gefunden.");
@@ -548,6 +550,7 @@ export async function getOpenShiftTradesForMyRole() {
   if (!me || !me.isActive) return [];
   const trades = await db.shift.findMany({
     where: tenantWhere(companyId, {
+      isDraft: false,
       isOpenForTrade: true,
       tradeStatus: ShiftTradeStatus.OPEN,
       userId: { not: userId },
@@ -580,7 +583,7 @@ export async function requestShiftTradeTakeover(shiftId: string) {
   if (!me || !me.isActive) throw new Error("Benutzer nicht aktiv.");
 
   const shift = await db.shift.findFirst({
-    where: tenantWhere(companyId, { id: shiftId }),
+    where: tenantWhere(companyId, { id: shiftId, isDraft: false }),
     include: { user: { select: { role: true, isActive: true } } },
   });
   if (!shift) throw new Error("Schicht nicht gefunden.");
@@ -618,7 +621,7 @@ export async function getPendingTradeApprovals(): Promise<
   const { companyId, role } = await requireTenant();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) return [];
   const rows = await db.shift.findMany({
-    where: tenantWhere(companyId, { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL }),
+    where: tenantWhere(companyId, { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL, isDraft: false }),
     include: {
       user: { select: { name: true, email: true } },
       company: { select: { users: { select: { id: true, name: true, email: true } } } },
@@ -646,7 +649,7 @@ export async function countPendingShiftTradeApprovals() {
   const { companyId, role } = await requireTenant();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) return 0;
   return db.shift.count({
-    where: tenantWhere(companyId, { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL }),
+    where: tenantWhere(companyId, { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL, isDraft: false }),
   });
 }
 
@@ -656,7 +659,7 @@ export async function decideShiftTradeApproval(shiftId: string, approve: boolean
     throw new Error("Keine Berechtigung.");
   }
   const shift = await db.shift.findFirst({
-    where: tenantWhere(companyId, { id: shiftId, tradeStatus: ShiftTradeStatus.PENDING_APPROVAL }),
+    where: tenantWhere(companyId, { id: shiftId, tradeStatus: ShiftTradeStatus.PENDING_APPROVAL, isDraft: false }),
     include: {
       user: { select: { role: true } },
       company: { select: { users: { select: { id: true, role: true, isActive: true } } } },
@@ -705,7 +708,7 @@ export async function copyWeekToAllMembers(sourceUserId: string) {
   }
 
   const sourceShifts = await db.shift.findMany({
-    where: tenantWhere(companyId, { userId: sourceUserId }),
+    where: tenantWhere(companyId, { userId: sourceUserId, isDraft: false }),
     select: { weekIndex: true, dayOfWeek: true, startTime: true, endTime: true, breakDuration: true },
     orderBy: [{ weekIndex: "asc" }, { dayOfWeek: "asc" }, { startTime: "asc" }],
   });

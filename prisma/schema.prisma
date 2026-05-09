@@ -89,6 +89,12 @@ enum InviteRole {
   MANAGER
 }
 
+enum ShiftTaskItemStatus {
+  PENDING
+  DONE
+  SKIPPED
+}
+
 enum ShiftTradeStatus {
   NONE
   OPEN
@@ -174,6 +180,8 @@ model Company {
   inviteLinks       InviteLink[]
   tickets           Ticket[]
   absences          Absence[]
+  taskTemplates     TaskTemplate[]
+  shiftTaskLists    ShiftTaskList[]
 
   @@index([slug])
   @@index([affiliateId])
@@ -220,6 +228,8 @@ model User {
   employeeNumber  String?
   /// Brutto-Stundenlohn (EUR), optional – für Lohn-Schätzung im Planer und in Berichten
   hourlyWage      Float?
+  /// Optionale Rolle für Autopilot (z. B. Bar, Küche) – muss zu Schicht-Slot passen
+  staffingRole    String?
   /// Planung: OUTDOOR | TERRACE für Wetter-Hinweise im Außenbereich; leer = Innen
   planningWorkArea String?
   phone           String?
@@ -247,6 +257,7 @@ model User {
   absenceRequests  Absence[] @relation("AbsenceRequester")
   reviewedAbsences Absence[] @relation("AbsenceReviewer")
   timesheetAcknowledgments TimesheetAcknowledgment[]
+  shiftTaskItemsCompleted  ShiftTaskItem[] @relation("ShiftTaskCompletedBy")
 
   @@index([companyId])
   @@index([email])
@@ -443,6 +454,10 @@ model Shift {
   startTime String   // "08:00"
   endTime   String   // "17:00"
   breakDuration Int  @default(0) // Minuten
+  /// Autopilot-Entwurf: erst nach Bestätigung wirksam
+  isDraft   Boolean  @default(false)
+  /// Anforderung aus Slot (Personalmangel-Report); optional
+  staffingRole String?
   isOpenForTrade Boolean @default(false)
   tradeStatus ShiftTradeStatus @default(NONE)
   tradeRequestedBy String?
@@ -451,10 +466,74 @@ model Shift {
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shiftTaskLists ShiftTaskList[]
 
   @@unique([companyId, userId, weekIndex, dayOfWeek, startTime])
   @@index([companyId, dayOfWeek])
   @@index([companyId, userId])
+}
+
+model TaskTemplate {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company        Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items          TaskTemplateItem[]
+  shiftTaskLists ShiftTaskList[]
+
+  @@index([companyId])
+  @@index([companyId, isDefault])
+}
+
+model TaskTemplateItem {
+  id         String  @id @default(cuid())
+  templateId String
+  title      String
+  sortOrder  Int     @default(0)
+  isRequired Boolean @default(true)
+
+  template TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId, sortOrder])
+}
+
+/// Checklisten-Vorkommen für eine konkrete Schicht an einem Kalendertag (Europe/Berlin Mitternacht als UTC-Instant in occurrenceDate).
+model ShiftTaskList {
+  id             String   @id @default(cuid())
+  companyId      String
+  shiftId        String
+  taskTemplateId String?
+  occurrenceDate DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  company  Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  shift    Shift         @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  template TaskTemplate? @relation(fields: [taskTemplateId], references: [id], onDelete: SetNull)
+  items    ShiftTaskItem[]
+
+  @@unique([shiftId, occurrenceDate])
+  @@index([companyId, occurrenceDate])
+}
+
+model ShiftTaskItem {
+  id                String              @id @default(cuid())
+  shiftTaskListId   String
+  title             String
+  sortOrder         Int                 @default(0)
+  isRequired        Boolean             @default(true)
+  status            ShiftTaskItemStatus @default(PENDING)
+  completedAt       DateTime?
+  completedByUserId String?
+
+  list        ShiftTaskList @relation(fields: [shiftTaskListId], references: [id], onDelete: Cascade)
+  completedBy User?         @relation("ShiftTaskCompletedBy", fields: [completedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([shiftTaskListId, sortOrder])
 }
 
 model WorkSchedule {

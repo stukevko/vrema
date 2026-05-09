@@ -74,3 +74,15 @@ export function buildComplianceFlagsByShiftId(shifts: ShiftPlanRow[], weekIndex:
   }
   return map;
 }
+
+/** True, wenn irgendeine Schicht dieses Nutzers in der Woche eine Ruhezeit &lt; 11h zum Vorgänger hat. */
+export function userHasRestRiskInWeek(shifts: ShiftPlanRow[], weekIndex: number, userId: string): boolean {
+  const flags = buildComplianceFlagsByShiftId(
+    shifts.filter((s) => s.userId === userId),
+    weekIndex
+  );
+  for (const f of flags.values()) {
+    if (f.restRisk) return true;
+  }
+  return false;
+}

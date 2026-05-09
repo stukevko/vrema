@@ -10,8 +10,23 @@ import {
   setShiftForDay,
   toggleShiftTradeOffer,
 } from "@/lib/actions/team";
+import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
+import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
+import { useRouter } from "next/navigation";
 import { buildComplianceFlagsByShiftId } from "@/lib/planning/compliance";
-import { AlarmClock, Coffee, CornerDownRight, Info, Plus, CloudSun, CloudRain, Cloud, Sun, HelpCircle } from "lucide-react";
+import {
+  AlarmClock,
+  Coffee,
+  CornerDownRight,
+  Info,
+  Plus,
+  CloudSun,
+  CloudRain,
+  Cloud,
+  Sun,
+  HelpCircle,
+  Sparkles,
+} from "lucide-react";
 import type { DailyWeatherForecast } from "@/lib/weather/shared";
 import { isRainLikeCondition } from "@/lib/weather/shared";
 import { Avatar } from "@/components/ui/avatar";
@@ -36,6 +51,8 @@ type ShiftRow = {
   startTime: string;
   endTime: string;
   breakDuration?: number;
+  isDraft?: boolean;
+  staffingRole?: string | null;
   isOpenForTrade?: boolean;
   tradeStatus?: "NONE" | "OPEN" | "PENDING_APPROVAL";
   tradeRequestedBy?: string | null;
@@ -158,13 +175,19 @@ export function ShiftManager({
   shifts,
   shiftCycleWeeks = 1,
   vacationConflictDays,
+  enableTaskListActions = false,
 }: {
   members: Member[];
   shifts: ShiftRow[];
   shiftCycleWeeks?: 1 | 2 | 3;
   vacationConflictDays?: Array<{ userId: string; dayOfWeek: number; type?: "VACATION" | "SICK" }>;
+  /** Manager: Schicht-Checkliste für den sichtbaren Tag im Timeline erzeugen */
+  enableTaskListActions?: boolean;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [autopilotBusy, setAutopilotBusy] = useState(false);
+  const [autopilotReport, setAutopilotReport] = useState<string[] | null>(null);
   const [selectedUserId, setSelectedUserId] = useState(members[0]?.id ?? "");
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("16:00");
@@ -213,6 +236,7 @@ export function ShiftManager({
     startTime: string;
     endTime: string;
     breakDuration: number;
+    occurrenceDateIso: string;
   } | null>(null);
   const [contextMenuIndex, setContextMenuIndex] = useState(0);
   const [flashAssignedKey, setFlashAssignedKey] = useState<string | null>(null);
@@ -395,6 +419,10 @@ export function ShiftManager({
     }
     return map;
   }, [vacationConflictDays]);
+  const draftShiftsInWeek = useMemo(
+    () => shifts.filter((s) => s.weekIndex === selectedWeekIndex && s.isDraft),
+    [shifts, selectedWeekIndex]
+  );
   const selectedUserVacationDays = useMemo(
     () => new Set(DAY_LABELS.map((_, d) => d).filter((d) => conflictTypeByCell.has(`${selectedUserId}-${d}`))),
     [selectedUserId, conflictTypeByCell]
@@ -596,7 +624,7 @@ export function ShiftManager({
   useEffect(() => {
     if (!contextMenu) return;
     const onKey = (e: KeyboardEvent) => {
-      const itemCount = 4;
+      const itemCount = enableTaskListActions ? 5 : 4;
       if (e.key === "Escape") {
         setContextMenu(null);
         return;
@@ -611,8 +639,7 @@ export function ShiftManager({
       }
       if (e.key === "Enter") {
         e.preventDefault();
-        const actions = [0, 1, 2, 3];
-        const idx = actions[contextMenuIndex] ?? 0;
+        const idx = contextMenuIndex;
         if (idx === 0) {
           const nextDay = (contextMenu.dayOfWeek + 1) % 7;
           startTransition(async () => {
@@ -641,12 +668,17 @@ export function ShiftManager({
             await setShiftBreakDuration(contextMenu.shiftId, 45);
           });
         }
+        if (idx === 4 && enableTaskListActions) {
+          startTransition(async () => {
+            await generateTaskListForShift(contextMenu.shiftId, contextMenu.occurrenceDateIso);
+          });
+        }
         setContextMenu(null);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [contextMenu, contextMenuIndex, selectedWeekIndex]);
+  }, [contextMenu, contextMenuIndex, selectedWeekIndex, enableTaskListActions]);
 
   useEffect(() => {
     if (!(renderDesktopTree && viewMode === "timeline")) return;
@@ -1027,6 +1059,73 @@ export function ShiftManager({
     });
   };
 
+  const startAutopilot = () => {
+    setAutopilotReport(null);
+    setMessage(null);
+    setAutopilotBusy(true);
+    startTransition(async () => {
+      try {
+        const anchor =
+          viewMode === "timeline" ? new Date(`${timelineDate.slice(0, 10)}T12:00:00`) : new Date();
+        const result = await runAutopilotDraft(selectedWeekIndex, {
+          slotTemplates: [
+            { startTime, endTime, breakDuration: 30 },
+            { startTime: "14:00", endTime: "22:00", breakDuration: 30 },
+          ],
+          coveragePerDay: Math.min(6, Math.max(1, neededStaff)),
+          anchorDate: anchor,
+        });
+        const lines = [
+          ...result.infoLines,
+          ...result.unfilled.map(
+            (u) =>
+              `Offen: ${u.dayLabel} ${u.startTime}–${u.endTime}${u.staffingRole ? ` – Rolle „${u.staffingRole}“` : ""}: ${u.reason}`
+          ),
+        ];
+        setAutopilotReport(lines);
+        if (result.shiftsCreated === 0 && result.unfilled.length === 0) {
+          setMessage("Autopilot: Alle vorgesehenen Schichten sind bereits besetzt.");
+        }
+        router.refresh();
+      } catch (e: unknown) {
+        setAutopilotReport(null);
+        setMessage(e instanceof Error ? e.message : "Autopilot fehlgeschlagen.");
+      } finally {
+        setAutopilotBusy(false);
+      }
+    });
+  };
+
+  const confirmAutopilot = () => {
+    if (!window.confirm("Alle Entwurfs-Schichten dieser Planwoche veröffentlichen?")) return;
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        await confirmAutopilotDrafts(selectedWeekIndex);
+        setAutopilotReport(null);
+        router.refresh();
+        setMessage("Autopilot-Entwürfe übernommen.");
+      } catch (e: unknown) {
+        setMessage(e instanceof Error ? e.message : "Freigabe fehlgeschlagen.");
+      }
+    });
+  };
+
+  const discardAutopilot = () => {
+    if (!window.confirm("Alle Entwurfs-Schichten dieser Planwoche verwerfen?")) return;
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        await discardAutopilotDrafts(selectedWeekIndex);
+        setAutopilotReport(null);
+        router.refresh();
+        setMessage("Entwürfe verworfen.");
+      } catch (e: unknown) {
+        setMessage(e instanceof Error ? e.message : "Verwerfen fehlgeschlagen.");
+      }
+    });
+  };
+
   const clearMobileDayLongPressTimer = () => {
     if (mobileDayLongPressTimerRef.current !== null) {
       clearTimeout(mobileDayLongPressTimerRef.current);
@@ -1204,8 +1303,10 @@ export function ShiftManager({
                       : undefined
                   }
                   className={`w-full rounded-2xl border border-border bg-background px-4 py-4 text-left active:bg-muted/40 ${
-                    mobileWeatherConflict ? "ring-2 ring-sky-500/80 animate-pulse" : ""
-                  }`}
+                    shift.isDraft
+                      ? "border-dashed border-violet-500/60 bg-[repeating-linear-gradient(-45deg,rgba(139,92,246,0.12)_0px,rgba(139,92,246,0.12)_6px,transparent_6px,transparent_12px)]"
+                      : ""
+                  } ${mobileWeatherConflict ? "ring-2 ring-sky-500/80 animate-pulse" : ""}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <span className="text-lg font-bold tabular-nums text-foreground">
@@ -1529,6 +1630,61 @@ export function ShiftManager({
           <strong className="text-foreground">Einfach-Planer</strong>: eine Person, Woche per Tippen.{" "}
           <strong className="text-foreground">Timeline</strong>: einen Wochentag, alle Mitarbeitenden als Balken (ziehen und klicken).
         </p>
+
+        {enableTaskListActions ? (
+          <div className="mt-4 rounded-2xl border border-violet-200/90 bg-gradient-to-br from-violet-50/95 via-white to-indigo-50/40 px-4 py-3 shadow-[0_14px_44px_rgba(99,102,241,0.12)]">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={isPending || autopilotBusy}
+                onClick={startAutopilot}
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-violet-400/50 bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-md shadow-violet-500/25 transition hover:bg-violet-700 disabled:opacity-55"
+              >
+                <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
+                Autopilot starten
+              </button>
+              {draftShiftsInWeek.length > 0 ? (
+                <>
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={confirmAutopilot}
+                    className="min-h-11 rounded-xl border border-emerald-500/40 bg-emerald-600/90 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-55"
+                  >
+                    Alle bestätigen ({draftShiftsInWeek.length})
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={discardAutopilot}
+                    className="min-h-11 rounded-xl border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-55"
+                  >
+                    Entwurf verwerfen
+                  </button>
+                </>
+              ) : null}
+            </div>
+            <p className="mt-2 text-[11px] text-violet-900/80">
+              Füllt freie Schicht-Slots (Woche {selectedWeekIndex}) mit KI-Logik: Ruhezeit, Abwesenheit, Soll-Stunden,
+              Wochenend-Fairness. Entwürfe: violett gestreifte Balken – erst nach Bestätigung fest.
+            </p>
+            {autopilotBusy ? (
+              <div className="mt-3 space-y-2">
+                <div className="h-2 overflow-hidden rounded-full bg-violet-200/60">
+                  <div className="h-full w-[55%] animate-pulse rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-400 to-violet-500" />
+                </div>
+                <p className="text-center text-xs font-semibold text-violet-800">KI optimiert Besetzung…</p>
+              </div>
+            ) : null}
+            {autopilotReport && autopilotReport.length > 0 ? (
+              <ul className="mt-3 max-h-40 list-inside list-disc space-y-1 overflow-y-auto text-[11px] text-foreground">
+                {autopilotReport.map((line, i) => (
+                  <li key={`${i}-${line.slice(0, 24)}`}>{line}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
 
         {viewMode === "simple" && (
         <>
@@ -2041,7 +2197,11 @@ export function ShiftManager({
                           ) : null}
                           <div
                             className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg border px-2 text-[11px] backdrop-blur-[2px] active:cursor-grabbing ${
-                              tradeOpen ? "border-amber-400 bg-amber-200/70 text-amber-900" : roleTone
+                              row.shift?.isDraft
+                                ? "border-dashed border-violet-600/70 bg-[repeating-linear-gradient(-45deg,rgba(139,92,246,0.3)_0px,rgba(139,92,246,0.3)_6px,transparent_6px,transparent_12px)] text-violet-950"
+                                : tradeOpen
+                                  ? "border-amber-400 bg-amber-200/70 text-amber-900"
+                                  : roleTone
                             } ${
                               activeDrag?.userId === row.member.id
                                 ? "shadow-lg shadow-black/40 transition-none"
@@ -2053,15 +2213,18 @@ export function ShiftManager({
                             } ${costPeakFocusActive && costPeakAffected ? "ring-2 ring-amber-500/90 animate-pulse" : ""}`}
                             style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
                             title={
-                              weatherConflict
-                                ? `${barLabel} — Wetter-Konflikt: Hohe Regenwahrscheinlichkeit für Außenbereich.`
-                                : costPeakFocusActive && costPeakAffected
-                                  ? `${barLabel} — Kosten-Peak: überdurchschnittliche Lohnkosten.`
-                                  : barLabel
+                              row.shift?.isDraft
+                                ? `${barLabel} — Autopilot-Entwurf (noch nicht veröffentlicht)`
+                                : weatherConflict
+                                  ? `${barLabel} — Wetter-Konflikt: Hohe Regenwahrscheinlichkeit für Außenbereich.`
+                                  : costPeakFocusActive && costPeakAffected
+                                    ? `${barLabel} — Kosten-Peak: überdurchschnittliche Lohnkosten.`
+                                    : barLabel
                             }
                             onPointerDown={(e) => {
                               if (e.pointerType === "mouse" && e.button !== 0) return;
                               if (!row.shift || row.conflict) return;
+                              if (row.shift.isDraft) return;
                               setTimelineFocusedUserId(row.member.id);
                               const shiftStartAbs = row.shift.dayOfWeek * 24 * 60 + (toMinutes(row.shift.startTime) ?? 0);
                               if (e.shiftKey) {
@@ -2119,6 +2282,7 @@ export function ShiftManager({
                                 startTime: row.shift.startTime,
                                 endTime: row.shift.endTime,
                                 breakDuration: row.shift.breakDuration ?? 0,
+                                occurrenceDateIso: timelineDate,
                               });
                               setContextMenuIndex(0);
                             }}
@@ -2248,6 +2412,20 @@ export function ShiftManager({
               >
                 45 Min Pause
               </button>
+              {enableTaskListActions ? (
+                <button
+                  type="button"
+                  className={`block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted ${contextMenuIndex === 4 ? "bg-muted" : ""}`}
+                  onClick={() => {
+                    startTransition(async () => {
+                      await generateTaskListForShift(contextMenu.shiftId, contextMenu.occurrenceDateIso);
+                    });
+                    setContextMenu(null);
+                  }}
+                >
+                  Checkliste für diesen Tag
+                </button>
+              ) : null}
             </div>
           ) : null}
           {selectedShiftIds.length > 0 && (bulkMenuOpen || selectedShiftIds.length > 1) ? (

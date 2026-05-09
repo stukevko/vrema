@@ -76,6 +76,7 @@ export default async function PlanningPage() {
           shifts={shifts}
           shiftCycleWeeks={shiftCycleWeeks}
           vacationConflictDays={vacationConflictDays}
+          enableTaskListActions={canManage}
         />
         {pendingTrades.length > 0 && (
           <section id="shift-trade-approvals" className="rounded-2xl border border-border bg-card p-5">
