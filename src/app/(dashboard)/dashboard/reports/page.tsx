@@ -41,17 +41,38 @@ export default async function ReportsPage({
   // Managers see all; employees see own
   const isManager = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
 
+  // Performance: Worklogs schlank laden (nur ID-Felder); Userdaten in einer
+  // separaten, deduplizierten Query holen → keine Redundanz pro Row.
+  // Cap reduziert: 12.000 Logs reichen für Monats-Reports auch grosser Teams (~400 MA × 30 Logs).
   const logs = await db.workLog.findMany({
     where: tenantWhere(companyId, {
       ...(isManager ? {} : { userId }),
       clockIn: { gte: start, lt: endExclusive },
     }),
-    include: { user: { select: { id: true, name: true, email: true, employeeNumber: true, weeklyHours: true } } },
+    select: {
+      id: true,
+      userId: true,
+      clockIn: true,
+      clockOut: true,
+      breakMins: true,
+      status: true,
+      note: true,
+    },
     orderBy: { clockIn: "desc" },
-    take: 25_000,
+    take: 12_000,
   });
 
-  const userIds = Array.from(new Set(logs.map((l) => l.user.id)));
+  const userIds = Array.from(new Set(logs.map((l) => l.userId)));
+  const usersById = userIds.length > 0
+    ? new Map(
+        (
+          await db.user.findMany({
+            where: tenantWhere(companyId, { id: { in: userIds } }),
+            select: { id: true, name: true, email: true, employeeNumber: true, weeklyHours: true },
+          })
+        ).map((u) => [u.id, u]),
+      )
+    : new Map<string, { id: string; name: string | null; email: string; employeeNumber: string | null; weeklyHours: number }>();
 
   const monthKeyDb = `${year}-${String(month + 1).padStart(2, "0")}`;
 
@@ -152,18 +173,21 @@ export default async function ReportsPage({
 
   return (
     <ReportsClient
-      logs={logs.map((l) => ({
-        id: l.id,
-        userName: l.user.name ?? l.user.email,
-        userId: l.user.id,
-        employeeNumber: l.user.employeeNumber ?? "",
-        weeklyHours: l.user.weeklyHours,
-        clockIn: l.clockIn.toISOString(),
-        clockOut: l.clockOut?.toISOString() ?? null,
-        breakMins: l.breakMins,
-        status: l.status,
-        note: l.note,
-      }))}
+      logs={logs.map((l) => {
+        const u = usersById.get(l.userId);
+        return {
+          id: l.id,
+          userName: u?.name ?? u?.email ?? "—",
+          userId: l.userId,
+          employeeNumber: u?.employeeNumber ?? "",
+          weeklyHours: u?.weeklyHours ?? 0,
+          clockIn: l.clockIn.toISOString(),
+          clockOut: l.clockOut?.toISOString() ?? null,
+          breakMins: l.breakMins,
+          status: l.status,
+          note: l.note,
+        };
+      })}
       totalMinutes={totalMinutes}
       month={`${start.toLocaleString("de-DE", { month: "long", timeZone: "Europe/Berlin" })} ${year}`}
       monthKey={`${year}-${String(month + 1).padStart(2, "0")}`}

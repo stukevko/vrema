@@ -37,28 +37,40 @@ export async function getSuperAdminOverview() {
   const session = await auth();
   assertSuperAdmin(session);
 
-  const companies = await db.company.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      plan: true,
-      billingInterval: true,
-      isActive: true,
-      createdAt: true,
-    },
-  });
+  // Performance: Statt 2N Count-Queries (N+1!) genau 3 Queries:
+  //   1× Companies, 1× groupBy(userCount), 1× groupBy(activeUserCount)
+  const [companies, userCounts, activeUserCounts] = await Promise.all([
+    db.company.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        plan: true,
+        billingInterval: true,
+        isActive: true,
+        createdAt: true,
+      },
+    }),
+    db.user.groupBy({
+      by: ["companyId"],
+      _count: { _all: true },
+    }),
+    db.user.groupBy({
+      by: ["companyId"],
+      where: { isActive: true },
+      _count: { _all: true },
+    }),
+  ]);
 
-  const companiesWithCounts = await Promise.all(
-    companies.map(async (c) => ({
-      ...c,
-      userCount: await db.user.count({ where: { companyId: c.id } }),
-      activeUserCount: await db.user.count({ where: { companyId: c.id, isActive: true } }),
-    })),
-  );
+  const userCountMap = new Map(userCounts.map((u) => [u.companyId, u._count._all]));
+  const activeUserCountMap = new Map(activeUserCounts.map((u) => [u.companyId, u._count._all]));
 
-  return companiesWithCounts;
+  return companies.map((c) => ({
+    ...c,
+    userCount: userCountMap.get(c.id) ?? 0,
+    activeUserCount: activeUserCountMap.get(c.id) ?? 0,
+  }));
 }
 
 export async function getSuperAdminMonitoring() {

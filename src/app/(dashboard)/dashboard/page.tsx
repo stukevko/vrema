@@ -28,11 +28,11 @@ import {
   UserRole,
   VacationStatus,
 } from "@prisma/client";
+import { Suspense } from "react";
 import { getSuperAdminMonitoring, getSuperAdminOverview } from "@/lib/actions/super-admin";
 import { SuperAdminInlinePanel } from "@/components/dashboard/SuperAdminInlinePanel";
-import { AIInsights } from "@/components/dashboard/AIInsights";
 import { DashboardAISection } from "@/components/dashboard/DashboardAISection";
-import { getDashboardAIInsights } from "@/lib/ai/engine";
+import { AsyncAIInsights, AIInsightsSkeleton } from "@/components/dashboard/AsyncAIInsights";
 import { queryActiveShiftTasks } from "@/lib/shift-tasks/active-shift-tasks-data";
 import { getTodayShiftTaskWall } from "@/lib/shift-tasks/wall";
 import { formatBerlinDate, formatBerlinTime, getBerlinNowHour, getDayBoundsUtc } from "@/lib/time/timezone";
@@ -103,7 +103,59 @@ export default async function DashboardPage() {
 
   const { companyId, id: userId } = session.user as { companyId: string; id: string };
   const plan = session.user.plan ?? "STARTER";
-  const [employeeCount, hasAnyWorkLog] = await Promise.all([
+  const role = session.user.role;
+  const isSuperAdmin = role === "SUPER_ADMIN" || session.user.id === process.env.SUPER_ADMIN_USER_ID;
+  const isManager = role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN";
+  const isEmployee = role === "EMPLOYEE";
+
+  const { start: todayStart, end: todayEnd } = getDayBoundsUtc("Europe/Berlin");
+
+  // Performance: ALLES, was nicht voneinander abhängt, in EINE Welle.
+  // (vorher: 4 sequentielle await-Blöcke → bis zu ~1,5s extra Latenz bei langsamem PG)
+  const teamStatsPromise: Promise<{
+    totalEmployees: number;
+    activeToday: number;
+    pendingVacations: number;
+    pendingAbsenceRequests: number;
+    absentToday: number;
+    lateToday: number;
+    pendingCorrections: number;
+    pendingTradeApprovals: number;
+  } | null> = isManager
+    ? Promise.all([
+        db.user.count({ where: tenantWhere(companyId, { isActive: true }) }),
+        db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, clockOut: null }) }),
+        db.vacationRequest.count({ where: tenantWhere(companyId, { status: VacationStatus.PENDING }) }),
+        db.absence.count({ where: { orgId: companyId, status: AbsenceRequestStatus.REQUESTED } }),
+        db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, status: EntryStatus.ABSENT }) }),
+        db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, status: EntryStatus.LATE }) }),
+        db.workLogCorrectionRequest.count({
+          where: tenantWhere(companyId, { status: CorrectionRequestStatus.PENDING }),
+        }),
+        db.shift.count({ where: tenantWhere(companyId, { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL }) }),
+      ]).then(([totalEmployees, activeToday, pendingVacations, pendingAbsenceRequests, absentToday, lateToday, pendingCorrections, pendingTradeApprovals]) => ({
+        totalEmployees,
+        activeToday,
+        pendingVacations,
+        pendingAbsenceRequests,
+        absentToday,
+        lateToday,
+        pendingCorrections,
+        pendingTradeApprovals,
+      }))
+    : Promise.resolve(null);
+
+  const [
+    employeeCount,
+    hasAnyWorkLog,
+    activeLog,
+    todayLogs,
+    teamStatsRaw,
+    liveOpsRows,
+    cockpitData,
+    superAdminPayload,
+    saldo,
+  ] = await Promise.all([
     db.user.count({
       where: tenantWhere(companyId, {
         isActive: true,
@@ -114,85 +166,60 @@ export default async function DashboardPage() {
       where: tenantWhere(companyId, { userId }),
       select: { id: true },
     }),
+    db.workLog.findFirst({
+      where: tenantWhere(companyId, { userId, clockOut: null }),
+      select: {
+        id: true,
+        clockIn: true,
+        breakMins: true,
+        isOnBreak: true,
+        breakStartedAt: true,
+      },
+    }),
+    db.workLog.findMany({
+      where: tenantWhere(companyId, { userId, clockIn: { gte: todayStart, lte: todayEnd } }),
+      orderBy: { clockIn: "desc" },
+      select: {
+        id: true,
+        clockIn: true,
+        clockOut: true,
+        breakMins: true,
+      },
+    }),
+    teamStatsPromise,
+    isManager ? getTodayShiftTaskWall(companyId) : Promise.resolve([]),
+    isEmployee ? getEmployeeCockpitData({ companyId, userId }) : Promise.resolve(null),
+    isSuperAdmin
+      ? Promise.all([getSuperAdminOverview(), getSuperAdminMonitoring()])
+      : Promise.resolve([null, null] as const),
+    calculateSaldo(userId),
   ]);
 
+  // shiftTasksPayload braucht activeLog → eigene zweite Welle (extrem leichtgewichtig).
+  const shiftTasksPayload = activeLog ? await queryActiveShiftTasks(userId, companyId) : null;
 
-  // Active clock-in
-  const activeLog = await db.workLog.findFirst({
-    where: tenantWhere(companyId, { userId, clockOut: null }),
-    select: {
-      id: true,
-      clockIn: true,
-      breakMins: true,
-      isOnBreak: true,
-      breakStartedAt: true,
-    },
-  });
+  const [superAdminCompanies, superAdminMonitoring] = superAdminPayload;
 
-  // Today's work logs
-  const { start: todayStart, end: todayEnd } = getDayBoundsUtc("Europe/Berlin");
-  const todayLogs = await db.workLog.findMany({
-    where: tenantWhere(companyId, { userId, clockIn: { gte: todayStart, lte: todayEnd } }),
-    orderBy: { clockIn: "desc" },
-  });
+  const teamStats = teamStatsRaw
+    ? {
+        totalEmployees: teamStatsRaw.totalEmployees,
+        activeToday: teamStatsRaw.activeToday,
+        pendingVacations: teamStatsRaw.pendingVacations + teamStatsRaw.pendingAbsenceRequests,
+        absentToday: teamStatsRaw.absentToday,
+        lateToday: teamStatsRaw.lateToday,
+        pendingCorrections: teamStatsRaw.pendingCorrections,
+        pendingTradeApprovals: teamStatsRaw.pendingTradeApprovals,
+      }
+    : null;
 
-  // Team stats (for owner/manager)
-  const role = session.user.role;
-  const isSuperAdmin = role === "SUPER_ADMIN" || session.user.id === process.env.SUPER_ADMIN_USER_ID;
-  let teamStats = null;
-  if (role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN") {
-    const [totalEmployees, activeToday, pendingVacations, pendingAbsenceRequests, absentToday, lateToday, pendingCorrections, pendingTradeApprovals] = await Promise.all([
-      db.user.count({ where: tenantWhere(companyId, { isActive: true }) }),
-      db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, clockOut: null }) }),
-      db.vacationRequest.count({ where: tenantWhere(companyId, { status: VacationStatus.PENDING }) }),
-      db.absence.count({ where: { orgId: companyId, status: AbsenceRequestStatus.REQUESTED } }),
-      db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, status: EntryStatus.ABSENT }) }),
-      db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, status: EntryStatus.LATE }) }),
-      db.workLogCorrectionRequest.count({
-        where: tenantWhere(companyId, { status: CorrectionRequestStatus.PENDING }),
-      }),
-      db.shift.count({ where: tenantWhere(companyId, { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL }) }),
-    ]);
-    teamStats = {
-      totalEmployees,
-      activeToday,
-      pendingVacations: pendingVacations + pendingAbsenceRequests,
-      absentToday,
-      lateToday,
-      pendingCorrections,
-      pendingTradeApprovals,
-    };
-  }
-
-  const [shiftTasksPayload, liveOpsRows, cockpitData] = await Promise.all([
-    activeLog ? queryActiveShiftTasks(userId, companyId) : Promise.resolve(null),
-    role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN"
-      ? getTodayShiftTaskWall(companyId)
-      : Promise.resolve([]),
-    role === "EMPLOYEE"
-      ? getEmployeeCockpitData({ companyId, userId })
-      : Promise.resolve(null),
-  ]);
-
-  const [superAdminCompanies, superAdminMonitoring] = isSuperAdmin
-    ? await Promise.all([getSuperAdminOverview(), getSuperAdminMonitoring()])
-    : [null, null];
-
-  // Saldo
-  const saldo = await calculateSaldo(userId);
-
-  // Today's worked time
   const now = new Date();
   const berlinHour = getBerlinNowHour(now);
   const todayWorkedMins = todayLogs.reduce((acc, log) => {
-    const end = log.clockOut ?? new Date();
+    const end = log.clockOut ?? now;
     return acc + (end.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins;
   }, 0);
 
   const focus = teamStats ? managerPrimaryFocus(teamStats) : null;
-  const aiInsights = await getDashboardAIInsights(companyId);
-
-  const isEmployee = role === "EMPLOYEE";
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 px-1 text-foreground sm:gap-6 sm:px-2 md:gap-8 md:px-0">
@@ -458,7 +485,9 @@ export default async function DashboardPage() {
         </div>
         <div className="order-3 md:order-3">
           <DashboardAISection>
-            <AIInsights initialPayload={aiInsights} />
+            <Suspense fallback={<AIInsightsSkeleton />}>
+              <AsyncAIInsights companyId={companyId} />
+            </Suspense>
           </DashboardAISection>
         </div>
       </div>

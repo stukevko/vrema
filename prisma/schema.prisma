@@ -430,6 +430,9 @@ model WorkLog {
 
   @@index([companyId, userId])
   @@index([companyId, clockIn])
+  // Hot-Paths Dashboard: (a) aktive Stempelung suchen, (b) Tages-/Monats-Range pro User
+  @@index([companyId, userId, clockIn])
+  @@index([companyId, userId, clockOut])
 }
 
 model WorkLogAudit {
@@ -505,6 +508,9 @@ model Shift {
   @@unique([companyId, userId, weekIndex, dayOfWeek, startTime])
   @@index([companyId, dayOfWeek])
   @@index([companyId, userId])
+  // findNextShift / queryActiveShiftTasks / Reports „shifts pro User in Woche/Tag"
+  @@index([companyId, userId, isDraft, dayOfWeek])
+  @@index([companyId, tradeStatus])
 }
 
 model TaskTemplate {

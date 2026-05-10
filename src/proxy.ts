@@ -39,5 +39,15 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // Performance: Wir matchen NUR Pfade, die wir tatsächlich brauchen.
+  //   - /dashboard/* für Rollen-Redirects
+  //   - /api/auth/*, /api/public/affiliate-preview, /terminal/* für Rate-Limits
+  // Statische Dateien (_next, favicon, manifest.json, sw.js, offline.html, Icons, Robots …)
+  // werden gar nicht erst durch die Edge-Middleware geschickt → keine JWT-Decodes pro Asset.
+  matcher: [
+    "/dashboard/:path*",
+    "/api/auth/:path*",
+    "/api/public/affiliate-preview",
+    "/terminal/:path*",
+  ],
 };

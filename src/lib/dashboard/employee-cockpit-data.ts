@@ -76,6 +76,10 @@ function dayLabel(daysAhead: number, dayOfWeek: number, hhmm: string): string {
 /**
  * Sucht die nächste anstehende Schicht (heute später, oder kommende Tage – maximal eine vollständige Cycle-Woche voraus).
  * Berücksichtigt `weekIndex` bei mehrwöchigen Zyklen.
+ *
+ * Performance: Statt bis zu 21 sequentieller Queries (cycleWeeks × 7 Tage) machen wir EINE Query
+ * über alle non-draft Shifts des Users und filtern in JS – greift den Index
+ * @@index([companyId, userId, isDraft, dayOfWeek]).
  */
 async function findNextShift(params: {
   companyId: string;
@@ -87,22 +91,39 @@ async function findNextShift(params: {
   const cycleWeeks = normalizeCycleWeeks(params.cycleWeeks);
   const today = getBerlinTodayParts(now);
 
+  const allShifts = await db.shift.findMany({
+    where: tenantWhere(companyId, {
+      userId,
+      isDraft: false,
+    }),
+    select: {
+      id: true,
+      startTime: true,
+      endTime: true,
+      weekIndex: true,
+      dayOfWeek: true,
+    },
+  });
+  if (allShifts.length === 0) return null;
+
+  const buckets = new Map<string, { id: string; startTime: string; endTime: string }[]>();
+  for (const s of allShifts) {
+    const key = `${s.weekIndex}-${s.dayOfWeek}`;
+    const list = buckets.get(key);
+    if (list) list.push({ id: s.id, startTime: s.startTime, endTime: s.endTime });
+    else buckets.set(key, [{ id: s.id, startTime: s.startTime, endTime: s.endTime }]);
+  }
+  for (const list of buckets.values()) {
+    list.sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }
+
   const lookaheadDays = cycleWeeks * 7;
   for (let offset = 0; offset < lookaheadDays; offset += 1) {
     const cursor = new Date(now.getTime() + offset * 24 * 60 * 60 * 1000);
     const weekIndex = getWeekCycleIndex(cursor, cycleWeeks);
     const dayOfWeek = (today.dayOfWeek + offset) % 7;
-
-    const candidates = await db.shift.findMany({
-      where: tenantWhere(companyId, {
-        userId,
-        weekIndex,
-        dayOfWeek,
-        isDraft: false,
-      }),
-      orderBy: { startTime: "asc" },
-      select: { id: true, startTime: true, endTime: true },
-    });
+    const candidates = buckets.get(`${weekIndex}-${dayOfWeek}`);
+    if (!candidates || candidates.length === 0) continue;
 
     for (const c of candidates) {
       if (offset === 0) {
@@ -169,13 +190,18 @@ export async function getEmployeeCockpitData(params: {
   companyId: string;
   userId: string;
   now?: Date;
+  /** Optional: vom Caller bereits geladenes shiftCycleWeeks. Vermeidet doppelten Company-Lookup. */
+  cycleWeeksHint?: number;
 }): Promise<EmployeeCockpitData> {
   const now = params.now ?? new Date();
-  const company = await db.company.findUnique({
-    where: { id: params.companyId },
-    select: { shiftCycleWeeks: true },
-  });
-  const cycleWeeks = company?.shiftCycleWeeks ?? 1;
+  let cycleWeeks = params.cycleWeeksHint ?? null;
+  if (cycleWeeks === null) {
+    const company = await db.company.findUnique({
+      where: { id: params.companyId },
+      select: { shiftCycleWeeks: true },
+    });
+    cycleWeeks = company?.shiftCycleWeeks ?? 1;
+  }
 
   const startOfDay = new Date(now);
   startOfDay.setHours(0, 0, 0, 0);

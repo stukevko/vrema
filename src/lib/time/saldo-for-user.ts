@@ -2,19 +2,27 @@ import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import { sumWorkedMinutes } from "@/lib/time/payroll";
 
-/** Nur serverintern / Skripte — nicht als Server Action exportieren (kein Session-Zwang). */
+/**
+ * Nur serverintern / Skripte — nicht als Server Action exportieren (kein Session-Zwang).
+ *
+ * Performance:
+ *  - User & Worklogs werden parallel geladen.
+ *  - `select` beschränkt auf die wirklich benötigten Felder (vorher kompletter Worklog-Datensatz).
+ */
 export async function calculateSaldoForUser(companyId: string, userId: string) {
-  const user = await db.user.findFirst({
-    where: tenantWhere(companyId, { id: userId }),
-    select: { weeklyHours: true },
-  });
+  const [user, logs] = await Promise.all([
+    db.user.findFirst({
+      where: tenantWhere(companyId, { id: userId }),
+      select: { weeklyHours: true },
+    }),
+    db.workLog.findMany({
+      where: tenantWhere(companyId, { userId, clockOut: { not: null } }),
+      orderBy: { clockIn: "asc" },
+      select: { clockIn: true, clockOut: true, breakMins: true },
+    }),
+  ]);
 
   if (!user) throw new Error("Benutzer nicht gefunden.");
-
-  const logs = await db.workLog.findMany({
-    where: tenantWhere(companyId, { userId, clockOut: { not: null } }),
-    orderBy: { clockIn: "asc" },
-  });
 
   const workedMinutes = sumWorkedMinutes(logs);
 

@@ -17,35 +17,54 @@ export type ActiveShiftTasksDTO = {
   items: ActiveShiftTaskItemDTO[];
 } | null;
 
-/** Reine DB-Abfrage (RSC + Server Action). */
-export async function queryActiveShiftTasks(userId: string, companyId: string): Promise<ActiveShiftTasksDTO> {
-  const company = await db.company.findUnique({
-    where: { id: companyId },
-    select: { shiftCycleWeeks: true },
-  });
-  if (!company) return null;
+/**
+ * Reine DB-Abfrage (RSC + Server Action).
+ *
+ * Performance: Der Caller kann `cycleWeeksHint` übergeben, um einen redundanten
+ * Company-Lookup zu sparen, wenn er den Wert bereits hat (z. B. Dashboard-Page).
+ */
+export async function queryActiveShiftTasks(
+  userId: string,
+  companyId: string,
+  cycleWeeksHint?: number,
+): Promise<ActiveShiftTasksDTO> {
+  let cycleWeeks = cycleWeeksHint ?? null;
+  if (cycleWeeks === null) {
+    const company = await db.company.findUnique({
+      where: { id: companyId },
+      select: { shiftCycleWeeks: true },
+    });
+    if (!company) return null;
+    cycleWeeks = company.shiftCycleWeeks;
+  }
 
   const now = new Date();
-  const weekIndex = getWeekCycleIndex(now, company.shiftCycleWeeks);
+  const weekIndex = getWeekCycleIndex(now, cycleWeeks);
   const dayOfWeek = now.getDay();
-
-  const shift = await db.shift.findFirst({
-    where: tenantWhere(companyId, { userId, dayOfWeek, weekIndex }),
-    orderBy: { startTime: "asc" },
-    select: { id: true },
-  });
-  if (!shift) return null;
-
   const occurrenceDate = berlinStartOfDayFromInstant(now);
 
-  const list = await db.shiftTaskList.findUnique({
-    where: { shiftId_occurrenceDate: { shiftId: shift.id, occurrenceDate } },
-    include: {
-      template: { select: { name: true } },
-      items: { orderBy: { sortOrder: "asc" }, select: { id: true, title: true, status: true, sortOrder: true } },
+  // Shift + zugehörige Liste (inkl. Items) in EINEM Roundtrip statt zwei.
+  const shift = await db.shift.findFirst({
+    where: tenantWhere(companyId, { userId, dayOfWeek, weekIndex, isDraft: false }),
+    orderBy: { startTime: "asc" },
+    select: {
+      id: true,
+      shiftTaskLists: {
+        where: { occurrenceDate },
+        select: {
+          id: true,
+          template: { select: { name: true } },
+          items: {
+            orderBy: { sortOrder: "asc" },
+            select: { id: true, title: true, status: true, sortOrder: true },
+          },
+        },
+        take: 1,
+      },
     },
   });
-
+  if (!shift) return null;
+  const list = shift.shiftTaskLists[0];
   if (!list || list.items.length === 0) return null;
 
   return {

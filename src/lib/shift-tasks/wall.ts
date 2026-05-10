@@ -33,12 +33,15 @@ export async function getTodayShiftTaskWall(companyId: string): Promise<ShiftTas
   const liveIds = [...liveUserIds];
   if (liveIds.length === 0) return [];
 
+  // Hard cap: niemand braucht >50 parallele Listen im Live-Operations-Widget.
+  // Schützt gegen Pathologien (große Teams + viele Listen pro Schicht).
   const lists = await db.shiftTaskList.findMany({
     where: tenantWhere(companyId, {
       occurrenceDate: dayStart,
       shift: { userId: { in: liveIds } },
     }),
-    include: {
+    select: {
+      id: true,
       shift: {
         select: {
           userId: true,
@@ -52,6 +55,7 @@ export async function getTodayShiftTaskWall(companyId: string): Promise<ShiftTas
       items: { select: { status: true } },
     },
     orderBy: { createdAt: "asc" },
+    take: 50,
   });
 
   return lists.map((list) => {
