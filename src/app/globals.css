@@ -55,15 +55,26 @@
   --radius: 0.875rem;
   --radius-sm: 0.5rem;
   --radius-lg: 1.25rem;
+  /* Apple-Style: extrem weich, gestaffelt, neutral – KEIN Brand-Halo. */
   --shadow-card:
-    0 1px 0 hsl(0 0% 100% / 0.65) inset,
-    0 1px 2px hsl(220 40% 12% / 0.05),
-    0 12px 40px hsl(220 40% 18% / 0.07);
+    0 1px 0 hsl(0 0% 100% / 0.6) inset,
+    0 1px 2px hsl(220 40% 12% / 0.04),
+    0 4px 12px hsl(220 40% 18% / 0.05);
   --shadow-card-hover:
-    0 1px 0 hsl(0 0% 100% / 0.75) inset,
-    0 2px 4px hsl(220 40% 12% / 0.06),
-    0 22px 50px hsl(220 40% 18% / 0.11);
-  --shadow-pop: 0 24px 60px hsl(220 40% 12% / 0.14), 0 8px 20px hsl(220 40% 12% / 0.06);
+    0 1px 0 hsl(0 0% 100% / 0.7) inset,
+    0 2px 6px hsl(220 40% 12% / 0.06),
+    0 12px 28px hsl(220 40% 18% / 0.08);
+  --shadow-pop:
+    0 16px 48px hsl(220 40% 12% / 0.12),
+    0 4px 12px hsl(220 40% 12% / 0.05);
+  --shadow-button:
+    0 1px 0 hsl(0 0% 100% / 0.22) inset,
+    0 1px 2px hsl(220 40% 12% / 0.06),
+    0 4px 10px hsl(220 40% 12% / 0.06);
+  --shadow-button-hover:
+    0 1px 0 hsl(0 0% 100% / 0.28) inset,
+    0 2px 4px hsl(220 40% 12% / 0.08),
+    0 8px 18px hsl(220 40% 12% / 0.1);
   --specular-line: 0 0% 100%;
 }
 
@@ -105,14 +116,24 @@
   --neutral-foreground: 215 14% 80%;
 
   --shadow-card:
-    0 1px 0 hsl(0 0% 100% / 0.06) inset,
-    0 1px 2px hsl(0 0% 0% / 0.45),
-    0 16px 42px hsl(0 0% 0% / 0.38);
+    0 1px 0 hsl(0 0% 100% / 0.05) inset,
+    0 1px 2px hsl(0 0% 0% / 0.4),
+    0 4px 14px hsl(0 0% 0% / 0.32);
   --shadow-card-hover:
-    0 1px 0 hsl(0 0% 100% / 0.09) inset,
-    0 2px 6px hsl(0 0% 0% / 0.5),
-    0 26px 56px hsl(0 0% 0% / 0.48);
-  --shadow-pop: 0 28px 70px hsl(0 0% 0% / 0.55), 0 10px 28px hsl(0 0% 0% / 0.35);
+    0 1px 0 hsl(0 0% 100% / 0.08) inset,
+    0 2px 6px hsl(0 0% 0% / 0.45),
+    0 12px 28px hsl(0 0% 0% / 0.42);
+  --shadow-pop:
+    0 18px 50px hsl(0 0% 0% / 0.5),
+    0 4px 12px hsl(0 0% 0% / 0.3);
+  --shadow-button:
+    0 1px 0 hsl(0 0% 100% / 0.12) inset,
+    0 1px 2px hsl(0 0% 0% / 0.45),
+    0 4px 10px hsl(0 0% 0% / 0.38);
+  --shadow-button-hover:
+    0 1px 0 hsl(0 0% 100% / 0.16) inset,
+    0 2px 4px hsl(0 0% 0% / 0.5),
+    0 8px 18px hsl(0 0% 0% / 0.45);
   --specular-line: 0 0% 100%;
 }
 
@@ -223,55 +244,86 @@
   border: 1px solid hsl(var(--border));
   background: hsl(var(--surface));
   box-shadow: var(--shadow-card);
-  transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease, border-color 220ms ease;
+  transition: box-shadow 220ms ease, border-color 220ms ease;
+  contain: layout style;
 }
-
 .premium-card:hover {
-  transform: translateY(-2px) scale(1.01);
   box-shadow: var(--shadow-card-hover);
 }
 
-/* Glasmorphism – Light: helles Frostglas, Dark: tiefes Slate mit Specular-Kante */
+/* =========================================================================
+   Glasmorphism – Apple iOS/macOS Style
+   - Top-Level Surfaces (Nav, Panel) bekommen echtes blur
+   - Inner Cards: hauptsächlich Solid mit subtiler Transparenz (Performance!)
+   - Mobile: blur deaktiviert (zu teuer für Compositor)
+   ========================================================================= */
 .glass-nav {
-  background: hsl(0 0% 100% / 0.78);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: hsl(0 0% 100% / 0.82);
+  backdrop-filter: saturate(140%) blur(20px);
+  -webkit-backdrop-filter: saturate(140%) blur(20px);
   border: 1px solid hsl(0 0% 100% / 0.55);
   box-shadow: var(--shadow-card);
 }
 .dark .glass-nav {
-  background: hsl(var(--surface) / 0.58);
-  border: 1px solid hsl(var(--specular-line) / 0.1);
+  background: hsl(var(--surface) / 0.7);
+  border: 1px solid hsl(var(--specular-line) / 0.08);
 }
 
 .glass-panel {
-  background: hsl(0 0% 100% / 0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid hsl(0 0% 100% / 0.6);
+  background: hsl(0 0% 100% / 0.86);
+  backdrop-filter: saturate(140%) blur(14px);
+  -webkit-backdrop-filter: saturate(140%) blur(14px);
+  border: 1px solid hsl(0 0% 100% / 0.55);
   box-shadow: var(--shadow-card);
 }
 .dark .glass-panel {
-  background: hsl(var(--surface) / 0.52);
-  border: 1px solid hsl(var(--specular-line) / 0.09);
+  background: hsl(var(--surface) / 0.68);
+  border: 1px solid hsl(var(--specular-line) / 0.08);
 }
 
+/**
+ * Inner Cards – nahezu solid für Performance, dünne Specular-Kante für Apple-Look.
+ * Kein blur (außer Light-Mode mit reduzierter Stärke), kein hover-transform.
+ */
 .glass-card {
   border-radius: var(--radius-lg);
-  background: hsl(0 0% 100% / 0.8);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid hsl(0 0% 100% / 0.65);
+  background: hsl(var(--surface) / 0.95);
+  border: 1px solid hsl(0 0% 100% / 0.55);
   box-shadow: var(--shadow-card);
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  transition: box-shadow 220ms ease, border-color 220ms ease;
+  contain: layout style;
 }
 .dark .glass-card {
-  background: hsl(var(--surface) / 0.5);
-  border: 1px solid hsl(var(--specular-line) / 0.12);
+  background: hsl(var(--surface) / 0.85);
+  border: 1px solid hsl(var(--specular-line) / 0.07);
 }
 .glass-card:hover {
-  transform: translateY(-1px) scale(1.005);
   box-shadow: var(--shadow-card-hover);
+}
+
+/* Mobile: blur ist auf vielen Geräten zu teuer → komplett aus für flüssiges Scrollen */
+@media (max-width: 1023px) {
+  .glass-nav,
+  .glass-panel {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: hsl(var(--surface) / 0.96);
+  }
+  .dark .glass-nav,
+  .dark .glass-panel {
+    background: hsl(var(--surface) / 0.95);
+  }
+}
+
+/* Reduced motion: alle Übergänge stark verkürzen */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 .lucide {
@@ -303,7 +355,7 @@ button[class] {
   }
 }
 
-/* Petrol-Brand-Button (Klassen-Variante für Stellen ohne <Button>) */
+/* Petrol-Brand-Button – Apple-Style: weicher neutraler Schatten, kein farbiger Halo */
 .btn-brand {
   display: inline-flex;
   align-items: center;
@@ -313,24 +365,17 @@ button[class] {
   font-weight: 600;
   border-radius: 0.75rem;
   color: hsl(var(--brand-foreground));
-  border: 1px solid hsl(var(--specular-line) / 0.22);
-  background: linear-gradient(to bottom, hsl(var(--brand) / 0.96), hsl(var(--brand-hover)));
-  box-shadow:
-    inset 0 1px 0 hsl(0 0% 100% / 0.22),
-    0 4px 16px hsl(var(--brand) / 0.28),
-    0 1px 2px hsl(220 40% 12% / 0.12);
-  transition: filter 180ms ease, transform 160ms ease, box-shadow 200ms ease;
+  border: 1px solid hsl(var(--specular-line) / 0.18);
+  background: linear-gradient(to bottom, hsl(var(--brand)), hsl(var(--brand-hover)));
+  box-shadow: var(--shadow-button);
+  transition: filter 180ms ease, box-shadow 200ms ease;
 }
 .btn-brand:hover:not(:disabled) {
-  filter: brightness(1.06);
-  transform: translateY(-1px) scale(1.02);
-  box-shadow:
-    inset 0 1px 0 hsl(0 0% 100% / 0.26),
-    0 10px 28px hsl(var(--brand) / 0.38),
-    0 2px 6px hsl(220 40% 12% / 0.14);
+  filter: brightness(1.05);
+  box-shadow: var(--shadow-button-hover);
 }
 .btn-brand:active:not(:disabled) {
-  transform: translateY(0);
+  filter: brightness(0.97);
 }
 .btn-brand:disabled {
   opacity: 0.55;

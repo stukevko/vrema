@@ -70,7 +70,7 @@ export default function AvvPage() {
             </p>
           </section>
 
-          <section className="rounded-xl border border-brand/25 bg-brand-soft/70 p-4 text-sm text-foreground backdrop-blur dark:border-white/10 dark:bg-brand/18">
+          <section className="rounded-xl border border-brand/25 bg-brand-soft p-4 text-sm text-foreground dark:border-white/10 dark:bg-brand/18">
             <h2 className="mb-2 font-semibold text-brand">Schnellstart für Kunden</h2>
             <p>
               Diese AVV-Version kann vom Kunden als Standard-AVV genutzt werden. Für individuelle Anforderungen:

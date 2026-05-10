@@ -36,11 +36,11 @@ type MonitoringData = {
 };
 
 const inputClass =
-  "min-h-12 rounded-2xl border border-line bg-surface/95 px-3 py-2.5 text-sm text-fg shadow-sm backdrop-blur-sm " +
+  "min-h-12 rounded-2xl border border-line bg-surface px-3 py-2.5 text-sm text-fg shadow-sm " +
   "placeholder:text-fg-subtle focus:border-brand dark:border-white/12 sm:text-xs";
 
 const selectClass =
-  "min-h-10 rounded-xl border border-line bg-surface/95 px-2 py-1.5 text-xs text-fg shadow-sm backdrop-blur-sm focus:border-brand dark:border-white/12";
+  "min-h-10 rounded-xl border border-line bg-surface px-2 py-1.5 text-xs text-fg shadow-sm focus:border-brand dark:border-white/12";
 
 export function SuperAdminInlinePanel({
   companies,
@@ -85,7 +85,7 @@ export function SuperAdminInlinePanel({
         ].map((m) => (
           <div
             key={m.label}
-            className="rounded-2xl border border-white/40 bg-white/55 px-3 py-2 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-surface/40"
+            className="rounded-2xl border border-line bg-surface-muted/80 px-3 py-2 shadow-sm dark:border-white/10 dark:bg-surface-muted/45"
           >
             <p className="text-[10px] uppercase tracking-widest text-fg-muted">{m.label}</p>
             <p className="mt-1">
@@ -97,7 +97,7 @@ export function SuperAdminInlinePanel({
         ))}
       </div>
 
-      <div className="mb-4 rounded-2xl border border-white/35 bg-white/50 px-3 py-2 text-[11px] text-fg backdrop-blur-md dark:border-white/10 dark:bg-surface/45">
+      <div className="mb-4 rounded-2xl border border-line bg-surface-muted/80 px-3 py-2 text-[11px] text-fg dark:border-white/10 dark:bg-surface-muted/45">
         Monitoring: neue User (7d) <span className="font-semibold">{monitoring.newUsersLast7d}</span> · offene Tokens{" "}
         <span className="font-semibold">{monitoring.verificationTokensOpen}</span> · abgelaufene Tokens{" "}
         <span className={monitoring.staleVerificationTokens > 0 ? "font-semibold text-warning" : "font-semibold text-brand"}>
@@ -114,7 +114,7 @@ export function SuperAdminInlinePanel({
       </div>
 
       <form
-        className="mb-4 grid grid-cols-1 gap-2 rounded-2xl border border-white/35 bg-surface/40 p-4 backdrop-blur-md dark:border-white/10 dark:bg-surface/35 sm:grid-cols-2 md:grid-cols-4"
+        className="mb-4 grid grid-cols-1 gap-2 rounded-2xl border border-line bg-surface-muted/70 p-4 dark:border-white/10 dark:bg-surface-muted/40 sm:grid-cols-2 md:grid-cols-4"
         onSubmit={(e) => {
           e.preventDefault();
           const form = e.currentTarget;
@@ -150,12 +150,12 @@ export function SuperAdminInlinePanel({
       </form>
 
       {resultMsg && (
-        <p className="mb-4 rounded-2xl border border-line bg-surface/90 px-3 py-2 text-[11px] text-fg backdrop-blur-sm dark:border-white/10">
+        <p className="mb-4 rounded-2xl border border-line bg-surface px-3 py-2 text-[11px] text-fg dark:border-white/10">
           {resultMsg}
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-2xl border border-white/30 bg-surface/35 backdrop-blur-md dark:border-white/10 dark:bg-surface/30">
+      <div className="overflow-x-auto rounded-2xl border border-line bg-surface-muted/60 dark:border-white/10 dark:bg-surface-muted/30">
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-line text-fg-muted dark:border-white/10">

@@ -59,7 +59,7 @@ export function DashboardLayoutClient({
   }, []);
 
   return (
-    <div className="flex h-screen min-h-0 w-full min-w-0 overflow-hidden overflow-x-hidden bg-slate-50 text-foreground">
+    <div className="flex h-screen min-h-0 w-full min-w-0 overflow-hidden overflow-x-hidden bg-background text-foreground">
       <Toaster richColors position="top-center" closeButton duration={2200} />
       <DashboardSidebar
         role={role}
@@ -72,7 +72,7 @@ export function DashboardLayoutClient({
         }}
         supportOverlayOpen={supportOverlayOpen}
       />
-      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-slate-50">
+      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-background">
         <DashboardTopbar user={user} unreadNotifications={initialUnreadNotifications} />
         <main
           className={clsx(
@@ -83,7 +83,7 @@ export function DashboardLayoutClient({
           )}
         >
           {unreadReplies > 0 ? (
-            <div className="mb-4 rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm text-foreground md:mb-5">
+            <div className="mb-4 rounded-2xl border border-brand/25 bg-brand-soft/80 px-4 py-3 text-sm text-foreground dark:border-white/10 dark:bg-brand/18 md:mb-5">
               <p className="font-medium">Du hast eine Antwort auf dein Support-Ticket erhalten.</p>
               <button
                 type="button"
@@ -91,7 +91,7 @@ export function DashboardLayoutClient({
                   setSupportInitialUnread(true);
                   setSupportOverlayOpen(true);
                 }}
-                className="mt-2 inline-flex text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                className="mt-2 inline-flex text-sm font-semibold text-brand underline-offset-4 hover:underline"
               >
                 Antwort im Support-Postfach öffnen
               </button>

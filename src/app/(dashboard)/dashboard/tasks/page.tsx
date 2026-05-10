@@ -14,7 +14,7 @@ export default async function ShiftTasksLiveWallPage() {
     <div className="mx-auto max-w-3xl space-y-4 px-1 sm:space-y-6 sm:px-0">
       <div className="glass-card px-4 py-3 sm:px-5 sm:py-4">
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand-soft/90 text-brand backdrop-blur-md dark:border-white/10 dark:bg-brand/25">
+          <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand-soft text-brand dark:border-white/10 dark:bg-brand/25">
             <ListTodo className="h-5 w-5" aria-hidden />
           </span>
           <div>
@@ -61,7 +61,7 @@ export default async function ShiftTasksLiveWallPage() {
                     {row.doneCount}/{row.totalCount} Aufgaben
                   </p>
                 </div>
-                <div className="mt-3 h-2.5 overflow-hidden rounded-full border border-white/30 bg-surface-muted/80 backdrop-blur dark:border-white/10 dark:bg-surface-muted/40">
+                <div className="mt-3 h-2.5 overflow-hidden rounded-full border border-white/30 bg-surface-muted dark:border-white/10 dark:bg-surface-muted/55">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-brand to-brand-hover shadow-[0_0_18px_-4px_hsl(var(--brand)_/_0.6)] transition-[width] duration-500 ease-out"
                     style={{ width: `${pct}%` }}

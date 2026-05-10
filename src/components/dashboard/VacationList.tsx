@@ -54,10 +54,10 @@ function remainingTone(remaining: number, requested: number): "positive" | "tigh
 
 const REMAINING_CONTAINER: Record<"positive" | "tight" | "over", string> = {
   positive:
-    "border-brand/30 bg-brand-soft/85 text-brand backdrop-blur-md dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground",
+    "border-brand/30 bg-brand-soft text-brand dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground",
   tight:
-    "border-warning/30 bg-warning-soft/85 text-warning-foreground backdrop-blur-md dark:border-white/10 dark:bg-warning/22",
-  over: "border-danger/35 bg-danger-soft/85 text-danger-foreground backdrop-blur-md dark:border-white/10 dark:bg-danger/22",
+    "border-warning/30 bg-warning-soft text-warning-foreground dark:border-white/10 dark:bg-warning/22",
+  over: "border-danger/35 bg-danger-soft text-danger-foreground dark:border-white/10 dark:bg-danger/22",
 };
 
 export function VacationList({ requests, canApprove }: VacationListProps) {
@@ -177,7 +177,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                   </div>
 
                   {req.status === "PENDING" && ctx.conflicts.length > 0 ? (
-                    <div className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning-soft/85 px-3 py-2 text-xs text-warning-foreground backdrop-blur-md dark:border-white/10 dark:bg-warning/22">
+                    <div className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning-soft px-3 py-2 text-xs text-warning-foreground dark:border-white/10 dark:bg-warning/22">
                       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                       <span>
                         <strong>{ctx.conflicts.length}</strong>{" "}
@@ -196,7 +196,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                       </span>
                     </div>
                   ) : req.status === "PENDING" ? (
-                    <div className="flex items-center gap-2 rounded-xl border border-brand/30 bg-brand-soft/85 px-3 py-2 text-xs text-brand backdrop-blur-md dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
+                    <div className="flex items-center gap-2 rounded-xl border border-brand/30 bg-brand-soft px-3 py-2 text-xs text-brand dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
                       <Users className="h-4 w-4 shrink-0" aria-hidden />
                       <span>Im Zeitraum sind keine Kolleg:innen abwesend.</span>
                     </div>
@@ -205,7 +205,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
               )}
 
               {req.decisionNote?.trim() && req.status !== "PENDING" ? (
-                <div className="mt-3 flex gap-2 rounded-xl border border-line bg-surface-muted/80 px-3 py-2 text-[11px] text-foreground backdrop-blur dark:border-white/10 dark:bg-surface-muted/40">
+                <div className="mt-3 flex gap-2 rounded-xl border border-line bg-surface-muted px-3 py-2 text-[11px] text-foreground dark:border-white/10 dark:bg-surface-muted/55">
                   <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
                   <p title={req.decisionNote}>
                     <span className="font-semibold">Entscheidung vom Chef:</span>{" "}
@@ -256,10 +256,10 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                     className="overflow-hidden"
                   >
                     <div
-                      className={`mt-4 rounded-xl border p-4 backdrop-blur-md ${
-                        decision.mode === "APPROVE"
-                          ? "border-brand/30 bg-brand-soft/70 dark:border-white/10 dark:bg-brand/18"
-                          : "border-danger/30 bg-danger-soft/70 dark:border-white/10 dark:bg-danger/18"
+                      className={`mt-4 rounded-xl border p-4 ${
+                          decision.mode === "APPROVE"
+                          ? "border-brand/30 bg-brand-soft/80 dark:border-white/10 dark:bg-brand/18"
+                          : "border-danger/30 bg-danger-soft/80 dark:border-white/10 dark:bg-danger/18"
                       }`}
                     >
                       <p className="text-sm font-semibold text-foreground">

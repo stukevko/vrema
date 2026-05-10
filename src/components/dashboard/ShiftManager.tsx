@@ -156,15 +156,15 @@ function dateForCycleDay(weekIndex: number, dayOfWeek: number) {
 }
 
 function getRoleShiftBarTone(role?: string | null) {
-  const glass =
-    "backdrop-blur-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]";
+  const inset =
+    "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]";
   if (role === "MANAGER")
-    return `${glass} border-brand/40 bg-gradient-to-b from-brand/28 to-brand/14 text-brand dark:from-brand/35 dark:to-brand/18 dark:text-brand-foreground`;
+    return `${inset} border-brand/40 bg-gradient-to-b from-brand/35 to-brand/22 text-brand dark:from-brand/45 dark:to-brand/25 dark:text-brand-foreground`;
   if (role === "COMPANY_OWNER")
-    return `${glass} border-warning/35 bg-gradient-to-b from-warning/22 to-warning/12 text-warning-foreground`;
+    return `${inset} border-warning/35 bg-gradient-to-b from-warning/30 to-warning/18 text-warning-foreground`;
   if (role === "SUPER_ADMIN")
-    return `${glass} border-white/15 bg-surface-muted/70 text-fg-muted dark:border-white/10 dark:bg-surface-muted/50`;
-  return `${glass} border-brand/38 bg-gradient-to-b from-brand/30 to-brand/15 text-brand dark:from-brand/38 dark:to-brand/18 dark:text-brand-foreground`;
+    return `${inset} border-line bg-surface-muted/95 text-fg-muted dark:border-white/10 dark:bg-surface-muted/55`;
+  return `${inset} border-brand/38 bg-gradient-to-b from-brand/40 to-brand/22 text-brand dark:from-brand/48 dark:to-brand/25 dark:text-brand-foreground`;
 }
 
 function simplePlannerDayState(params: {
@@ -179,7 +179,7 @@ function simplePlannerDayState(params: {
       tone: "danger",
       label: "Krank",
       cellClass:
-        "backdrop-blur-md border-danger/35 bg-danger/12 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] text-fg hover:bg-danger/18 dark:border-white/10 dark:bg-danger/18",
+        "border-danger/35 bg-danger-soft text-fg shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] hover:bg-danger/15 dark:border-white/10 dark:bg-danger/22",
     };
   }
   if (vacationDays.has(dayIdx)) {
@@ -187,7 +187,7 @@ function simplePlannerDayState(params: {
       tone: "warning",
       label: "Urlaub",
       cellClass:
-        "backdrop-blur-md border-warning/35 bg-warning/12 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] text-fg hover:bg-warning/18 dark:border-white/10 dark:bg-warning/16",
+        "border-warning/35 bg-warning-soft text-fg shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] hover:bg-warning/15 dark:border-white/10 dark:bg-warning/22",
     };
   }
   if (usedDays.has(dayIdx)) {
@@ -195,14 +195,14 @@ function simplePlannerDayState(params: {
       tone: "brand",
       label: "Schicht",
       cellClass:
-        "backdrop-blur-md border-brand/40 bg-gradient-to-b from-brand/22 to-brand/12 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18)] text-brand hover:from-brand/28 hover:to-brand/16 dark:border-white/12 dark:from-brand/28 dark:to-brand/14 dark:text-brand-foreground",
+        "border-brand/40 bg-gradient-to-b from-brand/30 to-brand/18 text-brand shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18)] hover:from-brand/38 hover:to-brand/22 dark:border-white/12 dark:from-brand/38 dark:to-brand/22 dark:text-brand-foreground",
     };
   }
   return {
     tone: "neutral",
     label: "Frei",
     cellClass:
-      "backdrop-blur-md border-white/40 bg-white/45 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.5)] text-fg hover:bg-white/60 dark:border-white/10 dark:bg-surface-muted/55 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] dark:hover:bg-surface-muted/70",
+      "border-line bg-surface text-fg shadow-[inset_0_1px_0_0_rgba(255,255,255,0.45)] hover:bg-surface-muted dark:border-white/10 dark:bg-surface/90 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] dark:hover:bg-surface-muted/70",
   };
 }
 
@@ -2261,7 +2261,7 @@ export function ShiftManager({
                             </div>
                           ) : null}
                           <div
-                            className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg border px-2 text-[11px] backdrop-blur-[2px] active:cursor-grabbing ${
+                            className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg border px-2 text-[11px] active:cursor-grabbing ${
                               row.shift?.isDraft
                                 ? "border-dashed border-brand/60 bg-[repeating-linear-gradient(-45deg,rgba(22,101,52,0.28)_0px,rgba(22,101,52,0.28)_6px,transparent_6px,transparent_12px)] text-brand"
                                 : tradeOpen

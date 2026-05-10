@@ -191,7 +191,7 @@ export function BigClockButton({
         <div
           role="status"
           aria-live="polite"
-          className="flex items-center gap-2 rounded-2xl border border-warning/35 bg-warning-soft/85 px-3 py-2 text-xs font-semibold text-warning-foreground backdrop-blur-md"
+          className="flex items-center gap-2 rounded-2xl border border-warning/35 bg-warning-soft px-3 py-2 text-xs font-semibold text-warning-foreground"
         >
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
           Offline – Stempeln pausiert, sobald Internet zurück ist.
@@ -203,10 +203,10 @@ export function BigClockButton({
         disabled={isPending || !isOnline}
         aria-label={state.isClockedIn ? "Ausstempeln" : "Einstempeln"}
         aria-busy={isPending}
-        className={`relative flex w-full items-center justify-center gap-3 rounded-3xl border border-white/20 px-6 py-6 text-lg font-extrabold tracking-tight backdrop-blur-md transition-all hover:-translate-y-px hover:scale-[1.01] active:translate-y-0 active:scale-[0.98] disabled:opacity-90 sm:py-7 sm:text-xl dark:border-white/10 ${
+        className={`relative flex w-full items-center justify-center gap-3 rounded-3xl border border-white/20 px-6 py-6 text-lg font-extrabold tracking-tight transition-[filter,box-shadow] duration-200 ease-out active:brightness-95 active:scale-[0.99] disabled:opacity-90 sm:py-7 sm:text-xl dark:border-white/10 ${
           state.isClockedIn
-            ? "bg-gradient-to-b from-danger to-danger text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_18px_44px_-8px_hsl(var(--danger)_/_0.55)] hover:brightness-110"
-            : "bg-gradient-to-b from-brand via-brand to-brand-hover text-brand-foreground shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_18px_46px_-8px_hsl(var(--brand)_/_0.6)] hover:brightness-[1.06]"
+            ? "bg-gradient-to-b from-danger to-danger text-white shadow-[var(--shadow-button)] hover:brightness-[1.06] hover:shadow-[var(--shadow-button-hover)]"
+            : "bg-gradient-to-b from-brand to-brand-hover text-brand-foreground shadow-[var(--shadow-button)] hover:brightness-[1.05] hover:shadow-[var(--shadow-button-hover)]"
         }`}
       >
         {isPending ? (
@@ -220,7 +220,7 @@ export function BigClockButton({
       </button>
 
       {state.isClockedIn ? (
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/35 bg-white/85 px-4 py-3 backdrop-blur-md dark:border-white/10 dark:bg-surface/65">
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-3 dark:border-white/10 dark:bg-surface/85">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               {state.isOnBreak ? "Pause aktiv" : "Aktive Schicht"}
@@ -233,10 +233,10 @@ export function BigClockButton({
             type="button"
             onClick={handleBreak}
             disabled={isPending}
-            className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-2xl border px-4 py-2 text-sm font-semibold backdrop-blur-md transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-60 ${
+            className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-2xl border px-4 py-2 text-sm font-semibold transition-[background-color,border-color] duration-150 active:brightness-95 disabled:opacity-60 ${
               state.isOnBreak
-                ? "border-brand/30 bg-brand-soft/90 text-brand hover:bg-brand-soft dark:border-white/10 dark:bg-brand/22"
-                : "border-line bg-card/95 text-foreground hover:bg-card/80 dark:border-white/10 dark:bg-surface/55"
+                ? "border-brand/30 bg-brand-soft text-brand hover:bg-brand-soft/80 dark:border-white/10 dark:bg-brand/22"
+                : "border-line bg-card text-foreground hover:bg-card/80 dark:border-white/10 dark:bg-surface/85"
             }`}
           >
             {state.isOnBreak ? <Play className="h-4 w-4" aria-hidden /> : <Pause className="h-4 w-4" aria-hidden />}

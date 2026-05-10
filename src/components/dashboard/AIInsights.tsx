@@ -31,7 +31,7 @@ export function AIInsights({ initialPayload }: { initialPayload: AIInsightsPaylo
               <div className="mt-2">
                 <Link
                   href={item.actionHref}
-                  className="inline-flex items-center rounded-lg border border-brand/25 bg-brand-soft/90 px-2.5 py-1 text-xs font-semibold text-brand backdrop-blur transition-all hover:scale-[1.02] hover:bg-brand-soft dark:border-white/10 dark:bg-brand/25"
+                  className="inline-flex items-center rounded-lg border border-brand/25 bg-brand-soft/95 px-2.5 py-1 text-xs font-semibold text-brand transition-colors duration-150 hover:bg-brand-soft dark:border-white/10 dark:bg-brand/25"
                 >
                   {item.actionLabel}
                 </Link>

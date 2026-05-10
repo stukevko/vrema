@@ -16,19 +16,22 @@ const tones: Record<StatusTone, string> = {
   info: "bg-surface-muted text-fg-muted border-line",
 };
 
-/** Glasmorphism-Overlay – Specular-Kante, keine grellen Vollflächen */
+/**
+ * "Glass"-Variante – keine echten backdrop-filter (Performance!),
+ * sondern eine sattere Tönung mit dünner Specular-Kante (Apple iOS Pille).
+ */
 const glassTones: Record<StatusTone, string> = {
   success:
-    "backdrop-blur-md border-white/30 bg-brand/16 text-brand shadow-sm dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground",
+    "border-brand/15 bg-brand-soft text-brand shadow-sm dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground",
   warning:
-    "backdrop-blur-md border-white/28 bg-warning/14 text-warning-foreground shadow-sm dark:border-white/10 dark:bg-warning/20",
+    "border-warning/20 bg-warning-soft text-warning-foreground shadow-sm dark:border-white/10 dark:bg-warning/22",
   danger:
-    "backdrop-blur-md border-white/28 bg-danger/14 text-danger-foreground shadow-sm dark:border-white/10 dark:bg-danger/22",
+    "border-danger/20 bg-danger-soft text-danger-foreground shadow-sm dark:border-white/10 dark:bg-danger/22",
   neutral:
-    "backdrop-blur-md border-white/35 bg-neutral-soft/85 text-neutral-foreground shadow-sm dark:border-white/10 dark:bg-neutral-soft/35",
+    "border-line bg-neutral-soft/95 text-neutral-foreground shadow-sm dark:border-white/10 dark:bg-neutral-soft/45",
   brand:
-    "backdrop-blur-md border-white/30 bg-brand/18 text-brand shadow-sm dark:border-white/10 dark:bg-brand/26 dark:text-brand-foreground",
-  info: "backdrop-blur-md border-white/25 bg-surface-muted/90 text-fg-muted shadow-sm dark:border-white/10 dark:bg-surface-muted/45",
+    "border-brand/20 bg-brand-soft text-brand shadow-sm dark:border-white/10 dark:bg-brand/25 dark:text-brand-foreground",
+  info: "border-line bg-surface-muted/95 text-fg-muted shadow-sm dark:border-white/10 dark:bg-surface-muted/55",
 };
 
 const dotTones: Record<StatusTone, string> = {

@@ -33,7 +33,7 @@ export function Toast({ message, type = "info", onClose, duration = 4000 }: Toas
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-      className={`flex max-w-sm items-start gap-3 rounded-xl border bg-surface/90 px-4 py-3 font-sans text-sm backdrop-blur-md shadow-[var(--shadow-pop)] dark:bg-surface/75 ${COLORS[type]}`}
+      className={`flex max-w-sm items-start gap-3 rounded-xl border bg-surface px-4 py-3 font-sans text-sm shadow-[var(--shadow-pop)] dark:bg-surface/95 ${COLORS[type]}`}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />
       <span className="flex-1 text-foreground">{message}</span>

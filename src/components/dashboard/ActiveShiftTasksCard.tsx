@@ -21,7 +21,7 @@ export function ActiveShiftTasksCard({ tasks }: { tasks: NonNullable<ActiveShift
         className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent dark:via-white/15"
       />
       <div className="mb-3 flex items-center gap-3">
-        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand-soft/90 text-brand backdrop-blur-md dark:border-white/10 dark:bg-brand/25">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand-soft text-brand dark:border-white/10 dark:bg-brand/25">
           <Sparkles className="h-4 w-4" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
@@ -30,7 +30,7 @@ export function ActiveShiftTasksCard({ tasks }: { tasks: NonNullable<ActiveShift
             {allDone ? "Alle Aufgaben erledigt" : "Aufgaben für heute"}
           </h2>
         </div>
-        <span className="shrink-0 rounded-full border border-white/30 bg-brand-soft/90 px-2.5 py-1 text-[11px] font-bold tabular-nums text-brand backdrop-blur-md dark:border-white/10 dark:bg-brand/25">
+        <span className="shrink-0 rounded-full border border-white/30 bg-brand-soft px-2.5 py-1 text-[11px] font-bold tabular-nums text-brand dark:border-white/10 dark:bg-brand/25">
           {done}/{total}
         </span>
       </div>

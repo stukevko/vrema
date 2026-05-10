@@ -110,7 +110,7 @@ export function DashboardSidebar({
                 className={clsx(
                   "flex min-h-11 w-full items-stretch gap-0.5 rounded-2xl px-1 py-0.5 transition-all active:scale-[0.99]",
                   supportOverlayOpen || isActive
-                    ? "bg-muted text-foreground backdrop-blur-sm"
+                    ? "bg-muted text-foreground"
                     : "text-muted-foreground md:hover:bg-card/70 md:hover:text-foreground"
                 )}
               >
@@ -143,7 +143,7 @@ export function DashboardSidebar({
               className={clsx(
                 "flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all active:scale-95",
                 isActive
-                  ? "bg-muted text-foreground backdrop-blur-sm"
+                  ? "bg-muted text-foreground"
                   : "text-muted-foreground md:hover:bg-card/70 md:hover:text-foreground"
               )}
             >

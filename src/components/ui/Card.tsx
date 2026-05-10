@@ -26,8 +26,8 @@ export function Card({
       className={clsx(
         "rounded-2xl border border-line bg-surface text-fg",
         "shadow-[var(--shadow-card)]",
-        "transition-[transform,box-shadow,border-color] duration-200",
-        hoverable && "hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)] hover:border-brand/30",
+        "transition-[box-shadow,border-color] duration-200",
+        hoverable && "hover:shadow-[var(--shadow-card-hover)] hover:border-brand/30",
         padded && "p-5 sm:p-6",
         className,
       )}

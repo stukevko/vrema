@@ -29,11 +29,11 @@ function formatDate(iso: string) {
 function categoryBadgeClass(cat: BlogPostCategory) {
   switch (cat) {
     case BlogPostCategory.UPDATES:
-      return "border-brand/25 bg-brand-soft/85 text-brand backdrop-blur dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground";
+      return "border-brand/25 bg-brand-soft text-brand dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground";
     case BlogPostCategory.TUTORIALS:
-      return "border-warning/25 bg-warning-soft/80 text-warning-foreground backdrop-blur dark:border-white/10 dark:bg-warning/22";
+      return "border-warning/25 bg-warning-soft text-warning-foreground dark:border-white/10 dark:bg-warning/22";
     case BlogPostCategory.KNOWLEDGE:
-      return "border-line bg-surface-muted/85 text-foreground backdrop-blur dark:border-white/10 dark:bg-surface-muted/40";
+      return "border-line bg-surface-muted text-foreground dark:border-white/10 dark:bg-surface-muted/55";
     default:
       return "border-line bg-surface-muted/85 text-foreground";
   }

@@ -53,7 +53,7 @@ export function CompanySettingsForm({ company }: Props) {
   };
 
   return (
-    <div className="min-w-0 rounded-2xl bg-card backdrop-blur-xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6">
+    <div className="min-w-0 rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90">
       <form onSubmit={handleSubmit} className="min-w-0 space-y-5">
         <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 flex gap-3">
           <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />

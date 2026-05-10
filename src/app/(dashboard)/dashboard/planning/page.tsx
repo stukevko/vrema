@@ -94,7 +94,7 @@ export default async function PlanningPage() {
                   <form
                     key={trade.id}
                     action={decideTradeFormAction}
-                    className="rounded-xl border border-line bg-surface/85 px-4 py-3 backdrop-blur-md dark:border-white/10 dark:bg-surface/55"
+                    className="rounded-xl border border-line bg-surface px-4 py-3 dark:border-white/10 dark:bg-surface/85"
                   >
                     <input type="hidden" name="shiftId" value={trade.id} />
                     <p className="text-sm">
@@ -164,7 +164,7 @@ export default async function PlanningPage() {
           {grouped.map((g) => (
             <div
               key={g.label}
-              className="rounded-xl border border-line bg-surface/85 px-4 py-3 backdrop-blur-md dark:border-white/10 dark:bg-surface/55"
+              className="rounded-xl border border-line bg-surface px-4 py-3 dark:border-white/10 dark:bg-surface/85"
             >
               <p className="text-xs uppercase tracking-widest text-muted-foreground">{g.label}</p>
               {g.rows.length === 0 ? (
@@ -174,7 +174,7 @@ export default async function PlanningPage() {
                   {g.rows.map((r) => (
                     <div
                       key={r.id}
-                      className="rounded-lg border border-line bg-surface/95 px-3 py-2 backdrop-blur dark:border-white/10 dark:bg-surface/60"
+                      className="rounded-lg border border-line bg-surface px-3 py-2 dark:border-white/10 dark:bg-surface/90"
                     >
                       <p className="font-sans text-sm text-brand">
                         {r.startTime} - {r.endTime}
@@ -206,7 +206,7 @@ export default async function PlanningPage() {
       <section className="glass-card p-5">
         <h2 className="text-base font-semibold">Offene Tausch-Schichten</h2>
         {openTrades.length === 0 ? (
-          <div className="mt-3 rounded-xl border border-dashed border-line bg-surface/60 px-4 py-6 text-center backdrop-blur dark:border-white/10 dark:bg-surface/35">
+          <div className="mt-3 rounded-xl border border-dashed border-line bg-surface-muted/70 px-4 py-6 text-center dark:border-white/10 dark:bg-surface-muted/40">
             <Handshake className="mx-auto h-7 w-7 text-muted-foreground" />
             <p className="mt-2 text-sm font-medium text-foreground">Noch keine Tauschanfragen</p>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -218,7 +218,7 @@ export default async function PlanningPage() {
             {openTrades.map((trade) => (
               <div
                 key={trade.id}
-                className="rounded-xl border border-warning/30 bg-warning-soft/85 px-4 py-3 backdrop-blur-md dark:border-white/10 dark:bg-warning/22"
+                className="rounded-xl border border-warning/30 bg-warning-soft px-4 py-3 dark:border-white/10 dark:bg-warning/22"
               >
                 <p className="text-sm font-medium text-warning-foreground">
                   🔄 {trade.ownerName}: {DAY_LABELS[trade.dayOfWeek]} {trade.startTime}-{trade.endTime}

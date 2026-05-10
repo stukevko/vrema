@@ -120,7 +120,7 @@ export function ProfileAvatarForm({ imageUrl }: { imageUrl: string | null }) {
                 type="button"
                 onClick={onRemove}
                 disabled={isPending}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-line px-4 text-sm font-medium text-muted-foreground backdrop-blur transition-all hover:scale-[1.02] hover:border-danger/40 hover:bg-danger-soft/70 hover:text-danger-foreground disabled:opacity-60 dark:border-white/10 dark:hover:bg-danger/20"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-line px-4 text-sm font-medium text-muted-foreground transition-[color,background-color,border-color] duration-150 hover:border-danger/40 hover:bg-danger-soft/70 hover:text-danger-foreground active:brightness-95 disabled:opacity-60 dark:border-white/10 dark:hover:bg-danger/20"
               >
                 <Trash2 className="h-4 w-4" aria-hidden />
                 Entfernen
@@ -135,7 +135,7 @@ export function ProfileAvatarForm({ imageUrl }: { imageUrl: string | null }) {
       </div>
 
       {error && (
-        <p className="rounded-xl border border-danger/30 bg-danger-soft/85 px-3 py-2 text-xs text-danger-foreground backdrop-blur dark:border-white/10 dark:bg-danger/22">
+        <p className="rounded-xl border border-danger/30 bg-danger-soft px-3 py-2 text-xs text-danger-foreground dark:border-white/10 dark:bg-danger/22">
           {error}
         </p>
       )}

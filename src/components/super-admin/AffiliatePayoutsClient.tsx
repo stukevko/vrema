@@ -145,7 +145,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
   return (
     <div className="glass-card overflow-hidden">
       <div className="flex items-center gap-3 border-b border-line/70 px-6 py-4 dark:border-white/10">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/30 bg-brand-soft/90 backdrop-blur dark:border-white/10 dark:bg-brand/25">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/30 bg-brand-soft dark:border-white/10 dark:bg-brand/25">
           <Wallet className="h-4 w-4 text-brand" />
         </div>
         <div>
@@ -160,10 +160,10 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
       <div className="space-y-8 p-6">
         {(error || success) && (
           <div
-            className={`rounded-lg border px-3 py-2 text-sm backdrop-blur-md ${
+            className={`rounded-lg border px-3 py-2 text-sm ${
               error
-                ? "border-danger/30 bg-danger-soft/85 text-danger-foreground dark:border-white/10 dark:bg-danger/22"
-                : "border-brand/30 bg-brand-soft/85 text-brand dark:border-white/10 dark:bg-brand/22"
+                ? "border-danger/30 bg-danger-soft text-danger-foreground dark:border-white/10 dark:bg-danger/22"
+                : "border-brand/30 bg-brand-soft text-brand dark:border-white/10 dark:bg-brand/22"
             }`}
           >
             {error ?? success}
@@ -175,7 +175,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
           <p className="mb-2 text-[11px] text-muted-foreground">
             Bounty-Modell: Starter 5,00 € · Business 15,00 € · Enterprise ohne Auto-Provision.
           </p>
-          <div className="overflow-x-auto rounded-xl border border-line bg-surface/85 backdrop-blur-md dark:border-white/10 dark:bg-surface/55">
+          <div className="overflow-x-auto rounded-xl border border-line bg-surface dark:border-white/10 dark:bg-surface/85">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-line/70 bg-surface-muted/60 dark:border-white/10 dark:bg-surface-muted/30">
@@ -263,7 +263,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
               </Button>
             </div>
           </div>
-          <div className="overflow-x-auto rounded-xl border border-line bg-surface/85 backdrop-blur-md dark:border-white/10 dark:bg-surface/55">
+          <div className="overflow-x-auto rounded-xl border border-line bg-surface dark:border-white/10 dark:bg-surface/85">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-line/70 bg-surface-muted/60 dark:border-white/10 dark:bg-surface-muted/30">
@@ -372,7 +372,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
           </form>
 
           {lastCreated && (
-            <div className="mt-4 space-y-3 rounded-xl border border-brand/30 bg-brand-soft/85 p-4 backdrop-blur-md dark:border-white/10 dark:bg-brand/22">
+            <div className="mt-4 space-y-3 rounded-xl border border-brand/30 bg-brand-soft p-4 dark:border-white/10 dark:bg-brand/22">
               <p className="flex items-center gap-2 text-xs font-medium text-brand">
                 <Link2 className="h-3.5 w-3.5 shrink-0" />
                 Ref-Link für den Partner
@@ -399,7 +399,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
                 <button
                   type="button"
                   onClick={() => void copyText(lastCreated.tempPassword)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-warning/30 bg-warning-soft/90 px-2.5 py-1.5 text-[11px] text-warning-foreground backdrop-blur hover:bg-warning-soft dark:border-white/10 dark:bg-warning/22"
+                  className="inline-flex items-center gap-1 rounded-lg border border-warning/30 bg-warning-soft px-2.5 py-1.5 text-[11px] text-warning-foreground hover:bg-warning-soft/80 dark:border-white/10 dark:bg-warning/22"
                 >
                   Startpasswort: {lastCreated.tempPassword}
                 </button>

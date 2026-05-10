@@ -42,7 +42,7 @@ export function VacationRequestForm() {
   };
 
   return (
-    <div className="min-w-0 rounded-2xl bg-card border border-border backdrop-blur-xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-8">
+    <div className="min-w-0 rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90 sm:p-8">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <CalendarDays className="w-5 h-5 text-primary" />

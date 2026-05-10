@@ -62,7 +62,7 @@ export function TeamList({
 
   if (members.length === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:p-10">
+      <div className="rounded-2xl border border-line bg-surface p-8 text-center shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90 sm:p-10">
         <User className="mx-auto mb-3 h-8 w-8 text-muted-foreground" aria-hidden />
         <p className="text-sm font-medium text-foreground">Noch keine Mitarbeiter</p>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -83,7 +83,7 @@ export function TeamList({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+    <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90">
       {/* Desktop */}
       <div className="hidden sm:block">
         <div className="grid grid-cols-12 gap-3 border-b border-border px-5 py-3 text-xs font-sans uppercase tracking-widest text-muted-foreground">
@@ -115,7 +115,7 @@ export function TeamList({
                 )}
               >
                 <div className="col-span-3 flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-sm font-bold text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-line bg-brand-soft text-sm font-bold text-brand shadow-sm dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
                     {(member.name ?? member.email)[0].toUpperCase()}
                   </div>
                   <div className="min-w-0">

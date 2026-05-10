@@ -100,12 +100,12 @@ export function PartnerDashboardClient({
         <div className="glass-card p-5">
           <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">Ihr Referenzlink</p>
           <div className="flex flex-wrap items-center gap-2">
-            <code className="break-all rounded-2xl border border-line bg-surface/95 px-2 py-1.5 text-xs text-foreground backdrop-blur dark:border-white/10 dark:bg-surface/65">
+            <code className="break-all rounded-2xl border border-line bg-surface px-2 py-1.5 text-xs text-foreground dark:border-white/10 dark:bg-surface/85">
               {refUrl}
             </code>
             <button
               onClick={() => void copy(refUrl)}
-              className="inline-flex items-center gap-1 rounded-2xl border border-line bg-surface/95 px-2.5 py-1.5 text-xs text-foreground backdrop-blur transition-all hover:scale-[1.02] hover:bg-surface-muted dark:border-white/10 dark:bg-surface/65"
+              className="inline-flex items-center gap-1 rounded-2xl border border-line bg-surface px-2.5 py-1.5 text-xs text-foreground transition-colors duration-150 hover:bg-surface-muted active:brightness-95 dark:border-white/10 dark:bg-surface/85"
             >
               <Copy className="h-3 w-3" />
               Link kopieren
@@ -115,11 +115,11 @@ export function PartnerDashboardClient({
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-2xl border border-warning/30 bg-warning-soft/85 p-4 backdrop-blur-md dark:border-white/10 dark:bg-warning/20">
+          <div className="rounded-2xl border border-warning/30 bg-warning-soft p-4 dark:border-white/10 dark:bg-warning/20">
             <p className="text-xs text-muted-foreground">Ausstehend</p>
             <p className="text-lg font-semibold tabular-nums text-warning-foreground">{formatCents(pendingCents, "eur")}</p>
           </div>
-          <div className="rounded-2xl border border-brand/30 bg-brand-soft/85 p-4 backdrop-blur-md dark:border-white/10 dark:bg-brand/22">
+          <div className="rounded-2xl border border-brand/30 bg-brand-soft p-4 dark:border-white/10 dark:bg-brand/22">
             <p className="text-xs text-muted-foreground">Verfügbares Guthaben</p>
             <p className="text-lg font-semibold tabular-nums text-brand">{formatCents(availableCents, "eur")}</p>
           </div>
@@ -148,26 +148,26 @@ export function PartnerDashboardClient({
             </button>
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-line bg-surface/95 p-4 backdrop-blur dark:border-white/10 dark:bg-surface/65">
+            <div className="rounded-2xl border border-line bg-surface p-4 dark:border-white/10 dark:bg-surface/85">
               <p className="text-xs text-muted-foreground">Starter-Abschlüsse</p>
               <p className="mt-1 text-sm tabular-nums text-foreground">
                 {starterDeals.length} (insg. {formatCents(starterTotalCents, "eur")})
               </p>
             </div>
-            <div className="rounded-2xl border border-line bg-surface/95 p-4 backdrop-blur dark:border-white/10 dark:bg-surface/65">
+            <div className="rounded-2xl border border-line bg-surface p-4 dark:border-white/10 dark:bg-surface/85">
               <p className="text-xs text-muted-foreground">Business-Abschlüsse</p>
               <p className="mt-1 text-sm tabular-nums text-foreground">
                 {businessDeals.length} (insg. {formatCents(businessTotalCents, "eur")})
               </p>
             </div>
-            <div className="rounded-2xl border border-brand/30 bg-brand-soft/85 p-4 backdrop-blur-md dark:border-white/10 dark:bg-brand/22">
+            <div className="rounded-2xl border border-brand/30 bg-brand-soft p-4 dark:border-white/10 dark:bg-brand/22">
               <p className="text-xs text-muted-foreground">Gesamtguthaben</p>
               <p className="mt-1 text-sm font-semibold tabular-nums text-brand">{formatCents(totalSuccessCents, "eur")}</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-brand/30 bg-brand-soft/80 p-5 backdrop-blur-md dark:border-white/10 dark:bg-brand/20">
+        <div className="rounded-2xl border border-brand/30 bg-brand-soft p-5 dark:border-white/10 dark:bg-brand/20">
           <p className="text-sm font-semibold text-brand">Verdienst-Struktur</p>
           <p className="mt-1 text-sm leading-relaxed text-foreground">
             5€ für jeden Starter-Abschluss, 15€ für jeden Business-Abschluss. Auszahlung erfolgt nach Bestätigung des

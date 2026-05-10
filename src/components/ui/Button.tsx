@@ -17,37 +17,41 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const base =
   "inline-flex items-center justify-center gap-2 font-semibold whitespace-nowrap " +
-  "rounded-xl border transition-all duration-200 " +
+  "rounded-xl border " +
+  "transition-[filter,box-shadow,background-color,border-color,color] duration-200 ease-out " +
   "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/25 " +
-  "disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100";
+  "active:brightness-95 " +
+  "disabled:opacity-55 disabled:cursor-not-allowed";
 
+/**
+ * Apple-Style: keine farbigen Halos, kein hover-scale (kosmetisch teuer + visuell unruhig).
+ * Tiefe entsteht aus gestaffelten neutralen Schatten + sehr dünner Specular-Kante.
+ */
 const variants: Record<Variant, string> = {
   brand:
-    "relative overflow-hidden bg-gradient-to-b from-brand via-brand to-brand-hover text-brand-foreground " +
-    "border-white/25 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_8px_26px_-6px_hsl(var(--brand)_/_0.42)] " +
-    "dark:border-white/12 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_10px_32px_-8px_hsl(var(--brand)_/_0.52)] " +
-    "hover:brightness-[1.06] hover:-translate-y-px hover:scale-[1.02] " +
-    "hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.28),0_14px_38px_-8px_hsl(var(--brand)_/_0.52)] " +
-    "active:translate-y-0 active:scale-[0.99] active:brightness-[0.97]",
+    "bg-gradient-to-b from-brand to-brand-hover text-brand-foreground " +
+    "border-white/20 shadow-[var(--shadow-button)] " +
+    "dark:border-white/10 " +
+    "hover:brightness-[1.05] hover:shadow-[var(--shadow-button-hover)]",
   outline:
-    "border-line-strong/90 bg-surface/90 text-fg backdrop-blur-md " +
-    "shadow-[inset_0_1px_0_0_hsl(var(--specular-line)_/_0.35)] " +
-    "dark:border-white/12 dark:bg-surface/55 " +
-    "hover:border-brand/45 hover:bg-surface-muted hover:text-brand hover:scale-[1.02]",
+    "border-line-strong/80 bg-surface/95 text-fg shadow-sm " +
+    "dark:border-white/10 dark:bg-surface/65 " +
+    "hover:border-brand/45 hover:bg-surface-muted hover:text-brand",
   ghost:
     "border-transparent bg-transparent text-fg-muted " +
-    "hover:bg-surface-muted/80 hover:text-fg hover:scale-[1.02]",
+    "hover:bg-surface-muted/80 hover:text-fg",
   subtle:
-    "border-white/15 bg-brand-soft/95 text-brand backdrop-blur-sm dark:border-white/10 dark:bg-brand-soft/80 " +
-    "shadow-sm hover:bg-brand/15 hover:scale-[1.02]",
+    "border-brand/15 bg-brand-soft/95 text-brand shadow-sm " +
+    "dark:border-white/10 dark:bg-brand-soft/80 " +
+    "hover:bg-brand/12",
   danger:
     "bg-gradient-to-b from-danger to-danger text-white border-white/15 " +
-    "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),0_6px_20px_-4px_hsl(var(--danger)_/_0.45)] " +
-    "hover:brightness-110 hover:-translate-y-px hover:scale-[1.02] active:translate-y-0",
+    "shadow-[var(--shadow-button)] dark:border-white/10 " +
+    "hover:brightness-[1.06] hover:shadow-[var(--shadow-button-hover)]",
   warning:
     "bg-gradient-to-b from-warning to-warning text-white border-white/15 " +
-    "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),0_6px_20px_-4px_hsl(var(--warning)_/_0.35)] " +
-    "hover:brightness-110 hover:-translate-y-px hover:scale-[1.02] active:translate-y-0",
+    "shadow-[var(--shadow-button)] dark:border-white/10 " +
+    "hover:brightness-[1.06] hover:shadow-[var(--shadow-button-hover)]",
 };
 
 const sizes: Record<Size, string> = {
@@ -86,7 +90,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
         fullWidth && "w-full",
         hero &&
           variant === "brand" &&
-          "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.24),0_0_52px_-14px_hsl(var(--brand)_/_0.65),0_12px_36px_-10px_hsl(var(--brand)_/_0.55)]",
+          "shadow-[var(--shadow-button-hover),0_0_36px_-12px_hsl(var(--brand)_/_0.5)]",
         className,
       )}
       {...rest}

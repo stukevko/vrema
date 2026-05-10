@@ -70,7 +70,7 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
         </h1>
         <p className="text-sm text-muted-foreground">{heroSecondary}</p>
         {data.isClockedIn && data.isOnBreak ? (
-          <span className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full border border-warning/30 bg-warning-soft/90 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-warning-foreground backdrop-blur dark:border-white/10 dark:bg-warning/22">
+          <span className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full border border-warning/30 bg-warning-soft px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-warning-foreground dark:border-white/10 dark:bg-warning/22">
             Pause läuft
           </span>
         ) : null}
@@ -84,7 +84,7 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
       />
 
       {!data.isClockedIn && !data.nextShift ? (
-        <div className="mt-4 rounded-2xl border border-dashed border-brand/30 bg-brand-soft/70 px-4 py-3 text-sm text-foreground backdrop-blur-md dark:border-white/10 dark:bg-brand/15">
+        <div className="mt-4 rounded-2xl border border-dashed border-brand/30 bg-brand-soft/70 px-4 py-3 text-sm text-foreground dark:border-white/10 dark:bg-brand/15">
           <p className="flex items-start gap-2 font-medium">
             <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
             <span>
@@ -100,16 +100,16 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
         {/* Nächste Schicht */}
         <Link
           href="/dashboard/planning"
-          className={`group flex min-h-[112px] items-start gap-3 rounded-2xl border p-4 backdrop-blur-md transition-all hover:-translate-y-px hover:scale-[1.01] active:scale-[0.99] ${
+          className={`group flex min-h-[112px] items-start gap-3 rounded-2xl border p-4 transition-[background-color,border-color,box-shadow] duration-200 hover:shadow-[var(--shadow-card-hover)] active:brightness-95 ${
             data.nextShift
-              ? "border-line bg-surface/85 hover:border-brand/40 dark:border-white/10 dark:bg-surface/55"
+              ? "border-line bg-surface hover:border-brand/40 dark:border-white/10 dark:bg-surface/85"
               : "border-dashed border-brand/30 bg-brand-soft/65 hover:border-brand/50 dark:border-white/10 dark:bg-brand/15"
           }`}
         >
           <span
-            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 backdrop-blur dark:border-white/10 ${
+            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 dark:border-white/10 ${
               data.nextShift
-                ? "bg-brand-soft/90 text-brand dark:bg-brand/25"
+                ? "bg-brand-soft text-brand dark:bg-brand/25"
                 : "bg-brand-soft text-brand dark:bg-brand/30"
             }`}
           >
@@ -141,9 +141,9 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
         {/* Offener Urlaub */}
         <Link
           href="/dashboard/vacation"
-          className="group flex min-h-[112px] items-start gap-3 rounded-2xl border border-line bg-surface/85 p-4 backdrop-blur-md transition-all hover:-translate-y-px hover:scale-[1.01] hover:border-brand/40 active:scale-[0.99] dark:border-white/10 dark:bg-surface/55"
+          className="group flex min-h-[112px] items-start gap-3 rounded-2xl border border-line bg-surface p-4 transition-[background-color,border-color,box-shadow] duration-200 hover:border-brand/40 hover:shadow-[var(--shadow-card-hover)] active:brightness-95 dark:border-white/10 dark:bg-surface/85"
         >
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-warning-soft/90 text-warning-foreground backdrop-blur dark:border-white/10 dark:bg-warning/22">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-warning-soft text-warning-foreground dark:border-white/10 dark:bg-warning/22">
             <Palmtree className="h-4 w-4" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
@@ -175,16 +175,16 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
 
         {/* Stunden diesen Monat */}
         <div
-          className={`flex min-h-[112px] items-start gap-3 rounded-2xl border p-4 backdrop-blur-md ${
+          className={`flex min-h-[112px] items-start gap-3 rounded-2xl border p-4 ${
             data.workedThisMonthMins > 0
-              ? "border-line bg-surface/85 dark:border-white/10 dark:bg-surface/55"
+              ? "border-line bg-surface dark:border-white/10 dark:bg-surface/85"
               : "border-dashed border-brand/30 bg-brand-soft/65 dark:border-white/10 dark:bg-brand/15"
           }`}
         >
           <span
-            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 backdrop-blur dark:border-white/10 ${
+            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 dark:border-white/10 ${
               data.workedThisMonthMins > 0
-                ? "bg-brand-soft/90 text-brand dark:bg-brand/25"
+                ? "bg-brand-soft text-brand dark:bg-brand/25"
                 : "bg-brand-soft text-brand dark:bg-brand/30"
             }`}
           >

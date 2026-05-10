@@ -56,7 +56,7 @@ export default async function SetupPage({
 
   return (
     <div className="min-h-screen bg-background text-foreground px-4 py-10">
-      <div className="mx-auto w-full max-w-xl rounded-2xl border border-border bg-card backdrop-blur-xl p-6 md:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+      <div className="mx-auto w-full max-w-xl rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90 md:p-8">
         <p className="mb-2 text-xs font-sans uppercase tracking-widest text-primary">Onboarding</p>
         <h1 className="text-2xl font-bold">Kurz einrichten, dann geht es los</h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -93,7 +93,7 @@ export default async function SetupPage({
         )}
 
         {requireCard && company?.paymentMethodVerifiedAt && (
-          <p className="mt-4 rounded-xl border border-brand/30 bg-brand-soft/85 px-4 py-3 text-xs text-brand backdrop-blur dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
+          <p className="mt-4 rounded-xl border border-brand/30 bg-brand-soft px-4 py-3 text-xs text-brand dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
             Karte verifiziert. Sie können das Setup abschliessen.
           </p>
         )}

@@ -348,7 +348,7 @@ export default async function DashboardPage() {
         <div className="order-5 space-y-4 md:order-4">
           <div className="glass-card border-brand/25 bg-gradient-to-br from-brand/14 via-surface/30 to-transparent p-5 sm:p-6 dark:from-brand/18 dark:via-surface/20">
             <div className="flex items-start gap-3">
-              <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand/15 text-brand shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
+              <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand-soft text-brand shadow-sm dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
                 <Target className="h-4 w-4" aria-hidden />
               </span>
               <div className="min-w-0 flex-1 space-y-2">
@@ -370,7 +370,7 @@ export default async function DashboardPage() {
           {teamStats.pendingTradeApprovals > 0 && (
             <Link
               href="/dashboard/planning#shift-trade-approvals"
-              className="block rounded-2xl border border-warning/30 bg-warning-soft/80 px-5 py-4 shadow-sm backdrop-blur-md transition-all hover:border-warning/45 hover:bg-warning-soft active:scale-[0.99] dark:border-white/10 dark:bg-warning/15"
+              className="block rounded-2xl border border-warning/30 bg-warning-soft px-5 py-4 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-warning/45 hover:shadow-[var(--shadow-card-hover)] active:brightness-95 dark:border-white/10 dark:bg-warning/18"
             >
               <p className="text-[10px] font-semibold uppercase tracking-widest text-warning-foreground">Offene Aufgaben</p>
               <p className="mt-1 text-base font-bold text-warning-foreground">
@@ -381,7 +381,7 @@ export default async function DashboardPage() {
           {teamStats.pendingCorrections > 0 && (
             <Link
               href="/dashboard/reports#zeitkorrekturen"
-              className="block rounded-2xl border border-brand/28 bg-brand-soft/90 px-5 py-4 shadow-sm backdrop-blur-md transition-all hover:border-brand/40 hover:bg-brand-soft active:scale-[0.99] dark:border-white/10 dark:bg-brand/18"
+              className="block rounded-2xl border border-brand/28 bg-brand-soft px-5 py-4 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-brand/40 hover:shadow-[var(--shadow-card-hover)] active:brightness-95 dark:border-white/10 dark:bg-brand/22"
             >
               <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">Compliance · Zeitkorrekturen</p>
               <p className="mt-1 text-base font-bold text-brand dark:text-brand-foreground">
@@ -430,13 +430,13 @@ export default async function DashboardPage() {
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-2 text-xs md:grid-cols-2 xl:grid-cols-3">
-                <div className="rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+                <div className="rounded-2xl border border-line bg-surface px-3 py-2 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/85">
                   <span className="text-muted-foreground">Fehlend heute</span>
                   <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-danger" : "text-brand"}`}>
                     {teamStats.absentToday > 0 ? `${teamStats.absentToday} kritisch` : "Keine offenen Ausfälle"}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+                <div className="rounded-2xl border border-line bg-surface px-3 py-2 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/85">
                   <span className="text-muted-foreground">Zu spät heute</span>
                   <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-warning" : "text-brand"}`}>
                     {teamStats.lateToday > 0 ? `${teamStats.lateToday} Hinweise` : "Alles pünktlich"}
@@ -445,7 +445,7 @@ export default async function DashboardPage() {
                 {teamStats.pendingCorrections > 0 ? (
                   <Link
                     href="/dashboard/reports#zeitkorrekturen"
-                    className="block rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl transition-colors hover:border-brand/40 hover:bg-card/80"
+                    className="block rounded-2xl border border-line bg-surface px-3 py-2 shadow-[var(--shadow-card)] transition-colors duration-150 hover:border-brand/40 hover:bg-card/80 dark:border-white/10 dark:bg-surface/85"
                   >
                     <span className="text-muted-foreground">Unbestätigte Zeiten</span>
                     <p className="mt-1 font-semibold text-warning">
@@ -453,7 +453,7 @@ export default async function DashboardPage() {
                     </p>
                   </Link>
                 ) : (
-                  <div className="rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+                  <div className="rounded-2xl border border-line bg-surface px-3 py-2 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/85">
                     <span className="text-muted-foreground">Unbestätigte Zeiten</span>
                     <p className="mt-1 font-semibold text-brand">Keine offenen Korrekturen</p>
                   </div>
@@ -501,7 +501,7 @@ export default async function DashboardPage() {
                       <Link
                         key={stat.label}
                         href={stat.href}
-                        className={`${baseClass} block hover:border-brand/35 hover:bg-card/80 hover:scale-[1.02] active:scale-[0.99]`}
+                        className={`${baseClass} block hover:border-brand/35 hover:bg-card/80 active:brightness-95`}
                       >
                         {inner}
                       </Link>
@@ -510,7 +510,7 @@ export default async function DashboardPage() {
                   return (
                     <div
                       key={stat.label}
-                      className={`${baseClass} md:hover:bg-card/80 md:hover:scale-[1.01]`}
+                      className={`${baseClass} md:hover:bg-card/80`}
                     >
                       {inner}
                     </div>
@@ -612,7 +612,7 @@ export default async function DashboardPage() {
 
       {/* Business plan CTA */}
       {plan === "STARTER" && (
-        <div className="order-8 flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div className="order-8 flex flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/85 sm:flex-row sm:items-center sm:justify-between sm:p-8">
           <div className="min-w-0">
             <p className="text-sm font-semibold">PDF-Export & Lohnbüro-Versand freischalten</p>
             <p className="mt-1 text-xs text-muted-foreground">Upgrade auf Business für vollständige Berichte.</p>

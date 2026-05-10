@@ -75,10 +75,10 @@ export default async function BillingPage({
           return (
             <div
               key={key}
-              className={`rounded-2xl p-8 border backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all hover:-translate-y-0.5 ${
+              className={`rounded-2xl border p-8 shadow-[var(--shadow-card)] transition-[box-shadow,border-color] duration-200 hover:shadow-[var(--shadow-card-hover)] ${
                 isCurrent
-                  ? "bg-primary/5 border-primary/30"
-                  : "bg-card border-border"
+                  ? "border-brand/30 bg-brand-soft/40 dark:bg-brand/15"
+                  : "border-line bg-surface dark:bg-surface/85"
               }`}
             >
               <div className="flex items-center justify-between mb-4">
