@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition, useOptimistic } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, LogIn, LogOut, Loader2, Pause, WifiOff, Check } from "lucide-react";
+import { toast } from "sonner";
 import { clockIn, clockOut, toggleBreak } from "@/lib/actions/worklogs";
 
 export interface TerminalActiveLog {
@@ -99,8 +100,13 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
     startTransition(async () => {
       addOptimistic({ type: "clock_in" });
       try {
-        await clockIn();
-        await runAfterSuccess("Eingestempelt.");
+        const res = await clockIn();
+        if (res.warning) {
+          toast.warning(res.warning, { duration: 6000 });
+          await runAfterSuccess("Eingestempelt – siehe Hinweis.");
+        } else {
+          await runAfterSuccess("Eingestempelt.");
+        }
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Fehler beim Einstempeln");
       }

@@ -44,8 +44,10 @@ export async function queryActiveShiftTasks(
   const occurrenceDate = berlinStartOfDayFromInstant(now);
 
   // Shift + zugehörige Liste (inkl. Items) in EINEM Roundtrip statt zwei.
+  // Bewusst KEIN `isDraft: false`-Filter: wenn jemand für eine noch ungenehmigte
+  // Autopilot-Schicht eingestempelt ist, soll er trotzdem seine Tasks sehen.
   const shift = await db.shift.findFirst({
-    where: tenantWhere(companyId, { userId, dayOfWeek, weekIndex, isDraft: false }),
+    where: tenantWhere(companyId, { userId, dayOfWeek, weekIndex }),
     orderBy: { startTime: "asc" },
     select: {
       id: true,

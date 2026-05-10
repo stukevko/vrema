@@ -102,11 +102,15 @@ export async function createClockInEntry(params: {
 
   let status: EntryStatus = "ON_TIME";
   let extraShiftNote: string | null = null;
+  let lateMinutes = 0;
   if (shift) {
     const shiftStart = parseShiftTimeToDate(now, shift.startTime);
     if (shiftStart) {
       const diffMins = Math.round((now.getTime() - shiftStart.getTime()) / 60000);
-      if (diffMins > LATE_GRACE_MINUTES) status = "LATE";
+      if (diffMins > LATE_GRACE_MINUTES) {
+        status = "LATE";
+        lateMinutes = diffMins;
+      }
     }
   } else {
     extraShiftNote = "[EXTRA_SHIFT] Kein geplanter Schichtslot gefunden.";
@@ -152,7 +156,17 @@ export async function createClockInEntry(params: {
     });
   }
 
-  return { log, warning: null as string | null };
+  // Kontextueller Hinweis fürs UI – das macht VREMA „smart" statt nur „funktioniert".
+  // Vorrangig: Verspätung erwähnen (Mitarbeiter weiß meist selbst), bei Extra-Schicht
+  // klar markieren (damit der MA versteht, dass das im Bericht auffällt).
+  let warning: string | null = null;
+  if (status === "LATE" && lateMinutes > 0) {
+    warning = `Schicht-Start war vor ${lateMinutes} Min. Eintrag ist als „verspätet" markiert.`;
+  } else if (extraShiftNote) {
+    warning = "Heute ist keine Schicht für dich geplant – wurde als Extra-Schicht erfasst.";
+  }
+
+  return { log, warning };
 }
 
 export async function closeClockForUser(params: {

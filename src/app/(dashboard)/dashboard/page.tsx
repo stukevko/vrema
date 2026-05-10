@@ -36,6 +36,19 @@ import { AsyncAIInsights, AIInsightsSkeleton } from "@/components/dashboard/Asyn
 import { queryActiveShiftTasks } from "@/lib/shift-tasks/active-shift-tasks-data";
 import { getTodayShiftTaskWall } from "@/lib/shift-tasks/wall";
 import { formatBerlinDate, formatBerlinTime, getBerlinNowHour, getDayBoundsUtc } from "@/lib/time/timezone";
+import { logServerError } from "@/lib/server-logger";
+
+/**
+ * Defensive: optionale Sektionen dürfen niemals die ganze Seite zerschießen.
+ * Klassisches B2B-SaaS-Verhalten: lieber Karte ausblenden + im Server-Log mitloggen,
+ * als ein „kompletter Crash"-Screen für den Mitarbeiter beim Einstempeln.
+ */
+function safe<T>(p: Promise<T>, scope: string, fallback: T): Promise<T> {
+  return p.catch((err) => {
+    logServerError(scope, err);
+    return fallback;
+  });
+}
 
 type TeamStatsSnapshot = {
   totalEmployees: number;
@@ -112,7 +125,7 @@ export default async function DashboardPage() {
 
   // Performance: ALLES, was nicht voneinander abhängt, in EINE Welle.
   // (vorher: 4 sequentielle await-Blöcke → bis zu ~1,5s extra Latenz bei langsamem PG)
-  const teamStatsPromise: Promise<{
+  type TeamStatsRaw = {
     totalEmployees: number;
     activeToday: number;
     pendingVacations: number;
@@ -121,28 +134,33 @@ export default async function DashboardPage() {
     lateToday: number;
     pendingCorrections: number;
     pendingTradeApprovals: number;
-  } | null> = isManager
-    ? Promise.all([
-        db.user.count({ where: tenantWhere(companyId, { isActive: true }) }),
-        db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, clockOut: null }) }),
-        db.vacationRequest.count({ where: tenantWhere(companyId, { status: VacationStatus.PENDING }) }),
-        db.absence.count({ where: { orgId: companyId, status: AbsenceRequestStatus.REQUESTED } }),
-        db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, status: EntryStatus.ABSENT }) }),
-        db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, status: EntryStatus.LATE }) }),
-        db.workLogCorrectionRequest.count({
-          where: tenantWhere(companyId, { status: CorrectionRequestStatus.PENDING }),
-        }),
-        db.shift.count({ where: tenantWhere(companyId, { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL }) }),
-      ]).then(([totalEmployees, activeToday, pendingVacations, pendingAbsenceRequests, absentToday, lateToday, pendingCorrections, pendingTradeApprovals]) => ({
-        totalEmployees,
-        activeToday,
-        pendingVacations,
-        pendingAbsenceRequests,
-        absentToday,
-        lateToday,
-        pendingCorrections,
-        pendingTradeApprovals,
-      }))
+  };
+  const teamStatsPromise: Promise<TeamStatsRaw | null> = isManager
+    ? safe(
+        Promise.all([
+          db.user.count({ where: tenantWhere(companyId, { isActive: true }) }),
+          db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, clockOut: null }) }),
+          db.vacationRequest.count({ where: tenantWhere(companyId, { status: VacationStatus.PENDING }) }),
+          db.absence.count({ where: { orgId: companyId, status: AbsenceRequestStatus.REQUESTED } }),
+          db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, status: EntryStatus.ABSENT }) }),
+          db.workLog.count({ where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd }, status: EntryStatus.LATE }) }),
+          db.workLogCorrectionRequest.count({
+            where: tenantWhere(companyId, { status: CorrectionRequestStatus.PENDING }),
+          }),
+          db.shift.count({ where: tenantWhere(companyId, { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL }) }),
+        ]).then(([totalEmployees, activeToday, pendingVacations, pendingAbsenceRequests, absentToday, lateToday, pendingCorrections, pendingTradeApprovals]) => ({
+          totalEmployees,
+          activeToday,
+          pendingVacations,
+          pendingAbsenceRequests,
+          absentToday,
+          lateToday,
+          pendingCorrections,
+          pendingTradeApprovals,
+        })),
+        "dashboard.teamStats",
+        null,
+      )
     : Promise.resolve(null);
 
   const [
@@ -156,47 +174,76 @@ export default async function DashboardPage() {
     superAdminPayload,
     saldo,
   ] = await Promise.all([
-    db.user.count({
-      where: tenantWhere(companyId, {
-        isActive: true,
-        role: { in: ["MANAGER", "EMPLOYEE"] as UserRole[] },
+    safe(
+      db.user.count({
+        where: tenantWhere(companyId, {
+          isActive: true,
+          role: { in: ["MANAGER", "EMPLOYEE"] as UserRole[] },
+        }),
       }),
-    }),
-    db.workLog.findFirst({
-      where: tenantWhere(companyId, { userId }),
-      select: { id: true },
-    }),
-    db.workLog.findFirst({
-      where: tenantWhere(companyId, { userId, clockOut: null }),
-      select: {
-        id: true,
-        clockIn: true,
-        breakMins: true,
-        isOnBreak: true,
-        breakStartedAt: true,
-      },
-    }),
-    db.workLog.findMany({
-      where: tenantWhere(companyId, { userId, clockIn: { gte: todayStart, lte: todayEnd } }),
-      orderBy: { clockIn: "desc" },
-      select: {
-        id: true,
-        clockIn: true,
-        clockOut: true,
-        breakMins: true,
-      },
-    }),
+      "dashboard.employeeCount",
+      0,
+    ),
+    safe(
+      db.workLog.findFirst({
+        where: tenantWhere(companyId, { userId }),
+        select: { id: true },
+      }),
+      "dashboard.hasAnyWorkLog",
+      null,
+    ),
+    safe(
+      db.workLog.findFirst({
+        where: tenantWhere(companyId, { userId, clockOut: null }),
+        select: {
+          id: true,
+          clockIn: true,
+          breakMins: true,
+          isOnBreak: true,
+          breakStartedAt: true,
+        },
+      }),
+      "dashboard.activeLog",
+      null,
+    ),
+    safe(
+      db.workLog.findMany({
+        where: tenantWhere(companyId, { userId, clockIn: { gte: todayStart, lte: todayEnd } }),
+        orderBy: { clockIn: "desc" },
+        select: {
+          id: true,
+          clockIn: true,
+          clockOut: true,
+          breakMins: true,
+        },
+      }),
+      "dashboard.todayLogs",
+      [] as Array<{ id: string; clockIn: Date; clockOut: Date | null; breakMins: number }>,
+    ),
     teamStatsPromise,
-    isManager ? getTodayShiftTaskWall(companyId) : Promise.resolve([]),
-    isEmployee ? getEmployeeCockpitData({ companyId, userId }) : Promise.resolve(null),
+    isManager
+      ? safe(getTodayShiftTaskWall(companyId), "dashboard.liveOpsWall", [])
+      : Promise.resolve([]),
+    isEmployee
+      ? safe(getEmployeeCockpitData({ companyId, userId }), "dashboard.cockpit", null)
+      : Promise.resolve(null),
     isSuperAdmin
-      ? Promise.all([getSuperAdminOverview(), getSuperAdminMonitoring()])
+      ? Promise.all([
+          safe(getSuperAdminOverview(), "dashboard.superAdminOverview", null as Awaited<ReturnType<typeof getSuperAdminOverview>> | null),
+          safe(getSuperAdminMonitoring(), "dashboard.superAdminMonitoring", null as Awaited<ReturnType<typeof getSuperAdminMonitoring>> | null),
+        ] as const)
       : Promise.resolve([null, null] as const),
-    calculateSaldo(userId),
+    safe(
+      calculateSaldo(userId),
+      "dashboard.saldo",
+      { workedMinutes: 0, expectedMinutes: 0, saldoMinutes: 0 },
+    ),
   ]);
 
   // shiftTasksPayload braucht activeLog → eigene zweite Welle (extrem leichtgewichtig).
-  const shiftTasksPayload = activeLog ? await queryActiveShiftTasks(userId, companyId) : null;
+  const shiftTasksPayload = activeLog
+    ? await safe(queryActiveShiftTasks(userId, companyId), "dashboard.activeShiftTasks", null)
+    : null;
 
   const [superAdminCompanies, superAdminMonitoring] = superAdminPayload;
 
@@ -236,10 +283,26 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Mitarbeiter: Personal Cockpit – Hero + Stempel + Quick-Stats */}
+      {/* Mitarbeiter: Personal Cockpit – Hero + Stempel + Quick-Stats.
+          ID `terminal-widget` migriert hierhin, damit alle Deeplinks („Jetzt einstempeln")
+          beim Mitarbeiter direkt auf den großen Stempel-Button springen. */}
       {isEmployee && cockpitData && (
-        <div className="order-1">
+        <div id="terminal-widget" className="order-1 scroll-mt-20">
           <EmployeeCockpit data={cockpitData} firstName={session.user.name?.split(" ")[0] ?? "Hallo"} />
+        </div>
+      )}
+      {/* Defensive Fallback: Cockpit-Daten konnten nicht geladen werden.
+          Mitarbeiter sieht trotzdem einen klaren Header + den Stempel-Button (über
+          das TerminalWidget weiter unten – wir blenden es in dem Fall ein). */}
+      {isEmployee && !cockpitData && (
+        <div id="terminal-widget" className="order-1 rounded-2xl border border-amber-200/70 bg-amber-50/60 p-5 sm:p-6">
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+            Hallo {session.user.name?.split(" ")[0] ?? ""} 👋
+          </h1>
+          <p className="mt-1 text-sm text-amber-900">
+            Dein persönliches Cockpit lädt gerade nicht – kein Problem, du kannst weiter unten am Terminal stempeln. Der
+            Status synchronisiert sich beim nächsten Reload automatisch.
+          </p>
         </div>
       )}
 
@@ -458,23 +521,28 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Main grid: Mobil Terminal → Saldo → AI; Desktop gleiche Reihenfolge im Grid */}
+      {/* Main grid: Mobil Terminal → Saldo → AI; Desktop gleiche Reihenfolge im Grid.
+          Für Mitarbeiter NORMALERWEISE keine TerminalWidget – sie haben oben den BigClockButton.
+          Ausnahme: wenn das Cockpit fehlschlägt, brauchen sie irgendeinen Stempel-Weg → wir
+          fallback-zeigen das TerminalWidget. */}
       <div className="order-6 flex flex-col gap-5 md:order-5 md:grid md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-        <div id="terminal-widget" className="order-1 md:order-1">
-          <TerminalWidget
-            activeLog={
-              activeLog
-                ? {
-                    id: activeLog.id,
-                    clockIn: activeLog.clockIn,
-                    breakMins: activeLog.breakMins,
-                    isOnBreak: activeLog.isOnBreak,
-                    breakStartedAt: activeLog.breakStartedAt,
-                  }
-                : null
-            }
-          />
-        </div>
+        {!isEmployee || !cockpitData ? (
+          <div className="order-1 md:order-1">
+            <TerminalWidget
+              activeLog={
+                activeLog
+                  ? {
+                      id: activeLog.id,
+                      clockIn: activeLog.clockIn,
+                      breakMins: activeLog.breakMins,
+                      isOnBreak: activeLog.isOnBreak,
+                      breakStartedAt: activeLog.breakStartedAt,
+                    }
+                  : null
+              }
+            />
+          </div>
+        ) : null}
         <div className="order-2 md:order-2">
           <SaldoWidget
             workedMinutes={saldo.workedMinutes}
