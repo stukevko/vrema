@@ -49,13 +49,13 @@ export function SupportTicketOverlay({
           <button
             type="button"
             aria-label="Support-Dialog schließen"
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-overlay/55 backdrop-blur-sm"
             onClick={onClose}
           />
 
           <div
             ref={panelRef}
-            className="fixed left-1/2 top-1/2 z-[141] w-[min(92vw,720px)] max-h-[min(92vh,840px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl bg-card p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:p-6 max-md:inset-0 max-md:left-0 max-md:top-0 max-md:h-[100dvh] max-md:max-h-none max-md:w-full max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none max-md:p-4"
+            className="fixed left-1/2 top-1/2 z-[141] w-[min(92vw,720px)] max-h-[min(92vh,840px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-line bg-surface p-5 text-fg shadow-[var(--shadow-pop)] md:p-6 max-md:inset-0 max-md:left-0 max-md:top-0 max-md:h-[100dvh] max-md:max-h-none max-md:w-full max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none max-md:p-4"
             role="dialog"
             aria-modal="true"
             aria-label="Hilfe und Support"
@@ -70,15 +70,16 @@ export function SupportTicketOverlay({
               if (endY - startY > 90) onClose();
             }}
           >
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-base font-semibold text-foreground">Hilfe & Support</h2>
-                <p className="text-xs text-muted-foreground">Postfach: Tickets lesen oder neu erstellen.</p>
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">Support</p>
+                <h2 className="mt-0.5 text-lg font-semibold text-fg">Hilfe & Support</h2>
+                <p className="mt-0.5 text-xs text-fg-muted">Tickets lesen oder neu erstellen.</p>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-surface text-fg-muted transition-colors hover:border-brand/40 hover:text-brand"
                 aria-label="Schließen"
               >
                 <X className="h-4 w-4" />

@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Send } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { createSupportTicketFormAction } from "@/lib/actions/support";
 
 export function SupportTicketCreateForm({
@@ -31,16 +33,24 @@ export function SupportTicketCreateForm({
           setIsSubmitting(false);
         }
       }}
-      className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm md:p-5"
+      className="space-y-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] md:p-6"
     >
-      <h2 className="text-base font-semibold">Neues Ticket</h2>
-      <p className="text-xs text-muted-foreground">Wir melden uns so schnell wie möglich – mit Antwort hier im Dashboard.</p>
-      <div>
-        <label className="text-xs font-medium text-muted-foreground">Kategorie</label>
+      <header>
+        <h2 className="text-base font-semibold text-fg">Neues Ticket</h2>
+        <p className="mt-1 text-xs text-fg-muted">
+          Wir melden uns so schnell wie möglich – mit Antwort hier im Dashboard.
+        </p>
+      </header>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-fg-muted" htmlFor="support-type">
+          Kategorie
+        </label>
         <select
+          id="support-type"
           name="type"
           required
-          className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-fg"
           defaultValue="QUESTION"
         >
           <option value="QUESTION">Frage</option>
@@ -48,35 +58,47 @@ export function SupportTicketCreateForm({
           <option value="FEEDBACK">Feedback</option>
         </select>
       </div>
-      <div>
-        <label className="text-xs font-medium text-muted-foreground">Betreff</label>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-fg-muted" htmlFor="support-subject">
+          Betreff
+        </label>
         <input
+          id="support-subject"
           name="subject"
           required
           minLength={3}
           data-support-subject
           placeholder="Kurz beschreiben…"
-          className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-fg"
         />
       </div>
-      <div>
-        <label className="text-xs font-medium text-muted-foreground">Nachricht</label>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-fg-muted" htmlFor="support-message">
+          Nachricht
+        </label>
         <textarea
+          id="support-message"
           name="message"
           required
           minLength={5}
           rows={5}
           placeholder="Details, Screenshots gern im Text beschreiben…"
-          className="mt-1 w-full resize-y rounded-xl border border-border bg-white px-3 py-2 text-sm"
+          className="w-full resize-y rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-fg"
         />
       </div>
-      <button
+
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        className="inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-foreground disabled:opacity-60"
+        variant="brand"
+        size="lg"
+        fullWidth
+        loading={isSubmitting}
+        leadingIcon={!isSubmitting ? <Send className="h-4 w-4" /> : undefined}
       >
-        {isSubmitting ? "Sende..." : "Ticket absenden"}
-      </button>
+        {isSubmitting ? "Sende…" : "Ticket absenden"}
+      </Button>
     </form>
   );
 }

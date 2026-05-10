@@ -6,6 +6,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getPersonalAccountHref } from "@/lib/dashboard/account-href";
 
 interface TopbarProps {
@@ -60,10 +61,11 @@ export function DashboardTopbar({ user, unreadNotifications = 0 }: TopbarProps) 
 
         <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 sm:gap-3">
           {user.role === "SUPER_ADMIN" && (
-            <span className="hidden rounded-full border border-amber-300/40 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-700 sm:inline-flex">
+            <span className="hidden rounded-full border border-warning/30 bg-warning-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-warning-foreground sm:inline-flex">
               Super Admin
             </span>
           )}
+          <ThemeToggle />
           <NotificationBell initialUnread={unreadNotifications} />
           <div className="relative" ref={dropdownRef}>
             <button
@@ -72,9 +74,9 @@ export function DashboardTopbar({ user, unreadNotifications = 0 }: TopbarProps) 
               aria-haspopup="menu"
               aria-controls="dashboard-user-menu"
               onClick={() => setOpen((prev) => !prev)}
-              className="flex min-h-12 items-center gap-2 rounded-2xl border border-border bg-white px-2 py-1.5 transition-all active:scale-95 md:hover:bg-card/70 md:min-h-0"
+              className="flex min-h-12 items-center gap-2 rounded-2xl border border-line bg-surface px-2 py-1.5 transition-all active:scale-95 md:hover:bg-surface-muted md:min-h-0"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/15 text-xs font-bold text-primary">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-soft text-xs font-bold text-brand">
                 {user.image ? (
                   // eslint-disable-next-line @next/next/no-img-element -- OAuth-URLs & /api/user-avatar
                   <img src={user.image} alt="" className="h-full w-full object-cover" width={36} height={36} />
@@ -82,7 +84,7 @@ export function DashboardTopbar({ user, unreadNotifications = 0 }: TopbarProps) 
                   initials
                 )}
               </div>
-              <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
+              <ChevronDown className="hidden h-4 w-4 text-fg-muted sm:block" />
             </button>
 
             {open && (
@@ -91,15 +93,15 @@ export function DashboardTopbar({ user, unreadNotifications = 0 }: TopbarProps) 
                 role="menu"
                 className="absolute right-0 top-[calc(100%+0.25rem)] z-[100] w-56 rounded-2xl glass-panel p-1 shadow-lg"
               >
-                <div className="mb-1 border-b border-border px-3 py-2">
-                  <p className="truncate text-sm font-semibold">{user.name ?? "Profil"}</p>
-                  <p className="truncate text-xs text-muted-foreground">{user.email ?? ""}</p>
+                <div className="mb-1 border-b border-line px-3 py-2">
+                  <p className="truncate text-sm font-semibold text-fg">{user.name ?? "Profil"}</p>
+                  <p className="truncate text-xs text-fg-muted">{user.email ?? ""}</p>
                 </div>
 
                 <Link
                   href={accountHref}
                   onClick={() => setOpen(false)}
-                  className="flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm text-foreground transition-all active:scale-95 md:hover:bg-card/70"
+                  className="flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm text-fg transition-all active:scale-95 md:hover:bg-surface-muted"
                 >
                   <UserCircle2 className="h-4 w-4 shrink-0" />
                   Profil
@@ -107,7 +109,7 @@ export function DashboardTopbar({ user, unreadNotifications = 0 }: TopbarProps) 
                 <Link
                   href={accountHref}
                   onClick={() => setOpen(false)}
-                  className="flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm text-foreground transition-all active:scale-95 md:hover:bg-card/70"
+                  className="flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm text-fg transition-all active:scale-95 md:hover:bg-surface-muted"
                 >
                   <Settings className="h-4 w-4 shrink-0" />
                   {user.role === "EMPLOYEE" ? "Mein Konto" : "Einstellungen"}
@@ -115,7 +117,7 @@ export function DashboardTopbar({ user, unreadNotifications = 0 }: TopbarProps) 
                 <button
                   type="button"
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm text-red-600 transition-all active:scale-95 md:hover:bg-red-50"
+                  className="flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm text-danger transition-all active:scale-95 md:hover:bg-danger-soft"
                 >
                   <LogOut className="h-4 w-4 shrink-0" />
                   Abmelden

@@ -2,6 +2,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Mail, Clock, Lock, Download, FileSpreadsheet, Sparkles, Loader2, CheckCircle2, Check, X } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useHashHighlight } from "@/components/dashboard/useHashHighlight";
@@ -270,6 +272,19 @@ function statusLabel(status: LogRow["status"]) {
   return "Manuell";
 }
 
+function logEntryStatusTone(status: LogRow["status"]): "success" | "warning" | "danger" | "brand" {
+  if (status === "ABSENT") return "danger";
+  if (status === "LATE") return "warning";
+  if (status === "MANUAL_ADJUSTED") return "brand";
+  return "success";
+}
+
+function correctionRequestStatusTone(status: CorrectionRequestStatus): "warning" | "success" | "danger" {
+  if (status === "PENDING") return "warning";
+  if (status === "APPROVED") return "success";
+  return "danger";
+}
+
 function PlanGateButton({
   icon: Icon,
   label,
@@ -295,7 +310,7 @@ function PlanGateButton({
       className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition-all active:scale-[0.99] sm:w-auto sm:py-2.5 ${
         locked
           ? "cursor-pointer border-border bg-card text-muted-foreground md:hover:bg-muted/50"
-          : "border-border bg-white text-foreground md:hover:bg-muted/50"
+          : "border-border bg-surface text-foreground md:hover:bg-muted/50"
       }`}
     >
       {locked ? <Lock className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
@@ -1015,7 +1030,7 @@ export function ReportsClient({
                   router.push(`${pathname}?${params.toString()}`);
                 });
               }}
-              className="min-h-12 w-full touch-manipulation rounded-2xl border border-border bg-white px-3 py-2.5 text-base text-foreground sm:text-sm md:min-h-0 md:w-auto md:py-2"
+              className="min-h-12 w-full touch-manipulation rounded-2xl border border-border bg-surface px-3 py-2.5 text-base text-foreground sm:text-sm md:min-h-0 md:w-auto md:py-2"
             >
               {monthOptions.map((option) => (
                 <option key={option.key} value={option.key}>
@@ -1029,8 +1044,8 @@ export function ReportsClient({
               disabled={isAIAnalyzing}
               className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition-all active:scale-[0.99] sm:py-2.5 md:min-h-0 md:w-auto ${
                 isAIAnalyzing
-                  ? "animate-pulse border-violet-200 bg-violet-50/80 text-violet-700 shadow-[0_0_24px_rgba(139,92,246,0.22)]"
-                  : "border-violet-200 bg-white text-violet-700 md:hover:bg-violet-50"
+                  ? "animate-pulse border-brand/35 bg-brand-soft text-brand shadow-[var(--shadow-card-hover)]"
+                  : "border-brand/25 bg-surface text-brand md:hover:bg-brand-soft"
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -1070,7 +1085,7 @@ export function ReportsClient({
               disabled={isDatevDownloading}
               className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 md:min-h-0 md:w-auto ${
                 canDatevExport
-                  ? "border-border bg-white text-foreground md:hover:bg-muted/50"
+                  ? "border-border bg-surface text-foreground md:hover:bg-muted/50"
                   : "cursor-pointer border border-border bg-card text-muted-foreground md:hover:bg-muted/50"
               }`}
             >
@@ -1108,26 +1123,30 @@ export function ReportsClient({
           ))}
         </div>
 
-        <div className="rounded-2xl border border-emerald-200/60 bg-emerald-50/40 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
+        <div className="rounded-2xl border border-brand/20 bg-brand-soft/50 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
             <div className="flex items-start gap-3">
-              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
                 <CheckCircle2 className="h-5 w-5" aria-hidden />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Monats-Stundenzettel</p>
-                <h3 className="mt-1 text-base font-semibold text-foreground">Eigene Stunden bestätigen</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="text-xs font-semibold uppercase tracking-widest text-fg-muted">Monats-Stundenzettel</p>
+                <h3 className="mt-1 text-base font-semibold text-fg">Eigene Stunden bestätigen</h3>
+                <p className="mt-2 text-sm text-fg-muted">
                   Einmal pro Monat bestätigen – der Zeitstempel erscheint in deinem Abschnitt im PDF-Export (Nachweis für die Personalakte).
                 </p>
                 {timesheetAcknowledgedAtByUserId[currentUserId] ? (
-                  <p className="mt-4 text-sm font-medium text-emerald-800">
+                  <p className="mt-4 text-sm font-medium text-success-foreground">
                     Bestätigt am {formatDateDE(new Date(timesheetAcknowledgedAtByUserId[currentUserId]))} um{" "}
                     {formatTimeCsv(new Date(timesheetAcknowledgedAtByUserId[currentUserId]))} ({DISPLAY_TIME_ZONE})
                   </p>
                 ) : (
-                  <button
+                  <Button
                     type="button"
                     disabled={isAckPending}
+                    variant="brand"
+                    size="md"
+                    className="mt-4"
+                    loading={isAckPending}
                     onClick={() => {
                       startAckTransition(async () => {
                         try {
@@ -1139,40 +1158,38 @@ export function ReportsClient({
                         }
                       });
                     }}
-                    className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-semibold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 disabled:opacity-60"
                   >
-                    {isAckPending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
                     {isAckPending ? "Speichere…" : "Stunden bestätigen"}
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
           </div>
 
         {(isAIAnalyzing || aiAnalysis) && (
-          <div className="rounded-2xl border border-violet-100 bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
+          <div className="rounded-2xl border border-brand/20 bg-surface p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-brand-soft text-brand">
                 <Sparkles className="h-4 w-4" />
               </span>
               <div>
-                <p className="text-xs uppercase tracking-widest text-muted-foreground">VREMA AI</p>
-                <h3 className="text-sm font-semibold">Datenbasierte System-Analyse</h3>
+                <p className="text-xs uppercase tracking-widest text-fg-muted">VREMA AI</p>
+                <h3 className="text-sm font-semibold text-fg">Datenbasierte System-Analyse</h3>
               </div>
             </div>
 
             {isAIAnalyzing ? (
               <div className="space-y-2">
-                <div className="h-4 rounded-full bg-violet-100/80 animate-pulse" />
-                <div className="h-4 rounded-full bg-violet-100/80 animate-pulse w-11/12" />
-                <div className="h-4 rounded-full bg-violet-100/80 animate-pulse w-9/12" />
+                <div className="h-4 animate-pulse rounded-full bg-brand-soft" />
+                <div className="h-4 w-11/12 animate-pulse rounded-full bg-brand-soft" />
+                <div className="h-4 w-9/12 animate-pulse rounded-full bg-brand-soft" />
               </div>
             ) : aiAnalysis ? (
               <div className="space-y-3">
-                <p className="text-sm text-foreground leading-relaxed">{aiAnalysis.summary}</p>
+                <p className="text-sm leading-relaxed text-fg">{aiAnalysis.summary}</p>
                 <ul className="space-y-2">
                   {aiAnalysis.highlights.map((item) => (
-                    <li key={item} className="text-sm text-muted-foreground leading-relaxed">
+                    <li key={item} className="text-sm leading-relaxed text-fg-muted">
                       ✨ {item}
                     </li>
                   ))}
@@ -1183,11 +1200,22 @@ export function ReportsClient({
         )}
 
         {isManager && (
-          <div className="rounded-2xl border border-border bg-white px-4 py-3 text-xs text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-            Status-Legende: <span className="text-emerald-700">Pünktlich</span> ·{" "}
-            <span className="text-amber-700">Zu spät (&gt;15 Min nach Schichtbeginn)</span> ·{" "}
-            <span className="text-red-700">Fehlend (automatisch per Cron)</span> ·{" "}
-            <span className="text-sky-700">Manuell angepasst</span>
+          <div className="rounded-2xl border border-line bg-surface px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-fg-muted">Status-Legende</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge tone="success" size="sm">
+                Pünktlich
+              </StatusBadge>
+              <StatusBadge tone="warning" size="sm">
+                Zu spät (&gt;15 Min nach Schichtbeginn)
+              </StatusBadge>
+              <StatusBadge tone="danger" size="sm">
+                Fehlend (automatisch per Cron)
+              </StatusBadge>
+              <StatusBadge tone="brand" size="sm">
+                Manuell angepasst
+              </StatusBadge>
+            </div>
           </div>
         )}
 
@@ -1196,7 +1224,7 @@ export function ReportsClient({
           ref={correctionSectionRef}
           className={`scroll-mt-24 rounded-2xl bg-card border p-4 md:p-5 space-y-3 transition-all duration-500 ${
             highlightCorrections
-              ? "border-primary ring-4 ring-primary/40 shadow-[0_24px_60px_rgba(0,0,0,0.10)]"
+              ? "border-brand ring-4 ring-brand/40 shadow-[0_24px_60px_rgba(0,0,0,0.10)]"
               : "border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
           }`}
         >
@@ -1209,7 +1237,7 @@ export function ReportsClient({
 
           {!isManager && (
             <div className="grid gap-2 sm:grid-cols-2">
-              <div className="sm:col-span-2 rounded-2xl border border-border bg-white px-4 py-3">
+              <div className="sm:col-span-2 rounded-2xl border border-border bg-surface px-4 py-3">
                 <p className="text-[11px] text-muted-foreground mb-2">Schritt 1: Korrekturmodus wählen</p>
                 <div className="flex flex-wrap gap-3 text-xs">
                   <label className="inline-flex items-center gap-2 cursor-pointer">
@@ -1248,7 +1276,7 @@ export function ReportsClient({
                     const selected = logs.find((l) => l.id === id);
                     if (selected) prefillFromLog(selected);
                   }}
-                  className="sm:col-span-2 rounded-2xl border border-border bg-white px-4 py-2 text-sm"
+                  className="sm:col-span-2 rounded-2xl border border-border bg-surface px-4 py-2 text-sm"
                 >
                   <option value="">Bitte Eintrag wählen…</option>
                   {logs.slice(0, 25).map((log) => (
@@ -1265,14 +1293,14 @@ export function ReportsClient({
                 value={requestClockIn}
                 onChange={(e) => setRequestClockIn(e.target.value)}
                 placeholder="Einstempelzeit"
-                className="rounded-2xl border border-border bg-white px-4 py-2 text-sm"
+                className="rounded-2xl border border-border bg-surface px-4 py-2 text-sm"
               />
               <input
                 type="datetime-local"
                 value={requestClockOut}
                 onChange={(e) => setRequestClockOut(e.target.value)}
                 placeholder="Ausstempelzeit (optional)"
-                className="rounded-2xl border border-border bg-white px-4 py-2 text-sm"
+                className="rounded-2xl border border-border bg-surface px-4 py-2 text-sm"
               />
               <input
                 type="number"
@@ -1281,31 +1309,33 @@ export function ReportsClient({
                 value={requestBreakMins}
                 onChange={(e) => setRequestBreakMins(e.target.value)}
                 placeholder="Pause in Minuten (z.B. 30)"
-                className="rounded-2xl border border-border bg-white px-4 py-2 text-sm"
+                className="rounded-2xl border border-border bg-surface px-4 py-2 text-sm"
               />
               <input
                 type="text"
                 value={requestReason}
                 onChange={(e) => setRequestReason(e.target.value)}
                 placeholder="Schritt 3: Begründung (Pflicht)"
-                className="rounded-2xl border border-border bg-white px-4 py-2 text-sm sm:col-span-2"
+                className="rounded-2xl border border-border bg-surface px-4 py-2 text-sm sm:col-span-2"
               />
               <input
                 type="text"
                 value={requestNote}
                 onChange={(e) => setRequestNote(e.target.value)}
                 placeholder="Notiz (optional)"
-                className="rounded-2xl border border-border bg-white px-4 py-2 text-sm sm:col-span-2"
+                className="rounded-2xl border border-border bg-surface px-4 py-2 text-sm sm:col-span-2"
               />
               <div className="sm:col-span-2 flex justify-end">
-                <button
+                <Button
                   type="button"
+                  variant="brand"
+                  size="sm"
                   onClick={submitCorrectionRequest}
                   disabled={isSaving}
-                  className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-foreground md:hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-60"
+                  loading={isSaving}
                 >
                   Antrag senden
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -1320,7 +1350,7 @@ export function ReportsClient({
               </div>
             ) : (
               correctionRequests.map((req) => {
-                const statusLabel =
+                const correctionStatusDisplay =
                   req.status === "PENDING" ? "Ausstehend" : req.status === "APPROVED" ? "Freigegeben" : "Abgelehnt";
                 const beforeLabel =
                   req.originalClockIn == null
@@ -1355,50 +1385,42 @@ export function ReportsClient({
                   <div
                     key={req.id}
                     className={`rounded-2xl border bg-card p-4 text-xs shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-inset ring-black/[0.03] ${
-                      correctionDecision?.id === req.id ? "border-primary ring-2 ring-primary/35" : "border-border"
+                      correctionDecision?.id === req.id ? "border-brand ring-2 ring-brand/35" : "border-border"
                     }`}
                   >
                     <div className="flex flex-wrap items-center gap-2 border-b border-border/80 pb-3">
                       <span className="text-sm font-semibold text-foreground">{req.userName}</span>
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                          req.status === "PENDING"
-                            ? "bg-amber-50 text-amber-900"
-                            : req.status === "APPROVED"
-                              ? "bg-emerald-50 text-emerald-900"
-                              : "bg-red-50 text-red-900"
-                        }`}
-                      >
-                        {statusLabel}
-                      </span>
+                      <StatusBadge tone={correctionRequestStatusTone(req.status)} size="sm" withDot={false}>
+                        {correctionStatusDisplay}
+                      </StatusBadge>
                     </div>
 
                     <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-stretch">
-                      <div className="rounded-xl border border-slate-200 bg-slate-50/90 px-3 py-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Alte Zeit</p>
-                        <p className="mt-1 font-mono text-sm font-semibold text-slate-900">{beforeLabel}</p>
+                      <div className="rounded-xl border border-line bg-surface-muted px-3 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">Alte Zeit</p>
+                        <p className="mt-1 font-mono text-sm font-semibold text-fg">{beforeLabel}</p>
                         {beforeNet ? (
-                          <p className="mt-1 text-[11px] text-slate-600">
+                          <p className="mt-1 text-[11px] text-fg-muted">
                             Pause {req.originalBreakMins ?? 0} Min · {beforeNet}
                           </p>
                         ) : req.originalClockIn ? (
-                          <p className="mt-1 text-[11px] text-slate-600">Pause {req.originalBreakMins ?? 0} Min</p>
+                          <p className="mt-1 text-[11px] text-fg-muted">Pause {req.originalBreakMins ?? 0} Min</p>
                         ) : null}
                       </div>
 
                       <div className="flex items-center justify-center md:min-w-[2rem]">
                         <span
-                          className="rounded-full bg-primary/15 px-3 py-1 text-lg font-black text-primary md:rotate-0"
+                          className="rounded-full bg-brand-soft px-3 py-1 text-lg font-black text-brand md:rotate-0"
                           aria-hidden
                         >
                           →
                         </span>
                       </div>
 
-                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-900">Neue Zeit</p>
-                        <p className="mt-1 font-mono text-sm font-semibold text-emerald-950">{afterLabel}</p>
-                        <p className="mt-1 text-[11px] text-emerald-900">
+                      <div className="rounded-xl border border-brand/25 bg-brand-soft px-3 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-brand">Neue Zeit</p>
+                        <p className="mt-1 font-mono text-sm font-semibold text-fg">{afterLabel}</p>
+                        <p className="mt-1 text-[11px] text-success-foreground">
                           Pause {req.requestedBreakMins} Min
                           {afterNet ? ` · ${afterNet}` : ""}
                         </p>
@@ -1406,7 +1428,7 @@ export function ReportsClient({
                     </div>
 
                     {deltaLine ? (
-                      <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-950">
+                      <div className="mt-3 rounded-lg border border-warning/25 bg-warning-soft px-3 py-2 text-[11px] font-semibold text-warning-foreground">
                         {deltaLine}
                       </div>
                     ) : null}
@@ -1435,28 +1457,30 @@ export function ReportsClient({
                     ) : null}
                     {isManager && req.status === "PENDING" && correctionDecision?.id !== req.id && (
                       <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
-                        <button
+                        <Button
                           type="button"
+                          variant="brand"
+                          size="sm"
                           onClick={() => {
                             setCorrectionDecisionError(null);
                             setCorrectionDecision({ id: req.id, mode: "APPROVE", note: "" });
                           }}
-                          className="rounded-xl border border-emerald-200 bg-emerald-600/10 px-3 py-2 text-[11px] font-semibold text-emerald-800 md:hover:bg-emerald-600/20 transition-all active:scale-95"
                           disabled={isSaving}
                         >
                           Freigeben & buchen
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          variant="danger"
+                          size="sm"
                           onClick={() => {
                             setCorrectionDecisionError(null);
                             setCorrectionDecision({ id: req.id, mode: "REJECT", note: "" });
                           }}
-                          className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-800 md:hover:bg-red-100 transition-all active:scale-95"
                           disabled={isSaving}
                         >
                           Ablehnen
-                        </button>
+                        </Button>
                       </div>
                     )}
                     <AnimatePresence>
@@ -1470,8 +1494,8 @@ export function ReportsClient({
                           <div
                             className={`mt-4 rounded-xl border p-4 ${
                               correctionDecision.mode === "APPROVE"
-                                ? "border-emerald-200 bg-emerald-50/70"
-                                : "border-red-200 bg-red-50/70"
+                                ? "border-brand/30 bg-brand-soft"
+                                : "border-danger/30 bg-danger-soft"
                             }`}
                           >
                             <p className="text-sm font-semibold text-foreground">
@@ -1495,47 +1519,47 @@ export function ReportsClient({
                                   : "Begründung für die Ablehnung (Pflicht)"
                               }
                               rows={3}
-                              className="mt-3 w-full resize-y rounded-lg border border-border bg-white px-3 py-2 text-sm"
+                              className="mt-3 w-full resize-y rounded-lg border border-line bg-surface px-3 py-2 text-sm"
                               autoFocus
                             />
                             {correctionDecisionError ? (
-                              <p className="mt-2 text-[11px] font-medium text-red-700">{correctionDecisionError}</p>
+                              <p className="mt-2 text-[11px] font-medium text-danger">{correctionDecisionError}</p>
                             ) : null}
                             <div className="mt-3 flex flex-wrap gap-2">
-                              <button
+                              <Button
                                 type="button"
+                                variant={correctionDecision.mode === "APPROVE" ? "brand" : "danger"}
+                                size="md"
+                                loading={isSaving}
                                 onClick={submitCorrectionDecision}
-                                disabled={isSaving}
-                                className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-foreground ring-1 ring-inset ring-white/15 active:scale-[0.99] ${
-                                  correctionDecision.mode === "APPROVE"
-                                    ? "bg-emerald-600 hover:bg-emerald-700"
-                                    : "bg-red-600 hover:bg-red-700"
-                                }`}
+                                leadingIcon={
+                                  !isSaving ? (
+                                    correctionDecision.mode === "APPROVE" ? (
+                                      <Check className="h-4 w-4" />
+                                    ) : (
+                                      <X className="h-4 w-4" />
+                                    )
+                                  ) : undefined
+                                }
                               >
-                                {isSaving ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : correctionDecision.mode === "APPROVE" ? (
-                                  <Check className="h-4 w-4" />
-                                ) : (
-                                  <X className="h-4 w-4" />
-                                )}
                                 {isSaving
                                   ? "Speichere…"
                                   : correctionDecision.mode === "APPROVE"
                                     ? "Jetzt freigeben & buchen"
                                     : "Ablehnung speichern"}
-                              </button>
-                              <button
+                              </Button>
+                              <Button
                                 type="button"
+                                variant="outline"
+                                size="md"
                                 onClick={() => {
                                   setCorrectionDecision(null);
                                   setCorrectionDecisionError(null);
                                 }}
                                 disabled={isSaving}
-                                className="inline-flex min-h-11 items-center rounded-xl border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-muted/50"
                               >
                                 Abbrechen
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         </motion.div>
@@ -1587,19 +1611,9 @@ export function ReportsClient({
                           )}
                           <p className="text-xs text-muted-foreground tabular-nums">{formatDateCsv(clockInDate)}</p>
                         </div>
-                        <span
-                          className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                            log.status === "ABSENT"
-                              ? "bg-red-50 text-red-700"
-                              : log.status === "LATE"
-                                ? "bg-amber-50 text-amber-700"
-                                : log.status === "MANUAL_ADJUSTED"
-                                  ? "bg-sky-50 text-sky-700"
-                                  : "bg-emerald-50 text-emerald-700"
-                          }`}
-                        >
+                        <StatusBadge tone={logEntryStatusTone(log.status)} size="sm" withDot={false} className="shrink-0">
                           {statusLabel(log.status)}
-                        </span>
+                        </StatusBadge>
                       </div>
                       <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                         <div>
@@ -1614,7 +1628,7 @@ export function ReportsClient({
                             {log.clockOut ? (
                               new Date(log.clockOut).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
                             ) : (
-                              <span className="text-amber-700">offen</span>
+                              <span className="text-warning">offen</span>
                             )}
                           </dd>
                         </div>
@@ -1649,7 +1663,7 @@ export function ReportsClient({
                                 type="button"
                                 onClick={() => handleAbsentOverride(log)}
                                 disabled={isSaving}
-                                className="min-h-11 flex-1 rounded-xl border border-amber-200 px-3 py-2.5 text-xs font-medium text-amber-800 transition-all active:scale-[0.99] disabled:opacity-50 sm:flex-none md:hover:bg-amber-50"
+                                className="min-h-11 flex-1 rounded-xl border border-warning/35 bg-warning-soft px-3 py-2.5 text-xs font-medium text-warning-foreground transition-all active:scale-[0.99] disabled:opacity-50 sm:flex-none md:hover:bg-warning-soft/80"
                               >
                                 Korrigieren
                               </button>
@@ -1657,7 +1671,7 @@ export function ReportsClient({
                                 type="button"
                                 onClick={() => handleDelete(log)}
                                 disabled={isSaving}
-                                className="min-h-11 flex-1 rounded-xl border border-red-200 px-3 py-2.5 text-xs font-medium text-red-700 transition-all active:scale-[0.99] disabled:opacity-50 sm:flex-none md:hover:bg-red-50"
+                                className="min-h-11 flex-1 rounded-xl border border-danger/35 bg-danger-soft px-3 py-2.5 text-xs font-medium text-danger-foreground transition-all active:scale-[0.99] disabled:opacity-50 sm:flex-none md:hover:bg-danger-soft/80"
                               >
                                 Löschen
                               </button>
@@ -1719,7 +1733,7 @@ export function ReportsClient({
                           <td className="px-5 py-4 tabular-nums text-foreground">
                             {log.clockOut
                               ? new Date(log.clockOut).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
-                              : <span className="animate-pulse text-amber-700">offen</span>}
+                              : <span className="animate-pulse text-warning">offen</span>}
                           </td>
                           <td className="px-5 py-4 tabular-nums text-xs text-muted-foreground">
                             {log.breakMins > 0 ? log.breakMins : "–"}
@@ -1731,19 +1745,9 @@ export function ReportsClient({
                             {dur !== null ? decimalHoursDE(Math.round(dur)) : "–"}
                           </td>
                           <td className="px-5 py-4">
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                                log.status === "ABSENT"
-                                  ? "bg-red-50 text-red-700"
-                                  : log.status === "LATE"
-                                    ? "bg-amber-50 text-amber-700"
-                                    : log.status === "MANUAL_ADJUSTED"
-                                      ? "bg-sky-50 text-sky-700"
-                                      : "bg-emerald-50 text-emerald-700"
-                              }`}
-                            >
+                            <StatusBadge tone={logEntryStatusTone(log.status)} size="sm" withDot={false}>
                               {statusLabel(log.status)}
-                            </span>
+                            </StatusBadge>
                           </td>
                           <td className="max-w-[120px] truncate px-5 py-4 text-xs text-muted-foreground">
                             {log.note ?? "–"}
@@ -1765,7 +1769,7 @@ export function ReportsClient({
                                       type="button"
                                       onClick={() => handleAbsentOverride(log)}
                                       disabled={isSaving}
-                                      className="rounded-xl border border-amber-200 px-2.5 py-1 text-[11px] text-amber-700 transition-all active:scale-95 disabled:opacity-50 md:hover:bg-amber-50"
+                                      className="rounded-xl border border-warning/35 bg-warning-soft px-2.5 py-1 text-[11px] text-warning-foreground transition-all active:scale-95 disabled:opacity-50 md:hover:bg-warning-soft/80"
                                     >
                                       Korrigieren
                                     </button>
@@ -1773,7 +1777,7 @@ export function ReportsClient({
                                       type="button"
                                       onClick={() => handleDelete(log)}
                                       disabled={isSaving}
-                                      className="rounded-xl border border-red-200 px-2.5 py-1 text-[11px] text-red-700 transition-all active:scale-95 disabled:opacity-50 md:hover:bg-red-50"
+                                      className="rounded-xl border border-danger/35 bg-danger-soft px-2.5 py-1 text-[11px] text-danger-foreground transition-all active:scale-95 disabled:opacity-50 md:hover:bg-danger-soft/80"
                                     >
                                       Löschen
                                     </button>
@@ -1813,7 +1817,7 @@ export function ReportsClient({
 
       <ToastContainer toasts={toasts} remove={remove} />
       {editingLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/75 px-4">
           <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <h3 className="text-base font-semibold">Zeiteintrag bearbeiten</h3>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -1824,13 +1828,13 @@ export function ReportsClient({
                 type="datetime-local"
                 value={editClockIn}
                 onChange={(e) => setEditClockIn(e.target.value)}
-                className="rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
+                className="rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm text-foreground outline-none focus:border-brand"
               />
               <input
                 type="datetime-local"
                 value={editClockOut}
                 onChange={(e) => setEditClockOut(e.target.value)}
-                className="rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
+                className="rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm text-foreground outline-none focus:border-brand"
               />
               <input
                 type="number"
@@ -1839,12 +1843,12 @@ export function ReportsClient({
                 value={editBreakMins}
                 onChange={(e) => setEditBreakMins(e.target.value)}
                 placeholder="Pause in Minuten"
-                className="rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
+                className="rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm text-foreground outline-none focus:border-brand"
               />
               <select
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value as LogRow["status"])}
-                className="rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
+                className="rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm text-foreground outline-none focus:border-brand"
               >
                 <option value="ON_TIME">Pünktlich</option>
                 <option value="LATE">Zu spät</option>
@@ -1856,14 +1860,14 @@ export function ReportsClient({
                 value={editReason}
                 onChange={(e) => setEditReason(e.target.value)}
                 placeholder="Grund der Änderung (Pflicht)"
-                className="sm:col-span-2 rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
+                className="sm:col-span-2 rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm text-foreground outline-none focus:border-brand"
               />
               <input
                 type="text"
                 value={editNote}
                 onChange={(e) => setEditNote(e.target.value)}
                 placeholder="Notiz (optional)"
-                className="sm:col-span-2 rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
+                className="sm:col-span-2 rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm text-foreground outline-none focus:border-brand"
               />
             </div>
             <div className="mt-4 flex items-center justify-end gap-2">
@@ -1887,7 +1891,7 @@ export function ReportsClient({
         </div>
       )}
       {showPayrollModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/75 px-4">
           <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <h3 className="text-base font-semibold">An Lohnbüro senden</h3>
             <p className="mt-1 text-xs text-muted-foreground">Der aktuelle PDF-Report wird als Anhang per E-Mail versendet.</p>
@@ -1897,7 +1901,7 @@ export function ReportsClient({
               value={payrollEmail}
               onChange={(e) => setPayrollEmail(e.target.value)}
               placeholder="lohnbuero@beispiel.de; chef@beispiel.de"
-              className="mt-1 w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
+              className="mt-1 w-full rounded-2xl border border-border bg-surface px-4 py-2.5 text-sm text-foreground outline-none focus:border-brand"
             />
             <div className="mt-4 flex items-center justify-end gap-2">
               <button

@@ -30,6 +30,9 @@ import {
 import type { DailyWeatherForecast } from "@/lib/weather/shared";
 import { isRainLikeCondition } from "@/lib/weather/shared";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import type { StatusTone } from "@/components/ui/StatusBadge";
 
 type Member = {
   id: string;
@@ -153,10 +156,45 @@ function dateForCycleDay(weekIndex: number, dayOfWeek: number) {
 }
 
 function getRoleShiftBarTone(role?: string | null) {
-  if (role === "MANAGER") return "border-blue-300/70 bg-blue-100/55 text-blue-800";
-  if (role === "COMPANY_OWNER") return "border-violet-300/70 bg-violet-100/55 text-violet-800";
-  if (role === "SUPER_ADMIN") return "border-fuchsia-300/70 bg-fuchsia-100/55 text-fuchsia-800";
-  return "border-emerald-300/70 bg-emerald-100/55 text-emerald-800";
+  if (role === "MANAGER") return "border-brand/35 bg-brand-soft text-brand";
+  if (role === "COMPANY_OWNER") return "border-warning/30 bg-warning-soft text-warning-foreground";
+  if (role === "SUPER_ADMIN") return "border-line bg-surface-muted text-fg-muted";
+  return "border-line bg-neutral-soft text-neutral-foreground";
+}
+
+function simplePlannerDayState(params: {
+  dayIdx: number;
+  usedDays: Set<number>;
+  vacationDays: Set<number>;
+  sickDays: Set<number>;
+}): { tone: StatusTone; label: string; cellClass: string } {
+  const { dayIdx, usedDays, vacationDays, sickDays } = params;
+  if (sickDays.has(dayIdx)) {
+    return {
+      tone: "danger",
+      label: "Krank",
+      cellClass: "border-danger/30 bg-danger-soft text-fg hover:bg-danger-soft/90",
+    };
+  }
+  if (vacationDays.has(dayIdx)) {
+    return {
+      tone: "warning",
+      label: "Urlaub",
+      cellClass: "border-warning/30 bg-warning-soft text-fg hover:bg-warning-soft/90",
+    };
+  }
+  if (usedDays.has(dayIdx)) {
+    return {
+      tone: "brand",
+      label: "Schicht",
+      cellClass: "border-brand/35 bg-brand-soft text-brand hover:bg-brand-soft/90",
+    };
+  }
+  return {
+    tone: "neutral",
+    label: "Frei",
+    cellClass: "border-line bg-surface-muted text-fg hover:bg-surface-muted/85",
+  };
 }
 
 function scrollFieldIntoView(e: React.FocusEvent<HTMLElement>) {
@@ -1234,7 +1272,7 @@ export function ShiftManager({
                   type="button"
                   onClick={() => setMobileSelectedDay(idx)}
                   className={`min-h-12 min-w-[4.25rem] rounded-2xl border px-3 py-2 text-left ${
-                    isActive ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-background text-foreground"
+                    isActive ? "border-brand/40 bg-brand-soft text-brand" : "border-border bg-background text-foreground"
                   }`}
                 >
                   <span className="block text-[10px] font-semibold uppercase tracking-wide">{DAY_LABELS[idx]}</span>
@@ -1304,9 +1342,9 @@ export function ShiftManager({
                   }
                   className={`w-full rounded-2xl border border-border bg-background px-4 py-4 text-left active:bg-muted/40 ${
                     shift.isDraft
-                      ? "border-dashed border-violet-500/60 bg-[repeating-linear-gradient(-45deg,rgba(139,92,246,0.12)_0px,rgba(139,92,246,0.12)_6px,transparent_6px,transparent_12px)]"
+                      ? "border-dashed border-brand/55 bg-[repeating-linear-gradient(-45deg,rgba(22,101,52,0.14)_0px,rgba(22,101,52,0.14)_6px,transparent_6px,transparent_12px)]"
                       : ""
-                  } ${mobileWeatherConflict ? "ring-2 ring-sky-500/80 animate-pulse" : ""}`}
+                  } ${mobileWeatherConflict ? "ring-2 ring-warning/75 animate-pulse" : ""}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <span className="text-lg font-bold tabular-nums text-foreground">
@@ -1316,12 +1354,12 @@ export function ShiftManager({
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                     {compliance?.pauseRisk ? (
-                      <span className="inline-flex items-center gap-1 text-red-600">
+                      <span className="inline-flex items-center gap-1 text-danger">
                         <Coffee className="h-3.5 w-3.5" /> Pause prüfen (&gt;6h)
                       </span>
                     ) : null}
                     {compliance?.restRisk ? (
-                      <span className="inline-flex items-center gap-1 text-orange-600">
+                      <span className="inline-flex items-center gap-1 text-warning">
                         <AlarmClock className="h-3.5 w-3.5" /> Ruhezeit &lt;11h
                       </span>
                     ) : null}
@@ -1341,7 +1379,7 @@ export function ShiftManager({
         <div className="mt-2 hidden">
           {/* Alte Detail-/Preset-Sektionen auf Mobile ausgeblendet, um die UX schlank zu halten */}
           {showDetails && (
-            <p className="text-sm font-medium text-amber-300">
+            <p className="text-sm font-medium text-warning-foreground">
               Abwesenheit: {Array.from(selectedUserVacationDays).map((d) => DAY_LABELS[d]).join(", ")}
               {selectedUserSickDays.size > 0 ? " (rot = krank)." : "."}
             </p>
@@ -1353,7 +1391,7 @@ export function ShiftManager({
         <button
           type="button"
           onClick={() => openMobileQuickAdd(mobileSelectedDay)}
-          className="fixed bottom-5 right-5 z-[50] inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-foreground shadow-[0_14px_36px_rgba(16,185,129,0.45)] active:scale-[0.98]"
+          className="fixed bottom-5 right-5 z-[50] inline-flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-[var(--shadow-card-hover)] active:scale-[0.98]"
           aria-label="Neue Schicht hinzufügen"
         >
           <Plus className="h-6 w-6" />
@@ -1380,7 +1418,7 @@ export function ShiftManager({
                     }}
                     className={`min-h-14 w-full rounded-2xl border px-4 py-3 text-left text-base font-semibold transition-colors active:scale-[0.99] ${
                       m.id === selectedUserId
-                        ? "border-primary/50 bg-primary/15 text-primary"
+                        ? "border-brand/45 bg-brand-soft text-brand"
                         : "border-border bg-background text-foreground active:bg-muted/40"
                     }`}
                   >
@@ -1431,14 +1469,14 @@ export function ShiftManager({
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     onFocus={scrollFieldIntoView}
-                    className="min-h-14 w-full rounded-2xl border border-border bg-white px-4 py-3 text-lg font-semibold tabular-nums text-foreground"
+                    className="min-h-14 w-full rounded-2xl border border-border bg-surface px-4 py-3 text-lg font-semibold tabular-nums text-foreground"
                     disabled={isPending}
                   />
                 )}
               </div>
             </div>
             <div className="shrink-0 border-t border-border px-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
-              <Drawer.Close className="flex min-h-14 w-full items-center justify-center rounded-2xl border border-primary/35 bg-primary/15 text-base font-bold text-primary">
+              <Drawer.Close className="flex min-h-14 w-full items-center justify-center rounded-2xl border border-line bg-surface text-base font-bold text-fg active:bg-surface-muted">
                 Fertig
               </Drawer.Close>
             </div>
@@ -1479,14 +1517,14 @@ export function ShiftManager({
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     onFocus={scrollFieldIntoView}
-                    className="min-h-14 w-full rounded-2xl border border-border bg-white px-4 py-3 text-lg font-semibold tabular-nums text-foreground"
+                    className="min-h-14 w-full rounded-2xl border border-border bg-surface px-4 py-3 text-lg font-semibold tabular-nums text-foreground"
                     disabled={isPending}
                   />
                 )}
               </div>
             </div>
             <div className="shrink-0 border-t border-border px-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
-              <Drawer.Close className="flex min-h-14 w-full items-center justify-center rounded-2xl border border-primary/35 bg-primary/15 text-base font-bold text-primary">
+              <Drawer.Close className="flex min-h-14 w-full items-center justify-center rounded-2xl border border-line bg-surface text-base font-bold text-fg active:bg-surface-muted">
                 Fertig
               </Drawer.Close>
             </div>
@@ -1516,7 +1554,7 @@ export function ShiftManager({
                         onClick={() => setSelectedUserId(m.id)}
                         className={`min-h-14 w-full rounded-2xl border px-4 py-3 text-left text-base font-semibold transition-colors ${
                           m.id === selectedUserId
-                            ? "border-primary/50 bg-primary/15 text-primary"
+                            ? "border-brand/45 bg-brand-soft text-brand"
                             : "border-border bg-background text-foreground active:bg-muted/40"
                         }`}
                       >
@@ -1536,7 +1574,7 @@ export function ShiftManager({
                         onClick={() => setSimpleSheetDay(idx)}
                         className={`flex min-h-14 w-full flex-col items-start justify-center rounded-2xl border px-4 py-3 text-left transition-colors active:scale-[0.99] ${
                           simpleSheetDay === idx
-                            ? "border-primary/50 bg-primary/15 text-primary"
+                            ? "border-brand/45 bg-brand-soft text-brand"
                             : "border-border bg-background text-foreground active:bg-muted/40"
                         }`}
                       >
@@ -1563,7 +1601,7 @@ export function ShiftManager({
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
                       onFocus={scrollFieldIntoView}
-                      className="mt-2 min-h-14 w-full rounded-2xl border border-border bg-white px-4 py-3 text-lg font-semibold tabular-nums text-foreground"
+                      className="mt-2 min-h-14 w-full rounded-2xl border border-border bg-surface px-4 py-3 text-lg font-semibold tabular-nums text-foreground"
                       disabled={isPending}
                     />
                   </div>
@@ -1574,14 +1612,14 @@ export function ShiftManager({
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
                       onFocus={scrollFieldIntoView}
-                      className="mt-2 min-h-14 w-full rounded-2xl border border-border bg-white px-4 py-3 text-lg font-semibold tabular-nums text-foreground"
+                      className="mt-2 min-h-14 w-full rounded-2xl border border-border bg-surface px-4 py-3 text-lg font-semibold tabular-nums text-foreground"
                       disabled={isPending}
                     />
                   </div>
                 </div>
 
                 {hasInvalidRange && (
-                  <p className="text-sm font-medium text-amber-600">Start und Ende dürfen nicht gleich sein.</p>
+                  <p className="text-sm font-medium text-warning">Start und Ende dürfen nicht gleich sein.</p>
                 )}
               </div>
 
@@ -1593,7 +1631,7 @@ export function ShiftManager({
                     applyDayFromInputs(simpleSheetDay);
                     setSimpleAddSheetOpen(false);
                   }}
-                  className="min-h-14 w-full rounded-2xl border border-primary/40 bg-primary/15 text-base font-bold text-primary active:bg-primary/25 disabled:opacity-50"
+                  className="min-h-14 w-full rounded-2xl border border-brand/40 bg-brand-soft px-4 py-3 text-base font-bold text-brand active:bg-brand/15 disabled:opacity-50"
                 >
                   Speichern
                 </button>
@@ -1632,48 +1670,39 @@ export function ShiftManager({
         </p>
 
         {enableTaskListActions ? (
-          <div className="mt-4 rounded-2xl border border-violet-200/90 bg-gradient-to-br from-violet-50/95 via-white to-indigo-50/40 px-4 py-3 shadow-[0_14px_44px_rgba(99,102,241,0.12)]">
+          <div className="mt-4 rounded-2xl border border-brand/20 bg-surface-muted/60 px-4 py-3 shadow-[var(--shadow-card)]">
             <div className="flex flex-wrap items-center gap-2">
-              <button
+              <Button
                 type="button"
+                variant="brand"
+                size="md"
                 disabled={isPending || autopilotBusy}
                 onClick={startAutopilot}
-                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-violet-400/50 bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-md shadow-violet-500/25 transition hover:bg-violet-700 disabled:opacity-55"
+                leadingIcon={<Sparkles className="h-4 w-4 shrink-0" aria-hidden />}
               >
-                <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
                 Autopilot starten
-              </button>
+              </Button>
               {draftShiftsInWeek.length > 0 ? (
                 <>
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={confirmAutopilot}
-                    className="min-h-11 rounded-xl border border-emerald-500/40 bg-emerald-600/90 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-55"
-                  >
+                  <Button type="button" variant="subtle" size="md" disabled={isPending} onClick={confirmAutopilot}>
                     Alle bestätigen ({draftShiftsInWeek.length})
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={discardAutopilot}
-                    className="min-h-11 rounded-xl border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-55"
-                  >
+                  </Button>
+                  <Button type="button" variant="outline" size="md" disabled={isPending} onClick={discardAutopilot}>
                     Entwurf verwerfen
-                  </button>
+                  </Button>
                 </>
               ) : null}
             </div>
-            <p className="mt-2 text-[11px] text-violet-900/80">
+            <p className="mt-2 text-[11px] text-fg-muted">
               Füllt freie Schicht-Slots (Woche {selectedWeekIndex}) mit KI-Logik: Ruhezeit, Abwesenheit, Soll-Stunden,
-              Wochenend-Fairness. Entwürfe: violett gestreifte Balken – erst nach Bestätigung fest.
+              Wochenend-Fairness. Entwürfe: gestrichelte Petrol-Balken – erst nach Bestätigung fest.
             </p>
             {autopilotBusy ? (
               <div className="mt-3 space-y-2">
-                <div className="h-2 overflow-hidden rounded-full bg-violet-200/60">
-                  <div className="h-full w-[55%] animate-pulse rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-400 to-violet-500" />
+                <div className="h-2 overflow-hidden rounded-full bg-brand-soft">
+                  <div className="h-full w-[55%] animate-pulse rounded-full bg-brand/70" />
                 </div>
-                <p className="text-center text-xs font-semibold text-violet-800">KI optimiert Besetzung…</p>
+                <p className="text-center text-xs font-semibold text-brand">KI optimiert Besetzung…</p>
               </div>
             ) : null}
             {autopilotReport && autopilotReport.length > 0 ? (
@@ -1688,11 +1717,11 @@ export function ShiftManager({
 
         {viewMode === "simple" && (
         <>
-      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-5">
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-5 md:items-end">
         <select
           value={selectedUserId}
           onChange={(e) => setSelectedUserId(e.target.value)}
-          className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
+          className="min-h-11 w-full touch-manipulation rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-fg sm:min-h-0 sm:py-2"
           disabled={isPending}
         >
           {members.map((m) => (
@@ -1706,42 +1735,46 @@ export function ShiftManager({
           type="time"
           value={startTime}
           onChange={(e) => setStartTime(e.target.value)}
-          className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
+          className="min-h-11 w-full touch-manipulation rounded-lg border border-line bg-surface px-3 py-2.5 text-sm tabular-nums text-fg shadow-sm transition-shadow focus:border-brand sm:min-h-0 sm:py-2"
           disabled={isPending}
         />
         <input
           type="time"
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)}
-          className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm sm:min-h-0 sm:py-2"
+          className="min-h-11 w-full touch-manipulation rounded-lg border border-line bg-surface px-3 py-2.5 text-sm tabular-nums text-fg shadow-sm transition-shadow focus:border-brand sm:min-h-0 sm:py-2"
           disabled={isPending}
         />
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="md"
+          className="w-full sm:w-auto"
           onClick={submitStandardWeek}
           disabled={isPending || !selectedUserId}
-          className="min-h-11 touch-manipulation rounded-lg border border-primary/30 bg-primary/15 px-3 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-primary/20 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] disabled:opacity-60 sm:min-h-0 sm:py-2"
         >
           Standardwoche (Mo-Fr)
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          size="md"
+          className="w-full sm:w-auto"
           onClick={submitCopyToAll}
           disabled={isPending || !selectedUserId}
-          className="min-h-11 touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-card/80 disabled:opacity-60 sm:min-h-0 sm:py-2"
         >
           Auf alle übertragen
-        </button>
+        </Button>
       </div>
       {crossesMidnight ? (
-        <p className="mt-2 text-xs font-medium text-primary">Hinweis: Schicht endet am Folgetag (+1 Tag).</p>
+        <p className="mt-2 text-xs font-medium text-brand">Hinweis: Schicht endet am Folgetag (+1 Tag).</p>
       ) : null}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <p className="text-[11px] text-muted-foreground">Tipp: Zeit oben einstellen und Tage direkt antippen. Erneuter Klick mit gleicher Zeit löscht den Tag.</p>
         {selectedUserVacationDays.size > 0 && (
-          <p className="text-[11px] text-amber-300">
+          <p className="text-[11px] text-warning-foreground">
             Abwesenheit: {Array.from(selectedUserVacationDays).map((d) => DAY_LABELS[d]).join(", ")}
-            {selectedUserSickDays.size > 0 ? " (rot = krank)." : "."}
+            {selectedUserSickDays.size > 0 ? " (krank = Rot)." : "."}
           </p>
         )}
       </div>
@@ -1756,7 +1789,7 @@ export function ShiftManager({
         </div>
       </div>
       {hasInvalidRange && (
-        <p className="mt-2 text-xs text-amber-300">Bitte gültige Zeit wählen: Start und Ende dürfen nicht gleich sein.</p>
+        <p className="mt-2 text-xs text-warning-foreground">Bitte gültige Zeit wählen: Start und Ende dürfen nicht gleich sein.</p>
       )}
 
       <div className="mt-3 flex flex-wrap items-stretch gap-2 text-xs">
@@ -1766,7 +1799,7 @@ export function ShiftManager({
             setStartTime("08:00");
             setEndTime("16:00");
           }}
-          className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-md border border-border bg-background px-2 py-2.5 text-foreground sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-card/80"
+          className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-lg border border-line bg-surface px-2 py-2.5 text-fg shadow-sm transition-colors sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-surface-muted"
           disabled={isPending}
         >
           Früh: 08:00-16:00
@@ -1777,7 +1810,7 @@ export function ShiftManager({
             setStartTime("09:00");
             setEndTime("17:00");
           }}
-          className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-md border border-border bg-background px-2 py-2.5 text-foreground sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-card/80"
+          className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-lg border border-line bg-surface px-2 py-2.5 text-fg shadow-sm transition-colors sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-surface-muted"
           disabled={isPending}
         >
           Standard: 09:00-17:00
@@ -1788,7 +1821,7 @@ export function ShiftManager({
             setStartTime("14:00");
             setEndTime("22:00");
           }}
-          className="min-h-11 min-w-0 flex-[1_1_100%] touch-manipulation rounded-md border border-border bg-background px-2 py-2.5 text-foreground sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-card/80"
+          className="min-h-11 min-w-0 flex-[1_1_100%] touch-manipulation rounded-lg border border-line bg-surface px-2 py-2.5 text-fg shadow-sm transition-colors sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-surface-muted"
           disabled={isPending}
         >
           Spät: 14:00-22:00
@@ -1796,59 +1829,79 @@ export function ShiftManager({
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-        {DAY_LABELS.map((label, idx) => (
-          <button
-            key={`desktop-day-${label}`}
-            type="button"
-            onClick={() => applyDayFromInputs(idx)}
-            disabled={isPending || !selectedUserId}
-            className={`touch-manipulation rounded-xl border px-3 py-3 text-left text-sm transition-colors disabled:opacity-60 sm:rounded-lg sm:text-xs min-h-[4.5rem] sm:min-h-0 sm:py-2 ${
-              selectedUserVacationDays.has(idx)
-                ? selectedUserSickDays.has(idx)
-                  ? "border-red-400/35 bg-red-500/12 text-red-100 hover:bg-red-500/20"
-                  : "border-amber-400/35 bg-amber-500/10 text-amber-100 hover:bg-amber-500/15"
-                : usedDays.has(idx)
-                  ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
-                : "border-border bg-background text-foreground hover:bg-card/80"
-            } ${recentDayAction?.dayOfWeek === idx ? "ring-2 ring-primary/60" : ""}`}
-          >
-            <span className="block text-xs">{label}</span>
-            <span className="mt-0.5 block text-[10px] font-sans opacity-80">
-              {userPrimaryShiftByDay.get(idx)
-                ? `${userPrimaryShiftByDay.get(idx)?.startTime}-${userPrimaryShiftByDay.get(idx)?.endTime}`
-                : "frei"}
-            </span>
-            {(() => {
-              const pl = userPrimaryShiftByDay.get(idx);
-              if (!pl) return null;
-              const cf = complianceByShiftId.get(pl.id);
-              if (!cf || (!cf.pauseRisk && !cf.restRisk)) return null;
-              return (
-                <span className="mt-1 flex items-center gap-1">
-                  {cf.pauseRisk ? (
-                    <span title="Über 6h: Pause prüfen">
-                      <Coffee className="h-3 w-3 text-red-500" aria-hidden />
-                    </span>
-                  ) : null}
-                  {cf.restRisk ? (
-                    <span title="Ruhezeit unter 11 Stunden">
-                      <AlarmClock className="h-3 w-3 text-orange-600" aria-hidden />
-                    </span>
-                  ) : null}
-                </span>
-              );
-            })()}
-            {recentDayAction?.dayOfWeek === idx && (
-              <span className={`mt-1 block text-[10px] ${recentDayAction.action === "saved" ? "text-primary" : "text-red-700"}`}>
-                {recentDayAction.action === "saved" ? "Gespeichert" : "Gelöscht"}
+        {DAY_LABELS.map((label, idx) => {
+          const dayMeta = simplePlannerDayState({
+            dayIdx: idx,
+            usedDays,
+            vacationDays: selectedUserVacationDays,
+            sickDays: selectedUserSickDays,
+          });
+          return (
+            <button
+              key={`desktop-day-${label}`}
+              type="button"
+              onClick={() => applyDayFromInputs(idx)}
+              disabled={isPending || !selectedUserId}
+              className={`touch-manipulation rounded-xl border px-3 py-3 text-left text-sm transition-colors disabled:opacity-60 sm:rounded-lg sm:text-xs min-h-[4.5rem] sm:min-h-0 sm:py-2 ${dayMeta.cellClass} ${recentDayAction?.dayOfWeek === idx ? "ring-2 ring-brand/45" : ""}`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="block text-xs font-semibold">{label}</span>
+                <StatusBadge tone={dayMeta.tone} size="sm" withDot={false} className="max-w-[min(100%,5.5rem)]">
+                  {dayMeta.label}
+                </StatusBadge>
+              </div>
+              <span className="mt-0.5 block text-[10px] font-sans opacity-85">
+                {userPrimaryShiftByDay.get(idx)
+                  ? `${userPrimaryShiftByDay.get(idx)?.startTime}-${userPrimaryShiftByDay.get(idx)?.endTime}`
+                  : "—"}
               </span>
-            )}
-          </button>
-        ))}
+              {(() => {
+                const pl = userPrimaryShiftByDay.get(idx);
+                if (!pl) return null;
+                const cf = complianceByShiftId.get(pl.id);
+                if (!cf || (!cf.pauseRisk && !cf.restRisk)) return null;
+                return (
+                  <span className="mt-1 flex items-center gap-1">
+                    {cf.pauseRisk ? (
+                      <span title="Über 6h: Pause prüfen">
+                        <Coffee className="h-3 w-3 text-danger" aria-hidden />
+                      </span>
+                    ) : null}
+                    {cf.restRisk ? (
+                      <span title="Ruhezeit unter 11 Stunden">
+                        <AlarmClock className="h-3 w-3 text-warning" aria-hidden />
+                      </span>
+                    ) : null}
+                  </span>
+                );
+              })()}
+              {recentDayAction?.dayOfWeek === idx && (
+                <span
+                  className={`mt-1 block text-[10px] ${recentDayAction.action === "saved" ? "text-brand" : "text-danger"}`}
+                >
+                  {recentDayAction.action === "saved" ? "Gespeichert" : "Gelöscht"}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
-      <p className="mt-2 text-[11px] text-muted-foreground">
-        Grün = Schicht, Orange = Urlaub, Rot = Krank. Klick setzt die oben gewählte Zeit direkt für den Tag.
-      </p>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <p className="text-[11px] text-muted-foreground">Legende:</p>
+        <StatusBadge tone="neutral" size="sm" withDot={false}>
+          Frei
+        </StatusBadge>
+        <StatusBadge tone="brand" size="sm" withDot={false}>
+          Schicht
+        </StatusBadge>
+        <StatusBadge tone="warning" size="sm" withDot={false}>
+          Urlaub
+        </StatusBadge>
+        <StatusBadge tone="danger" size="sm" withDot={false}>
+          Krank
+        </StatusBadge>
+        <span className="text-[11px] text-muted-foreground">· Klick übernimmt die oben gewählte Zeit für den Tag.</span>
+      </div>
 
       <div className="mt-4">
         <button
@@ -1870,7 +1923,7 @@ export function ShiftManager({
             <p className="px-3 py-3 text-xs text-muted-foreground">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
           ) : (
             userShifts.map((s, idx) => (
-              <div key={s.id} className={`grid grid-cols-3 items-center px-3 py-2 text-sm ${idx % 2 === 0 ? "bg-white/[0.01]" : ""}`}>
+              <div key={s.id} className={`grid grid-cols-3 items-center px-3 py-2 text-sm ${idx % 2 === 0 ? "bg-surface-muted/35" : ""}`}>
                 <span>{DAY_LABELS[s.dayOfWeek] ?? s.dayOfWeek}</span>
                 <span className="font-sans text-foreground">{s.startTime}</span>
                 <span className="font-sans text-foreground">{s.endTime}</span>
@@ -1895,11 +1948,11 @@ export function ShiftManager({
             </button>
           </div>
           {showPlannerInfo && (
-            <div className="mb-3 rounded-xl border border-border bg-white px-3 py-2">
+            <div className="mb-3 rounded-xl border border-border bg-surface px-3 py-2">
               <p className="text-[11px] text-foreground">
                 Wochenstatus: <span className="text-foreground/85">{plannedDaysCount}/7</span> · Sollstunden:{" "}
-                <span className="text-primary">{formatHours(weeklyMinutes)}</span> · Lücken Mo-Fr:{" "}
-                <span className="text-amber-300">{missingWeekdays.length === 0 ? "Keine" : missingWeekdays.join(", ")}</span>
+                <span className="text-brand">{formatHours(weeklyMinutes)}</span> · Lücken Mo-Fr:{" "}
+                <span className="text-warning">{missingWeekdays.length === 0 ? "Keine" : missingWeekdays.join(", ")}</span>
               </p>
             </div>
           )}
@@ -1913,11 +1966,11 @@ export function ShiftManager({
                 type="date"
                 value={timelineDate}
                 onChange={(e) => setTimelineDate(e.target.value)}
-                className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-base sm:min-h-11 sm:text-sm"
+                className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-surface px-3 py-2.5 text-base sm:min-h-11 sm:text-sm"
               />
               <p className="mt-1 text-[11px] text-muted-foreground">Wochentag: {DAY_LABELS[timelineDay]}</p>
               {selectedShiftIds.length > 1 ? (
-                <span className="mt-1 inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                <span className="mt-1 inline-flex items-center rounded-full border border-brand/30 bg-brand-soft px-2 py-0.5 text-[10px] font-semibold text-brand">
                   {selectedShiftIds.length} Schichten ausgewählt
                 </span>
               ) : null}
@@ -1936,7 +1989,7 @@ export function ShiftManager({
                 max={20}
                 value={neededStaff}
                 onChange={(e) => setNeededStaff(Math.max(1, Number(e.target.value) || 1))}
-                className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-2.5 text-base tabular-nums sm:min-h-11 sm:text-sm"
+                className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-surface px-3 py-2.5 text-base tabular-nums sm:min-h-11 sm:text-sm"
                 title="Benötigte Mitarbeiter pro Zeitfenster"
               />
             </div>
@@ -1949,7 +2002,7 @@ export function ShiftManager({
               <button
                 type="button"
                 onClick={suggestAutofillForFirstGap}
-                className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 underline-offset-2 hover:underline sm:text-[11px]"
+                className="inline-flex items-center rounded-full border border-danger/30 bg-danger-soft px-3 py-2 text-xs font-medium text-danger-foreground underline-offset-2 hover:underline sm:text-[11px]"
               >
                 Erste Lücke ab {firstCriticalSlot}
               </button>
@@ -1960,7 +2013,7 @@ export function ShiftManager({
               <p className="text-[11px] font-semibold text-foreground">Autofill-Vorschläge (Top 3)</p>
               <div className="mt-2 space-y-1.5">
                 {gapSuggestions.map((s) => (
-                  <div key={s.userId} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-white px-2.5 py-2 text-xs">
+                  <div key={s.userId} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-2.5 py-2 text-xs">
                     <div>
                       <p className="font-medium text-foreground">{s.name}</p>
                       <p className="text-muted-foreground">{s.startTime}-{s.endTime} · {s.reason}</p>
@@ -1981,7 +2034,7 @@ export function ShiftManager({
                         setFlashAssignedKey(`${s.userId}-${timelineDay}`);
                         window.setTimeout(() => setFlashAssignedKey(null), 1200);
                       }}
-                      className="rounded-md border border-primary/35 bg-primary/15 px-2 py-1 font-medium text-primary"
+                      className="rounded-md border border-brand/30 bg-brand-soft px-2 py-1 font-medium text-brand"
                     >
                       Einplanen
                     </button>
@@ -2006,7 +2059,7 @@ export function ShiftManager({
                       type="button"
                       onClick={() => setTimelineDate(iso)}
                       className={`flex min-w-[3.25rem] flex-col items-center rounded-xl border px-1.5 py-1 text-[10px] transition-colors ${
-                        active ? "border-primary/50 bg-primary/10 text-primary" : "border-border bg-white/80 text-foreground"
+                        active ? "border-brand/45 bg-brand-soft text-brand" : "border-line bg-surface/80 text-fg"
                       }`}
                     >
                       <span className="font-semibold">{label}</span>
@@ -2036,12 +2089,12 @@ export function ShiftManager({
             <p className="mt-1 text-right text-[10px] text-muted-foreground">{weatherFetchErr}</p>
           ) : null}
           {costPeakFocusDay != null && timelineDay === costPeakFocusDay ? (
-            <div className="mt-2 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
+            <div className="mt-2 flex items-center justify-between rounded-xl border border-warning/25 bg-warning-soft px-3 py-2 text-[11px] text-warning-foreground">
               <span>Kosten-Peak-Fokus aktiv: Betroffene Schichten sind hervorgehoben.</span>
               <button
                 type="button"
                 onClick={() => setCostPeakFocusDay(null)}
-                className="rounded-md border border-amber-300 bg-white px-2 py-0.5 font-semibold"
+                className="rounded-md border border-warning/35 bg-surface px-2 py-0.5 font-semibold text-warning-foreground"
               >
                 Filter aus
               </button>
@@ -2118,7 +2171,7 @@ export function ShiftManager({
                     key={row.member.id}
                     className="grid grid-cols-1 items-stretch gap-2 md:grid-cols-[220px_1fr] md:items-center md:gap-3"
                   >
-                    <div className="flex min-h-12 items-center rounded-2xl border border-border bg-white px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] md:min-h-0 md:px-4 md:py-4">
+                    <div className="flex min-h-12 items-center rounded-2xl border border-border bg-surface px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] md:min-h-0 md:px-4 md:py-4">
                       <span className="inline-flex min-w-0 items-center gap-2 text-sm text-foreground">
                         <Avatar
                           src={row.member.image}
@@ -2156,7 +2209,7 @@ export function ShiftManager({
                           slot.isGap ? (
                             <div
                               key={`gap-${idx}`}
-                              className="absolute top-0 bottom-0 bg-red-500/[0.05]"
+                              className="absolute top-0 bottom-0 bg-danger/10"
                               style={{
                                 left: `${(idx * coverageSlotMinutes / TIMELINE_TOTAL_MINUTES) * 100}%`,
                                 width: `${(coverageSlotMinutes / TIMELINE_TOTAL_MINUTES) * 100}%`,
@@ -2169,7 +2222,7 @@ export function ShiftManager({
                           return (
                             <div
                               key={`hour-line-${hour}`}
-                              className="pointer-events-none absolute top-0 bottom-0 w-px bg-white/[0.08]"
+                              className="pointer-events-none absolute top-0 bottom-0 w-px bg-surface/[0.08]"
                               style={{ left: `${left}%` }}
                             />
                           );
@@ -2178,7 +2231,9 @@ export function ShiftManager({
                       {row.conflict ? (
                         <div
                           className={`absolute inset-1 rounded-lg flex items-center justify-center text-xs font-semibold ${
-                            row.conflict === "SICK" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"
+                            row.conflict === "SICK"
+                              ? "bg-danger-soft text-danger-foreground"
+                              : "bg-warning-soft text-warning-foreground"
                           }`}
                         >
                           {row.conflict === "SICK" ? "Krank (gesperrt)" : "Urlaub (gesperrt)"}
@@ -2187,7 +2242,7 @@ export function ShiftManager({
                         <>
                           {!draftForRow && overnightCurrent && shiftEnd !== null ? (
                             <div
-                              className="absolute top-1.5 bottom-1.5 z-[9] flex items-center gap-1 rounded-lg border border-emerald-300/50 bg-emerald-300/35 px-2 text-[10px] font-semibold text-emerald-900"
+                              className="absolute top-1.5 bottom-1.5 z-[9] flex items-center gap-1 rounded-lg border border-brand/35 bg-brand-soft px-2 text-[10px] font-semibold text-brand"
                               style={{ left: "0%", width: `${(shiftEnd / TIMELINE_TOTAL_MINUTES) * 100}%` }}
                               title={`Next Day ${minutesToHHMM(0)}-${minutesToHHMM(shiftEnd)}`}
                             >
@@ -2198,19 +2253,19 @@ export function ShiftManager({
                           <div
                             className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg border px-2 text-[11px] backdrop-blur-[2px] active:cursor-grabbing ${
                               row.shift?.isDraft
-                                ? "border-dashed border-violet-600/70 bg-[repeating-linear-gradient(-45deg,rgba(139,92,246,0.3)_0px,rgba(139,92,246,0.3)_6px,transparent_6px,transparent_12px)] text-violet-950"
+                                ? "border-dashed border-brand/60 bg-[repeating-linear-gradient(-45deg,rgba(22,101,52,0.28)_0px,rgba(22,101,52,0.28)_6px,transparent_6px,transparent_12px)] text-brand"
                                 : tradeOpen
-                                  ? "border-amber-400 bg-amber-200/70 text-amber-900"
+                                  ? "border-warning/40 bg-warning-soft text-warning-foreground"
                                   : roleTone
                             } ${
                               activeDrag?.userId === row.member.id
                                 ? "shadow-lg shadow-black/40 transition-none"
                                 : "transition-[left,width] duration-100 ease-out"
-                            } ${flashAssignedKey === `${row.member.id}-${timelineDay}` ? "ring-2 ring-primary/70 animate-pulse" : ""} ${
-                              row.shift && selectedShiftIds.includes(row.shift.id) ? "ring-2 ring-blue-500/80" : ""
-                            } ${weatherConflict ? "ring-2 ring-sky-500/90 animate-pulse" : ""} ${
+                            } ${flashAssignedKey === `${row.member.id}-${timelineDay}` ? "ring-2 ring-brand/55 animate-pulse" : ""} ${
+                              row.shift && selectedShiftIds.includes(row.shift.id) ? "ring-2 ring-brand/75" : ""
+                            } ${weatherConflict ? "ring-2 ring-warning/80 animate-pulse" : ""} ${
                               costPeakFocusActive && !costPeakAffected ? "opacity-30 [filter:grayscale(35%)]" : ""
-                            } ${costPeakFocusActive && costPeakAffected ? "ring-2 ring-amber-500/90 animate-pulse" : ""}`}
+                            } ${costPeakFocusActive && costPeakAffected ? "ring-2 ring-warning/85 animate-pulse" : ""}`}
                             style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
                             title={
                               row.shift?.isDraft
@@ -2310,12 +2365,12 @@ export function ShiftManager({
                             {tradeOpen ? <span className="mr-1 text-[10px]">🔄</span> : null}
                             {livePauseRisk ? (
                               <span className="mr-0.5 inline-flex shrink-0" title="Über 6h Soll: Pause prüfen">
-                                <Coffee className="h-3.5 w-3.5 text-red-200" aria-hidden />
+                                <Coffee className="h-3.5 w-3.5 text-danger" aria-hidden />
                               </span>
                             ) : null}
                             {rowCompliance?.restRisk ? (
                               <span className="mr-0.5 inline-flex shrink-0" title="Ruhezeit unter 11 Stunden">
-                                <AlarmClock className="h-3.5 w-3.5 text-amber-200" aria-hidden />
+                                <AlarmClock className="h-3.5 w-3.5 text-warning" aria-hidden />
                               </span>
                             ) : null}
                             {!activeDrag && (
@@ -2331,7 +2386,7 @@ export function ShiftManager({
                                     });
                                   });
                                 }}
-                                className="absolute -right-1 -top-1 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-300/40 bg-red-500/90 text-sm text-foreground opacity-100 md:h-7 md:w-7 md:text-xs md:opacity-0 md:transition-opacity md:group-hover:opacity-100"
+                                className="absolute -right-1 -top-1 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-danger/40 bg-danger px-2 text-sm text-brand-foreground opacity-100 md:h-7 md:w-7 md:text-xs md:opacity-0 md:transition-opacity md:group-hover:opacity-100"
                                 title="Schicht löschen"
                               >
                                 ×
@@ -2353,7 +2408,7 @@ export function ShiftManager({
           </div>
           {contextMenu ? (
             <div
-              className="fixed z-[160] min-w-[170px] rounded-lg border border-border bg-white p-1 shadow-[0_16px_40px_rgba(0,0,0,0.2)]"
+              className="fixed z-[160] min-w-[170px] rounded-lg border border-border bg-surface p-1 shadow-[0_16px_40px_rgba(0,0,0,0.2)]"
               style={{ left: contextMenu.x, top: contextMenu.y }}
             >
               <button
@@ -2429,7 +2484,7 @@ export function ShiftManager({
             </div>
           ) : null}
           {selectedShiftIds.length > 0 && (bulkMenuOpen || selectedShiftIds.length > 1) ? (
-            <div className="fixed bottom-24 right-6 z-[160] min-w-[220px] rounded-xl border border-border bg-white/95 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur">
+            <div className="fixed bottom-24 right-6 z-[160] min-w-[220px] rounded-xl border border-border bg-surface/95 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur">
               <p className="px-2 py-1 text-[11px] font-semibold text-foreground">{selectedShiftIds.length} Schichten gewählt</p>
               <button
                 type="button"
@@ -2511,11 +2566,11 @@ export function ShiftManager({
             </div>
           ) : null}
           {bulkUndo ? (
-            <div className="fixed bottom-7 right-6 z-[170] rounded-xl border border-border bg-white/95 px-3 py-2 text-xs shadow-[0_14px_36px_rgba(0,0,0,0.2)] backdrop-blur">
+            <div className="fixed bottom-7 right-6 z-[170] rounded-xl border border-border bg-surface/95 px-3 py-2 text-xs shadow-[0_14px_36px_rgba(0,0,0,0.2)] backdrop-blur">
               <span className="mr-3 text-foreground">{bulkUndo.label}</span>
               <button
                 type="button"
-                className="font-semibold text-primary underline underline-offset-2"
+                className="font-semibold text-brand underline underline-offset-2"
                 onClick={() => {
                   const restore = bulkUndo.items;
                   startTransition(async () => {
@@ -2540,7 +2595,7 @@ export function ShiftManager({
               </button>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-primary transition-[width] duration-100"
+                  className="h-full rounded-full bg-brand transition-[width] duration-100"
                   style={{
                     width: `${
                       bulkUndoDeadlineMs
@@ -2617,7 +2672,7 @@ export function ShiftManager({
       {shiftEdit ? (
         <div
           className={`fixed inset-0 z-[100] flex justify-center bg-black/45 ${
-            renderDesktopTree ? "items-end p-0 md:items-center md:bg-white/70 md:p-4" : "items-stretch p-0"
+            renderDesktopTree ? "items-end p-0 md:items-center md:bg-surface/70 md:p-4" : "items-stretch p-0"
           }`}
           role="dialog"
           aria-modal="true"
@@ -2673,7 +2728,7 @@ export function ShiftManager({
                   step={900}
                   value={shiftEdit.startTime.slice(0, 5)}
                   onChange={(e) => setShiftEdit({ ...shiftEdit, startTime: e.target.value })}
-                  className="mt-1 min-h-12 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-3 text-base text-foreground md:min-h-0 md:py-2 md:text-sm"
+                  className="mt-1 min-h-12 w-full touch-manipulation rounded-lg border border-border bg-surface px-3 py-3 text-base text-foreground md:min-h-0 md:py-2 md:text-sm"
                 />
               </div>
               <div>
@@ -2683,7 +2738,7 @@ export function ShiftManager({
                   step={900}
                   value={shiftEdit.endTime.slice(0, 5)}
                   onChange={(e) => setShiftEdit({ ...shiftEdit, endTime: e.target.value })}
-                  className="mt-1 min-h-12 w-full touch-manipulation rounded-lg border border-border bg-white px-3 py-3 text-base text-foreground md:min-h-0 md:py-2 md:text-sm"
+                  className="mt-1 min-h-12 w-full touch-manipulation rounded-lg border border-border bg-surface px-3 py-3 text-base text-foreground md:min-h-0 md:py-2 md:text-sm"
                 />
               </div>
             </div>
@@ -2717,7 +2772,7 @@ export function ShiftManager({
                     }
                   });
                 }}
-                className="min-h-12 w-full touch-manipulation rounded-lg border border-primary/35 bg-primary/15 px-4 py-3 text-sm font-semibold text-primary transition-all hover:bg-primary/25 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] disabled:opacity-50 sm:w-auto sm:py-2"
+                className="min-h-12 w-full touch-manipulation rounded-lg border border-brand/35 bg-brand-soft px-4 py-3 text-sm font-semibold text-brand transition-all hover:bg-brand/15 hover:shadow-md disabled:opacity-50 sm:w-auto sm:py-2"
               >
                 Speichern
               </button>
@@ -2740,7 +2795,7 @@ export function ShiftManager({
                     }
                   });
                 }}
-                className="min-h-12 w-full touch-manipulation rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 transition-colors hover:bg-red-100 disabled:opacity-50 sm:w-auto sm:py-2"
+                className="min-h-12 w-full touch-manipulation rounded-lg border border-danger/35 bg-danger-soft px-4 py-3 text-sm text-danger-foreground transition-colors hover:bg-danger-soft/90 disabled:opacity-50 sm:w-auto sm:py-2"
               >
                 Löschen
               </button>
@@ -2761,15 +2816,15 @@ export function ShiftManager({
         <p className="font-semibold text-foreground">Compliance-Radar · Budget</p>
         <div className="flex flex-wrap gap-3">
           <span className="inline-flex items-center gap-1">
-            <Coffee className="h-3.5 w-3.5 text-red-500" aria-hidden />
+            <Coffee className="h-3.5 w-3.5 text-danger" aria-hidden />
             Schicht &gt;6h: 30-Min-Pause prüfen (nur Sollzeit im Plan)
           </span>
           <span className="inline-flex items-center gap-1">
-            <AlarmClock className="h-3.5 w-3.5 text-orange-600" aria-hidden />
+            <AlarmClock className="h-3.5 w-3.5 text-warning" aria-hidden />
             &lt;11h Ruhe zwischen aufeinanderfolgenden Schichten (Mo–So, Zykluswoche {selectedWeekIndex})
           </span>
         </div>
-        <p className="text-[10px] text-amber-800/85">Hinweis: keine Rechtsberatung – vor Veröffentlichung prüfen.</p>
+        <p className="text-[10px] text-warning-foreground/90">Hinweis: keine Rechtsberatung – vor Veröffentlichung prüfen.</p>
         <div className="flex flex-wrap items-baseline justify-between gap-2 border-t border-border pt-2">
           <span className="text-foreground">Geplante Brutto-Lohnkosten (Woche {selectedWeekIndex})</span>
           <span className="font-sans tabular-nums font-semibold text-foreground">

@@ -1,50 +1,161 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Tailwind v4: Dark-Variant über .dark-Klasse (next-themes-kompatibel) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* =========================================================================
+   VREMA – Elegante Effizienz Theme
+   Tokens sind die EINZIGE Quelle der Wahrheit für Farben.
+   Nutzt HSL-Triplets, damit Tailwind opacity-Modifier (z. B. /20) greifen.
+   ========================================================================= */
+
 :root {
-  --background: 210 40% 98%;
-  --card: 0 0% 100%;
+  /* Surfaces */
+  --background: 210 20% 98%;          /* #f9fafb */
+  --surface: 0 0% 100%;               /* #ffffff   – Karten/Container  */
+  --surface-muted: 210 20% 96%;       /* leichter Heber für Sub-Karten */
   --popover: 0 0% 100%;
-  --primary: 148 85% 42%;
-  --secondary: 210 20% 97%;
-  --accent: 210 20% 97%;
-  --border: 214 32% 91%;
-  --ring: 148 85% 42%;
-  --radius: 1.25rem;
-  --foreground: 222 47% 11%;
-  --muted: 214 20% 92%;
-  --muted-foreground: 215 16% 38%;
+  --overlay: 222 47% 11%;             /* Modal-Backdrop                */
+
+  /* Text */
+  --foreground: 215 28% 17%;          /* #1f2937 */
+  --foreground-muted: 215 16% 38%;
+  --foreground-subtle: 215 14% 55%;
+
+  /* Borders & Lines */
+  --border: 214 28% 90%;
+  --border-strong: 214 24% 80%;
+  --ring: 142 64% 24%;                /* Fokus = Brand */
+
+  /* Brand – Petrol (tiefes Grün) */
+  --brand: 142 64% 24%;               /* #166534 */
+  --brand-hover: 142 70% 20%;
+  --brand-soft: 142 50% 94%;          /* Pille-/Hover-Hintergrund */
+  --brand-foreground: 0 0% 100%;      /* Text auf Brand-Fläche    */
+
+  /* Status – gedämpft, konsistent */
+  --success: 142 64% 24%;
+  --success-soft: 142 50% 94%;
+  --success-foreground: 142 64% 18%;
+
+  --warning: 38 78% 42%;              /* gedämpftes Gold */
+  --warning-soft: 38 90% 95%;
+  --warning-foreground: 30 70% 28%;
+
+  --danger: 0 60% 45%;                /* gedämpftes Karmesin */
+  --danger-soft: 0 75% 96%;
+  --danger-foreground: 0 60% 32%;
+
+  --neutral: 215 16% 47%;
+  --neutral-soft: 215 20% 94%;
+  --neutral-foreground: 215 28% 25%;
+
+  /* Geometrie & Tiefe */
+  --radius: 0.875rem;
+  --radius-sm: 0.5rem;
+  --radius-lg: 1.25rem;
+  --shadow-card: 0 1px 2px hsl(220 40% 12% / 0.04), 0 8px 24px hsl(220 40% 12% / 0.04);
+  --shadow-card-hover: 0 1px 2px hsl(220 40% 12% / 0.06), 0 18px 36px hsl(220 40% 12% / 0.08);
+  --shadow-pop: 0 12px 40px hsl(220 40% 12% / 0.18);
 }
 
 .dark {
-  --background: 210 40% 98%;
-  --card: 0 0% 100%;
-  --popover: 0 0% 100%;
-  --primary: 148 85% 42%;
-  --secondary: 210 20% 97%;
-  --accent: 210 20% 97%;
-  --border: 214 32% 91%;
-  --ring: 148 85% 42%;
-  --radius: 1.25rem;
-  --foreground: 222 47% 11%;
-  --muted: 214 20% 92%;
-  --muted-foreground: 215 16% 38%;
+  --background: 222 47% 11%;          /* #111827 */
+  --surface: 215 28% 17%;             /* #1f2937 */
+  --surface-muted: 217 33% 14%;
+  --popover: 215 28% 17%;
+  --overlay: 0 0% 0%;
+
+  --foreground: 220 14% 96%;          /* #f3f4f6 */
+  --foreground-muted: 215 14% 70%;
+  --foreground-subtle: 215 14% 56%;
+
+  --border: 215 22% 26%;
+  --border-strong: 215 20% 34%;
+  --ring: 142 71% 38%;
+
+  --brand: 142 71% 35%;               /* #15803d auf Dark etwas heller für Lesbarkeit */
+  --brand-hover: 142 75% 42%;
+  --brand-soft: 142 50% 16%;
+  --brand-foreground: 0 0% 100%;
+
+  --success: 142 71% 38%;
+  --success-soft: 142 50% 16%;
+  --success-foreground: 142 65% 80%;
+
+  --warning: 38 80% 58%;
+  --warning-soft: 38 50% 18%;
+  --warning-foreground: 38 90% 80%;
+
+  --danger: 0 70% 60%;
+  --danger-soft: 0 60% 20%;
+  --danger-foreground: 0 80% 88%;
+
+  --neutral: 215 18% 60%;
+  --neutral-soft: 215 18% 22%;
+  --neutral-foreground: 215 14% 80%;
+
+  --shadow-card: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 24px hsl(0 0% 0% / 0.32);
+  --shadow-card-hover: 0 1px 2px hsl(0 0% 0% / 0.5), 0 18px 36px hsl(0 0% 0% / 0.45);
+  --shadow-pop: 0 12px 40px hsl(0 0% 0% / 0.55);
 }
 
-@theme {
+/* =========================================================================
+   Tailwind v4 – Tokens als Utility-Klassen verfügbar machen
+   (bg-surface, text-fg, border-line, ring-brand, …)
+   ========================================================================= */
+@theme inline {
   --color-background: hsl(var(--background));
-  --color-card: hsl(var(--card));
+  --color-surface: hsl(var(--surface));
+  --color-surface-muted: hsl(var(--surface-muted));
   --color-popover: hsl(var(--popover));
-  --color-primary: hsl(var(--primary));
-  --color-secondary: hsl(var(--secondary));
-  --color-accent: hsl(var(--accent));
+  --color-overlay: hsl(var(--overlay));
+
+  --color-fg: hsl(var(--foreground));
+  --color-fg-muted: hsl(var(--foreground-muted));
+  --color-fg-subtle: hsl(var(--foreground-subtle));
+
+  --color-line: hsl(var(--border));
+  --color-line-strong: hsl(var(--border-strong));
+  --color-ring-brand: hsl(var(--ring));
+
+  --color-brand: hsl(var(--brand));
+  --color-brand-hover: hsl(var(--brand-hover));
+  --color-brand-soft: hsl(var(--brand-soft));
+  --color-brand-foreground: hsl(var(--brand-foreground));
+
+  --color-success: hsl(var(--success));
+  --color-success-soft: hsl(var(--success-soft));
+  --color-success-foreground: hsl(var(--success-foreground));
+
+  --color-warning: hsl(var(--warning));
+  --color-warning-soft: hsl(var(--warning-soft));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+
+  --color-danger: hsl(var(--danger));
+  --color-danger-soft: hsl(var(--danger-soft));
+  --color-danger-foreground: hsl(var(--danger-foreground));
+
+  --color-neutral-tone: hsl(var(--neutral));
+  --color-neutral-soft: hsl(var(--neutral-soft));
+  --color-neutral-foreground: hsl(var(--neutral-foreground));
+
+  /* Legacy-Aliasse, damit existierende Klassen bg-primary/bg-card nicht brechen */
+  --color-primary: hsl(var(--brand));
+  --color-secondary: hsl(var(--surface-muted));
+  --color-accent: hsl(var(--brand-soft));
+  --color-card: hsl(var(--surface));
+  --color-foreground: hsl(var(--foreground));
+  --color-muted: hsl(var(--surface-muted));
+  --color-muted-foreground: hsl(var(--foreground-muted));
   --color-border: hsl(var(--border));
   --color-ring: hsl(var(--ring));
-  --color-foreground: hsl(var(--foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
 }
 
+/* =========================================================================
+   Globale Basis
+   ========================================================================= */
 * {
   box-sizing: border-box;
 }
@@ -63,6 +174,11 @@
   html {
     scroll-behavior: smooth;
     min-height: 0;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
@@ -72,18 +188,16 @@
     color: hsl(var(--foreground));
     font-family: var(--font-geist-sans), system-ui, sans-serif;
     -webkit-text-size-adjust: 100%;
+    transition: background-color 200ms ease, color 200ms ease;
   }
 }
 
+/* =========================================================================
+   Wiederverwendbare Patterns (CSS-Helfer)
+   ========================================================================= */
 @keyframes premiumFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .premium-enter {
@@ -92,34 +206,39 @@
 
 .premium-card {
   border: 1px solid hsl(var(--border));
-  background: hsl(var(--card));
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
-  transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
+  background: hsl(var(--surface));
+  box-shadow: var(--shadow-card);
+  transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease, border-color 220ms ease;
 }
 
 .premium-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .glass-nav {
-  background: hsl(0 0% 100% / 0.86);
+  background: hsl(var(--surface) / 0.86);
   backdrop-filter: blur(16px);
-  border: 1px solid hsl(214 32% 91%);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-card);
 }
 
 .glass-panel {
-  background: hsl(var(--card));
+  background: hsl(var(--surface));
   backdrop-filter: blur(18px);
-  border: 1px solid hsl(214 32% 91%);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-card);
 }
 
 .lucide {
   stroke-width: 1.5;
 }
 
+/* =========================================================================
+   Buttons – globale Basis (rundes Radius, Mindesthöhe)
+   Spezielle Variants nutzen Klassen .btn-* (siehe unten) oder die
+   <Button> React-Komponente. Wir vermeiden bg-primary-Hacks.
+   ========================================================================= */
 button[class]:not([class*="rounded-full"]):not([class*="rounded-2xl"]):not([class*="rounded-3xl"]) {
   border-radius: 0.75rem;
 }
@@ -128,7 +247,6 @@ button[class] {
   min-height: 44px;
 }
 
-/* Dashboard & Co.: größere Tap-Ziele bis Tablet (eine Hand + Alltag). */
 @media (max-width: 1023px) {
   button[class] {
     min-height: 48px;
@@ -141,7 +259,72 @@ button[class] {
   }
 }
 
-/* Horizontale Snap-Reihen (Dashboard-KPIs): kein sichtbarer Scrollbalken */
+/* Petrol-Brand-Button (Klassen-Variante für Stellen ohne <Button>) */
+.btn-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  background: hsl(var(--brand));
+  color: hsl(var(--brand-foreground));
+  border: 1px solid hsl(var(--brand));
+  box-shadow: var(--shadow-card);
+  transition: background-color 180ms ease, transform 160ms ease, box-shadow 200ms ease;
+}
+.btn-brand:hover:not(:disabled) {
+  background: hsl(var(--brand-hover));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card-hover);
+}
+.btn-brand:active:not(:disabled) {
+  transform: translateY(0);
+}
+.btn-brand:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  background: hsl(var(--surface));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border-strong));
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+.btn-outline:hover:not(:disabled) {
+  background: hsl(var(--surface-muted));
+  border-color: hsl(var(--brand) / 0.5);
+  color: hsl(var(--brand));
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  background: hsl(var(--danger));
+  color: hsl(0 0% 100%);
+  border: 1px solid hsl(var(--danger));
+  transition: background-color 180ms ease, transform 160ms ease;
+}
+.btn-danger:hover:not(:disabled) {
+  background: hsl(var(--danger) / 0.92);
+  transform: translateY(-1px);
+}
+
+/* Scrollbar */
 .scrollbar-hide {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -150,7 +333,6 @@ button[class] {
   display: none;
 }
 
-/* Leichtes „Native“-Feedback bei Tap (nur Dashboard-Hauptbereich) */
 @media (max-width: 1023px) {
   .native-app-tap button:not(:disabled):active,
   .native-app-tap a[href]:active {
@@ -159,82 +341,56 @@ button[class] {
   }
 }
 
-/* Dashboard-Hauptbereich: sanfteres Scrollen auf iOS */
 .dashboard-touch-scroll {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Public (non-dashboard) surfaces: unified enterprise hierarchy. */
+/* Public Surfaces */
 .public-page {
   min-height: 100dvh;
-  background: hsl(210 40% 98%);
+  background: hsl(var(--background));
 }
 
 .public-card {
-  border: 1px solid hsl(214 32% 91%);
-  background: hsl(0 0% 100%);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  box-shadow: var(--shadow-card);
   transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease;
 }
 
 .public-card:hover {
   transform: translateY(-1px);
-  border-color: hsl(214 32% 86%);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  border-color: hsl(var(--border-strong));
+  box-shadow: var(--shadow-card-hover);
 }
 
-.btn-primary-solid {
-  border: 1px solid hsl(var(--primary) / 0.2);
-  background: linear-gradient(to bottom, hsl(var(--primary) / 0.98), hsl(var(--primary) / 0.9));
-  color: hsl(var(--foreground));
-  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.22);
-  transition: background-color 220ms ease, transform 220ms ease, box-shadow 220ms ease, filter 220ms ease;
-}
-
-.btn-primary-solid:hover {
-  background: hsl(var(--primary) / 0.9);
-}
-
-.btn-secondary-outline {
-  border: 1px solid hsl(214 32% 91%);
-  background: hsl(0 0% 100%);
-  color: hsl(var(--foreground));
-  transition: background-color 220ms ease, border-color 220ms ease;
-}
-
-.btn-secondary-outline:hover {
-  background: hsl(var(--secondary));
-}
-
-button[class*="bg-primary"] {
-  background-image: linear-gradient(to bottom, hsl(var(--primary) / 0.96), hsl(var(--primary) / 0.88));
-  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.2);
-  transition: transform 220ms ease, box-shadow 220ms ease, filter 220ms ease;
-}
-
-button[class*="bg-primary"]:hover {
-  transform: translateY(-1px);
-  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.2), 0 16px 30px hsl(var(--primary) / 0.2);
-}
-
+/* =========================================================================
+   Inputs – globale Basis: Petrol-Linie als Fokus-Indikator (kein Rahmen-Glow).
+   ========================================================================= */
 input[class],
 select[class],
 textarea[class] {
-  border-radius: 0.75rem;
-  background: hsl(0 0% 100%);
+  border-radius: 0.625rem;
+  background: hsl(var(--surface));
   color: hsl(var(--foreground));
-  border-color: hsl(var(--border));
+  border: 1px solid hsl(var(--border));
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
 input[class]:focus,
 select[class]:focus,
 textarea[class]:focus {
   outline: none;
-  border-color: hsl(var(--ring));
-  box-shadow: 0 0 0 4px hsl(var(--ring) / 0.2);
+  border-color: hsl(var(--brand));
+  box-shadow: 0 0 0 3px hsl(var(--brand) / 0.18);
 }
 
-/* Custom scrollbar */
+input[class]::placeholder,
+textarea[class]::placeholder {
+  color: hsl(var(--foreground-subtle));
+}
+
+/* Webkit-Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -243,20 +399,23 @@ textarea[class]:focus {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.35);
+  background: hsl(var(--border-strong));
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  background: hsl(var(--neutral));
 }
 
-/* Date input indicator for neutral light mode */
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: none;
   opacity: 0.55;
 }
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.7;
+}
 
-/* Vaul: geschlossene Overlays/Drawer dürfen kein Scroll/Touch blockieren (Ghost-Layer) */
+/* Vaul */
 [data-vaul-overlay][data-state="closed"],
 [data-vaul-drawer][data-state="closed"] {
   pointer-events: none !important;
