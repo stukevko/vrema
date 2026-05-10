@@ -58,7 +58,7 @@ export default async function BillingPage({
             <form action={createBillingPortalSession}>
               <button
                 type="submit"
-              className="flex min-h-12 items-center gap-2 rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium transition-colors hover:bg-muted/50 sm:min-h-0 sm:py-2"
+              className="flex min-h-12 items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium transition-colors hover:bg-surface-muted hover:border-brand/40 sm:min-h-0 sm:py-2"
               >
                 <CreditCard className="w-4 h-4" />
                 Zahlungsportal
@@ -127,7 +127,7 @@ export default async function BillingPage({
                   <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "yearly")}>
                     <button
                       type="submit"
-                      className="min-h-12 w-full rounded-xl border border-border bg-white py-3.5 text-sm font-medium transition-colors hover:bg-muted/50 sm:min-h-0 sm:py-2.5"
+                      className="min-h-12 w-full rounded-xl border border-line bg-surface py-3.5 text-sm font-medium transition-colors hover:bg-surface-muted hover:border-brand/40 sm:min-h-0 sm:py-2.5"
                     >
                       Jährlich (2 Monate gratis)
                     </button>
@@ -137,7 +137,7 @@ export default async function BillingPage({
               {key === "ENTERPRISE" && !isCurrent && (
                 <a
                   href="mailto:kontakt@kevko.studio?subject=Enterprise%20Anfrage%20Vrema"
-                  className="block min-h-12 w-full rounded-xl border border-border bg-white py-3.5 text-center text-sm font-medium transition-colors hover:bg-muted/50 sm:min-h-0 sm:py-2.5"
+                  className="block min-h-12 w-full rounded-xl border border-line bg-surface py-3.5 text-center text-sm font-medium transition-colors hover:bg-surface-muted hover:border-brand/40 sm:min-h-0 sm:py-2.5"
                 >
                   Kontakt aufnehmen
                 </a>
@@ -147,7 +147,7 @@ export default async function BillingPage({
         })}
       </div>
 
-      <div className="rounded-2xl border border-border bg-white px-4 py-3 text-xs text-muted-foreground">
+      <div className="rounded-2xl border border-line bg-surface px-4 py-3 text-xs text-muted-foreground">
         Mit dem Abschluss eines kostenpflichtigen Plans gelten die{" "}
         <Link href="/agb" className="text-foreground underline underline-offset-2 hover:text-foreground">
           AGB

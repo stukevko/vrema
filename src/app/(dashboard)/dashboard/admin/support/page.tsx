@@ -67,7 +67,7 @@ export default async function OrgAdminSupportPage() {
                   <select
                     name="status"
                     defaultValue={ticket.status}
-                    className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-xl px-3 py-2 text-sm"
                   >
                     <option value={TicketStatus.OPEN}>Offen</option>
                     <option value={TicketStatus.PENDING}>In Bearbeitung</option>
@@ -82,7 +82,7 @@ export default async function OrgAdminSupportPage() {
                     rows={3}
                     defaultValue={ticket.response ?? ""}
                     placeholder="Antwort schreiben…"
-                    className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-xl px-3 py-2 text-sm"
                   />
                 </div>
                 <FormSubmitButton

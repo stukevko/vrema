@@ -23,7 +23,7 @@ export default function AgbPage() {
           Diese AGB gelten für die Nutzung der SaaS-Anwendung Vrema, bereitgestellt von KevkoStudio.
         </p>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+        <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
           <h2 className="mb-2 font-semibold text-foreground">1. Anbieter und Geltungsbereich</h2>
           <p>
             Anbieter ist Kevin Konkin - KevkoStudio, Kolbstr. 5, 67346 Speyer, Deutschland, kontakt@kevko.studio.
@@ -35,7 +35,7 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+        <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
           <h2 className="mb-2 font-semibold text-foreground">2. Vertragsgegenstand</h2>
           <p>
             Vertragsgegenstand ist die zeitlich befristete Bereitstellung der cloudbasierten Anwendung Vrema zur digitalen
@@ -44,7 +44,7 @@ export default function AgbPage() {
           <p>Der genaue Funktionsumfang ergibt sich aus der jeweils aktuellen Leistungsbeschreibung auf der Website.</p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+        <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
           <h2 className="mb-2 font-semibold text-foreground">3. Registrierung und Zugang</h2>
           <p>
             Der Kunde ist verpflichtet, bei Registrierung wahrheitsgemäße Angaben zu machen und Zugangsdaten vertraulich zu
@@ -55,7 +55,7 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+        <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
           <h2 className="mb-2 font-semibold text-foreground">4. Preise, Abrechnung und Zahlung</h2>
           <p>Es gelten die auf der Website ausgewiesenen Preise zum Zeitpunkt des Vertragsschlusses.</p>
           <p>
@@ -64,7 +64,7 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+        <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
           <h2 className="mb-2 font-semibold text-foreground">5. Laufzeit, Verlängerung und Kündigung</h2>
           <p>
             Die Vertragslaufzeit richtet sich nach dem gebuchten Intervall (monatlich oder jährlich) und verlängert sich
@@ -76,7 +76,7 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+        <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
           <h2 className="mb-2 font-semibold text-foreground">6. Verfügbarkeit und Wartung</h2>
           <p>
             Der Anbieter bemüht sich um einen störungsfreien Betrieb. Wartungsfenster, sicherheitsrelevante Updates und
@@ -87,7 +87,7 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+        <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
           <h2 className="mb-2 font-semibold text-foreground">7. Pflichten des Kunden</h2>
           <p>
             Der Kunde darf die Anwendung nur im vertraglich vorgesehenen Rahmen nutzen und keine rechtswidrigen Inhalte
@@ -99,7 +99,7 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+        <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
           <h2 className="mb-2 font-semibold text-foreground">8. Haftung</h2>
           <p>
             Der Anbieter haftet unbeschränkt bei Vorsatz und grober Fahrlässigkeit sowie bei Verletzung von Leben, Körper
@@ -111,7 +111,7 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+        <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
           <h2 className="mb-2 font-semibold text-foreground">9. Datenschutz und Auftragsverarbeitung</h2>
           <p>
             Die Verarbeitung personenbezogener Daten erfolgt gemäß Datenschutzhinweisen unter /datenschutz. Soweit
@@ -119,7 +119,7 @@ export default function AgbPage() {
           </p>
         </section>
 
-        <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+        <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
           <h2 className="mb-2 font-semibold text-foreground">10. Schlussbestimmungen</h2>
           <p>
             Es gilt deutsches Recht unter Ausschluss des UN-Kaufrechts. Gerichtsstand für Kaufleute ist, soweit gesetzlich

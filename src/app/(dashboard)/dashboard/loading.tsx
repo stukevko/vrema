@@ -38,7 +38,7 @@ export default function DashboardLoading() {
           </div>
           <div className="h-2 w-full animate-pulse rounded-full bg-muted/40" />
         </div>
-        <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)]">
           <div className="flex items-center gap-3 border-b border-border px-4 py-3 sm:px-5 sm:py-4">
             <div className="h-8 w-8 shrink-0 animate-pulse rounded-2xl bg-muted/50" />
             <div className="min-w-0 flex-1 space-y-2">

@@ -80,7 +80,7 @@ export default async function TeamAbsencesPage() {
                   value="REQUESTED"
                   label="Offen lassen"
                   pendingLabel="Speichere..."
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-xs font-semibold text-foreground hover:border-brand/40 hover:text-brand disabled:opacity-60"
                 />
               </div>
             </form>

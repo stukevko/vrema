@@ -35,7 +35,7 @@ export default function TerminalIndexPage() {
           maxLength={4}
           value={pin}
           onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-          className="w-full rounded-xl border border-border bg-white px-4 py-3 text-center text-2xl tracking-[0.35em]"
+          className="w-full rounded-xl px-4 py-3 text-center text-2xl tracking-[0.35em]"
           placeholder="----"
         />
         <button

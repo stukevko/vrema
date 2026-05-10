@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { Drawer } from "vaul";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 // ─── Typing animation hook ───────────────────────────────────────────────────
 function useTypewriter(lines: string[], speed = 45, pauseMs = 900) {
@@ -240,7 +241,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full max-w-full flex-col overflow-x-hidden overscroll-x-none bg-slate-50 text-foreground selection:bg-primary/10">
+    <div className="relative flex min-h-[100dvh] w-full max-w-full flex-col overflow-x-hidden overscroll-x-none bg-background text-foreground selection:bg-brand/15">
       <Script
         id="ld-json-vrema"
         type="application/ld+json"
@@ -248,7 +249,7 @@ export default function LandingPage() {
       />
 
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
-      <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full overflow-x-hidden border-b border-slate-200 glass-nav">
+      <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full overflow-x-hidden border-b border-line glass-nav">
         <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-2 overflow-x-hidden px-4">
           <Link href="/" className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none">
             <Image
@@ -271,31 +272,35 @@ export default function LandingPage() {
           </div>
 
           <div className="hidden min-w-0 max-w-[55%] flex-shrink-0 flex-wrap items-center justify-end gap-x-1.5 gap-y-1 sm:max-w-none sm:gap-3 md:flex">
+            <ThemeToggle />
             <Link
               href="/auth/login"
-              className="max-w-full break-words text-right text-sm text-muted-foreground transition-colors hover:text-foreground px-2 py-1.5 rounded-xl hover:bg-card sm:px-3 md:whitespace-nowrap"
+              className="max-w-full break-words text-right text-sm text-fg-muted transition-colors hover:text-foreground px-2 py-1.5 rounded-xl hover:bg-surface-muted sm:px-3 md:whitespace-nowrap"
             >
               Anmelden
             </Link>
             <Link
               href="/auth/register"
-              className="max-w-full break-words text-right text-sm rounded-xl border border-border bg-card px-3 py-2 font-semibold text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all hover:bg-card/70 sm:px-4 md:whitespace-nowrap"
+              className="btn-primary-solid !py-2 !px-3 sm:!px-4 text-sm md:whitespace-nowrap"
             >
               Registrieren
             </Link>
           </div>
-          <button
-            type="button"
-            aria-label="Menü öffnen"
-            onClick={() => setMobileNavOpen(true)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-white text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-colors active:scale-95 md:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
+            <button
+              type="button"
+              aria-label="Menü öffnen"
+              onClick={() => setMobileNavOpen(true)}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-line bg-surface text-foreground shadow-sm transition-colors active:scale-95"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
           <Drawer.Root open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
             <Drawer.Portal>
               <Drawer.Overlay className="fixed inset-0 z-[120] bg-black/45" />
-              <Drawer.Content className="fixed inset-x-0 bottom-0 z-[121] rounded-t-[28px] border border-border bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.18)] outline-none">
+              <Drawer.Content className="fixed inset-x-0 bottom-0 z-[121] rounded-t-[28px] border border-border bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.18)] outline-none">
                 <Drawer.Handle className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-muted-foreground/35" />
                 <Drawer.Title className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Menü</Drawer.Title>
                 <nav className="mt-4 space-y-2">
@@ -325,7 +330,7 @@ export default function LandingPage() {
                   <Link
                     href="/auth/register"
                     onClick={() => setMobileNavOpen(false)}
-                    className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-primary px-4 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20"
+                    className="btn-primary-solid flex min-h-12 w-full items-center justify-center px-4 text-sm"
                   >
                     Registrieren
                   </Link>
@@ -337,13 +342,13 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ────────────────────────────────────────────────────────────── */}
-      <section className="relative w-full max-w-full border-b border-slate-200 bg-white pt-32 pb-16">
+      <section className="relative w-full max-w-full border-b border-line bg-surface pt-32 pb-16">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="grid min-w-0 max-w-full items-center gap-12 lg:grid-cols-2">
 
             {/* Left: Text */}
             <div className="min-w-0 max-w-full transition-all duration-300">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-white text-foreground text-xs mb-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface text-foreground text-xs mb-8">
                 <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />
                 VREMA - Intelligente Zeiterfassung
               </div>
@@ -360,7 +365,7 @@ export default function LandingPage() {
               <div className="flex max-w-full flex-wrap items-center gap-4">
                 <Link
                   href="/auth/register"
-                  className="group flex min-w-0 max-w-full items-center gap-2 rounded-2xl bg-primary px-7 py-3.5 font-bold text-foreground ring-1 ring-inset ring-white/20 transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)] active:scale-95"
+                  className="btn-primary-solid group flex min-w-0 max-w-full items-center gap-2 px-7 py-3.5"
                 >
                   Jetzt starten
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -381,7 +386,7 @@ export default function LandingPage() {
                 ].map((seal) => (
                   <div
                     key={seal.label}
-                    className="rounded-2xl bg-white border border-slate-100 px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
+                    className="rounded-2xl bg-surface border border-line px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
                   >
                     <p className="text-[11px] font-semibold text-muted-foreground">{seal.label}</p>
                     <p className="mt-0.5 text-[10px] text-muted-foreground">{seal.text}</p>
@@ -454,14 +459,14 @@ export default function LandingPage() {
       </section>
 
       {/* ── STATS BAR ───────────────────────────────────────────────────────── */}
-      <section className="w-full max-w-full border-y border-slate-200 bg-slate-50 py-10">
+      <section className="w-full max-w-full border-y border-line bg-surface-muted py-10">
         <div className="mx-auto grid w-full min-w-0 max-w-7xl grid-cols-2 gap-8 px-4 sm:grid-cols-3 lg:grid-cols-5">
           {STATS.map((s) => <AnimatedStat key={s.label} {...s} />)}
         </div>
       </section>
 
       {/* ── FEATURES ────────────────────────────────────────────────────────── */}
-      <section id="features" className="w-full max-w-full border-b border-slate-200 bg-white py-24">
+      <section id="features" className="w-full max-w-full border-b border-line bg-surface py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="mb-16 min-w-0 transition-all duration-300">
             <p className="text-xs text-muted-foreground uppercase tracking-widest mb-4">01 / Features</p>
@@ -476,10 +481,10 @@ export default function LandingPage() {
             {FEATURES.map((feature) => (
               <div
                 key={feature.title}
-                className="max-w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300 md:hover:bg-muted/50"
+                className="max-w-full min-w-0 rounded-2xl border border-line bg-surface p-7 shadow-sm transition-all duration-300 md:hover:bg-muted/50"
               >
                 <div className="flex min-w-0 max-w-full items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-surface">
                     <feature.icon className="h-5 w-5 text-foreground" />
                   </div>
                   <div className="min-w-0 max-w-full">
@@ -495,10 +500,10 @@ export default function LandingPage() {
       </section>
 
       {/* ── AI TEASER ───────────────────────────────────────────────────────── */}
-      <section className="w-full max-w-full border-b border-slate-200 bg-slate-50 py-20">
+      <section className="w-full max-w-full border-b border-line bg-surface-muted py-20">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="relative max-w-full rounded-2xl bg-gradient-to-r from-brand/35 via-brand/25 to-brand-hover/35 p-[1px]">
-            <div className="max-w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <div className="max-w-full rounded-2xl border border-line bg-surface p-6 shadow-sm sm:p-8">
               <div className="flex min-w-0 max-w-full flex-col flex-wrap items-stretch justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="min-w-0 max-w-full">
                   <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">02 / Core Intelligence</p>
@@ -520,7 +525,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PHILOSOPHY ──────────────────────────────────────────────────────── */}
-      <section className="w-full max-w-full border-t border-slate-200 bg-white py-24">
+      <section className="w-full max-w-full border-t border-line bg-surface py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="grid min-w-0 max-w-full items-center gap-16 lg:grid-cols-2">
             <div className="min-w-0 max-w-full transition-all duration-300">
@@ -541,7 +546,7 @@ export default function LandingPage() {
                   { num: "02", title: "Transparent & Fair", desc: "Feste Preise, klare Meilensteine, keine versteckten Kosten." },
                   { num: "03", title: "Lokale Verwurzelung", desc: "Speyer, Rhein-Neckar, Pfalz. Ein Handschlag zählt mehr als jedes SLA." },
                 ].map((item) => (
-                  <div key={item.num} className="flex max-w-full min-w-0 gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div key={item.num} className="flex max-w-full min-w-0 gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm">
                     <span className="mt-0.5 shrink-0 text-sm font-bold text-primary">{item.num}</span>
                     <div className="min-w-0 max-w-full">
                       <p className="mb-1 hyphens-auto break-words text-sm font-semibold">{item.title}</p>
@@ -566,7 +571,7 @@ export default function LandingPage() {
                   </div>
                   <div className="grid grid-cols-3 gap-3 mt-4">
                     {[{ v: "10+", l: "Jahre" }, { v: "Full", l: "Stack" }, { v: "5★", l: "Feedback" }].map((s) => (
-                      <div key={s.l} className="rounded-xl border border-slate-200 bg-white p-2 text-center shadow-sm">
+                      <div key={s.l} className="rounded-xl border border-line bg-surface p-2 text-center shadow-sm">
                         <p className="text-primary font-bold text-lg">{s.v}</p>
                         <p className="text-muted-foreground text-xs">{s.l}</p>
                       </div>
@@ -588,7 +593,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ─────────────────────────────────────────────────────────── */}
-      <section id="pricing" className="w-full max-w-full border-t border-slate-200 bg-slate-50 py-24">
+      <section id="pricing" className="w-full max-w-full border-t border-line bg-surface-muted py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="mb-12 min-w-0 transition-all duration-300">
             <p className="text-xs text-primary uppercase tracking-widest mb-4">03 / Preise</p>
@@ -647,10 +652,10 @@ export default function LandingPage() {
             {PLANS.map((plan) => (
               <div
                 key={plan.key}
-                className={`relative max-w-full min-w-0 overflow-visible rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 ${
+                className={`relative max-w-full min-w-0 overflow-visible rounded-2xl border border-line bg-surface p-8 shadow-sm transition-all duration-300 ${
                   plan.highlight
                     ? "border-primary/30"
-                    : "hover:border-slate-300"
+                    : "hover:border-line-strong"
                 }`}
               >
                 {"badge" in plan && plan.badge && (
@@ -711,11 +716,11 @@ export default function LandingPage() {
                       ? "mailto:kontakt@kevko.studio?subject=Enterprise%20Anfrage%20Vrema"
                       : `/auth/register?plan=${plan.key}&interval=${yearly ? "yearly" : "monthly"}`
                   }
-                  className={`block w-full text-center py-3 rounded-2xl font-bold text-sm transition-all ${
+                  className={
                     plan.highlight
-                      ? "bg-primary text-foreground hover:bg-primary/90"
-                      : "bg-card border border-slate-200 text-muted-foreground shadow-sm hover:bg-card/70"
-                  }`}
+                      ? "btn-primary-solid block w-full text-center py-3 text-sm"
+                      : "btn-secondary-outline block w-full text-center py-3 text-sm"
+                  }
                 >
                   {plan.key === "ENTERPRISE" ? "$ kontakt --plan enterprise" : `$ start --plan ${plan.key.toLowerCase()}`}
                 </Link>
@@ -737,7 +742,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ─────────────────────────────────────────────────────────────── */}
-      <section className="w-full max-w-full border-t border-slate-200 bg-white py-24">
+      <section className="w-full max-w-full border-t border-line bg-surface py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="min-w-0 max-w-full transition-all duration-300">
             <TerminalWindow title="vrema — System-Transformation starten">
@@ -752,7 +757,7 @@ export default function LandingPage() {
                 <div className="flex items-center justify-center gap-4 pt-2 flex-wrap">
                   <Link
                     href="/auth/register"
-                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-primary text-foreground font-bold hover:bg-primary/90 transition-all hover:scale-105 active:scale-95"
+                    className="btn-primary-solid flex items-center gap-2 px-8 py-3.5"
                   >
                     <Zap className="w-4 h-4" />
                     Jetzt registrieren
@@ -771,7 +776,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="w-full max-w-full border-t border-slate-200 bg-slate-50 py-16">
+      <section className="w-full max-w-full border-t border-line bg-surface-muted py-16">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden rounded-2xl glass-panel p-8 px-4 sm:px-8">
           <h3 className="max-w-full hyphens-auto break-words text-2xl font-bold">Werde VREMA-Partner</h3>
           <p className="mt-2 hyphens-auto break-words text-muted-foreground">
@@ -781,7 +786,7 @@ export default function LandingPage() {
           <div className="mt-5">
             <Link
               href="/partner-login"
-              className="inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-foreground hover:bg-primary/90 transition-colors"
+              className="btn-primary-solid inline-flex items-center gap-2 px-6 py-3"
             >
               Jetzt Partner werden
               <ArrowRight className="h-4 w-4" />
@@ -791,7 +796,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ──────────────────────────────────────────────────────────── */}
-      <footer className="w-full max-w-full border-t border-slate-900 bg-slate-950 py-10 text-slate-300">
+      <footer className="w-full max-w-full border-t border-line bg-surface-muted py-10 text-fg-muted">
         <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col items-start justify-between gap-6 overflow-x-hidden px-4 md:flex-row md:items-center">
           <div className="flex min-w-0 max-w-full items-center gap-3">
             <Image
@@ -803,58 +808,58 @@ export default function LandingPage() {
               className="-my-1 h-auto w-full max-w-[120px] object-contain opacity-90 sm:max-w-[140px] md:max-h-11 md:max-w-[160px]"
             />
             <div className="min-w-0 max-w-full">
-              <span className="block hyphens-auto break-words text-sm font-bold text-slate-100">VREMA</span>
-              <span className="mt-0.5 block text-[10px] text-slate-400">Intelligente Zeiterfassung</span>
+              <span className="block hyphens-auto break-words text-sm font-bold text-foreground">VREMA</span>
+              <span className="mt-0.5 block text-[10px] text-fg-subtle">Intelligente Zeiterfassung</span>
             </div>
           </div>
 
-          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-300">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-fg-muted">
             <button
               onClick={() => setModal("impressum")}
-              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-slate-300 transition-colors hover:text-white"
+              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-fg-muted transition-colors hover:text-foreground"
             >
               Impressum
             </button>
             <button
               onClick={() => setModal("datenschutz")}
-              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-slate-300 transition-colors hover:text-white"
+              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-fg-muted transition-colors hover:text-foreground"
             >
               Datenschutz
             </button>
             <button
               onClick={() => setModal("widerruf")}
-              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-slate-300 transition-colors hover:text-white"
+              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-fg-muted transition-colors hover:text-foreground"
             >
               Widerruf
             </button>
             <button
               onClick={() => setModal("cookies")}
-              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-slate-300 transition-colors hover:text-white"
+              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-fg-muted transition-colors hover:text-foreground"
             >
               Cookies
             </button>
             <button
               onClick={() => setModal("agb")}
-              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-slate-300 transition-colors hover:text-white"
+              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-fg-muted transition-colors hover:text-foreground"
             >
               AGB
             </button>
             <button
               onClick={() => setModal("avv")}
-              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-slate-300 transition-colors hover:text-white"
+              className="!min-h-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-xs text-fg-muted transition-colors hover:text-foreground"
             >
               AVV
             </button>
-            <Link href="/blog" className="text-xs text-slate-300 transition-colors hover:text-white">
+            <Link href="/blog" className="text-xs text-fg-muted transition-colors hover:text-foreground">
               Insights
             </Link>
-            <a href="#pricing" className="text-xs text-slate-300 transition-colors hover:text-white">Preise</a>
-            <Link href="/partner" className="text-xs text-slate-300 transition-colors hover:text-white">
+            <a href="#pricing" className="text-xs text-fg-muted transition-colors hover:text-foreground">Preise</a>
+            <Link href="/partner" className="text-xs text-fg-muted transition-colors hover:text-foreground">
               Partner werden
             </Link>
           </div>
 
-          <p className="text-xs text-slate-400">© 2026 VREMA – Intelligente Zeiterfassung</p>
+          <p className="text-xs text-fg-subtle">© 2026 VREMA – Intelligente Zeiterfassung</p>
         </div>
       </footer>
 
@@ -867,7 +872,7 @@ export default function LandingPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setModal(null)}
-            className="fixed inset-0 z-50 bg-white/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-foreground/30 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
           >
             <motion.div
               initial={{ opacity: 0, y: 12, scale: 0.98 }}
@@ -877,17 +882,17 @@ export default function LandingPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full min-w-0 max-w-lg"
             >
-              <div className="max-h-[85vh] overflow-y-auto rounded-3xl border border-white/60 bg-white/80 shadow-2xl backdrop-blur-md">
-                <div className="relative border-b border-slate-200/70 px-6 py-5 text-center">
+              <div className="max-h-[85vh] overflow-y-auto rounded-3xl border border-line bg-surface/95 shadow-2xl backdrop-blur-md">
+                <div className="relative border-b border-line/70 px-6 py-5 text-center">
                   <button
                     type="button"
                     onClick={() => setModal(null)}
                     aria-label="Dialog schließen"
-                    className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-slate-600 transition-colors hover:bg-white"
+                    className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface/80 text-fg-muted transition-colors hover:bg-surface"
                   >
                     <X className="h-4 w-4" aria-hidden />
                   </button>
-                  <h3 className="text-xl font-bold text-slate-900">
+                  <h3 className="text-xl font-bold text-foreground">
                     {modal === "impressum"
                       ? "Impressum"
                       : modal === "datenschutz"
@@ -905,7 +910,7 @@ export default function LandingPage() {
                 <div className="space-y-5 p-6 text-sm leading-relaxed">
                   {modal === "impressum" ? (
                     <>
-                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                      <div className="text-xs uppercase tracking-wide text-fg-muted">
                         Angaben gemäß § 5 TMG
                       </div>
                       {[
@@ -917,11 +922,11 @@ export default function LandingPage() {
                         ["§ 55 RStV", "Kevin Konkin, Kolbstr. 5, 67346 Speyer"],
                       ].map(([key, val]) => (
                         <div key={key} className="flex gap-3">
-                          <span className="w-24 shrink-0 text-right text-slate-500">{key}:</span>
-                          <span className="text-slate-900">{val}</span>
+                          <span className="w-24 shrink-0 text-right text-fg-muted">{key}:</span>
+                          <span className="text-foreground">{val}</span>
                         </div>
                       ))}
-                      <div className="border-t border-slate-200 pt-3 text-xs leading-relaxed text-slate-500">
+                      <div className="border-t border-line pt-3 text-xs leading-relaxed text-fg-muted">
                         Trotz sorgfältiger Kontrolle keine Haftung für externe Links.
                         <br />
                         Für verlinkte Seiten sind deren Betreiber verantwortlich.
@@ -934,7 +939,7 @@ export default function LandingPage() {
                     </>
                   ) : modal === "datenschutz" ? (
                     <>
-                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                      <div className="text-xs uppercase tracking-wide text-fg-muted">
                         DSGVO-Erklärung
                       </div>
                       {[
@@ -946,11 +951,11 @@ export default function LandingPage() {
                         ["Anfragen", "kontakt@kevko.studio"],
                       ].map(([key, val]) => (
                         <div key={key} className="flex gap-3">
-                          <span className="w-32 shrink-0 text-right text-xs leading-5 text-slate-500">{key}:</span>
-                          <span className="text-xs leading-5 text-slate-900">{val}</span>
+                          <span className="w-32 shrink-0 text-right text-xs leading-5 text-fg-muted">{key}:</span>
+                          <span className="text-xs leading-5 text-foreground">{val}</span>
                         </div>
                       ))}
-                      <div className="border-t border-slate-200 pt-3 text-xs text-slate-500">
+                      <div className="border-t border-line pt-3 text-xs text-fg-muted">
                         Datenübertragbarkeit & Einschränkung der Verarbeitung auf Anfrage.
                       </div>
                       <div className="pt-3 text-xs">
@@ -961,10 +966,10 @@ export default function LandingPage() {
                     </>
                   ) : modal === "widerruf" ? (
                     <>
-                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                      <div className="text-xs uppercase tracking-wide text-fg-muted">
                         Hinweise für Verbraucher
                       </div>
-                      <div className="space-y-3 text-xs leading-relaxed text-slate-900">
+                      <div className="space-y-3 text-xs leading-relaxed text-foreground">
                         <p>
                           Für digitale Leistungen gelten die gesetzlichen Widerrufsrechte gemäß den jeweils
                           anwendbaren Verbraucherschutzvorschriften.
@@ -982,10 +987,10 @@ export default function LandingPage() {
                     </>
                   ) : modal === "cookies" ? (
                     <>
-                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                      <div className="text-xs uppercase tracking-wide text-fg-muted">
                         Einsatz & Optionen
                       </div>
-                      <div className="space-y-3 text-xs leading-relaxed text-slate-900">
+                      <div className="space-y-3 text-xs leading-relaxed text-foreground">
                         <p>
                           Wir verwenden technisch notwendige Cookies für Authentifizierung, Sicherheit und
                           Sitzungsverwaltung.
@@ -1003,10 +1008,10 @@ export default function LandingPage() {
                     </>
                   ) : modal === "agb" ? (
                     <>
-                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                      <div className="text-xs uppercase tracking-wide text-fg-muted">
                         Vertragsgrundlagen
                       </div>
-                      <div className="space-y-3 text-xs leading-relaxed text-slate-900">
+                      <div className="space-y-3 text-xs leading-relaxed text-foreground">
                         <p>
                           Unsere Allgemeinen Geschäftsbedingungen regeln Leistungen, Laufzeiten, Kündigung,
                           Haftungsrahmen und weitere Vertragsbedingungen.
@@ -1023,10 +1028,10 @@ export default function LandingPage() {
                     </>
                   ) : (
                     <>
-                      <div className="text-xs uppercase tracking-wide text-slate-500">
+                      <div className="text-xs uppercase tracking-wide text-fg-muted">
                         Auftragsverarbeitung
                       </div>
-                      <div className="space-y-3 text-xs leading-relaxed text-slate-900">
+                      <div className="space-y-3 text-xs leading-relaxed text-foreground">
                         <p>
                           Die AVV beschreibt datenschutzrechtliche Rollen, technische und organisatorische Maßnahmen
                           sowie Pflichten im Rahmen der Auftragsverarbeitung.

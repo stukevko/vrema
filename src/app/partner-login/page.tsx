@@ -33,61 +33,66 @@ export default function PartnerLoginPage() {
   };
 
   return (
-    <div className="public-page flex items-center justify-center px-4 py-12">
+    <div className="auth-shell flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="mb-10">
+        <div className="mb-8 flex justify-center">
           <AuthBrandLogo />
         </div>
 
-        <div className="public-card rounded-2xl p-8">
-          <h1 className="text-xl font-bold mb-1">Partner Login</h1>
-          <p className="text-muted-foreground text-sm mb-8">Melden Sie sich mit Ihrem Partnerzugang an.</p>
+        <div className="auth-card p-8 sm:p-10">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Partner Login</h1>
+          <p className="mt-1.5 text-sm text-fg-muted">Melden Sie sich mit Ihrem Partnerzugang an.</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="mt-7 space-y-4">
             <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">E-Mail</label>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-fg-muted">E-Mail</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" aria-hidden />
                 <input
                   type="email"
                   name="email"
                   required
+                  autoComplete="email"
                   placeholder="partner@firma.de"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full rounded-xl py-3 pl-10 pr-4 text-sm"
                 />
               </div>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">Passwort</label>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-fg-muted">Passwort</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" aria-hidden />
                 <input
                   type="password"
                   name="password"
                   required
+                  autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full rounded-xl py-3 pl-10 pr-4 text-sm"
                 />
               </div>
             </div>
 
-            {error && <p className="text-xs text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
+            {error && (
+              <p
+                role="alert"
+                className="rounded-xl border border-danger/30 bg-danger-soft/70 px-3.5 py-2.5 text-xs font-medium text-danger-foreground"
+              >
+                {error}
+              </p>
+            )}
 
-            <button
-              type="submit"
-              disabled={isPending}
-              className="btn-primary-solid flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold disabled:opacity-60"
-            >
-              {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            <button type="submit" disabled={isPending} className="btn-primary-solid w-full">
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
               Einloggen
             </button>
           </form>
 
-          <p className="mt-6 text-xs text-muted-foreground">
+          <p className="mt-6 text-xs text-fg-muted">
             Kein Self-Register: Partnerzugänge werden zentral von Vrema angelegt.
           </p>
           <p className="mt-2 text-xs">
-            <Link href="/" className="text-primary hover:underline">
+            <Link href="/" className="font-semibold text-brand hover:underline">
               Zurück zur Startseite
             </Link>
           </p>

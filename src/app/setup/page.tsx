@@ -107,7 +107,7 @@ export default async function SetupPage({
               required
               defaultValue={company?.name ?? ""}
               placeholder="Musterfirma GmbH"
-              className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors"
+              className="w-full rounded-xl px-4 py-3 text-sm"
             />
           </div>
 
@@ -119,7 +119,7 @@ export default async function SetupPage({
               min={1}
               step={1}
               placeholder="z. B. 8"
-              className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none transition-colors"
+              className="w-full rounded-xl px-4 py-3 text-sm"
             />
             <p className="mt-1 text-[11px] text-muted-foreground">Diese Angabe hilft bei der Einordnung Ihres Setups.</p>
           </div>

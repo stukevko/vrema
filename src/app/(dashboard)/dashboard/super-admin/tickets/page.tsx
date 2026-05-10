@@ -68,7 +68,7 @@ export default async function SuperAdminTicketsPage() {
                   <select
                     name="status"
                     defaultValue={ticket.status}
-                    className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-xl px-3 py-2 text-sm"
                   >
                     <option value={TicketStatus.OPEN}>Offen</option>
                     <option value={TicketStatus.PENDING}>In Bearbeitung</option>
@@ -82,7 +82,7 @@ export default async function SuperAdminTicketsPage() {
                     name="response"
                     rows={3}
                     placeholder="Antwort an den Mitarbeiter…"
-                    className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-xl px-3 py-2 text-sm"
                     defaultValue={ticket.response ?? ""}
                   />
                 </div>

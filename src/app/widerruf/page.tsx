@@ -21,7 +21,7 @@ export default function WiderrufPage() {
           <h1 className="text-3xl font-bold">Widerrufsbelehrung</h1>
           <p className="text-sm text-muted-foreground">Kurz und transparent für Vrema als B2B-Produkt.</p>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
             <h2 className="mb-2 font-semibold text-foreground">Hinweis zur Zielgruppe</h2>
           <p>
             Vrema richtet sich primär an Unternehmen und Gewerbetreibende (B2B). Für rein gewerbliche Verträge besteht grundsätzlich
@@ -30,7 +30,7 @@ export default function WiderrufPage() {
           <p>Verträge werden daher im Regelfall ausschließlich mit Unternehmern im Sinne des BGB geschlossen.</p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
             <h2 className="mb-2 font-semibold text-foreground">Falls ausnahmsweise Verbraucher buchen</h2>
           <p>
             Sollte ein Vertrag mit einem Verbraucher geschlossen werden, gilt das gesetzliche Widerrufsrecht gemäß den jeweils

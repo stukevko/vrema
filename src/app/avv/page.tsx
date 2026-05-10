@@ -23,13 +23,13 @@ export default function AvvPage() {
             Vorlage für B2B-Kunden von Vrema. Diese Seite dient als schnell nutzbare Standardversion.
           </p>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
             <h2 className="mb-2 font-semibold text-foreground">1. Parteien</h2>
             <p>Verantwortlicher: Kunde (Unternehmen, das Vrema nutzt).</p>
             <p>Auftragsverarbeiter: Kevin Konkin - KevkoStudio, Kolbstr. 5, 67346 Speyer, kontakt@kevko.studio.</p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
             <h2 className="mb-2 font-semibold text-foreground">2. Gegenstand und Dauer</h2>
             <p>
               Gegenstand ist die Verarbeitung personenbezogener Daten zur Bereitstellung der SaaS-Anwendung Vrema
@@ -38,7 +38,7 @@ export default function AvvPage() {
             <p>Die Dauer entspricht der Laufzeit des Hauptvertrags (Abo).</p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
             <h2 className="mb-2 font-semibold text-foreground">3. Art der Daten und Kategorien Betroffener</h2>
             <p>
               Datenarten: Stammdaten, Kontaktdaten, Arbeitszeitdaten, technische Metadaten. Keine Standortdaten.
@@ -46,7 +46,7 @@ export default function AvvPage() {
             <p>Betroffene: Mitarbeiter, Teamleiter, Kundenadministratoren.</p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
             <h2 className="mb-2 font-semibold text-foreground">4. Technische und organisatorische Massnahmen (TOM)</h2>
             <p>
               Zugriffsschutz über Authentifizierung und Rollenmodell, Transportverschlüsselung, Protokollierung,
@@ -54,7 +54,7 @@ export default function AvvPage() {
             </p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
             <h2 className="mb-2 font-semibold text-foreground">5. Unterauftragsverarbeiter</h2>
             <p>Je nach Nutzung können unter anderem folgende Anbieter eingesetzt werden:</p>
             <p>- Hosting/Infrastrukturanbieter</p>
@@ -62,7 +62,7 @@ export default function AvvPage() {
             <p>- Resend (transaktionale E-Mails)</p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
             <h2 className="mb-2 font-semibold text-foreground">6. Weisungen, Unterstützung und Löschung</h2>
             <p>
               Verarbeitung erfolgt nur auf dokumentierte Weisung des Verantwortlichen. Der Auftragsverarbeiter unterstützt

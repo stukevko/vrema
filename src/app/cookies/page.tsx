@@ -21,7 +21,7 @@ export default function CookiesPage() {
           <h1 className="text-3xl font-bold">Cookie-Hinweise</h1>
           <p className="text-sm text-muted-foreground">Übersicht zu technisch notwendigen Cookies bei Vrema.</p>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
             <h2 className="mb-2 font-semibold text-foreground">Technisch notwendige Cookies</h2>
           <p>
             Wir setzen Cookies ein, die für den sicheren Betrieb von Vrema erforderlich sind, z. B. für Login, Sitzung,
@@ -29,14 +29,14 @@ export default function CookiesPage() {
           </p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
             <h2 className="mb-2 font-semibold text-foreground">Keine Marketing-Cookies ohne Einwilligung</h2>
           <p>
             Aktuell setzen wir keine optionalen Werbe- oder Tracking-Cookies ohne vorherige Einwilligung.
           </p>
           </section>
 
-          <section className="rounded-xl border border-border bg-white p-4 text-sm text-foreground">
+          <section className="rounded-xl border border-line bg-surface-muted p-4 text-sm text-foreground">
             <h2 className="mb-2 font-semibold text-foreground">Browser-Einstellungen</h2>
           <p>
             Du kannst Cookies in deinem Browser löschen oder blockieren. Beachte, dass dadurch Funktionen der Anwendung

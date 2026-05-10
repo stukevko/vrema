@@ -44,15 +44,15 @@ export default async function BlogArticlePage({ params }: Props) {
     <article className="mx-auto w-full max-w-3xl px-4 pb-20 pt-6 sm:px-6 sm:pt-8">
       <Link
         href="/blog"
-        className="inline-flex min-h-10 items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+        className="inline-flex min-h-10 items-center gap-1 text-sm font-medium text-fg-muted transition-colors hover:text-foreground"
       >
         <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
         Zur Übersicht
       </Link>
 
       <header className="public-card mt-6 rounded-2xl p-6 sm:p-8">
-        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-          <span className="rounded-full border border-slate-200 bg-white px-2.5 py-0.5 font-semibold uppercase tracking-wide text-slate-900">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-fg-muted">
+          <span className="rounded-full border border-line bg-surface-muted px-2.5 py-0.5 font-semibold uppercase tracking-wide text-foreground">
             {BLOG_CATEGORY_LABELS[post.category]}
           </span>
           <span className="inline-flex items-center gap-1.5">
@@ -60,18 +60,17 @@ export default async function BlogArticlePage({ params }: Props) {
             <time dateTime={post.createdAt.toISOString()}>{formatDate(post.createdAt)}</time>
           </span>
         </div>
-        <h1 className="mt-4 text-3xl font-bold leading-[1.15] tracking-tight text-slate-900 sm:text-4xl md:text-[2.5rem]">
+        <h1 className="mt-4 text-3xl font-bold leading-[1.15] tracking-tight text-foreground sm:text-4xl md:text-[2.5rem]">
           {post.title}
         </h1>
-        <p className="mt-4 text-lg leading-relaxed text-slate-600">{post.teaser}</p>
+        <p className="mt-4 text-lg leading-relaxed text-fg-muted">{post.teaser}</p>
       </header>
 
       <div className="public-card mt-6 rounded-2xl p-6 sm:p-8">
         <div
           className={[
-            "prose prose-slate max-w-none prose-lg leading-[1.75] prose-headings:scroll-mt-24 prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-900",
-            "prose-p:text-slate-600 prose-li:text-slate-600 prose-strong:text-slate-900",
-            "prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline",
+            "prose prose-slate dark:prose-invert max-w-none prose-lg leading-[1.75] prose-headings:scroll-mt-24 prose-headings:font-bold prose-headings:tracking-tight",
+            "prose-a:text-brand prose-a:font-medium prose-a:no-underline hover:prose-a:underline",
             "prose-ul:my-4 prose-ol:my-4 prose-li:my-1",
           ].join(" ")}
         >
