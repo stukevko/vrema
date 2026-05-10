@@ -153,64 +153,66 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName, inv
   };
 
   return (
-    <div className="public-page flex items-center justify-center px-4 py-12">
+    <div className="auth-shell flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="mb-10">
+        <div className="mb-8 flex justify-center">
           <AuthBrandLogo />
         </div>
 
-        <div className="public-card rounded-2xl p-8">
-          <h1 className="text-xl font-bold mb-1">
+        <div className="auth-card p-8 sm:p-10">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             {isInviteFlow ? `Registrierung als ${inviteContext?.role === "MANAGER" ? "Manager" : "Mitarbeiter"}` : "Konto erstellen"}
           </h1>
-          <p className="text-muted-foreground text-sm mb-2">
+          <p className="mt-1.5 text-sm text-fg-muted">
             {isInviteFlow
               ? `Sie registrieren sich für ${inviteContext?.orgName}.`
               : "14 Tage kostenlos testen. Kartenprüfung im Onboarding."}
           </p>
           {!isInviteFlow && resolvedCode ? (
-            <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
+            <p className="mt-3 text-xs leading-relaxed text-fg-muted">
               Empfohlen durch unseren Partner
               {resolvedName ? (
                 <>
-                  : <span className="font-medium text-brand">{resolvedName}</span>
+                  : <span className="font-semibold text-brand">{resolvedName}</span>
                 </>
               ) : null}
-              <span className="block text-[10px] text-muted-foreground font-sans mt-1">{resolvedCode}</span>
+              <span className="mt-0.5 block font-mono text-[10px] text-fg-subtle">{resolvedCode}</span>
             </p>
           ) : null}
           {!isInviteFlow && plan !== "STARTER" && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-6">
+            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-brand/25 bg-brand-soft px-3 py-1 text-xs font-semibold text-brand">
               Plan: {plan}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+          <form onSubmit={handleSubmit} className="mt-7 space-y-4">
             {isInviteFlow ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">Vorname</label>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-fg-muted">Vorname</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" aria-hidden />
                     <input
                       type="text"
                       name="firstName"
                       required
+                      autoComplete="given-name"
                       placeholder="Max"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                      className="w-full rounded-xl py-3 pl-10 pr-4 text-sm"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">Nachname</label>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-fg-muted">Nachname</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" aria-hidden />
                     <input
                       type="text"
                       name="lastName"
                       required
+                      autoComplete="family-name"
                       placeholder="Mustermann"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                      className="w-full rounded-xl py-3 pl-10 pr-4 text-sm"
                     />
                   </div>
                 </div>
@@ -218,81 +220,84 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName, inv
             ) : (
               <>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">Ihr Name</label>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-fg-muted">Ihr Name</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" aria-hidden />
                     <input
                       type="text"
                       name="name"
                       required
+                      autoComplete="name"
                       placeholder="Max Mustermann"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                      className="w-full rounded-xl py-3 pl-10 pr-4 text-sm"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">Firmenname</label>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-fg-muted">Firmenname</label>
                   <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Building2 className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" aria-hidden />
                     <input
                       type="text"
                       name="companyName"
                       required
+                      autoComplete="organization"
                       placeholder="Musterfirma GmbH"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                      className="w-full rounded-xl py-3 pl-10 pr-4 text-sm"
                     />
                   </div>
                 </div>
               </>
             )}
             <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">E-Mail</label>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-fg-muted">E-Mail</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" aria-hidden />
                 <input
                   type="email"
                   name="email"
                   required
+                  autoComplete="email"
                   placeholder="name@firma.de"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full rounded-xl py-3 pl-10 pr-4 text-sm"
                 />
               </div>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">Passwort</label>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-fg-muted">Passwort</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" aria-hidden />
                 <input
                   type="password"
                   name="password"
                   required
                   minLength={8}
+                  autoComplete="new-password"
                   placeholder="Mindestens 8 Zeichen"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                  className="w-full rounded-xl py-3 pl-10 pr-4 text-sm"
                 />
               </div>
             </div>
 
             {error && (
-              <p className="text-xs text-red-400 bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2">
+              <p
+                role="alert"
+                className="rounded-xl border border-danger/30 bg-danger-soft/70 px-3.5 py-2.5 text-xs font-medium text-danger-foreground"
+              >
                 {error}
               </p>
             )}
 
-            <button
-              type="submit"
-              disabled={isPending}
-              className="btn-primary-solid flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold disabled:opacity-60"
-            >
-              {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            <button type="submit" disabled={isPending} className="btn-primary-solid w-full">
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
               {isPending ? "Lädt..." : "Konto erstellen"}
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-border text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="mt-7 border-t border-line pt-6 text-center">
+            <p className="text-sm text-fg-muted">
               Bereits registriert?{" "}
-              <Link href="/auth/login" className="text-primary hover:underline">
+              <Link href="/auth/login" className="font-semibold text-brand hover:underline">
                 Anmelden
               </Link>
             </p>

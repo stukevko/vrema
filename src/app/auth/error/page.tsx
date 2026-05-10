@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import { AuthBrandLogo } from "@/components/brand/AuthBrandLogo";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -19,18 +20,29 @@ export default async function AuthErrorPage({
   const message = ERROR_MESSAGES[code] ?? ERROR_MESSAGES.Default;
 
   return (
-    <main className="min-h-screen bg-background text-foreground px-4 py-10">
-      <div className="mx-auto max-w-md mb-8">
-        <AuthBrandLogo />
-      </div>
-      <div className="mx-auto max-w-md rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-        <p className="text-xs font-sans uppercase tracking-widest text-red-300">Auth Error</p>
-        <h1 className="mt-2 text-xl font-bold">Anmeldung nicht möglich</h1>
-        <p className="mt-3 text-sm text-foreground">{message}</p>
-        <div className="mt-6">
-          <Link href="/auth/login" className="text-sm font-semibold text-primary hover:underline">
-            Zurück zum Login
-          </Link>
+    <main className="auth-shell flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="mb-8 flex justify-center">
+          <AuthBrandLogo />
+        </div>
+        <div className="auth-card p-8 sm:p-10">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-danger/30 bg-danger-soft text-danger-foreground">
+              <AlertTriangle className="h-5 w-5" aria-hidden />
+            </span>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-danger-foreground">Auth-Fehler</p>
+          </div>
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">Anmeldung nicht möglich</h1>
+          <p className="mt-2 text-sm text-fg-muted">{message}</p>
+
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <Link href="/auth/login" className="btn-primary-solid w-full sm:w-auto">
+              Zurück zum Login
+            </Link>
+            <Link href="/auth/forgot-password" className="btn-secondary-outline w-full sm:w-auto">
+              Passwort zurücksetzen
+            </Link>
+          </div>
         </div>
       </div>
     </main>

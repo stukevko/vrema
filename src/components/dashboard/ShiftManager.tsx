@@ -748,9 +748,17 @@ export function ShiftManager({
             breakDuration: s.breakDuration ?? 0,
           }));
           startTransition(async () => {
-            await Promise.all(
+            const results = await Promise.allSettled(
               targets.map((s) => clearShiftForDay({ userId: s.userId, weekIndex: s.weekIndex, dayOfWeek: s.dayOfWeek }))
             );
+            const failed = results.filter((r) => r.status === "rejected").length;
+            if (failed > 0) {
+              setMessage(
+                failed === targets.length
+                  ? "Schichten konnten nicht gelöscht werden. Bitte erneut versuchen."
+                  : `${failed} von ${targets.length} Schichten konnten nicht gelöscht werden.`
+              );
+            }
           });
           setBulkUndo({ label: "Schichten gelöscht", items: undoItems });
           setBulkUndoDeadlineMs(Date.now() + 5000);
@@ -2388,14 +2396,24 @@ export function ShiftManager({
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  setMessage(null);
                                   startTransition(async () => {
-                                    await clearShiftForDay({
-                                      userId: row.member.id,
-                                      weekIndex: selectedWeekIndex,
-                                      dayOfWeek: timelineDay,
-                                    });
+                                    try {
+                                      await clearShiftForDay({
+                                        userId: row.member.id,
+                                        weekIndex: selectedWeekIndex,
+                                        dayOfWeek: timelineDay,
+                                      });
+                                    } catch (err: unknown) {
+                                      setMessage(
+                                        err instanceof Error
+                                          ? err.message
+                                          : "Schicht konnte nicht gelöscht werden. Bitte erneut versuchen."
+                                      );
+                                    }
                                   });
                                 }}
+                                aria-label="Schicht löschen"
                                 className="absolute -right-1 -top-1 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-danger/40 bg-danger px-2 text-sm text-brand-foreground opacity-100 md:h-7 md:w-7 md:text-xs md:opacity-0 md:transition-opacity md:group-hover:opacity-100"
                                 title="Schicht löschen"
                               >
@@ -2510,11 +2528,19 @@ export function ShiftManager({
                     breakDuration: s.breakDuration ?? 0,
                   }));
                   startTransition(async () => {
-                    await Promise.all(
+                    const results = await Promise.allSettled(
                       targets.map((s) =>
                         clearShiftForDay({ userId: s.userId, weekIndex: s.weekIndex, dayOfWeek: s.dayOfWeek })
                       )
                     );
+                    const failed = results.filter((r) => r.status === "rejected").length;
+                    if (failed > 0) {
+                      setMessage(
+                        failed === targets.length
+                          ? "Schichten konnten nicht gelöscht werden. Bitte erneut versuchen."
+                          : `${failed} von ${targets.length} Schichten konnten nicht gelöscht werden.`
+                      );
+                    }
                   });
                   setBulkUndo({ label: "Schichten gelöscht", items: undoItems });
                   setBulkUndoDeadlineMs(Date.now() + 5000);
