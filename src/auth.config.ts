@@ -4,8 +4,8 @@ import Google from "next-auth/providers/google";
 import type { Provider } from "next-auth/providers";
 
 /**
- * Edge-compatible auth config – NO Prisma adapter, NO Node.js-only imports.
- * Used in proxy.ts (middleware) which runs in Edge runtime.
+ * Edge-auth Konfiguration — keine Node-only Imports.
+ * Wird von `src/proxy.ts` (Next.js Proxy / Edge) genutzt.
  */
 export const authConfig: NextAuthConfig = {
   secret: process.env.AUTH_SECRET,

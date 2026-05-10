@@ -1,10 +1,12 @@
 "use client";
 
-import { Bell, ChevronDown, LogOut, Settings, UserCircle2 } from "lucide-react";
+import { ChevronDown, LogOut, Settings, UserCircle2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { getPersonalAccountHref } from "@/lib/dashboard/account-href";
 
 interface TopbarProps {
   user: {
@@ -13,11 +15,13 @@ interface TopbarProps {
     image?: string | null;
     role?: string | null;
   };
+  unreadNotifications?: number;
 }
 
-export function DashboardTopbar({ user }: TopbarProps) {
+export function DashboardTopbar({ user, unreadNotifications = 0 }: TopbarProps) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const accountHref = getPersonalAccountHref(user.role);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -60,14 +64,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
               Super Admin
             </span>
           )}
-          <button
-            type="button"
-            className="relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-white/90 shadow-sm transition-all active:scale-95 md:hover:bg-card/70 md:h-11 md:w-11"
-            aria-label="Benachrichtigungen"
-          >
-            <Bell className="h-4 w-4 text-muted-foreground" />
-            <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary" />
-          </button>
+          <NotificationBell initialUnread={unreadNotifications} />
           <div className="relative" ref={dropdownRef}>
             <button
               type="button"
@@ -100,7 +97,7 @@ export function DashboardTopbar({ user }: TopbarProps) {
                 </div>
 
                 <Link
-                  href="/dashboard/settings"
+                  href={accountHref}
                   onClick={() => setOpen(false)}
                   className="flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm text-foreground transition-all active:scale-95 md:hover:bg-card/70"
                 >
@@ -108,12 +105,12 @@ export function DashboardTopbar({ user }: TopbarProps) {
                   Profil
                 </Link>
                 <Link
-                  href="/dashboard/settings"
+                  href={accountHref}
                   onClick={() => setOpen(false)}
                   className="flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm text-foreground transition-all active:scale-95 md:hover:bg-card/70"
                 >
                   <Settings className="h-4 w-4 shrink-0" />
-                  Einstellungen
+                  {user.role === "EMPLOYEE" ? "Mein Konto" : "Einstellungen"}
                 </Link>
                 <button
                   type="button"

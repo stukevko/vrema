@@ -7,25 +7,41 @@ export type GenerateTaskListResult =
   | { ok: true; skipped: true; reason: "NO_TEMPLATE" | "SHIFT_NOT_FOUND" }
   | { ok: false; error: string };
 
-async function resolveDefaultTemplateId(companyId: string): Promise<string | null> {
-  const preferred = await db.taskTemplate.findFirst({
-    where: tenantWhere(companyId, { isDefault: true }),
+/**
+ * Wählt ein Template: zuerst exakter Match auf staffingRole des Nutzers,
+ * sonst globale Vorlage (staffingRole IS NULL) mit isDefault, sonst erste globale.
+ */
+async function resolveTemplateIdForUser(companyId: string, staffingRole: string | null): Promise<string | null> {
+  const roleKey = staffingRole?.trim();
+  if (roleKey) {
+    const roleMatch = await db.taskTemplate.findFirst({
+      where: tenantWhere(companyId, { staffingRole: roleKey }),
+      orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }],
+      select: { id: true },
+    });
+    if (roleMatch) return roleMatch.id;
+  }
+
+  const globalDefault = await db.taskTemplate.findFirst({
+    where: tenantWhere(companyId, { staffingRole: null, isDefault: true }),
     orderBy: { updatedAt: "desc" },
     select: { id: true },
   });
-  if (preferred) return preferred.id;
+  if (globalDefault) return globalDefault.id;
 
-  const any = await db.taskTemplate.findFirst({
-    where: tenantWhere(companyId, {}),
+  const anyGlobal = await db.taskTemplate.findFirst({
+    where: tenantWhere(companyId, { staffingRole: null }),
     orderBy: { name: "asc" },
     select: { id: true },
   });
-  return any?.id ?? null;
+  return anyGlobal?.id ?? null;
 }
 
 /**
  * Legt für Schicht + Kalendertag eine Checklisten-Instanz an (idempotent).
  * Kein Session-Check — nur für vertrauenswürdige Server-Pfade (z. B. Clock-In).
+ *
+ * @param templateUserId Nutzer, dessen staffingRole das Template bestimmt (typisch: einstellende Person).
  */
 export async function generateTaskListForShiftCore(params: {
   companyId: string;
@@ -34,6 +50,7 @@ export async function generateTaskListForShiftCore(params: {
   occurrenceAt?: Date;
   /** Alternative zu occurrenceAt: `YYYY-MM-DD` */
   occurrenceDateIso?: string;
+  templateUserId?: string;
 }): Promise<GenerateTaskListResult> {
   const { companyId, shiftId } = params;
   const occurrenceDate = params.occurrenceDateIso
@@ -52,7 +69,16 @@ export async function generateTaskListForShiftCore(params: {
   });
   if (existing) return { ok: true, shiftTaskListId: existing.id, created: false, skipped: false };
 
-  const templateId = await resolveDefaultTemplateId(companyId);
+  let staffingRole: string | null = null;
+  if (params.templateUserId) {
+    const u = await db.user.findFirst({
+      where: tenantWhere(companyId, { id: params.templateUserId }),
+      select: { staffingRole: true },
+    });
+    staffingRole = u?.staffingRole?.trim() || null;
+  }
+
+  const templateId = await resolveTemplateIdForUser(companyId, staffingRole);
   if (!templateId) return { ok: true, skipped: true, reason: "NO_TEMPLATE" };
 
   const templateItems = await db.taskTemplateItem.findMany({

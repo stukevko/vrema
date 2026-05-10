@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { DashboardLayoutClient } from "@/components/dashboard/DashboardLayoutClient";
 import { db } from "@/lib/db";
 import { getMyUnreadSupportRepliesCount, countOpenSupportTicketsForSuperAdmin } from "@/lib/actions/support";
+import { countMyUnreadNotifications } from "@/lib/actions/notifications";
 
 export default async function DashboardLayout({
   children,
@@ -34,6 +35,7 @@ export default async function DashboardLayout({
 
   let supportUnreadCount = 0;
   let superOpenTickets = 0;
+  let unreadNotifications = 0;
   try {
     supportUnreadCount = await getMyUnreadSupportRepliesCount();
   } catch {
@@ -44,6 +46,11 @@ export default async function DashboardLayout({
   } catch {
     superOpenTickets = 0;
   }
+  try {
+    unreadNotifications = await countMyUnreadNotifications();
+  } catch {
+    unreadNotifications = 0;
+  }
 
   return (
     <DashboardLayoutClient
@@ -52,6 +59,7 @@ export default async function DashboardLayout({
       user={session.user}
       supportUnreadCount={supportUnreadCount}
       initialSuperOpenTickets={superOpenTickets}
+      initialUnreadNotifications={unreadNotifications}
     >
       {children}
     </DashboardLayoutClient>

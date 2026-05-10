@@ -147,7 +147,7 @@ export async function createClockInEntry(params: {
   });
 
   if (shift?.id) {
-    await generateTaskListForShiftCore({ companyId, shiftId: shift.id }).catch(() => {
+    await generateTaskListForShiftCore({ companyId, shiftId: shift.id, templateUserId: userId }).catch(() => {
       /* Checklisten sind optional; Clock-In darf nicht fehlschlagen */
     });
   }

@@ -1,9 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { FileText, Mail, Clock, Lock, Download, FileSpreadsheet, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FileText, Mail, Clock, Lock, Download, FileSpreadsheet, Sparkles, Loader2, CheckCircle2, Check, X } from "lucide-react";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
+import { useHashHighlight } from "@/components/dashboard/useHashHighlight";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   createWorkLogCorrectionRequest,
@@ -56,6 +57,9 @@ interface Props {
     workLogId: string | null;
     userId: string;
     userName: string;
+    originalClockIn: string | null;
+    originalClockOut: string | null;
+    originalBreakMins: number | null;
     requestedClockIn: string;
     requestedClockOut: string | null;
     requestedBreakMins: number;
@@ -63,6 +67,7 @@ interface Props {
     reason: string;
     status: CorrectionRequestStatus;
     reviewerName: string | null;
+    reviewerNote: string | null;
   }>;
   currentUserId: string;
   hourlyWageByUserId: Record<string, number | null>;
@@ -73,6 +78,70 @@ function formatMins(mins: number) {
   const h = Math.floor(Math.abs(mins) / 60);
   const m = Math.floor(Math.abs(mins) % 60);
   return `${h}h ${m.toString().padStart(2, "0")}m`;
+}
+
+function berlinDateKey(iso: string) {
+  return new Date(iso).toLocaleDateString("de-DE", { timeZone: DISPLAY_TIME_ZONE });
+}
+
+/** Lesbare Zeitspanne für Korrektur-Diff (Europe/Berlin). */
+function formatCorrectionSlot(isoIn: string, isoOut: string | null, breakMins: number) {
+  const tz = DISPLAY_TIME_ZONE;
+  const inD = new Date(isoIn);
+  const inTime = inD.toLocaleTimeString("de-DE", { timeZone: tz, hour: "2-digit", minute: "2-digit" });
+  if (!isoOut) return `${inTime} – offen (keine Ausstempelung)`;
+  const outD = new Date(isoOut);
+  const outTime = outD.toLocaleTimeString("de-DE", { timeZone: tz, hour: "2-digit", minute: "2-digit" });
+  if (berlinDateKey(isoIn) === berlinDateKey(isoOut)) return `${inTime} – ${outTime}`;
+  const dIn = inD.toLocaleDateString("de-DE", { timeZone: tz, day: "2-digit", month: "2-digit" });
+  const dOut = outD.toLocaleDateString("de-DE", { timeZone: tz, day: "2-digit", month: "2-digit" });
+  return `${dIn}, ${inTime} → ${dOut}, ${outTime}`;
+}
+
+function netWorkedLabel(isoIn: string, isoOut: string | null, breakMins: number): string | null {
+  if (!isoOut) return null;
+  const net = workedMinutes({ clockIn: isoIn, clockOut: isoOut, breakMins });
+  return `${formatMins(net)} netto`;
+}
+
+function formatSignedDecimalHoursFromDeltaMins(deltaMins: number): string {
+  const sign = deltaMins >= 0 ? "+" : "−";
+  const absH = Math.abs(deltaMins) / 60;
+  const rounded = Math.round(absH * 10) / 10;
+  const s = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1).replace(/\.0$/, "");
+  return `${sign}${s}h`;
+}
+
+function correctionDeltaSummary(params: {
+  originalClockIn: string | null;
+  originalClockOut: string | null;
+  originalBreakMins: number | null;
+  requestedClockIn: string;
+  requestedClockOut: string | null;
+  requestedBreakMins: number;
+}): string | null {
+  const { originalClockIn, originalClockOut, originalBreakMins, requestedClockIn, requestedClockOut, requestedBreakMins } =
+    params;
+  if (!requestedClockOut) return null;
+  const afterNet = workedMinutes({
+    clockIn: requestedClockIn,
+    clockOut: requestedClockOut,
+    breakMins: requestedBreakMins,
+  });
+  if (!originalClockIn) {
+    const hoursDec = (afterNet / 60).toFixed(1).replace(/\.0$/, "");
+    return `Neuer Eintrag · ${hoursDec}h netto (${formatMins(afterNet)})`;
+  }
+  if (!originalClockOut) {
+    return `Vorher offene Buchung – Vergleich Netto nicht möglich · neu ${formatMins(afterNet)} netto`;
+  }
+  const beforeNet = workedMinutes({
+    clockIn: originalClockIn,
+    clockOut: originalClockOut,
+    breakMins: originalBreakMins ?? 0,
+  });
+  const delta = afterNet - beforeNet;
+  return `Änderung Nettoarbeitszeit: ${formatSignedDecimalHoursFromDeltaMins(delta)} (${formatMins(beforeNet)} → ${formatMins(afterNet)})`;
 }
 
 function durationMins(row: LogRow) {
@@ -274,6 +343,16 @@ export function ReportsClient({
   const [editStatus, setEditStatus] = useState<LogRow["status"]>("MANUAL_ADJUSTED");
   const [editNote, setEditNote] = useState("");
   const [editReason, setEditReason] = useState("");
+
+  const correctionSectionRef = useRef<HTMLDivElement | null>(null);
+  const highlightCorrections = useHashHighlight("zeitkorrekturen", correctionSectionRef);
+
+  const [correctionDecision, setCorrectionDecision] = useState<{
+    id: string;
+    mode: "APPROVE" | "REJECT";
+    note: string;
+  } | null>(null);
+  const [correctionDecisionError, setCorrectionDecisionError] = useState<string | null>(null);
 
   const lockedMsg = () => show("Upgrade erforderlich", "info");
 
@@ -851,20 +930,30 @@ export function ReportsClient({
     });
   };
 
-  const decideCorrectionRequest = (
-    requestId: string,
-    decision: "APPROVE" | "REJECT"
-  ) => {
-    const reviewerNote = window.prompt(
-      decision === "APPROVE" ? "Kommentar zur Freigabe (optional)" : "Grund der Ablehnung (optional)"
-    );
-    if (reviewerNote === null) return;
+  const submitCorrectionDecision = () => {
+    if (!correctionDecision) return;
+    setCorrectionDecisionError(null);
+    const note = correctionDecision.note.trim();
+    if (correctionDecision.mode === "REJECT" && note.length < 3) {
+      setCorrectionDecisionError("Bitte eine kurze Begründung angeben (≥ 3 Zeichen) – der Kollege sieht sie im Dashboard.");
+      return;
+    }
     startTransition(async () => {
       try {
-        await decideWorkLogCorrectionRequest({ requestId, decision, reviewerNote });
-        show(decision === "APPROVE" ? "Antrag freigegeben und gebucht." : "Antrag abgelehnt.", "success");
+        await decideWorkLogCorrectionRequest({
+          requestId: correctionDecision.id,
+          decision: correctionDecision.mode,
+          reviewerNote: note.length > 0 ? note : null,
+        });
+        show(
+          correctionDecision.mode === "APPROVE"
+            ? "Korrektur freigegeben und gebucht."
+            : "Korrektur abgelehnt – Begründung gespeichert.",
+          "success"
+        );
+        setCorrectionDecision(null);
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
+        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden.", "error");
       }
     });
   };
@@ -1102,7 +1191,15 @@ export function ReportsClient({
           </div>
         )}
 
-        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-4 md:p-5 space-y-3">
+        <div
+          id="zeitkorrekturen"
+          ref={correctionSectionRef}
+          className={`scroll-mt-24 rounded-2xl bg-card border p-4 md:p-5 space-y-3 transition-all duration-500 ${
+            highlightCorrections
+              ? "border-primary ring-4 ring-primary/40 shadow-[0_24px_60px_rgba(0,0,0,0.10)]"
+              : "border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold tracking-wide">Zeitkorrektur-Anträge</h2>
             <span className="text-[11px] text-muted-foreground">
@@ -1222,50 +1319,231 @@ export function ReportsClient({
                 </p>
               </div>
             ) : (
-              correctionRequests.map((req) => (
-                <div key={req.id} className="rounded-2xl border border-border bg-card p-4 text-xs shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">{req.userName}</span>
-                    <span className="text-muted-foreground">{new Date(req.requestedClockIn).toLocaleString("de-DE")}</span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 ${
-                        req.status === "PENDING"
-                          ? "bg-amber-50 text-amber-700"
-                          : req.status === "APPROVED"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-red-50 text-red-700"
-                      }`}
-                    >
-                      {req.status}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-foreground">Grund: {req.reason}</p>
-                  {req.requestedNote && <p className="mt-1 text-muted-foreground">Notiz: {req.requestedNote}</p>}
-                  {req.status !== "PENDING" && req.reviewerName && (
-                    <p className="mt-1 text-muted-foreground">Bearbeitet von: {req.reviewerName}</p>
-                  )}
-                  {isManager && req.status === "PENDING" && (
-                    <div className="mt-2 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => decideCorrectionRequest(req.id, "APPROVE")}
-                        className="rounded-xl border border-emerald-200 px-2.5 py-1 text-[11px] text-emerald-700 md:hover:bg-emerald-50 transition-all active:scale-95"
-                        disabled={isSaving}
+              correctionRequests.map((req) => {
+                const statusLabel =
+                  req.status === "PENDING" ? "Ausstehend" : req.status === "APPROVED" ? "Freigegeben" : "Abgelehnt";
+                const beforeLabel =
+                  req.originalClockIn == null
+                    ? req.workLogId
+                      ? "Ursprünglicher Eintrag nicht mehr verfügbar"
+                      : "Kein bestehender Eintrag (Nachtrag)"
+                    : formatCorrectionSlot(req.originalClockIn, req.originalClockOut, req.originalBreakMins ?? 0);
+                const afterLabel = formatCorrectionSlot(
+                  req.requestedClockIn,
+                  req.requestedClockOut,
+                  req.requestedBreakMins
+                );
+                const beforeNet =
+                  req.originalClockIn && req.originalClockOut
+                    ? netWorkedLabel(req.originalClockIn, req.originalClockOut, req.originalBreakMins ?? 0)
+                    : null;
+                const afterNet = req.requestedClockOut
+                  ? netWorkedLabel(req.requestedClockIn, req.requestedClockOut, req.requestedBreakMins)
+                  : null;
+                const deltaLine = correctionDeltaSummary({
+                  originalClockIn: req.originalClockIn,
+                  originalClockOut: req.originalClockOut,
+                  originalBreakMins: req.originalBreakMins,
+                  requestedClockIn: req.requestedClockIn,
+                  requestedClockOut: req.requestedClockOut,
+                  requestedBreakMins: req.requestedBreakMins,
+                });
+                const breakChanged =
+                  req.originalBreakMins != null && req.originalBreakMins !== req.requestedBreakMins;
+
+                return (
+                  <div
+                    key={req.id}
+                    className={`rounded-2xl border bg-card p-4 text-xs shadow-[0_20px_50px_rgba(0,0,0,0.04)] ring-1 ring-inset ring-black/[0.03] ${
+                      correctionDecision?.id === req.id ? "border-primary ring-2 ring-primary/35" : "border-border"
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center gap-2 border-b border-border/80 pb-3">
+                      <span className="text-sm font-semibold text-foreground">{req.userName}</span>
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                          req.status === "PENDING"
+                            ? "bg-amber-50 text-amber-900"
+                            : req.status === "APPROVED"
+                              ? "bg-emerald-50 text-emerald-900"
+                              : "bg-red-50 text-red-900"
+                        }`}
                       >
-                        Freigeben & buchen
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => decideCorrectionRequest(req.id, "REJECT")}
-                        className="rounded-xl border border-red-200 px-2.5 py-1 text-[11px] text-red-700 md:hover:bg-red-50 transition-all active:scale-95"
-                        disabled={isSaving}
-                      >
-                        Ablehnen
-                      </button>
+                        {statusLabel}
+                      </span>
                     </div>
-                  )}
-                </div>
-              ))
+
+                    <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-stretch">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/90 px-3 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Alte Zeit</p>
+                        <p className="mt-1 font-mono text-sm font-semibold text-slate-900">{beforeLabel}</p>
+                        {beforeNet ? (
+                          <p className="mt-1 text-[11px] text-slate-600">
+                            Pause {req.originalBreakMins ?? 0} Min · {beforeNet}
+                          </p>
+                        ) : req.originalClockIn ? (
+                          <p className="mt-1 text-[11px] text-slate-600">Pause {req.originalBreakMins ?? 0} Min</p>
+                        ) : null}
+                      </div>
+
+                      <div className="flex items-center justify-center md:min-w-[2rem]">
+                        <span
+                          className="rounded-full bg-primary/15 px-3 py-1 text-lg font-black text-primary md:rotate-0"
+                          aria-hidden
+                        >
+                          →
+                        </span>
+                      </div>
+
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-900">Neue Zeit</p>
+                        <p className="mt-1 font-mono text-sm font-semibold text-emerald-950">{afterLabel}</p>
+                        <p className="mt-1 text-[11px] text-emerald-900">
+                          Pause {req.requestedBreakMins} Min
+                          {afterNet ? ` · ${afterNet}` : ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    {deltaLine ? (
+                      <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-950">
+                        {deltaLine}
+                      </div>
+                    ) : null}
+
+                    {breakChanged && req.originalBreakMins != null ? (
+                      <p className="mt-2 text-[11px] text-muted-foreground">
+                        Pausenänderung: {req.originalBreakMins} → {req.requestedBreakMins} Min
+                      </p>
+                    ) : null}
+
+                    <p className="mt-3 text-sm text-foreground">
+                      <span className="font-semibold">Begründung:</span> {req.reason}
+                    </p>
+                    {req.requestedNote ? (
+                      <p className="mt-1 text-muted-foreground">
+                        <span className="font-medium text-foreground">Notiz:</span> {req.requestedNote}
+                      </p>
+                    ) : null}
+                    {req.status !== "PENDING" && req.reviewerName ? (
+                      <p className="mt-2 text-muted-foreground">Bearbeitet von: {req.reviewerName}</p>
+                    ) : null}
+                    {req.status !== "PENDING" && req.reviewerNote ? (
+                      <p className="mt-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-[11px] text-foreground">
+                        <span className="font-semibold">Hinweis vom Genehmiger:</span> {req.reviewerNote}
+                      </p>
+                    ) : null}
+                    {isManager && req.status === "PENDING" && correctionDecision?.id !== req.id && (
+                      <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCorrectionDecisionError(null);
+                            setCorrectionDecision({ id: req.id, mode: "APPROVE", note: "" });
+                          }}
+                          className="rounded-xl border border-emerald-200 bg-emerald-600/10 px-3 py-2 text-[11px] font-semibold text-emerald-800 md:hover:bg-emerald-600/20 transition-all active:scale-95"
+                          disabled={isSaving}
+                        >
+                          Freigeben & buchen
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCorrectionDecisionError(null);
+                            setCorrectionDecision({ id: req.id, mode: "REJECT", note: "" });
+                          }}
+                          className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-800 md:hover:bg-red-100 transition-all active:scale-95"
+                          disabled={isSaving}
+                        >
+                          Ablehnen
+                        </button>
+                      </div>
+                    )}
+                    <AnimatePresence>
+                      {isManager && req.status === "PENDING" && correctionDecision?.id === req.id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div
+                            className={`mt-4 rounded-xl border p-4 ${
+                              correctionDecision.mode === "APPROVE"
+                                ? "border-emerald-200 bg-emerald-50/70"
+                                : "border-red-200 bg-red-50/70"
+                            }`}
+                          >
+                            <p className="text-sm font-semibold text-foreground">
+                              {correctionDecision.mode === "APPROVE"
+                                ? "Lohnrelevante Buchung freigeben?"
+                                : "Korrektur wirklich ablehnen?"}
+                            </p>
+                            <p className="mt-1 text-[11px] text-muted-foreground">
+                              {correctionDecision.mode === "APPROVE"
+                                ? "Optionaler Kommentar wird nur intern gespeichert und hier angezeigt."
+                                : "Pflicht: Begründung (≥ 3 Zeichen) – wird hier im Bericht gespeichert und angezeigt."}
+                            </p>
+                            <textarea
+                              value={correctionDecision.note}
+                              onChange={(e) =>
+                                setCorrectionDecision((d) => (d ? { ...d, note: e.target.value } : d))
+                              }
+                              placeholder={
+                                correctionDecision.mode === "APPROVE"
+                                  ? "Optionaler interner Kommentar zur Freigabe"
+                                  : "Begründung für die Ablehnung (Pflicht)"
+                              }
+                              rows={3}
+                              className="mt-3 w-full resize-y rounded-lg border border-border bg-white px-3 py-2 text-sm"
+                              autoFocus
+                            />
+                            {correctionDecisionError ? (
+                              <p className="mt-2 text-[11px] font-medium text-red-700">{correctionDecisionError}</p>
+                            ) : null}
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={submitCorrectionDecision}
+                                disabled={isSaving}
+                                className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-foreground ring-1 ring-inset ring-white/15 active:scale-[0.99] ${
+                                  correctionDecision.mode === "APPROVE"
+                                    ? "bg-emerald-600 hover:bg-emerald-700"
+                                    : "bg-red-600 hover:bg-red-700"
+                                }`}
+                              >
+                                {isSaving ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : correctionDecision.mode === "APPROVE" ? (
+                                  <Check className="h-4 w-4" />
+                                ) : (
+                                  <X className="h-4 w-4" />
+                                )}
+                                {isSaving
+                                  ? "Speichere…"
+                                  : correctionDecision.mode === "APPROVE"
+                                    ? "Jetzt freigeben & buchen"
+                                    : "Ablehnung speichern"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCorrectionDecision(null);
+                                  setCorrectionDecisionError(null);
+                                }}
+                                disabled={isSaving}
+                                className="inline-flex min-h-11 items-center rounded-xl border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-muted/50"
+                              >
+                                Abbrechen
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>

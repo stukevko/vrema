@@ -122,6 +122,7 @@ export async function sendVacationStatusEmail(data: {
   endDate: Date;
   days: number;
   approvedByName: string;
+  decisionNote?: string;
 }) {
   const fmt = (d: Date) =>
     d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -136,6 +137,7 @@ export async function sendVacationStatusEmail(data: {
       endDate: fmt(data.endDate),
       days: data.days,
       approvedByName: data.approvedByName,
+      decisionNote: data.decisionNote,
     })
   );
 }

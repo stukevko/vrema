@@ -354,13 +354,17 @@ export async function decideWorkLogCorrectionRequest(input: {
   if (req.status !== "PENDING") throw new Error("Antrag wurde bereits bearbeitet.");
 
   if (input.decision === "REJECT") {
+    const rejectNote = input.reviewerNote?.trim() ?? "";
+    if (rejectNote.length < 3) {
+      throw new Error("Bitte eine kurze Begründung für die Ablehnung angeben (≥ 3 Zeichen).");
+    }
     const rejected = await db.workLogCorrectionRequest.update({
       where: { id: req.id },
       data: {
         status: "REJECTED",
         reviewedById: userId,
         reviewedAt: new Date(),
-        reviewerNote: input.reviewerNote?.trim() || null,
+        reviewerNote: rejectNote,
       },
     });
     revalidatePath("/dashboard/reports");
@@ -370,7 +374,7 @@ export async function decideWorkLogCorrectionRequest(input: {
       actorUserId: userId,
       action: "CORRECTION_REJECTED",
       source: "manager",
-      reason: input.reviewerNote?.trim() || req.reason,
+      reason: rejectNote || req.reason,
       beforeJson: req as unknown as object,
       afterJson: rejected as unknown as object,
     });

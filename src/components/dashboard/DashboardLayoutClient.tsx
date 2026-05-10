@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import clsx from "clsx";
+import { Toaster } from "sonner";
 import { DashboardSidebar, DashboardMobileBottomNav } from "@/components/dashboard/Sidebar";
 import { DashboardTopbar } from "@/components/dashboard/Topbar";
 import { SupportTicketOverlay } from "@/components/dashboard/SupportTicketOverlay";
-import { useState } from "react";
+import { getMyUnreadSupportRepliesCount } from "@/lib/actions/support";
 
 type SessionUser = {
   name?: string | null;
@@ -20,6 +22,7 @@ export function DashboardLayoutClient({
   user,
   supportUnreadCount = 0,
   initialSuperOpenTickets = 0,
+  initialUnreadNotifications = 0,
 }: {
   children: React.ReactNode;
   role: string;
@@ -27,27 +30,71 @@ export function DashboardLayoutClient({
   user: SessionUser;
   supportUnreadCount?: number;
   initialSuperOpenTickets?: number;
+  initialUnreadNotifications?: number;
 }) {
   const [supportOverlayOpen, setSupportOverlayOpen] = useState(false);
+  const [supportInitialUnread, setSupportInitialUnread] = useState(false);
+  const [unreadReplies, setUnreadReplies] = useState(supportUnreadCount);
+  const [supportNonce, setSupportNonce] = useState(0);
+
+  useEffect(() => {
+    setUnreadReplies(supportUnreadCount);
+  }, [supportUnreadCount]);
+
+  const refreshSupportUnread = useCallback(async () => {
+    try {
+      const n = await getMyUnreadSupportRepliesCount();
+      setUnreadReplies(n);
+    } catch {
+      setUnreadReplies(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshSupportUnread();
+  }, [supportNonce, refreshSupportUnread]);
+
+  const bumpSupport = useCallback(() => {
+    setSupportNonce((x) => x + 1);
+  }, []);
 
   return (
     <div className="flex h-screen min-h-0 w-full min-w-0 overflow-hidden overflow-x-hidden bg-slate-50 text-foreground">
+      <Toaster richColors position="top-center" closeButton duration={2200} />
       <DashboardSidebar
         role={role}
         plan={plan}
         initialSuperOpenTickets={initialSuperOpenTickets}
-        onOpenSupport={() => setSupportOverlayOpen(true)}
+        unreadReplies={unreadReplies}
+        onOpenSupport={(mode) => {
+          setSupportInitialUnread(mode === "unread");
+          setSupportOverlayOpen(true);
+        }}
         supportOverlayOpen={supportOverlayOpen}
       />
       <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-slate-50">
-        <DashboardTopbar user={user} />
-        <main className="dashboard-touch-scroll native-app-tap flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-2 pb-32 pt-[calc(4rem+env(safe-area-inset-top,0px))] touch-manipulation sm:px-3 md:px-8 md:pb-6 md:pt-0">
-          {supportUnreadCount > 0 ? (
+        <DashboardTopbar user={user} unreadNotifications={initialUnreadNotifications} />
+        <main
+          className={clsx(
+            "dashboard-touch-scroll native-app-tap flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-manipulation pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-0",
+            role === "EMPLOYEE"
+              ? "px-[max(0.25rem,env(safe-area-inset-left))] pr-[max(0.25rem,env(safe-area-inset-right))] pb-[max(7.5rem,calc(env(safe-area-inset-bottom)+6rem))] sm:px-2 md:px-8 md:pb-6"
+              : "px-2 pb-32 sm:px-3 md:px-8 md:pb-6",
+          )}
+        >
+          {unreadReplies > 0 ? (
             <div className="mb-4 rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm text-foreground md:mb-5">
               <p className="font-medium">Du hast eine Antwort auf dein Support-Ticket erhalten.</p>
-              <Link href="/dashboard/support" className="mt-2 inline-flex text-sm font-semibold text-primary underline-offset-4 hover:underline">
-                Zum Support-Bereich
-              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setSupportInitialUnread(true);
+                  setSupportOverlayOpen(true);
+                }}
+                className="mt-2 inline-flex text-sm font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                Antwort im Support-Postfach öffnen
+              </button>
             </div>
           ) : null}
           {children}
@@ -55,10 +102,24 @@ export function DashboardLayoutClient({
         </main>
       </div>
       <DashboardMobileBottomNav
-        onOpenSupport={() => setSupportOverlayOpen(true)}
+        role={role}
+        unreadReplies={unreadReplies}
+        onOpenSupport={(mode) => {
+          setSupportInitialUnread(mode === "unread");
+          setSupportOverlayOpen(true);
+        }}
         supportOverlayOpen={supportOverlayOpen}
       />
-      <SupportTicketOverlay open={supportOverlayOpen} onClose={() => setSupportOverlayOpen(false)} />
+      <SupportTicketOverlay
+        open={supportOverlayOpen}
+        initialFocusUnread={supportInitialUnread}
+        onInitialFocusUnreadConsumed={() => setSupportInitialUnread(false)}
+        onSupportActivity={bumpSupport}
+        onClose={() => {
+          setSupportOverlayOpen(false);
+          bumpSupport();
+        }}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   type AutopilotOptions,
 } from "@/lib/planning/autopilot";
 import type { ShiftPlanRow } from "@/lib/planning/compliance";
+import { createNotificationsForUsers } from "@/lib/notifications/create";
 import { revalidatePath } from "next/cache";
 
 const CAN_RUN = new Set(["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"]);
@@ -43,6 +44,7 @@ export async function confirmAutopilotDrafts(weekIndex: number) {
 
   const wk = Math.min(3, Math.max(1, Math.floor(weekIndex)));
 
+  let affectedUserIds: string[] = [];
   await db.$transaction(async (tx) => {
     const [published, drafts] = await Promise.all([
       tx.shift.findMany({
@@ -86,9 +88,23 @@ export async function confirmAutopilotDrafts(weekIndex: number) {
       where: tenantWhere(companyId, { weekIndex: wk, isDraft: true }),
       data: { isDraft: false },
     });
+
+    affectedUserIds = Array.from(new Set(drafts.map((d) => d.userId)));
   });
 
+  if (affectedUserIds.length > 0) {
+    await createNotificationsForUsers({
+      companyId,
+      userIds: affectedUserIds,
+      type: "SHIFT_PUBLISHED",
+      title: "Neuer Schichtplan veröffentlicht",
+      body: `Wochenplan KW-Index ${wk} ist live – jetzt deine Schichten ansehen.`,
+      href: "/dashboard/planning",
+    });
+  }
+
   revalidatePath("/dashboard/planning");
+  revalidatePath("/dashboard");
 }
 
 export async function discardAutopilotDrafts(weekIndex: number) {

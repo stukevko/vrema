@@ -79,6 +79,24 @@ export async function markMySupportRepliesSeen() {
   revalidatePath("/dashboard");
 }
 
+/** Als gelesen markieren, sobald der Nutzer eine konkrete Antwort im Chat öffnet (Badge bleibt sonst bestehen). */
+export async function markSupportTicketReplySeen(ticketId: string) {
+  const { userId, companyId } = await requireTenant();
+  await db.ticket.updateMany({
+    where: {
+      id: ticketId,
+      userId,
+      orgId: companyId,
+      response: { not: null },
+      respondedAt: { not: null },
+      userSeenResponseAt: null,
+    },
+    data: { userSeenResponseAt: new Date() },
+  });
+  revalidatePath("/dashboard/support");
+  revalidatePath("/dashboard");
+}
+
 export async function listMySupportTickets() {
   const { userId, companyId } = await requireTenant();
   return db.ticket.findMany({
@@ -93,6 +111,7 @@ export async function listMySupportTickets() {
       response: true,
       respondedAt: true,
       createdAt: true,
+      userSeenResponseAt: true,
     },
   });
 }

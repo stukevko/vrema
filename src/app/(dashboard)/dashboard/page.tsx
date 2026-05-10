@@ -3,6 +3,10 @@ import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import { redirect } from "next/navigation";
 import { TerminalWidget } from "@/components/dashboard/TerminalWidget";
+import { LiveOperationsWidget } from "@/components/dashboard/LiveOperationsWidget";
+import { EmployeeCockpit } from "@/components/dashboard/EmployeeCockpit";
+import { ActiveShiftTasksCard } from "@/components/dashboard/ActiveShiftTasksCard";
+import { getEmployeeCockpitData } from "@/lib/dashboard/employee-cockpit-data";
 import { SaldoWidget } from "@/components/dashboard/SaldoWidget";
 import { calculateSaldo } from "@/lib/actions/worklogs";
 import {
@@ -14,7 +18,6 @@ import {
   ClipboardCheck,
   ChevronDown,
   Target,
-  LogIn,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -30,6 +33,8 @@ import { SuperAdminInlinePanel } from "@/components/dashboard/SuperAdminInlinePa
 import { AIInsights } from "@/components/dashboard/AIInsights";
 import { DashboardAISection } from "@/components/dashboard/DashboardAISection";
 import { getDashboardAIInsights } from "@/lib/ai/engine";
+import { queryActiveShiftTasks } from "@/lib/shift-tasks/active-shift-tasks-data";
+import { getTodayShiftTaskWall } from "@/lib/shift-tasks/wall";
 import { formatBerlinDate, formatBerlinTime, getBerlinNowHour, getDayBoundsUtc } from "@/lib/time/timezone";
 
 type TeamStatsSnapshot = {
@@ -55,9 +60,9 @@ function managerPrimaryFocus(stats: TeamStatsSnapshot) {
   if (stats.pendingCorrections > 0) {
     return {
       title: `${stats.pendingCorrections} offene Zeitkorrektur${stats.pendingCorrections === 1 ? "" : "en"}`,
-      description: "Freigaben sichern die Nachvollziehbarkeit für Lohn und Prüfung.",
-      href: "/dashboard/reports",
-      cta: "Korrekturen prüfen",
+      description: "Vorher/Nachher direkt im Bericht prüfen – Freigabe sichert Lohn & Audit.",
+      href: "/dashboard/reports#zeitkorrekturen",
+      cta: "Diff prüfen",
     };
   }
   if (stats.pendingTradeApprovals > 0) {
@@ -79,9 +84,9 @@ function managerPrimaryFocus(stats: TeamStatsSnapshot) {
   if (stats.pendingVacations > 0) {
     return {
       title: `${stats.pendingVacations} Urlaubsantrag${stats.pendingVacations === 1 ? "" : "e"} offen`,
-      description: "Schnelle Entscheidungen entlasten Ihr Team.",
-      href: "/dashboard/vacation",
-      cta: "Anträge bearbeiten",
+      description: "Resturlaub & Konflikte werden direkt am Antrag angezeigt – sicher entscheiden.",
+      href: "/dashboard/vacation#team-vacation-requests",
+      cta: "Anträge prüfen",
     };
   }
   return {
@@ -159,6 +164,16 @@ export default async function DashboardPage() {
     };
   }
 
+  const [shiftTasksPayload, liveOpsRows, cockpitData] = await Promise.all([
+    activeLog ? queryActiveShiftTasks(userId, companyId) : Promise.resolve(null),
+    role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN"
+      ? getTodayShiftTaskWall(companyId)
+      : Promise.resolve([]),
+    role === "EMPLOYEE"
+      ? getEmployeeCockpitData({ companyId, userId })
+      : Promise.resolve(null),
+  ]);
+
   const [superAdminCompanies, superAdminMonitoring] = isSuperAdmin
     ? await Promise.all([getSuperAdminOverview(), getSuperAdminMonitoring()])
     : [null, null];
@@ -177,65 +192,36 @@ export default async function DashboardPage() {
   const focus = teamStats ? managerPrimaryFocus(teamStats) : null;
   const aiInsights = await getDashboardAIInsights(companyId);
 
-  return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-5 px-2 text-foreground sm:gap-6 sm:px-0 md:gap-8 md:px-0">
-      {/* Header */}
-      <div className="order-1 shrink-0 rounded-2xl glass-panel p-5 sm:p-8">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          Guten {berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"},{" "}
-          {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {formatBerlinDate(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-        </p>
-      </div>
+  const isEmployee = role === "EMPLOYEE";
 
-      {/* Mitarbeiter: eine klare Primäraktion vor dem restlichen Dashboard */}
-      {role === "EMPLOYEE" && (
-        <div className="order-2 rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card p-4 shadow-sm sm:p-6">
-          <div className="mb-3 grid grid-cols-2 gap-2 md:hidden">
-            <div className="rounded-xl border border-border bg-white px-3 py-2">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Status</p>
-              <p className="text-sm font-semibold">{activeLog ? "Eingestempelt" : "Ausgestempelt"}</p>
-            </div>
-            <div className="rounded-xl border border-border bg-white px-3 py-2">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Heute</p>
-              <p className="text-sm font-semibold tabular-nums">
-                {Math.floor(todayWorkedMins / 60)}h {Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-              <LogIn className="h-4 w-4" aria-hidden />
-            </span>
-            <div className="min-w-0 flex-1 space-y-2">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-primary">Jetzt stempeln</p>
-              {activeLog ? (
-                <>
-                  <h2 className="text-base font-bold tracking-tight text-foreground sm:text-lg">Sie sind eingestempelt</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Pausen und Arbeitsende buchen Sie direkt im Terminal unten — ohne Umwege.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-base font-bold tracking-tight text-foreground sm:text-lg">Arbeitsbeginn erfassen</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Tippen Sie im Terminal auf Einstempeln. Der Status erscheint sofort, die Buchung läuft im Hintergrund.
-                  </p>
-                </>
-              )}
-              <a
-                href="#terminal-widget"
-                className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 active:scale-[0.99]"
-              >
-                Zum Terminal
-              </a>
-            </div>
-          </div>
+  return (
+    <div className="mx-auto flex max-w-6xl flex-col gap-4 px-1 text-foreground sm:gap-6 sm:px-2 md:gap-8 md:px-0">
+      {/* Header — für Mitarbeiter überspringen, weil das Cockpit selbst begrüßt */}
+      {!isEmployee && (
+        <div className="order-1 shrink-0 rounded-2xl glass-panel p-5 sm:p-8">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            Guten {berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"},{" "}
+            {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {formatBerlinDate(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          </p>
         </div>
       )}
+
+      {/* Mitarbeiter: Personal Cockpit – Hero + Stempel + Quick-Stats */}
+      {isEmployee && cockpitData && (
+        <div className="order-1">
+          <EmployeeCockpit data={cockpitData} firstName={session.user.name?.split(" ")[0] ?? "Hallo"} />
+        </div>
+      )}
+
+      {/* Aufgaben prominent: nur sichtbar, wenn eingestempelt + Liste vorhanden */}
+      {activeLog && shiftTasksPayload && shiftTasksPayload.items.length > 0 ? (
+        <div className="order-2">
+          <ActiveShiftTasksCard tasks={shiftTasksPayload} />
+        </div>
+      ) : null}
 
       {isSuperAdmin && superAdminCompanies && superAdminMonitoring && (
         <div className="order-3">
@@ -288,6 +274,9 @@ export default async function DashboardPage() {
               </div>
             </div>
           </div>
+
+          <LiveOperationsWidget rows={liveOpsRows} />
+
           {teamStats.pendingTradeApprovals > 0 && (
             <Link
               href="/dashboard/planning#shift-trade-approvals"
@@ -297,6 +286,18 @@ export default async function DashboardPage() {
               <p className="mt-1 text-base font-bold text-amber-900">
                 {teamStats.pendingTradeApprovals} Tauschanfragen warten auf deine Freigabe
               </p>
+            </Link>
+          )}
+          {teamStats.pendingCorrections > 0 && (
+            <Link
+              href="/dashboard/reports#zeitkorrekturen"
+              className="block rounded-2xl border border-violet-300 bg-violet-50 px-5 py-4 shadow-sm transition-colors hover:bg-violet-100/70"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-violet-700">Compliance · Zeitkorrekturen</p>
+              <p className="mt-1 text-base font-bold text-violet-900">
+                {teamStats.pendingCorrections} {teamStats.pendingCorrections === 1 ? "Antrag" : "Anträge"} mit Vorher/Nachher prüfen
+              </p>
+              <p className="mt-1 text-xs text-violet-700">Direkt zum Diff-Block in den Berichten – kein Suchen.</p>
             </Link>
           )}
 
@@ -351,35 +352,79 @@ export default async function DashboardPage() {
                     {teamStats.lateToday > 0 ? `${teamStats.lateToday} Hinweise` : "Alles pünktlich"}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
-                  <span className="text-muted-foreground">Unbestätigte Zeiten</span>
-                  <p className={`mt-1 font-semibold ${teamStats.pendingCorrections > 0 ? "text-amber-700" : "text-emerald-700"}`}>
-                    {teamStats.pendingCorrections > 0 ? `${teamStats.pendingCorrections} offen` : "Keine offenen Korrekturen"}
-                  </p>
-                </div>
+                {teamStats.pendingCorrections > 0 ? (
+                  <Link
+                    href="/dashboard/reports#zeitkorrekturen"
+                    className="block rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl transition-colors hover:border-primary/40 hover:bg-card/80"
+                  >
+                    <span className="text-muted-foreground">Unbestätigte Zeiten</span>
+                    <p className="mt-1 font-semibold text-amber-700">
+                      {teamStats.pendingCorrections} offen · Diff prüfen →
+                    </p>
+                  </Link>
+                ) : (
+                  <div className="rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+                    <span className="text-muted-foreground">Unbestätigte Zeiten</span>
+                    <p className="mt-1 font-semibold text-emerald-700">Keine offenen Korrekturen</p>
+                  </div>
+                )}
               </div>
               <div className="-mx-2 flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-visible pb-2 pt-1 scrollbar-hide md:mx-0 md:grid md:snap-none md:grid-cols-2 md:gap-4 md:overflow-visible md:pb-0 md:pt-0 xl:grid-cols-3 2xl:grid-cols-6">
-                {[
-                  { label: "Mitarbeiter gesamt", value: teamStats.totalEmployees, icon: Users, color: "#60a5fa" },
-                  { label: "Heute aktiv", value: teamStats.activeToday, icon: Clock, color: "#86efac" },
-                  { label: "Urlaubsanträge", value: teamStats.pendingVacations, icon: CalendarDays, color: "#f59e0b" },
-                  { label: "Fehlend heute", value: teamStats.absentToday, icon: TriangleAlert, color: "#f87171" },
-                  { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24" },
-                  { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc" },
-                ].map((stat) => (
-                  <div
-                    key={stat.label}
-                    className="w-[min(88vw,20rem)] shrink-0 snap-center rounded-2xl glass-panel p-5 transition-all sm:p-6 md:w-auto md:min-w-0 md:hover:bg-card/80"
-                  >
-                    <div className="mb-3 flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">{stat.label}</p>
-                      <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
+                {(
+                  [
+                    { label: "Mitarbeiter gesamt", value: teamStats.totalEmployees, icon: Users, color: "#60a5fa", href: "/dashboard/team" },
+                    { label: "Heute aktiv", value: teamStats.activeToday, icon: Clock, color: "#86efac", href: "/dashboard/reports" },
+                    { label: "Urlaubsanträge", value: teamStats.pendingVacations, icon: CalendarDays, color: "#f59e0b", href: "/dashboard/vacation#team-vacation-requests", actionable: teamStats.pendingVacations > 0 ? "Mit Resturlaub & Konflikten prüfen" : undefined },
+                    { label: "Fehlend heute", value: teamStats.absentToday, icon: TriangleAlert, color: "#f87171", href: "/dashboard/reports" },
+                    { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24", href: "/dashboard/planning" },
+                    { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc", href: "/dashboard/reports#zeitkorrekturen", actionable: teamStats.pendingCorrections > 0 ? "Diff prüfen" : undefined },
+                  ] as Array<{
+                    label: string;
+                    value: number;
+                    icon: typeof Users;
+                    color: string;
+                    href?: string;
+                    actionable?: string;
+                  }>
+                ).map((stat) => {
+                  const inner = (
+                    <>
+                      <div className="mb-3 flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">{stat.label}</p>
+                        <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
+                      </div>
+                      <p className="text-3xl font-bold" style={{ color: stat.color }}>
+                        {stat.value}
+                      </p>
+                      {stat.actionable ? (
+                        <p className="mt-1 text-[11px] font-semibold text-foreground/80">
+                          {stat.actionable} →
+                        </p>
+                      ) : null}
+                    </>
+                  );
+                  const baseClass =
+                    "w-[min(88vw,20rem)] shrink-0 snap-center rounded-2xl glass-panel p-5 transition-all sm:p-6 md:w-auto md:min-w-0";
+                  if (stat.href && stat.value > 0) {
+                    return (
+                      <Link
+                        key={stat.label}
+                        href={stat.href}
+                        className={`${baseClass} block hover:border-primary/40 hover:bg-card/80 active:scale-[0.99]`}
+                      >
+                        {inner}
+                      </Link>
+                    );
+                  }
+                  return (
+                    <div
+                      key={stat.label}
+                      className={`${baseClass} md:hover:bg-card/80`}
+                    >
+                      {inner}
                     </div>
-                    <p className="text-3xl font-bold" style={{ color: stat.color }}>
-                      {stat.value}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </details>

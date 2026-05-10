@@ -9,6 +9,8 @@ export type ShiftTaskWallRow = {
   userName: string | null;
   userEmail: string;
   shiftLabel: string;
+  /** Anzeige z. B. „Küche“ für Live-Operations */
+  roleLabel: string;
   doneCount: number;
   totalCount: number;
   isLive: boolean;
@@ -42,7 +44,8 @@ export async function getTodayShiftTaskWall(companyId: string): Promise<ShiftTas
           userId: true,
           startTime: true,
           endTime: true,
-          user: { select: { name: true, email: true } },
+          staffingRole: true,
+          user: { select: { name: true, email: true, staffingRole: true } },
         },
       },
       template: { select: { name: true } },
@@ -55,12 +58,19 @@ export async function getTodayShiftTaskWall(companyId: string): Promise<ShiftTas
     const total = list.items.length;
     const doneCount = list.items.filter((i) => i.status === "DONE").length;
     const u = list.shift.user;
+    const roleLabel =
+      list.shift.staffingRole?.trim() ||
+      u.staffingRole?.trim() ||
+      u.name?.trim() ||
+      u.email.split("@")[0] ||
+      "Team";
     return {
       listId: list.id,
       templateName: list.template?.name ?? null,
       userName: u.name,
       userEmail: u.email,
       shiftLabel: `${list.shift.startTime}–${list.shift.endTime}`,
+      roleLabel,
       doneCount,
       totalCount: total,
       isLive: liveUserIds.has(list.shift.userId),

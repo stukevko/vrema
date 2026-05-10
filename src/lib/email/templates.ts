@@ -170,6 +170,7 @@ export function vacationStatusEmailHtml(data: {
   endDate: string;
   days: number;
   approvedByName: string;
+  decisionNote?: string;
 }): string {
   const isApproved = data.status === "APPROVED";
   const statusColor = isApproved ? BASE.accent : "#ef4444";
@@ -197,6 +198,18 @@ export function vacationStatusEmailHtml(data: {
         ${kv("bearbeitet_von", data.approvedByName)}
       </table>
     </div>
+
+    ${
+      data.decisionNote
+        ? `
+    <div style="background:${BASE.bg};border:1px solid ${BASE.border};border-radius:12px;padding:16px 20px;margin-bottom:28px;">
+      <div style="color:${statusColor};font-size:11px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">
+        # ${isApproved ? "anmerkung" : "begründung"}
+      </div>
+      <p style="color:${BASE.textPrimary};font-size:14px;margin:0;line-height:1.5;white-space:pre-wrap;">${data.decisionNote.replace(/[<>]/g, "")}</p>
+    </div>`
+        : ""
+    }
 
     <table cellpadding="0" cellspacing="0">
       <tr>

@@ -28,6 +28,10 @@ export default async function SettingsPage() {
   if (!session?.user) redirect("/auth/login");
 
   const role = session.user.role ?? "EMPLOYEE";
+  if (role === "EMPLOYEE") {
+    redirect("/dashboard/account");
+  }
+
   const isOwner = role === "COMPANY_OWNER" || role === "SUPER_ADMIN";
   const isSuperAdmin = role === "SUPER_ADMIN";
   const showBilling = role !== "EMPLOYEE";

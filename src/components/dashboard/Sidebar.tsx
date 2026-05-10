@@ -3,28 +3,22 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CalendarClock, FileText, Settings, LogOut, LifeBuoy } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import clsx from "clsx";
-import { getDashboardNavItems } from "./dashboard-nav-config";
+import { getDashboardNavItems, getMobileBottomNavItems } from "./dashboard-nav-config";
 import { useEffect, useState } from "react";
-import { countOpenSupportTicketsForSuperAdmin, getMyUnreadSupportRepliesCount } from "@/lib/actions/support";
+import { countOpenSupportTicketsForSuperAdmin } from "@/lib/actions/support";
 import { countPendingShiftTradeApprovals } from "@/lib/actions/team";
 
-/** Nur Mobil (< md): Daumen-Zone, vier Kernrouten — kein Hamburger, Rest über Einstellungen/Dashboard. */
-const MOBILE_NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/planning", label: "Planen", icon: CalendarClock },
-  { href: "/dashboard/reports", label: "Berichte", icon: FileText },
-  { href: "/dashboard/support", label: "Support", icon: LifeBuoy },
-  { href: "/dashboard/settings", label: "Einstellungen", icon: Settings },
-];
+/** Nur Mobil (< md): Daumen-Zone — Items aus `getMobileBottomNavItems(role)`. */
 
 interface SidebarProps {
   role: string;
   plan: string;
   initialSuperOpenTickets?: number;
-  onOpenSupport?: () => void;
+  unreadReplies?: number;
+  onOpenSupport?: (mode?: "default" | "unread") => void;
   supportOverlayOpen?: boolean;
 }
 
@@ -32,30 +26,15 @@ export function DashboardSidebar({
   role,
   plan,
   initialSuperOpenTickets = 0,
+  unreadReplies = 0,
   onOpenSupport,
   supportOverlayOpen = false,
 }: SidebarProps) {
   const pathname = usePathname();
   const visibleItems = getDashboardNavItems(role, plan);
-  const [unreadReplies, setUnreadReplies] = useState(0);
   const [pendingTradeApprovals, setPendingTradeApprovals] = useState(0);
   const [openSuperTickets, setOpenSuperTickets] = useState(initialSuperOpenTickets);
   const canManageTrades = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
-
-  useEffect(() => {
-    let mounted = true;
-    void (async () => {
-      try {
-        const count = await getMyUnreadSupportRepliesCount();
-        if (mounted) setUnreadReplies(count);
-      } catch {
-        if (mounted) setUnreadReplies(0);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     setOpenSuperTickets(initialSuperOpenTickets);
@@ -126,25 +105,34 @@ export function DashboardSidebar({
             pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
           if (item.href === "/dashboard/support") {
             return (
-              <button
+              <div
                 key={item.href}
-                type="button"
-                onClick={onOpenSupport}
                 className={clsx(
-                  "flex min-h-11 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium transition-all active:scale-95",
+                  "flex min-h-11 w-full items-stretch gap-0.5 rounded-2xl px-1 py-0.5 transition-all active:scale-[0.99]",
                   supportOverlayOpen || isActive
                     ? "bg-muted text-foreground backdrop-blur-sm"
                     : "text-muted-foreground md:hover:bg-card/70 md:hover:text-foreground"
                 )}
               >
-                <item.icon className="h-4 w-4 shrink-0" />
-                {item.label}
+                <button
+                  type="button"
+                  onClick={() => onOpenSupport?.("default")}
+                  className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium"
+                >
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
                 {unreadReplies > 0 ? (
-                  <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-foreground">
-                    {unreadReplies}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onOpenSupport?.("unread")}
+                    className="inline-flex min-h-11 min-w-[2.75rem] shrink-0 items-center justify-center self-center rounded-xl bg-primary px-2 text-xs font-bold text-foreground shadow-sm md:hover:bg-primary/90"
+                    aria-label={`${unreadReplies} ungelesene Support-Antworten anzeigen`}
+                  >
+                    {unreadReplies > 9 ? "9+" : unreadReplies}
+                  </button>
                 ) : null}
-              </button>
+              </div>
             );
           }
 
@@ -193,38 +181,64 @@ export function DashboardSidebar({
 }
 
 export function DashboardMobileBottomNav({
+  role,
+  unreadReplies = 0,
   onOpenSupport,
   supportOverlayOpen = false,
 }: {
-  onOpenSupport?: () => void;
+  role: string;
+  unreadReplies?: number;
+  onOpenSupport?: (mode?: "default" | "unread") => void;
   supportOverlayOpen?: boolean;
 }) {
   const pathname = usePathname();
-  const items = MOBILE_NAV_ITEMS;
+  const items = getMobileBottomNavItems(role);
 
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md md:hidden"
       aria-label="Hauptnavigation"
     >
-      <div className="mx-auto grid max-w-lg grid-cols-5 gap-0.5">
+      <div
+        className={clsx(
+          "mx-auto grid max-w-lg gap-0.5",
+          items.length <= 4 ? "grid-cols-4" : "grid-cols-5",
+        )}
+      >
         {items.map((item) => {
           const isActive =
             pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
           if (item.href === "/dashboard/support") {
             return (
-              <button
+              <div
                 key={item.href}
-                type="button"
-                onClick={onOpenSupport}
                 className={clsx(
-                  "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1 text-[10px] font-semibold leading-tight transition-transform duration-100 active:scale-95",
-                  supportOverlayOpen ? "bg-primary/12 text-primary" : "text-muted-foreground"
+                  "flex min-h-14 min-w-0 items-stretch rounded-2xl border border-transparent",
+                  supportOverlayOpen ? "border-primary/20 bg-primary/12" : ""
                 )}
               >
-                <item.icon className="h-6 w-6 shrink-0 stroke-[1.75]" aria-hidden />
-                <span className="line-clamp-2 text-center">{item.label}</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onOpenSupport?.("default")}
+                  className={clsx(
+                    "flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1 text-[10px] font-semibold leading-tight transition-transform duration-100 active:scale-95",
+                    supportOverlayOpen ? "text-primary" : "text-muted-foreground"
+                  )}
+                >
+                  <item.icon className="h-6 w-6 shrink-0 stroke-[1.75]" aria-hidden />
+                  <span className="line-clamp-2 text-center">{item.label}</span>
+                </button>
+                {unreadReplies > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => onOpenSupport?.("unread")}
+                    className="flex w-10 shrink-0 flex-col items-center justify-center rounded-r-2xl bg-primary text-[11px] font-bold leading-none text-foreground active:scale-95"
+                    aria-label="Ungelesene Support-Antwort öffnen"
+                  >
+                    {unreadReplies > 9 ? "9+" : unreadReplies}
+                  </button>
+                ) : null}
+              </div>
             );
           }
           return (

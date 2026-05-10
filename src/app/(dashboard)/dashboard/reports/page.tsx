@@ -17,8 +17,12 @@ export default async function ReportsPage({
   if (!session?.user?.companyId) redirect("/auth/login");
 
   const { companyId, id: userId } = session.user as { companyId: string; id: string };
-  const plan = session.user.plan ?? "STARTER";
   const role = session.user.role ?? "EMPLOYEE";
+  if (role === "EMPLOYEE") {
+    redirect("/dashboard");
+  }
+
+  const plan = session.user.plan ?? "STARTER";
   const canDatevExport = role === "COMPANY_OWNER" || role === "SUPER_ADMIN";
   const company = await db.company.findUnique({
     where: { id: companyId },
@@ -132,6 +136,7 @@ export default async function ReportsPage({
     include: {
       user: { select: { name: true, email: true } },
       reviewedBy: { select: { name: true, email: true } },
+      workLog: { select: { clockIn: true, clockOut: true, breakMins: true } },
     },
   });
 
@@ -173,6 +178,9 @@ export default async function ReportsPage({
         workLogId: r.workLogId,
         userId: r.userId,
         userName: r.user.name ?? r.user.email,
+        originalClockIn: r.workLog?.clockIn.toISOString() ?? null,
+        originalClockOut: r.workLog?.clockOut?.toISOString() ?? null,
+        originalBreakMins: r.workLog ? r.workLog.breakMins : null,
         requestedClockIn: r.requestedClockIn.toISOString(),
         requestedClockOut: r.requestedClockOut?.toISOString() ?? null,
         requestedBreakMins: r.requestedBreakMins,
@@ -180,6 +188,7 @@ export default async function ReportsPage({
         reason: r.reason,
         status: r.status as "PENDING" | "APPROVED" | "REJECTED",
         reviewerName: r.reviewedBy?.name ?? r.reviewedBy?.email ?? null,
+        reviewerNote: r.reviewerNote ?? null,
       }))}
       currentUserId={userId}
       hourlyWageByUserId={hourlyWageByUserId}

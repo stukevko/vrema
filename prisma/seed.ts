@@ -17,6 +17,7 @@ async function main() {
 
   if (existingCompany) {
     await prisma.shiftTaskList.deleteMany({ where: { companyId: existingCompany.id } });
+    await prisma.shift.deleteMany({ where: { companyId: existingCompany.id } });
     await prisma.taskTemplate.deleteMany({ where: { companyId: existingCompany.id } });
     await prisma.vacationRequest.deleteMany({ where: { companyId: existingCompany.id } });
     await prisma.workLog.deleteMany({ where: { companyId: existingCompany.id } });
@@ -36,10 +37,28 @@ async function main() {
 
   const passwordHash = await bcrypt.hash("DemoPass!123", 12);
 
-  const staff = [
+  type StaffSeed = {
+    name: string;
+    email: string;
+    role: UserRole;
+    weeklyHours: number;
+    vacationDays: number;
+    pin: string;
+    staffingRole?: string;
+  };
+
+  const staff: StaffSeed[] = [
     { name: "Kevin Admin", email: "kevin@vrema.solutions", role: UserRole.COMPANY_OWNER, weeklyHours: 40, vacationDays: 30, pin: "1234" },
     { name: "Mia Manager", email: "mia@vrema.solutions", role: UserRole.MANAGER, weeklyHours: 40, vacationDays: 28, pin: "2222" },
-    { name: "Max Mustermann", email: "max@vrema.solutions", role: UserRole.EMPLOYEE, weeklyHours: 40, vacationDays: 25, pin: "3333" },
+    {
+      name: "Max Mustermann",
+      email: "max@vrema.solutions",
+      role: UserRole.EMPLOYEE,
+      weeklyHours: 40,
+      vacationDays: 25,
+      pin: "3333",
+      staffingRole: "Bar",
+    },
     { name: "Sophie Bauer", email: "sophie@vrema.solutions", role: UserRole.EMPLOYEE, weeklyHours: 38, vacationDays: 27, pin: "4444" },
     { name: "Luca Weber", email: "luca@vrema.solutions", role: UserRole.EMPLOYEE, weeklyHours: 35, vacationDays: 26, pin: "5555" },
   ];
@@ -57,6 +76,7 @@ async function main() {
           terminalPinHash: pinHash,
           weeklyHours: member.weeklyHours,
           vacationDays: member.vacationDays,
+          ...(member.staffingRole ? { staffingRole: member.staffingRole } : {}),
           employeeNumber: `EMP-${(idx + 1).toString().padStart(3, "0")}`,
           emailVerified: new Date(),
           isActive: true,
@@ -105,18 +125,34 @@ async function main() {
     data: {
       companyId: company.id,
       name: "Schlussdienst Bar",
-      isDefault: true,
+      staffingRole: "Bar",
+      isDefault: false,
       items: {
         create: [
           { title: "Kaffeemaschine reinigen", sortOrder: 0 },
-          { title: "Gläser / Spülmaschine", sortOrder: 1 },
-          { title: "Theke desinfizieren", sortOrder: 2 },
-          { title: "Müll & Recycling", sortOrder: 3 },
-          { title: "Kasse & Übergabe", sortOrder: 4 },
+          { title: "Terrasse abschließen", sortOrder: 1 },
+          { title: "Kassensturz machen", sortOrder: 2 },
+          { title: "Licht aus", sortOrder: 3 },
+          { title: "Fenster prüfen", sortOrder: 4 },
         ],
       },
     },
   });
+
+  for (let dayOfWeek = 0; dayOfWeek <= 6; dayOfWeek += 1) {
+    await prisma.shift.create({
+      data: {
+        companyId: company.id,
+        userId: max.id,
+        dayOfWeek,
+        weekIndex: 1,
+        startTime: "10:00",
+        endTime: "18:00",
+        breakDuration: 30,
+        staffingRole: "Bar",
+      },
+    });
+  }
 
   await prisma.vacationRequest.createMany({
     data: [
@@ -156,6 +192,7 @@ async function main() {
 
   console.log("Seed fertig: VREMA Solutions + Demo-Daten erstellt.");
   console.log("Login Demo: kevin@vrema.solutions / DemoPass!123");
+  console.log("Checkliste Bar: max@vrema.solutions (Personalrolle Bar) – nach Einstempeln erscheint „Schlussdienst Bar“.");
 }
 
 main()

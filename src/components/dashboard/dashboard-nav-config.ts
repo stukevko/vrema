@@ -15,6 +15,12 @@ import {
   ListTodo,
 } from "lucide-react";
 
+export type MobileBottomNavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+};
+
 export type DashboardNavItem = {
   href: string;
   label: string;
@@ -23,6 +29,27 @@ export type DashboardNavItem = {
 };
 
 const ALL_PLANS = ["STARTER", "BUSINESS", "ENTERPRISE"] as const;
+
+/** Mobil-Bottom-Nav (< md): Daumen-Zone — EMPLOYEE ohne Berichte/Admin-URLs. */
+export function getMobileBottomNavItems(role: string): MobileBottomNavItem[] {
+  const base: MobileBottomNavItem[] = [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard/planning", label: "Planen", icon: CalendarClock },
+    { href: "/dashboard/reports", label: "Berichte", icon: FileText },
+    { href: "/dashboard/support", label: "Support", icon: LifeBuoy },
+    { href: "/dashboard/settings", label: "Einstellungen", icon: Settings },
+  ];
+  if (role === "EMPLOYEE") {
+    return base
+      .filter((i) => i.href !== "/dashboard/reports")
+      .map((i) =>
+        i.href === "/dashboard/settings"
+          ? { ...i, href: "/dashboard/account", label: "Konto" }
+          : i,
+      );
+  }
+  return base;
+}
 
 const BASE_NAV: DashboardNavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, plans: ALL_PLANS },
@@ -48,10 +75,15 @@ export function getDashboardNavItems(role: string, plan: string): DashboardNavIt
   const visible = BASE_NAV.filter((item) => {
     if (!item.plans.includes(plan)) return false;
     if (item.href === "/dashboard/billing" && role === "EMPLOYEE") return false;
+    if (item.href === "/dashboard/reports" && role === "EMPLOYEE") return false;
     if (item.href === "/dashboard/team/absences" && role === "EMPLOYEE") return false;
     if (item.href === "/dashboard/tasks" && role === "EMPLOYEE") return false;
     return true;
-  });
+  }).map((item) =>
+    role === "EMPLOYEE" && item.href === "/dashboard/settings"
+      ? { ...item, href: "/dashboard/account", label: "Mein Konto" }
+      : item,
+  );
 
   let composed = [...visible];
   if (["COMPANY_OWNER", "MANAGER"].includes(role) && role !== "SUPER_ADMIN") {
