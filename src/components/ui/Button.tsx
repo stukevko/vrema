@@ -11,34 +11,43 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   loading?: boolean;
   leadingIcon?: React.ReactNode;
   trailingIcon?: React.ReactNode;
+  /** Extra Petrol-Glow – für Hero-CTAs (z. B. Autopilot). */
+  hero?: boolean;
 };
 
 const base =
   "inline-flex items-center justify-center gap-2 font-semibold whitespace-nowrap " +
   "rounded-xl border transition-all duration-200 " +
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 " +
-  "disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0";
+  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/25 " +
+  "disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100";
 
 const variants: Record<Variant, string> = {
   brand:
-    "bg-brand text-brand-foreground border-brand shadow-sm " +
-    "hover:bg-brand-hover hover:-translate-y-px hover:shadow-md " +
-    "active:translate-y-0",
+    "relative overflow-hidden bg-gradient-to-b from-brand via-brand to-brand-hover text-brand-foreground " +
+    "border-white/25 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_8px_26px_-6px_hsl(var(--brand)_/_0.42)] " +
+    "dark:border-white/12 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_10px_32px_-8px_hsl(var(--brand)_/_0.52)] " +
+    "hover:brightness-[1.06] hover:-translate-y-px hover:scale-[1.02] " +
+    "hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.28),0_14px_38px_-8px_hsl(var(--brand)_/_0.52)] " +
+    "active:translate-y-0 active:scale-[0.99] active:brightness-[0.97]",
   outline:
-    "bg-surface text-fg border-line-strong shadow-sm " +
-    "hover:bg-surface-muted hover:border-brand/50 hover:text-brand",
+    "border-line-strong/90 bg-surface/90 text-fg backdrop-blur-md " +
+    "shadow-[inset_0_1px_0_0_hsl(var(--specular-line)_/_0.35)] " +
+    "dark:border-white/12 dark:bg-surface/55 " +
+    "hover:border-brand/45 hover:bg-surface-muted hover:text-brand hover:scale-[1.02]",
   ghost:
-    "bg-transparent text-fg-muted border-transparent " +
-    "hover:bg-surface-muted hover:text-fg",
+    "border-transparent bg-transparent text-fg-muted " +
+    "hover:bg-surface-muted/80 hover:text-fg hover:scale-[1.02]",
   subtle:
-    "bg-brand-soft text-brand border-transparent " +
-    "hover:bg-brand/15",
+    "border-white/15 bg-brand-soft/95 text-brand backdrop-blur-sm dark:border-white/10 dark:bg-brand-soft/80 " +
+    "shadow-sm hover:bg-brand/15 hover:scale-[1.02]",
   danger:
-    "bg-danger text-white border-danger shadow-sm " +
-    "hover:bg-danger/90 hover:-translate-y-px hover:shadow-md",
+    "bg-gradient-to-b from-danger to-danger text-white border-white/15 " +
+    "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),0_6px_20px_-4px_hsl(var(--danger)_/_0.45)] " +
+    "hover:brightness-110 hover:-translate-y-px hover:scale-[1.02] active:translate-y-0",
   warning:
-    "bg-warning text-white border-warning shadow-sm " +
-    "hover:bg-warning/90 hover:-translate-y-px hover:shadow-md",
+    "bg-gradient-to-b from-warning to-warning text-white border-white/15 " +
+    "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),0_6px_20px_-4px_hsl(var(--warning)_/_0.35)] " +
+    "hover:brightness-110 hover:-translate-y-px hover:scale-[1.02] active:translate-y-0",
 };
 
 const sizes: Record<Size, string> = {
@@ -57,6 +66,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
     disabled,
     leadingIcon,
     trailingIcon,
+    hero,
     children,
     type = "button",
     ...rest
@@ -69,7 +79,16 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={clsx(base, variants[variant], sizes[size], fullWidth && "w-full", className)}
+      className={clsx(
+        base,
+        variants[variant],
+        sizes[size],
+        fullWidth && "w-full",
+        hero &&
+          variant === "brand" &&
+          "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.24),0_0_52px_-14px_hsl(var(--brand)_/_0.65),0_12px_36px_-10px_hsl(var(--brand)_/_0.55)]",
+        className,
+      )}
       {...rest}
     >
       {loading ? (

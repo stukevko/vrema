@@ -5,8 +5,8 @@ import Link from "next/link";
 
 const levelStyles: Record<AIInsightItem["level"], string> = {
   info: "text-muted-foreground",
-  warning: "text-amber-700",
-  success: "text-emerald-700",
+  warning: "text-warning-foreground",
+  success: "text-brand",
 };
 
 export function AIInsights({ initialPayload }: { initialPayload: AIInsightsPayload }) {
@@ -23,7 +23,7 @@ export function AIInsights({ initialPayload }: { initialPayload: AIInsightsPaylo
         {items.map((item) => (
           <li
             key={item.id}
-            className="border-b border-border/60 py-3 text-sm leading-relaxed last:border-0 last:pb-0 sm:border-0 sm:py-2"
+            className="border-b border-line/60 py-3 text-sm leading-relaxed last:border-0 last:pb-0 sm:border-0 sm:py-2 dark:border-white/8"
           >
             <span className={`font-medium ${levelStyles[item.level]}`}>✨</span>{" "}
             <span className="text-foreground">{item.text}</span>
@@ -31,7 +31,7 @@ export function AIInsights({ initialPayload }: { initialPayload: AIInsightsPaylo
               <div className="mt-2">
                 <Link
                   href={item.actionHref}
-                  className="inline-flex rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/15"
+                  className="inline-flex items-center rounded-lg border border-brand/25 bg-brand-soft/90 px-2.5 py-1 text-xs font-semibold text-brand backdrop-blur transition-all hover:scale-[1.02] hover:bg-brand-soft dark:border-white/10 dark:bg-brand/25"
                 >
                   {item.actionLabel}
                 </Link>

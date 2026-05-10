@@ -173,7 +173,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName, inv
               Empfohlen durch unseren Partner
               {resolvedName ? (
                 <>
-                  : <span className="text-emerald-400/95 font-medium">{resolvedName}</span>
+                  : <span className="font-medium text-brand">{resolvedName}</span>
                 </>
               ) : null}
               <span className="block text-[10px] text-muted-foreground font-sans mt-1">{resolvedCode}</span>

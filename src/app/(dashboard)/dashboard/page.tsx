@@ -322,7 +322,7 @@ export default async function DashboardPage() {
       {employeeCount === 0 && (
         <div className="order-4 rounded-2xl glass-panel p-5 sm:p-8">
           <div className="flex items-center gap-2 mb-2">
-            <ListChecks className="w-4 h-4 text-primary" />
+            <ListChecks className="w-4 h-4 text-brand" />
             <p className="font-semibold text-sm">Noch kein Team angelegt</p>
           </div>
           <p className="mb-3 text-sm text-muted-foreground">
@@ -330,12 +330,12 @@ export default async function DashboardPage() {
           </p>
           <ol className="list-decimal pl-5 text-sm text-foreground space-y-1">
             <li>
-              <Link href="/dashboard/team" className="text-primary hover:underline">
+              <Link href="/dashboard/team" className="text-brand hover:underline">
                 Mitarbeiter anlegen
               </Link>
             </li>
             <li>
-              <a href="#terminal-widget" className="text-primary hover:underline">
+              <a href="#terminal-widget" className="text-brand hover:underline">
                 Terminal testen
               </a>
             </li>
@@ -346,18 +346,18 @@ export default async function DashboardPage() {
       {/* Team stats (for owners/managers) — Fokus-Karte + Details für Kennzahlen */}
       {teamStats && focus && (
         <div className="order-5 space-y-4 md:order-4">
-          <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card p-5 shadow-sm sm:p-6">
+          <div className="glass-card border-brand/25 bg-gradient-to-br from-brand/14 via-surface/30 to-transparent p-5 sm:p-6 dark:from-brand/18 dark:via-surface/20">
             <div className="flex items-start gap-3">
-              <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand/15 text-brand shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
                 <Target className="h-4 w-4" aria-hidden />
               </span>
               <div className="min-w-0 flex-1 space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-primary">Heute im Fokus</p>
-                <h2 className="text-base font-bold tracking-tight text-foreground sm:text-lg">{focus.title}</h2>
-                <p className="text-sm text-muted-foreground">{focus.description}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">Heute im Fokus</p>
+                <h2 className="text-base font-bold tracking-tight text-fg sm:text-lg">{focus.title}</h2>
+                <p className="text-sm text-fg-muted">{focus.description}</p>
                 <Link
                   href={focus.href + (focus.href === "/dashboard/planning" && teamStats.pendingTradeApprovals > 0 ? "#shift-trade-approvals" : "")}
-                  className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 active:scale-[0.99]"
+                  className="btn-brand inline-flex min-h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold active:scale-[0.99]"
                 >
                   {focus.cta}
                 </Link>
@@ -370,10 +370,10 @@ export default async function DashboardPage() {
           {teamStats.pendingTradeApprovals > 0 && (
             <Link
               href="/dashboard/planning#shift-trade-approvals"
-              className="block rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 shadow-sm transition-colors hover:bg-amber-100/70"
+              className="block rounded-2xl border border-warning/30 bg-warning-soft/80 px-5 py-4 shadow-sm backdrop-blur-md transition-all hover:border-warning/45 hover:bg-warning-soft active:scale-[0.99] dark:border-white/10 dark:bg-warning/15"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-700">Offene Aufgaben</p>
-              <p className="mt-1 text-base font-bold text-amber-900">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-warning-foreground">Offene Aufgaben</p>
+              <p className="mt-1 text-base font-bold text-warning-foreground">
                 {teamStats.pendingTradeApprovals} Tauschanfragen warten auf deine Freigabe
               </p>
             </Link>
@@ -381,13 +381,13 @@ export default async function DashboardPage() {
           {teamStats.pendingCorrections > 0 && (
             <Link
               href="/dashboard/reports#zeitkorrekturen"
-              className="block rounded-2xl border border-violet-300 bg-violet-50 px-5 py-4 shadow-sm transition-colors hover:bg-violet-100/70"
+              className="block rounded-2xl border border-brand/28 bg-brand-soft/90 px-5 py-4 shadow-sm backdrop-blur-md transition-all hover:border-brand/40 hover:bg-brand-soft active:scale-[0.99] dark:border-white/10 dark:bg-brand/18"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-violet-700">Compliance · Zeitkorrekturen</p>
-              <p className="mt-1 text-base font-bold text-violet-900">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">Compliance · Zeitkorrekturen</p>
+              <p className="mt-1 text-base font-bold text-brand dark:text-brand-foreground">
                 {teamStats.pendingCorrections} {teamStats.pendingCorrections === 1 ? "Antrag" : "Anträge"} mit Vorher/Nachher prüfen
               </p>
-              <p className="mt-1 text-xs text-violet-700">Direkt zum Diff-Block in den Berichten – kein Suchen.</p>
+              <p className="mt-1 text-xs text-fg-muted">Direkt zum Diff-Block in den Berichten – kein Suchen.</p>
             </Link>
           )}
 
@@ -432,47 +432,48 @@ export default async function DashboardPage() {
               <div className="grid grid-cols-1 gap-2 text-xs md:grid-cols-2 xl:grid-cols-3">
                 <div className="rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
                   <span className="text-muted-foreground">Fehlend heute</span>
-                  <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-red-700" : "text-emerald-700"}`}>
+                  <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-danger" : "text-brand"}`}>
                     {teamStats.absentToday > 0 ? `${teamStats.absentToday} kritisch` : "Keine offenen Ausfälle"}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
                   <span className="text-muted-foreground">Zu spät heute</span>
-                  <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-amber-700" : "text-emerald-700"}`}>
+                  <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-warning" : "text-brand"}`}>
                     {teamStats.lateToday > 0 ? `${teamStats.lateToday} Hinweise` : "Alles pünktlich"}
                   </p>
                 </div>
                 {teamStats.pendingCorrections > 0 ? (
                   <Link
                     href="/dashboard/reports#zeitkorrekturen"
-                    className="block rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl transition-colors hover:border-primary/40 hover:bg-card/80"
+                    className="block rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl transition-colors hover:border-brand/40 hover:bg-card/80"
                   >
                     <span className="text-muted-foreground">Unbestätigte Zeiten</span>
-                    <p className="mt-1 font-semibold text-amber-700">
+                    <p className="mt-1 font-semibold text-warning">
                       {teamStats.pendingCorrections} offen · Diff prüfen →
                     </p>
                   </Link>
                 ) : (
                   <div className="rounded-2xl border border-border bg-card px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
                     <span className="text-muted-foreground">Unbestätigte Zeiten</span>
-                    <p className="mt-1 font-semibold text-emerald-700">Keine offenen Korrekturen</p>
+                    <p className="mt-1 font-semibold text-brand">Keine offenen Korrekturen</p>
                   </div>
                 )}
               </div>
               <div className="-mx-2 flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-visible pb-2 pt-1 scrollbar-hide md:mx-0 md:grid md:snap-none md:grid-cols-2 md:gap-4 md:overflow-visible md:pb-0 md:pt-0 xl:grid-cols-3 2xl:grid-cols-6">
                 {(
                   [
-                    { label: "Mitarbeiter gesamt", value: teamStats.totalEmployees, icon: Users, color: "#60a5fa", href: "/dashboard/team" },
-                    { label: "Heute aktiv", value: teamStats.activeToday, icon: Clock, color: "#86efac", href: "/dashboard/reports" },
-                    { label: "Urlaubsanträge", value: teamStats.pendingVacations, icon: CalendarDays, color: "#f59e0b", href: "/dashboard/vacation#team-vacation-requests", actionable: teamStats.pendingVacations > 0 ? "Mit Resturlaub & Konflikten prüfen" : undefined },
-                    { label: "Fehlend heute", value: teamStats.absentToday, icon: TriangleAlert, color: "#f87171", href: "/dashboard/reports" },
-                    { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, color: "#fbbf24", href: "/dashboard/planning" },
-                    { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, color: "#c084fc", href: "/dashboard/reports#zeitkorrekturen", actionable: teamStats.pendingCorrections > 0 ? "Diff prüfen" : undefined },
+                    { label: "Mitarbeiter gesamt", value: teamStats.totalEmployees, icon: Users, iconClass: "text-brand", valueClass: "text-brand", href: "/dashboard/team" },
+                    { label: "Heute aktiv", value: teamStats.activeToday, icon: Clock, iconClass: "text-brand", valueClass: "text-brand", href: "/dashboard/reports" },
+                    { label: "Urlaubsanträge", value: teamStats.pendingVacations, icon: CalendarDays, iconClass: "text-warning", valueClass: "text-warning", href: "/dashboard/vacation#team-vacation-requests", actionable: teamStats.pendingVacations > 0 ? "Mit Resturlaub & Konflikten prüfen" : undefined },
+                    { label: "Fehlend heute", value: teamStats.absentToday, icon: TriangleAlert, iconClass: "text-danger", valueClass: "text-danger", href: "/dashboard/reports" },
+                    { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, iconClass: "text-warning", valueClass: "text-warning", href: "/dashboard/planning" },
+                    { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, iconClass: "text-brand", valueClass: "text-brand", href: "/dashboard/reports#zeitkorrekturen", actionable: teamStats.pendingCorrections > 0 ? "Diff prüfen" : undefined },
                   ] as Array<{
                     label: string;
                     value: number;
                     icon: typeof Users;
-                    color: string;
+                    iconClass: string;
+                    valueClass: string;
                     href?: string;
                     actionable?: string;
                   }>
@@ -481,9 +482,9 @@ export default async function DashboardPage() {
                     <>
                       <div className="mb-3 flex items-center justify-between">
                         <p className="text-xs text-muted-foreground">{stat.label}</p>
-                        <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
+                        <stat.icon className={`h-4 w-4 ${stat.iconClass}`} />
                       </div>
-                      <p className="text-3xl font-bold" style={{ color: stat.color }}>
+                      <p className={`text-3xl font-bold ${stat.valueClass}`}>
                         {stat.value}
                       </p>
                       {stat.actionable ? (
@@ -500,7 +501,7 @@ export default async function DashboardPage() {
                       <Link
                         key={stat.label}
                         href={stat.href}
-                        className={`${baseClass} block hover:border-primary/40 hover:bg-card/80 active:scale-[0.99]`}
+                        className={`${baseClass} block hover:border-brand/35 hover:bg-card/80 hover:scale-[1.02] active:scale-[0.99]`}
                       >
                         {inner}
                       </Link>
@@ -509,7 +510,7 @@ export default async function DashboardPage() {
                   return (
                     <div
                       key={stat.label}
-                      className={`${baseClass} md:hover:bg-card/80`}
+                      className={`${baseClass} md:hover:bg-card/80 md:hover:scale-[1.01]`}
                     >
                       {inner}
                     </div>
@@ -564,7 +565,7 @@ export default async function DashboardPage() {
       <div className="order-7 rounded-2xl glass-panel p-5 transition-all sm:p-8 md:hover:bg-card/80">
         <div className="mb-4 flex items-center justify-between gap-2">
           <h2 className="font-semibold">Heute</h2>
-          <span className="text-sm text-primary tabular-nums font-bold">
+          <span className="text-sm text-brand tabular-nums font-bold">
             {Math.floor(todayWorkedMins / 60)}h {Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m
           </span>
         </div>
@@ -588,7 +589,7 @@ export default async function DashboardPage() {
               return (
                 <div key={log.id} className="flex min-h-[3.25rem] items-center justify-between gap-3 rounded-2xl bg-background px-3 py-3 sm:py-2.5">
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-muted-foreground/30" : "bg-primary animate-pulse"}`} />
+                    <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-muted-foreground/30" : "bg-brand animate-pulse"}`} />
                     <span className="text-sm text-foreground">
                       {formatBerlinTime(new Date(log.clockIn), { hour: "2-digit", minute: "2-digit" })}
                       {" — "}
@@ -618,7 +619,7 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/dashboard/billing"
-            className="inline-flex min-h-12 w-full shrink-0 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-all active:scale-[0.99] md:hover:bg-primary/90 sm:w-auto"
+            className="btn-brand inline-flex min-h-12 w-full shrink-0 items-center justify-center rounded-2xl px-5 text-sm font-bold active:scale-[0.99] sm:w-auto"
           >
             Upgrade
           </Link>

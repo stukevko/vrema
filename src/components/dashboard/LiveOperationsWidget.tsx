@@ -3,9 +3,9 @@ import { Activity, CheckCircle2 } from "lucide-react";
 
 export function LiveOperationsWidget({ rows }: { rows: ShiftTaskWallRow[] }) {
   return (
-    <div className="rounded-2xl border border-border bg-card/90 p-5 shadow-sm backdrop-blur-md sm:p-6">
+    <div className="glass-card p-5 sm:p-6">
       <div className="mb-4 flex items-center gap-2">
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-700">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand-soft/90 text-brand backdrop-blur-md dark:border-white/10 dark:bg-brand/25">
           <Activity className="h-4 w-4" aria-hidden />
         </span>
         <div className="min-w-0">
@@ -32,20 +32,20 @@ export function LiveOperationsWidget({ rows }: { rows: ShiftTaskWallRow[] }) {
                 {r.userName ? (
                   <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{r.userName}</p>
                 ) : null}
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+                <div className="mt-2 h-2 overflow-hidden rounded-full border border-white/30 bg-surface-muted/80 backdrop-blur dark:border-white/10 dark:bg-surface-muted/40">
                   <div
-                    className="h-full rounded-full bg-emerald-500 transition-[width] duration-300 ease-out"
+                    className="h-full rounded-full bg-gradient-to-r from-brand to-brand-hover shadow-[0_0_16px_-4px_hsl(var(--brand)_/_0.6)] transition-[width] duration-300 ease-out"
                     style={{ width: `${pct}%` }}
                   />
                 </div>
                 {r.totalCount > 0 && pct === 0 ? (
-                  <p className="mt-2 text-xs font-medium text-amber-800">
+                  <p className="mt-2 text-xs font-medium text-warning-foreground">
                     Schicht gestartet – Aufgaben warten!
                   </p>
                 ) : null}
                 {r.totalCount > 0 && pct === 100 ? (
-                  <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+                  <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-brand">
+                    <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
                     Alle Punkte erledigt
                   </div>
                 ) : null}

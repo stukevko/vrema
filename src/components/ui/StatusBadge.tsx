@@ -3,16 +3,7 @@ import clsx from "clsx";
 
 /**
  * Eine konsistente Status-Pille für ALLE Status-Anzeigen in VREMA.
- * Statt Ad-hoc-Tailwind-Farben pro Seite (grün-bg-100 hier, lila-text-700 dort)
- * gibt es genau diese sechs Töne, gemappt auf die Theme-Tokens.
- *
- * Tone → Bedeutung:
- *  - success  : Pünktlich, Freigegeben, Schicht aktiv, OK
- *  - warning  : Zu spät, Urlaub, Achtung, Pending
- *  - danger   : Krank, Abgelehnt, Fehlend, Fehler
- *  - neutral  : Frei, Standard, Keine Info
- *  - brand    : Hervorhebung im Petrol (z. B. "Aktiv")
- *  - info     : Hinweis (gedämpftes Schiefergrau – Alias für neutral, aber mit Punkt)
+ * `glass`: halbtransparent + backdrop-blur (Apple-Glas über Statusfarbe).
  */
 export type StatusTone = "success" | "warning" | "danger" | "neutral" | "brand" | "info";
 
@@ -23,6 +14,21 @@ const tones: Record<StatusTone, string> = {
   neutral: "bg-neutral-soft text-neutral-foreground border-line",
   brand: "bg-brand-soft text-brand border-brand/20",
   info: "bg-surface-muted text-fg-muted border-line",
+};
+
+/** Glasmorphism-Overlay – Specular-Kante, keine grellen Vollflächen */
+const glassTones: Record<StatusTone, string> = {
+  success:
+    "backdrop-blur-md border-white/30 bg-brand/16 text-brand shadow-sm dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground",
+  warning:
+    "backdrop-blur-md border-white/28 bg-warning/14 text-warning-foreground shadow-sm dark:border-white/10 dark:bg-warning/20",
+  danger:
+    "backdrop-blur-md border-white/28 bg-danger/14 text-danger-foreground shadow-sm dark:border-white/10 dark:bg-danger/22",
+  neutral:
+    "backdrop-blur-md border-white/35 bg-neutral-soft/85 text-neutral-foreground shadow-sm dark:border-white/10 dark:bg-neutral-soft/35",
+  brand:
+    "backdrop-blur-md border-white/30 bg-brand/18 text-brand shadow-sm dark:border-white/10 dark:bg-brand/26 dark:text-brand-foreground",
+  info: "backdrop-blur-md border-white/25 bg-surface-muted/90 text-fg-muted shadow-sm dark:border-white/10 dark:bg-surface-muted/45",
 };
 
 const dotTones: Record<StatusTone, string> = {
@@ -45,6 +51,8 @@ type StatusBadgeProps = {
   tone?: StatusTone;
   size?: Size;
   withDot?: boolean;
+  /** Halbtransparentes Glas über der Statusfarbe */
+  glass?: boolean;
   className?: string;
   children: React.ReactNode;
 };
@@ -53,6 +61,7 @@ export function StatusBadge({
   tone = "neutral",
   size = "md",
   withDot = true,
+  glass = false,
   className,
   children,
 }: StatusBadgeProps): React.JSX.Element {
@@ -62,7 +71,7 @@ export function StatusBadge({
         "inline-flex items-center font-medium tracking-tight",
         "rounded-full border",
         sizes[size],
-        tones[tone],
+        glass ? glassTones[tone] : tones[tone],
         className,
       )}
     >

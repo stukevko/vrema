@@ -14,19 +14,23 @@ export function ActiveShiftTasksCard({ tasks }: { tasks: NonNullable<ActiveShift
   return (
     <section
       aria-label="Deine Aufgaben für die aktuelle Schicht"
-      className="rounded-3xl border border-emerald-300 bg-gradient-to-br from-emerald-50 via-white to-white p-4 shadow-sm sm:p-6"
+      className="glass-card relative overflow-hidden p-4 sm:p-6"
     >
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent dark:via-white/15"
+      />
       <div className="mb-3 flex items-center gap-3">
-        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-700">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand-soft/90 text-brand backdrop-blur-md dark:border-white/10 dark:bg-brand/25">
           <Sparkles className="h-4 w-4" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-700">Deine Schicht läuft</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">Deine Schicht läuft</p>
           <h2 className="text-base font-bold tracking-tight text-foreground sm:text-lg">
             {allDone ? "Alle Aufgaben erledigt" : "Aufgaben für heute"}
           </h2>
         </div>
-        <span className="shrink-0 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold tabular-nums text-emerald-800">
+        <span className="shrink-0 rounded-full border border-white/30 bg-brand-soft/90 px-2.5 py-1 text-[11px] font-bold tabular-nums text-brand backdrop-blur-md dark:border-white/10 dark:bg-brand/25">
           {done}/{total}
         </span>
       </div>

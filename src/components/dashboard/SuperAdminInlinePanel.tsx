@@ -5,6 +5,8 @@ import Link from "next/link";
 import { createCompanyBySuperAdmin, deleteCompanyBySuperAdmin, updateCompanyBySuperAdmin } from "@/lib/actions/super-admin";
 import { Shield, Building2 } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 type CompanyRow = {
   id: string;
@@ -33,6 +35,13 @@ type MonitoringData = {
   generatedAt: string;
 };
 
+const inputClass =
+  "min-h-12 rounded-2xl border border-line bg-surface/95 px-3 py-2.5 text-sm text-fg shadow-sm backdrop-blur-sm " +
+  "placeholder:text-fg-subtle focus:border-brand dark:border-white/12 sm:text-xs";
+
+const selectClass =
+  "min-h-10 rounded-xl border border-line bg-surface/95 px-2 py-1.5 text-xs text-fg shadow-sm backdrop-blur-sm focus:border-brand dark:border-white/12";
+
 export function SuperAdminInlinePanel({
   companies,
   monitoring,
@@ -45,22 +54,22 @@ export function SuperAdminInlinePanel({
   const [resultMsg, setResultMsg] = useState<string | null>(null);
 
   return (
-    <section id="super-admin" className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
+    <section id="super-admin" className="glass-card p-4 sm:p-6">
       <div className="mb-4 flex items-center gap-2">
-        <Shield className="h-4 w-4 text-primary" />
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">Super Admin Modus</h2>
+        <Shield className="h-4 w-4 text-brand" />
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-brand">Super Admin Modus</h2>
       </div>
 
-      <p className="mb-4 text-[11px] leading-relaxed text-muted-foreground">
-        Hier legen Sie <span className="text-foreground">Kundenfirmen</span> an.{" "}
-        <span className="text-foreground">Empfehlungspartner (Affiliate)</span> mit Referenzlink legen Sie auf der Seite{" "}
-        <Link href="/dashboard/partners" className="text-primary underline underline-offset-2 hover:text-primary/90">
+      <p className="mb-4 text-[11px] leading-relaxed text-fg-muted">
+        Hier legen Sie <span className="text-fg">Kundenfirmen</span> an.{" "}
+        <span className="text-fg">Empfehlungspartner (Affiliate)</span> mit Referenzlink legen Sie auf der Seite{" "}
+        <Link href="/dashboard/partners" className="font-medium text-brand underline underline-offset-2 hover:brightness-110">
           /dashboard/partners
         </Link>{" "}
         unter „Affiliate & Auszahlungen“. Blog-Artikel:{" "}
         <Link
           href="/dashboard/super-admin/blog"
-          className="text-primary underline underline-offset-2 hover:text-primary/90"
+          className="font-medium text-brand underline underline-offset-2 hover:brightness-110"
         >
           Blog-Manager
         </Link>
@@ -69,40 +78,47 @@ export function SuperAdminInlinePanel({
 
       <div className="mb-4 grid gap-3 md:grid-cols-4">
         {[
-          { label: "Firmen", value: `${monitoring.activeCompanies}/${monitoring.totalCompanies}`, tone: "text-sky-700" },
-          { label: "User", value: `${monitoring.activeUsers}/${monitoring.totalUsers}`, tone: "text-emerald-700" },
-          { label: "Logs 24h", value: `${monitoring.logsLast24h}`, tone: "text-violet-700" },
-          { label: "Offene Clock-ins", value: `${monitoring.openWorkLogs}`, tone: "text-amber-700" },
+          { label: "Firmen", value: `${monitoring.activeCompanies}/${monitoring.totalCompanies}`, tone: "brand" as const },
+          { label: "User", value: `${monitoring.activeUsers}/${monitoring.totalUsers}`, tone: "success" as const },
+          { label: "Logs 24h", value: `${monitoring.logsLast24h}`, tone: "info" as const },
+          { label: "Offene Clock-ins", value: `${monitoring.openWorkLogs}`, tone: "warning" as const },
         ].map((m) => (
-          <div key={m.label} className="rounded-2xl border border-border bg-white px-3 py-2">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{m.label}</p>
-            <p className={`mt-1 text-sm font-semibold ${m.tone}`}>{m.value}</p>
+          <div
+            key={m.label}
+            className="rounded-2xl border border-white/40 bg-white/55 px-3 py-2 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-surface/40"
+          >
+            <p className="text-[10px] uppercase tracking-widest text-fg-muted">{m.label}</p>
+            <p className="mt-1">
+              <StatusBadge tone={m.tone} size="sm" glass withDot={false}>
+                {m.value}
+              </StatusBadge>
+            </p>
           </div>
         ))}
       </div>
 
-      <div className="mb-4 rounded-2xl border border-border bg-white px-3 py-2 text-[11px] text-foreground">
-        Monitoring: neue User (7d) <span className="text-foreground">{monitoring.newUsersLast7d}</span> · offene Tokens{" "}
-        <span className="text-foreground">{monitoring.verificationTokensOpen}</span> · abgelaufene Tokens{" "}
-        <span className={monitoring.staleVerificationTokens > 0 ? "text-amber-700" : "text-emerald-700"}>
+      <div className="mb-4 rounded-2xl border border-white/35 bg-white/50 px-3 py-2 text-[11px] text-fg backdrop-blur-md dark:border-white/10 dark:bg-surface/45">
+        Monitoring: neue User (7d) <span className="font-semibold">{monitoring.newUsersLast7d}</span> · offene Tokens{" "}
+        <span className="font-semibold">{monitoring.verificationTokensOpen}</span> · abgelaufene Tokens{" "}
+        <span className={monitoring.staleVerificationTokens > 0 ? "font-semibold text-warning" : "font-semibold text-brand"}>
           {monitoring.staleVerificationTokens}
         </span>{" "}
         · abgelaufene Sessions{" "}
-        <span className={monitoring.expiredSessions > 0 ? "text-amber-700" : "text-emerald-700"}>
+        <span className={monitoring.expiredSessions > 0 ? "font-semibold text-warning" : "font-semibold text-brand"}>
           {monitoring.expiredSessions}
         </span>{" "}
         · Retention-Cron{" "}
-        <span className={monitoring.retentionCronConfigured ? "text-emerald-700" : "text-red-700"}>
+        <span className={monitoring.retentionCronConfigured ? "font-semibold text-brand" : "font-semibold text-danger"}>
           {monitoring.retentionCronConfigured ? "konfiguriert" : "nicht gesetzt"}
         </span>
       </div>
 
       <form
-        className="mb-4 grid grid-cols-1 gap-2 rounded-2xl border border-border bg-card p-4 sm:grid-cols-2 md:grid-cols-4"
+        className="mb-4 grid grid-cols-1 gap-2 rounded-2xl border border-white/35 bg-surface/40 p-4 backdrop-blur-md dark:border-white/10 dark:bg-surface/35 sm:grid-cols-2 md:grid-cols-4"
         onSubmit={(e) => {
           e.preventDefault();
           const form = e.currentTarget;
-          const fd = new FormData(e.currentTarget);
+          const fd = new FormData(form);
           const companyName = String(fd.get("companyName") ?? "");
           const ownerName = String(fd.get("ownerName") ?? "");
           const ownerEmail = String(fd.get("ownerEmail") ?? "");
@@ -125,44 +141,24 @@ export function SuperAdminInlinePanel({
           });
         }}
       >
-        <input
-          name="companyName"
-          placeholder="Firma (z. B. Muster GmbH)"
-          className="min-h-12 rounded-2xl border border-border bg-white px-3 py-2.5 text-sm text-foreground sm:text-xs"
-          required
-        />
-        <input
-          name="ownerName"
-          placeholder="Owner Name"
-          className="min-h-12 rounded-2xl border border-border bg-white px-3 py-2.5 text-sm text-foreground sm:text-xs"
-          required
-        />
-        <input
-          name="ownerEmail"
-          type="email"
-          placeholder="owner@firma.de"
-          className="min-h-12 rounded-2xl border border-border bg-white px-3 py-2.5 text-sm text-foreground sm:text-xs"
-          required
-        />
-        <button
-          type="submit"
-          className="min-h-12 rounded-2xl border border-primary/35 bg-primary px-4 py-3 text-sm font-semibold text-foreground hover:bg-primary/90 disabled:opacity-60 sm:py-2 sm:text-xs lg:col-span-1"
-          disabled={isPending}
-        >
+        <input name="companyName" placeholder="Firma (z. B. Muster GmbH)" className={inputClass} required />
+        <input name="ownerName" placeholder="Owner Name" className={inputClass} required />
+        <input name="ownerEmail" type="email" placeholder="owner@firma.de" className={inputClass} required />
+        <Button type="submit" variant="brand" size="md" className="w-full lg:col-span-1" disabled={isPending} loading={isPending}>
           Firma hinzufügen
-        </button>
+        </Button>
       </form>
 
       {resultMsg && (
-        <p className="mb-4 rounded-2xl border border-border bg-white px-3 py-2 text-[11px] text-foreground">
+        <p className="mb-4 rounded-2xl border border-line bg-surface/90 px-3 py-2 text-[11px] text-fg backdrop-blur-sm dark:border-white/10">
           {resultMsg}
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+      <div className="overflow-x-auto rounded-2xl border border-white/30 bg-surface/35 backdrop-blur-md dark:border-white/10 dark:bg-surface/30">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-border text-muted-foreground">
+            <tr className="border-b border-line text-fg-muted dark:border-white/10">
               <th className="px-3 py-2 text-left">Firma</th>
               <th className="px-3 py-2 text-left">Plan</th>
               <th className="px-3 py-2 text-left">Intervall</th>
@@ -174,19 +170,19 @@ export function SuperAdminInlinePanel({
           <tbody>
             {!hasCompanies && (
               <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-muted-foreground">
+                <td colSpan={6} className="px-3 py-4 text-center text-fg-muted">
                   Keine Firmen vorhanden.
                 </td>
               </tr>
             )}
             {companies.map((c) => (
-              <tr key={c.id} className="border-b border-border last:border-0">
+              <tr key={c.id} className="border-b border-line last:border-0 dark:border-white/8">
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Building2 className="h-3.5 w-3.5 text-fg-muted" />
                     <div>
-                      <p className="text-foreground/85">{c.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{c.slug}</p>
+                      <p className="text-fg/90">{c.name}</p>
+                      <p className="text-[10px] text-fg-muted">{c.slug}</p>
                     </div>
                   </div>
                 </td>
@@ -203,7 +199,7 @@ export function SuperAdminInlinePanel({
                         });
                       })
                     }
-                    className="rounded-2xl border border-border bg-white px-2 py-1 text-foreground"
+                    className={selectClass}
                     disabled={isPending}
                   >
                     <option value="STARTER">STARTER</option>
@@ -224,7 +220,7 @@ export function SuperAdminInlinePanel({
                         });
                       })
                     }
-                    className="rounded-2xl border border-border bg-white px-2 py-1 text-foreground"
+                    className={selectClass}
                     disabled={isPending}
                   >
                     <option value="MONTHLY">MONTHLY</option>
@@ -232,15 +228,20 @@ export function SuperAdminInlinePanel({
                   </select>
                 </td>
                 <td className="px-3 py-2">
-                  <span className={c.isActive ? "text-emerald-700" : "text-red-700"}>{c.isActive ? "Aktiv" : "Inaktiv"}</span>
+                  <StatusBadge tone={c.isActive ? "brand" : "neutral"} size="sm" glass withDot={false}>
+                    {c.isActive ? "Aktiv" : "Inaktiv"}
+                  </StatusBadge>
                 </td>
-                <td className="px-3 py-2 text-foreground">
+                <td className="px-3 py-2 text-fg">
                   {c.activeUserCount}/{c.userCount}
                 </td>
                 <td className="px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <button
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-danger/35 text-danger-foreground hover:border-danger/50 hover:bg-danger-soft/70 hover:text-danger"
                       onClick={() =>
                         startTransition(async () => {
                           await updateCompanyBySuperAdmin({
@@ -251,27 +252,25 @@ export function SuperAdminInlinePanel({
                           });
                         })
                       }
-                      className="rounded-2xl border border-border bg-white px-2 py-1 text-foreground hover:bg-card/80"
                       disabled={isPending}
                     >
                       {c.isActive ? "Deaktivieren" : "Aktivieren"}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="danger"
+                      size="sm"
                       onClick={() => {
-                        const confirmation = window.prompt(
-                          `Zum Löschen bitte den Slug eingeben: ${c.slug}`
-                        );
+                        const confirmation = window.prompt(`Zum Löschen bitte den Slug eingeben: ${c.slug}`);
                         if (confirmation !== c.slug) return;
                         startTransition(async () => {
                           await deleteCompanyBySuperAdmin(c.id);
                         });
                       }}
-                      className="rounded-2xl border border-red-200 bg-red-50 px-2 py-1 text-red-700 hover:bg-red-100"
                       disabled={isPending}
                     >
                       Löschen
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>

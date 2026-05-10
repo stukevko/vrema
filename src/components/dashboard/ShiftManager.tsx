@@ -156,10 +156,15 @@ function dateForCycleDay(weekIndex: number, dayOfWeek: number) {
 }
 
 function getRoleShiftBarTone(role?: string | null) {
-  if (role === "MANAGER") return "border-brand/35 bg-brand-soft text-brand";
-  if (role === "COMPANY_OWNER") return "border-warning/30 bg-warning-soft text-warning-foreground";
-  if (role === "SUPER_ADMIN") return "border-line bg-surface-muted text-fg-muted";
-  return "border-line bg-neutral-soft text-neutral-foreground";
+  const glass =
+    "backdrop-blur-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]";
+  if (role === "MANAGER")
+    return `${glass} border-brand/40 bg-gradient-to-b from-brand/28 to-brand/14 text-brand dark:from-brand/35 dark:to-brand/18 dark:text-brand-foreground`;
+  if (role === "COMPANY_OWNER")
+    return `${glass} border-warning/35 bg-gradient-to-b from-warning/22 to-warning/12 text-warning-foreground`;
+  if (role === "SUPER_ADMIN")
+    return `${glass} border-white/15 bg-surface-muted/70 text-fg-muted dark:border-white/10 dark:bg-surface-muted/50`;
+  return `${glass} border-brand/38 bg-gradient-to-b from-brand/30 to-brand/15 text-brand dark:from-brand/38 dark:to-brand/18 dark:text-brand-foreground`;
 }
 
 function simplePlannerDayState(params: {
@@ -173,27 +178,31 @@ function simplePlannerDayState(params: {
     return {
       tone: "danger",
       label: "Krank",
-      cellClass: "border-danger/30 bg-danger-soft text-fg hover:bg-danger-soft/90",
+      cellClass:
+        "backdrop-blur-md border-danger/35 bg-danger/12 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] text-fg hover:bg-danger/18 dark:border-white/10 dark:bg-danger/18",
     };
   }
   if (vacationDays.has(dayIdx)) {
     return {
       tone: "warning",
       label: "Urlaub",
-      cellClass: "border-warning/30 bg-warning-soft text-fg hover:bg-warning-soft/90",
+      cellClass:
+        "backdrop-blur-md border-warning/35 bg-warning/12 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12)] text-fg hover:bg-warning/18 dark:border-white/10 dark:bg-warning/16",
     };
   }
   if (usedDays.has(dayIdx)) {
     return {
       tone: "brand",
       label: "Schicht",
-      cellClass: "border-brand/35 bg-brand-soft text-brand hover:bg-brand-soft/90",
+      cellClass:
+        "backdrop-blur-md border-brand/40 bg-gradient-to-b from-brand/22 to-brand/12 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18)] text-brand hover:from-brand/28 hover:to-brand/16 dark:border-white/12 dark:from-brand/28 dark:to-brand/14 dark:text-brand-foreground",
     };
   }
   return {
     tone: "neutral",
     label: "Frei",
-    cellClass: "border-line bg-surface-muted text-fg hover:bg-surface-muted/85",
+    cellClass:
+      "backdrop-blur-md border-white/40 bg-white/45 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.5)] text-fg hover:bg-white/60 dark:border-white/10 dark:bg-surface-muted/55 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] dark:hover:bg-surface-muted/70",
   };
 }
 
@@ -1670,12 +1679,13 @@ export function ShiftManager({
         </p>
 
         {enableTaskListActions ? (
-          <div className="mt-4 rounded-2xl border border-brand/20 bg-surface-muted/60 px-4 py-3 shadow-[var(--shadow-card)]">
+          <div className="glass-card mt-4 px-4 py-3">
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
                 variant="brand"
                 size="md"
+                hero
                 disabled={isPending || autopilotBusy}
                 onClick={startAutopilot}
                 leadingIcon={<Sparkles className="h-4 w-4 shrink-0" aria-hidden />}
@@ -1846,7 +1856,7 @@ export function ShiftManager({
             >
               <div className="flex items-start justify-between gap-2">
                 <span className="block text-xs font-semibold">{label}</span>
-                <StatusBadge tone={dayMeta.tone} size="sm" withDot={false} className="max-w-[min(100%,5.5rem)]">
+                <StatusBadge tone={dayMeta.tone} size="sm" glass withDot={false} className="max-w-[min(100%,5.5rem)]">
                   {dayMeta.label}
                 </StatusBadge>
               </div>
@@ -1888,16 +1898,16 @@ export function ShiftManager({
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <p className="text-[11px] text-muted-foreground">Legende:</p>
-        <StatusBadge tone="neutral" size="sm" withDot={false}>
+        <StatusBadge tone="neutral" size="sm" glass withDot={false}>
           Frei
         </StatusBadge>
-        <StatusBadge tone="brand" size="sm" withDot={false}>
+        <StatusBadge tone="brand" size="sm" glass withDot={false}>
           Schicht
         </StatusBadge>
-        <StatusBadge tone="warning" size="sm" withDot={false}>
+        <StatusBadge tone="warning" size="sm" glass withDot={false}>
           Urlaub
         </StatusBadge>
-        <StatusBadge tone="danger" size="sm" withDot={false}>
+        <StatusBadge tone="danger" size="sm" glass withDot={false}>
           Krank
         </StatusBadge>
         <span className="text-[11px] text-muted-foreground">· Klick übernimmt die oben gewählte Zeit für den Tag.</span>

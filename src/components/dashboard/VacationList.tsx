@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { approveVacation, rejectVacation, type VacationDecisionContext } from "@/lib/actions/vacation";
 import { Check, X, Clock, AlertTriangle, Users, ShieldCheck, Loader2, Info } from "lucide-react";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
+import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
+import { Button } from "@/components/ui/Button";
 
 type VacationRequest = {
   id: string;
@@ -27,13 +29,13 @@ interface VacationListProps {
   canApprove: boolean;
 }
 
-const STATUS_STYLES = {
-  PENDING: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  APPROVED: "bg-primary/10 text-primary border-primary/20",
-  REJECTED: "bg-red-500/10 text-red-600 border-red-500/20",
+const STATUS_TONES: Record<VacationRequest["status"], StatusTone> = {
+  PENDING: "warning",
+  APPROVED: "brand",
+  REJECTED: "danger",
 };
 
-const STATUS_LABELS = {
+const STATUS_LABELS: Record<VacationRequest["status"], string> = {
   PENDING: "Ausstehend",
   APPROVED: "Genehmigt",
   REJECTED: "Abgelehnt",
@@ -49,6 +51,14 @@ function remainingTone(remaining: number, requested: number): "positive" | "tigh
   if (after <= 3) return "tight";
   return "positive";
 }
+
+const REMAINING_CONTAINER: Record<"positive" | "tight" | "over", string> = {
+  positive:
+    "border-brand/30 bg-brand-soft/85 text-brand backdrop-blur-md dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground",
+  tight:
+    "border-warning/30 bg-warning-soft/85 text-warning-foreground backdrop-blur-md dark:border-white/10 dark:bg-warning/22",
+  over: "border-danger/35 bg-danger-soft/85 text-danger-foreground backdrop-blur-md dark:border-white/10 dark:bg-danger/22",
+};
 
 export function VacationList({ requests, canApprove }: VacationListProps) {
   const [isPending, startTransition] = useTransition();
@@ -83,7 +93,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
   if (requests.length === 0) {
     return (
       <>
-        <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+        <div className="glass-card p-8 text-center">
           <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground/60" aria-hidden />
           <p className="text-sm font-medium text-foreground">Keine Anträge in dieser Liste</p>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -113,31 +123,35 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className={`rounded-2xl border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:p-6 ${
-                isOpen ? "border-primary ring-2 ring-primary/30" : "border-border"
+              className={`glass-card p-5 transition-all sm:p-6 ${
+                isOpen ? "ring-2 ring-brand/30" : ""
               }`}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   {req.userName && (
-                    <p className="text-sm font-semibold mb-1">{req.userName}</p>
+                    <p className="mb-1 text-sm font-semibold">{req.userName}</p>
                   )}
                   <p className="text-sm text-foreground">
                     {formatDate(req.startDate)} – {formatDate(req.endDate)}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {req.days} Tage · {req.absenceType === "SICK" ? "Krank" : req.absenceType === "OTHER" ? "Abwesenheit" : "Urlaub"}
                   </p>
                   {req.reason && (
-                    <p className={`text-xs mt-1 truncate ${req.absenceType === "SICK" ? "text-red-700" : "text-muted-foreground"}`}>
+                    <p
+                      className={`mt-1 truncate text-xs ${
+                        req.absenceType === "SICK" ? "text-danger-foreground" : "text-muted-foreground"
+                      }`}
+                    >
                       {req.reason}
                     </p>
                   )}
                 </div>
-                <div className="flex flex-col items-end gap-2 shrink-0">
-                  <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${STATUS_STYLES[req.status]}`}>
+                <div className="flex shrink-0 flex-col items-end gap-2">
+                  <StatusBadge tone={STATUS_TONES[req.status]} glass size="sm">
                     {STATUS_LABELS[req.status]}
-                  </span>
+                  </StatusBadge>
                   {req.approvedBy?.name && req.status !== "PENDING" ? (
                     <span className="text-[11px] text-muted-foreground">durch {req.approvedBy.name}</span>
                   ) : null}
@@ -148,13 +162,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
               {ctx && req.absenceType !== "SICK" && (
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <div
-                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${
-                      tone === "over"
-                        ? "border-red-200 bg-red-50 text-red-900"
-                        : tone === "tight"
-                          ? "border-amber-200 bg-amber-50 text-amber-900"
-                          : "border-emerald-200 bg-emerald-50 text-emerald-900"
-                    }`}
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${REMAINING_CONTAINER[tone]}`}
                   >
                     <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden />
                     <span>
@@ -169,7 +177,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                   </div>
 
                   {req.status === "PENDING" && ctx.conflicts.length > 0 ? (
-                    <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                    <div className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning-soft/85 px-3 py-2 text-xs text-warning-foreground backdrop-blur-md dark:border-white/10 dark:bg-warning/22">
                       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                       <span>
                         <strong>{ctx.conflicts.length}</strong>{" "}
@@ -188,7 +196,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                       </span>
                     </div>
                   ) : req.status === "PENDING" ? (
-                    <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+                    <div className="flex items-center gap-2 rounded-xl border border-brand/30 bg-brand-soft/85 px-3 py-2 text-xs text-brand backdrop-blur-md dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
                       <Users className="h-4 w-4 shrink-0" aria-hidden />
                       <span>Im Zeitraum sind keine Kolleg:innen abwesend.</span>
                     </div>
@@ -197,8 +205,8 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
               )}
 
               {req.decisionNote?.trim() && req.status !== "PENDING" ? (
-                <div className="mt-3 flex gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-[11px] text-sky-950">
-                  <Info className="h-4 w-4 shrink-0 mt-0.5" aria-hidden />
+                <div className="mt-3 flex gap-2 rounded-xl border border-line bg-surface-muted/80 px-3 py-2 text-[11px] text-foreground backdrop-blur dark:border-white/10 dark:bg-surface-muted/40">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
                   <p title={req.decisionNote}>
                     <span className="font-semibold">Entscheidung vom Chef:</span>{" "}
                     <span className="whitespace-pre-wrap">{req.decisionNote}</span>
@@ -209,28 +217,33 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
               {/* Buttons → Confirm-Panel */}
               {showApprovals && !isOpen && (
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="brand"
+                    size="md"
                     disabled={isPending}
+                    leadingIcon={<Check className="h-4 w-4" />}
                     onClick={() => {
                       setError(null);
                       setDecision({ id: req.id, mode: "APPROVE", note: "" });
                     }}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-foreground ring-1 ring-inset ring-white/15 hover:bg-primary/90 active:scale-[0.99]"
                   >
-                    <Check className="h-4 w-4" /> Genehmigen
-                  </button>
-                  <button
+                    Genehmigen
+                  </Button>
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="md"
                     disabled={isPending}
+                    leadingIcon={<X className="h-4 w-4" />}
                     onClick={() => {
                       setError(null);
                       setDecision({ id: req.id, mode: "REJECT", note: "" });
                     }}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-sm font-semibold text-red-800 hover:bg-red-100 active:scale-[0.99]"
+                    className="border-danger/40 text-danger-foreground hover:border-danger/60 hover:bg-danger-soft/70 hover:text-danger-foreground"
                   >
-                    <X className="h-4 w-4" /> Ablehnen
-                  </button>
+                    Ablehnen
+                  </Button>
                 </div>
               )}
 
@@ -243,10 +256,10 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                     className="overflow-hidden"
                   >
                     <div
-                      className={`mt-4 rounded-xl border p-4 ${
+                      className={`mt-4 rounded-xl border p-4 backdrop-blur-md ${
                         decision.mode === "APPROVE"
-                          ? "border-emerald-200 bg-emerald-50/60"
-                          : "border-red-200 bg-red-50/60"
+                          ? "border-brand/30 bg-brand-soft/70 dark:border-white/10 dark:bg-brand/18"
+                          : "border-danger/30 bg-danger-soft/70 dark:border-white/10 dark:bg-danger/18"
                       }`}
                     >
                       <p className="text-sm font-semibold text-foreground">
@@ -268,41 +281,48 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                             : "Begründung für die Ablehnung (Pflicht)"
                         }
                         rows={3}
-                        className="mt-3 w-full resize-y rounded-lg border border-border bg-white px-3 py-2 text-sm"
+                        className="mt-3 w-full resize-y rounded-lg border border-line bg-surface px-3 py-2 text-sm"
                         autoFocus
                       />
                       {error ? (
-                        <p className="mt-2 text-xs font-medium text-red-700">{error}</p>
+                        <p className="mt-2 text-xs font-medium text-danger-foreground">{error}</p>
                       ) : null}
                       <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <button
+                        <Button
                           type="button"
-                          onClick={submitDecision}
+                          variant={decision.mode === "APPROVE" ? "brand" : "danger"}
+                          size="md"
                           disabled={isPending}
-                          className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-foreground ring-1 ring-inset ring-white/15 active:scale-[0.99] ${
-                            decision.mode === "APPROVE"
-                              ? "bg-primary hover:bg-primary/90"
-                              : "bg-red-600 hover:bg-red-700"
-                          }`}
+                          loading={isPending}
+                          leadingIcon={
+                            isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : decision.mode === "APPROVE" ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <X className="h-4 w-4" />
+                            )
+                          }
+                          onClick={submitDecision}
                         >
-                          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : decision.mode === "APPROVE" ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
                           {isPending
                             ? "Speichere…"
                             : decision.mode === "APPROVE"
                               ? "Genehmigen & benachrichtigen"
                               : "Ablehnen & benachrichtigen"}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="md"
                           onClick={() => {
                             setDecision(null);
                             setError(null);
                           }}
                           disabled={isPending}
-                          className="inline-flex min-h-11 items-center rounded-xl border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-muted/50"
                         >
                           Abbrechen
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </motion.div>

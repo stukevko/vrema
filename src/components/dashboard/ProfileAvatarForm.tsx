@@ -110,7 +110,7 @@ export function ProfileAvatarForm({ imageUrl }: { imageUrl: string | null }) {
               type="button"
               onClick={onPick}
               disabled={isPending}
-              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 disabled:opacity-60 sm:flex-none"
+              className="btn-brand min-h-11 flex-1 text-sm sm:flex-none"
             >
               {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
               {hasPhoto ? "Neues Bild wählen" : "Bild hochladen"}
@@ -120,7 +120,7 @@ export function ProfileAvatarForm({ imageUrl }: { imageUrl: string | null }) {
                 type="button"
                 onClick={onRemove}
                 disabled={isPending}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-border px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-700 disabled:opacity-60"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-line px-4 text-sm font-medium text-muted-foreground backdrop-blur transition-all hover:scale-[1.02] hover:border-danger/40 hover:bg-danger-soft/70 hover:text-danger-foreground disabled:opacity-60 dark:border-white/10 dark:hover:bg-danger/20"
               >
                 <Trash2 className="h-4 w-4" aria-hidden />
                 Entfernen
@@ -135,9 +135,11 @@ export function ProfileAvatarForm({ imageUrl }: { imageUrl: string | null }) {
       </div>
 
       {error && (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">{error}</p>
+        <p className="rounded-xl border border-danger/30 bg-danger-soft/85 px-3 py-2 text-xs text-danger-foreground backdrop-blur dark:border-white/10 dark:bg-danger/22">
+          {error}
+        </p>
       )}
-      {success && <p className="text-xs font-medium text-emerald-700">Profil aktualisiert.</p>}
+      {success && <p className="text-xs font-medium text-brand">Profil aktualisiert.</p>}
     </div>
   );
 }

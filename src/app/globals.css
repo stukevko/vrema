@@ -55,13 +55,21 @@
   --radius: 0.875rem;
   --radius-sm: 0.5rem;
   --radius-lg: 1.25rem;
-  --shadow-card: 0 1px 2px hsl(220 40% 12% / 0.04), 0 8px 24px hsl(220 40% 12% / 0.04);
-  --shadow-card-hover: 0 1px 2px hsl(220 40% 12% / 0.06), 0 18px 36px hsl(220 40% 12% / 0.08);
-  --shadow-pop: 0 12px 40px hsl(220 40% 12% / 0.18);
+  --shadow-card:
+    0 1px 0 hsl(0 0% 100% / 0.65) inset,
+    0 1px 2px hsl(220 40% 12% / 0.05),
+    0 12px 40px hsl(220 40% 18% / 0.07);
+  --shadow-card-hover:
+    0 1px 0 hsl(0 0% 100% / 0.75) inset,
+    0 2px 4px hsl(220 40% 12% / 0.06),
+    0 22px 50px hsl(220 40% 18% / 0.11);
+  --shadow-pop: 0 24px 60px hsl(220 40% 12% / 0.14), 0 8px 20px hsl(220 40% 12% / 0.06);
+  --specular-line: 0 0% 100%;
 }
 
 .dark {
-  --background: 222 47% 11%;          /* #111827 */
+  /* Tiefes Mitternachts-Slate (Apple-nah), nicht „reines Schwarz“ */
+  --background: 222 47% 11%;          /* #0f172a */
   --surface: 215 28% 17%;             /* #1f2937 */
   --surface-muted: 217 33% 14%;
   --popover: 215 28% 17%;
@@ -96,9 +104,16 @@
   --neutral-soft: 215 18% 22%;
   --neutral-foreground: 215 14% 80%;
 
-  --shadow-card: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 24px hsl(0 0% 0% / 0.32);
-  --shadow-card-hover: 0 1px 2px hsl(0 0% 0% / 0.5), 0 18px 36px hsl(0 0% 0% / 0.45);
-  --shadow-pop: 0 12px 40px hsl(0 0% 0% / 0.55);
+  --shadow-card:
+    0 1px 0 hsl(0 0% 100% / 0.06) inset,
+    0 1px 2px hsl(0 0% 0% / 0.45),
+    0 16px 42px hsl(0 0% 0% / 0.38);
+  --shadow-card-hover:
+    0 1px 0 hsl(0 0% 100% / 0.09) inset,
+    0 2px 6px hsl(0 0% 0% / 0.5),
+    0 26px 56px hsl(0 0% 0% / 0.48);
+  --shadow-pop: 0 28px 70px hsl(0 0% 0% / 0.55), 0 10px 28px hsl(0 0% 0% / 0.35);
+  --specular-line: 0 0% 100%;
 }
 
 /* =========================================================================
@@ -212,22 +227,51 @@
 }
 
 .premium-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.01);
   box-shadow: var(--shadow-card-hover);
 }
 
+/* Glasmorphism – Light: helles Frostglas, Dark: tiefes Slate mit Specular-Kante */
 .glass-nav {
-  background: hsl(var(--surface) / 0.86);
-  backdrop-filter: blur(16px);
-  border: 1px solid hsl(var(--border));
+  background: hsl(0 0% 100% / 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid hsl(0 0% 100% / 0.55);
   box-shadow: var(--shadow-card);
+}
+.dark .glass-nav {
+  background: hsl(var(--surface) / 0.58);
+  border: 1px solid hsl(var(--specular-line) / 0.1);
 }
 
 .glass-panel {
-  background: hsl(var(--surface));
-  backdrop-filter: blur(18px);
-  border: 1px solid hsl(var(--border));
+  background: hsl(0 0% 100% / 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid hsl(0 0% 100% / 0.6);
   box-shadow: var(--shadow-card);
+}
+.dark .glass-panel {
+  background: hsl(var(--surface) / 0.52);
+  border: 1px solid hsl(var(--specular-line) / 0.09);
+}
+
+.glass-card {
+  border-radius: var(--radius-lg);
+  background: hsl(0 0% 100% / 0.8);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid hsl(0 0% 100% / 0.65);
+  box-shadow: var(--shadow-card);
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+.dark .glass-card {
+  background: hsl(var(--surface) / 0.5);
+  border: 1px solid hsl(var(--specular-line) / 0.12);
+}
+.glass-card:hover {
+  transform: translateY(-1px) scale(1.005);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .lucide {
@@ -268,16 +312,22 @@ button[class] {
   padding: 0.625rem 1rem;
   font-weight: 600;
   border-radius: 0.75rem;
-  background: hsl(var(--brand));
   color: hsl(var(--brand-foreground));
-  border: 1px solid hsl(var(--brand));
-  box-shadow: var(--shadow-card);
-  transition: background-color 180ms ease, transform 160ms ease, box-shadow 200ms ease;
+  border: 1px solid hsl(var(--specular-line) / 0.22);
+  background: linear-gradient(to bottom, hsl(var(--brand) / 0.96), hsl(var(--brand-hover)));
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / 0.22),
+    0 4px 16px hsl(var(--brand) / 0.28),
+    0 1px 2px hsl(220 40% 12% / 0.12);
+  transition: filter 180ms ease, transform 160ms ease, box-shadow 200ms ease;
 }
 .btn-brand:hover:not(:disabled) {
-  background: hsl(var(--brand-hover));
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-card-hover);
+  filter: brightness(1.06);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / 0.26),
+    0 10px 28px hsl(var(--brand) / 0.38),
+    0 2px 6px hsl(220 40% 12% / 0.14);
 }
 .btn-brand:active:not(:disabled) {
   transform: translateY(0);
@@ -382,7 +432,17 @@ select[class]:focus,
 textarea[class]:focus {
   outline: none;
   border-color: hsl(var(--brand));
-  box-shadow: 0 0 0 3px hsl(var(--brand) / 0.18);
+  box-shadow: 0 0 0 4px hsl(var(--brand) / 0.2);
+}
+
+.dark select[class] {
+  background-color: hsl(var(--surface));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--specular-line) / 0.14);
+}
+.dark select[class]:focus {
+  border-color: hsl(var(--brand));
+  box-shadow: 0 0 0 4px hsl(var(--brand) / 0.22);
 }
 
 input[class]::placeholder,

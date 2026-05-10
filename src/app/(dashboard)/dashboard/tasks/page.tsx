@@ -2,6 +2,7 @@ import { requireTenant } from "@/lib/tenant-guard";
 import { getTodayShiftTaskWall } from "@/lib/shift-tasks/wall";
 import { redirect } from "next/navigation";
 import { ListTodo } from "lucide-react";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 export default async function ShiftTasksLiveWallPage() {
   const { companyId, role } = await requireTenant();
@@ -11,9 +12,9 @@ export default async function ShiftTasksLiveWallPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 px-1 sm:space-y-6 sm:px-0">
-      <div className="rounded-2xl border border-border bg-white px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:px-5 sm:py-4">
+      <div className="glass-card px-4 py-3 sm:px-5 sm:py-4">
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+          <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand-soft/90 text-brand backdrop-blur-md dark:border-white/10 dark:bg-brand/25">
             <ListTodo className="h-5 w-5" aria-hidden />
           </span>
           <div>
@@ -26,11 +27,11 @@ export default async function ShiftTasksLiveWallPage() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-4 py-10 text-center text-sm text-muted-foreground">
+        <div className="glass-card border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
           <p className="font-medium text-foreground">Noch keine aktiven Checklisten</p>
           <p className="mt-2">
-            Sobald Mitarbeitende heute einstempeln (und eine Standard-Vorlage existiert), erscheinen sie hier. Im Planer (Timeline) kannst du
-            per Rechtsklick auf eine Schicht auch manuell eine Checkliste für den gewählten Tag anlegen.
+            Sobald Mitarbeitende heute einstempeln (und eine Standard-Vorlage existiert), erscheinen sie hier. Im Planer
+            (Timeline) kannst du per Rechtsklick auf eine Schicht auch manuell eine Checkliste für den gewählten Tag anlegen.
           </p>
         </div>
       ) : (
@@ -40,22 +41,19 @@ export default async function ShiftTasksLiveWallPage() {
             const headline = row.templateName ?? "Schicht-Checkliste";
             const who = row.userName?.trim() || row.userEmail;
             return (
-              <li
-                key={row.listId}
-                className="rounded-2xl border border-border bg-white px-4 py-4 shadow-[0_12px_40px_rgba(0,0,0,0.06)] sm:px-5"
-              >
+              <li key={row.listId} className="glass-card px-4 py-4 sm:px-5">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <div>
                     <p className="text-base font-semibold text-foreground">
                       {headline}
                       <span className="font-normal text-muted-foreground"> · {who}</span>
                     </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                       Schicht {row.shiftLabel}
                       {row.isLive ? (
-                        <span className="ml-2 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-800">
+                        <StatusBadge tone="brand" glass size="sm" withDot={false}>
                           Live
-                        </span>
+                        </StatusBadge>
                       ) : null}
                     </p>
                   </div>
@@ -63,9 +61,9 @@ export default async function ShiftTasksLiveWallPage() {
                     {row.doneCount}/{row.totalCount} Aufgaben
                   </p>
                 </div>
-                <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
+                <div className="mt-3 h-2.5 overflow-hidden rounded-full border border-white/30 bg-surface-muted/80 backdrop-blur dark:border-white/10 dark:bg-surface-muted/40">
                   <div
-                    className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+                    className="h-full rounded-full bg-gradient-to-r from-brand to-brand-hover shadow-[0_0_18px_-4px_hsl(var(--brand)_/_0.6)] transition-[width] duration-500 ease-out"
                     style={{ width: `${pct}%` }}
                   />
                 </div>

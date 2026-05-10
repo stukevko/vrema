@@ -2,6 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import { Copy } from "lucide-react";
+import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
 
 type Row = {
   id: string;
@@ -38,11 +39,11 @@ function statusLabel(status: Row["status"]) {
   return "Storniert";
 }
 
-function statusBadgeClass(status: Row["status"]) {
-  if (status === "PENDING") return "bg-amber-50 text-amber-700";
-  if (status === "AVAILABLE") return "bg-emerald-50 text-emerald-700";
-  if (status === "PAID") return "bg-muted text-foreground";
-  return "bg-red-50 text-red-700";
+function statusTone(status: Row["status"]): StatusTone {
+  if (status === "PENDING") return "warning";
+  if (status === "AVAILABLE") return "brand";
+  if (status === "PAID") return "neutral";
+  return "danger";
 }
 
 export function PartnerDashboardClient({
@@ -79,8 +80,8 @@ export function PartnerDashboardClient({
   const totalSuccessCents = starterTotalCents + businessTotalCents;
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6 premium-enter">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="premium-enter min-h-screen bg-background p-6 text-foreground">
+      <div className="mx-auto max-w-6xl space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Partner Dashboard</h1>
@@ -90,40 +91,45 @@ export function PartnerDashboardClient({
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/partner-login" })}
-            className="rounded-2xl border border-border px-3 py-2 text-sm text-foreground hover:bg-muted/50"
+            className="btn-outline text-sm"
           >
             Abmelden
           </button>
         </div>
 
-        <div className="rounded-2xl premium-card p-5">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Ihr Referenzlink</p>
+        <div className="glass-card p-5">
+          <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">Ihr Referenzlink</p>
           <div className="flex flex-wrap items-center gap-2">
-            <code className="rounded-2xl border border-border bg-white px-2 py-1.5 text-xs text-foreground break-all">{refUrl}</code>
-            <button onClick={() => void copy(refUrl)} className="inline-flex items-center gap-1 rounded-2xl border border-border bg-white px-2.5 py-1.5 text-xs text-foreground hover:bg-muted/50">
-              <Copy className="w-3 h-3" />
+            <code className="break-all rounded-2xl border border-line bg-surface/95 px-2 py-1.5 text-xs text-foreground backdrop-blur dark:border-white/10 dark:bg-surface/65">
+              {refUrl}
+            </code>
+            <button
+              onClick={() => void copy(refUrl)}
+              className="inline-flex items-center gap-1 rounded-2xl border border-line bg-surface/95 px-2.5 py-1.5 text-xs text-foreground backdrop-blur transition-all hover:scale-[1.02] hover:bg-surface-muted dark:border-white/10 dark:bg-surface/65"
+            >
+              <Copy className="h-3 w-3" />
               Link kopieren
             </button>
             <span className="text-[11px] text-muted-foreground">Code: {code}</span>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-3">
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-warning/30 bg-warning-soft/85 p-4 backdrop-blur-md dark:border-white/10 dark:bg-warning/20">
             <p className="text-xs text-muted-foreground">Ausstehend</p>
-            <p className="text-lg font-semibold text-amber-700 tabular-nums">{formatCents(pendingCents, "eur")}</p>
+            <p className="text-lg font-semibold tabular-nums text-warning-foreground">{formatCents(pendingCents, "eur")}</p>
           </div>
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+          <div className="rounded-2xl border border-brand/30 bg-brand-soft/85 p-4 backdrop-blur-md dark:border-white/10 dark:bg-brand/22">
             <p className="text-xs text-muted-foreground">Verfügbares Guthaben</p>
-            <p className="text-lg font-semibold text-emerald-700 tabular-nums">{formatCents(availableCents, "eur")}</p>
+            <p className="text-lg font-semibold tabular-nums text-brand">{formatCents(availableCents, "eur")}</p>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="glass-card p-4">
             <p className="text-xs text-muted-foreground">Ausgezahlt</p>
-            <p className="text-lg font-semibold text-foreground tabular-nums">{formatCents(paidCents, "eur")}</p>
+            <p className="text-lg font-semibold tabular-nums text-foreground">{formatCents(paidCents, "eur")}</p>
           </div>
         </div>
 
-        <div className="rounded-2xl premium-card p-5">
+        <div className="glass-card p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-base font-semibold">Ihre Erfolgsstatistik</h2>
@@ -131,7 +137,7 @@ export function PartnerDashboardClient({
             </div>
             <button
               type="button"
-              className="rounded-2xl border border-border bg-white px-4 py-2 text-sm text-foreground hover:bg-muted/50"
+              className="btn-outline text-sm"
               onClick={() =>
                 window.alert(
                   "Werbemittel (Logos, Screenshots und Textbausteine) werden hier in Kürze bereitgestellt."
@@ -142,41 +148,41 @@ export function PartnerDashboardClient({
             </button>
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-white p-4">
+            <div className="rounded-2xl border border-line bg-surface/95 p-4 backdrop-blur dark:border-white/10 dark:bg-surface/65">
               <p className="text-xs text-muted-foreground">Starter-Abschlüsse</p>
-              <p className="mt-1 text-sm text-foreground tabular-nums">
+              <p className="mt-1 text-sm tabular-nums text-foreground">
                 {starterDeals.length} (insg. {formatCents(starterTotalCents, "eur")})
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-white p-4">
+            <div className="rounded-2xl border border-line bg-surface/95 p-4 backdrop-blur dark:border-white/10 dark:bg-surface/65">
               <p className="text-xs text-muted-foreground">Business-Abschlüsse</p>
-              <p className="mt-1 text-sm text-foreground tabular-nums">
+              <p className="mt-1 text-sm tabular-nums text-foreground">
                 {businessDeals.length} (insg. {formatCents(businessTotalCents, "eur")})
               </p>
             </div>
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <div className="rounded-2xl border border-brand/30 bg-brand-soft/85 p-4 backdrop-blur-md dark:border-white/10 dark:bg-brand/22">
               <p className="text-xs text-muted-foreground">Gesamtguthaben</p>
-              <p className="mt-1 text-sm font-semibold text-emerald-700 tabular-nums">{formatCents(totalSuccessCents, "eur")}</p>
+              <p className="mt-1 text-sm font-semibold tabular-nums text-brand">{formatCents(totalSuccessCents, "eur")}</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-          <p className="text-sm font-semibold text-emerald-700">Verdienst-Struktur</p>
-          <p className="mt-1 text-sm text-emerald-700/85 leading-relaxed">
+        <div className="rounded-2xl border border-brand/30 bg-brand-soft/80 p-5 backdrop-blur-md dark:border-white/10 dark:bg-brand/20">
+          <p className="text-sm font-semibold text-brand">Verdienst-Struktur</p>
+          <p className="mt-1 text-sm leading-relaxed text-foreground">
             5€ für jeden Starter-Abschluss, 15€ für jeden Business-Abschluss. Auszahlung erfolgt nach Bestätigung des
-            Kunden-Abos. Es zählt nur ein direkter Abschluss - eine 14-Tage-Testphase zählt nicht.
+            Kunden-Abos. Es zählt nur ein direkter Abschluss – eine 14-Tage-Testphase zählt nicht.
           </p>
         </div>
 
-        <div className="rounded-2xl premium-card overflow-hidden">
-          <div className="px-4 py-3 border-b border-border">
+        <div className="glass-card overflow-hidden">
+          <div className="border-b border-line/70 px-4 py-3 dark:border-white/10">
             <h2 className="font-semibold">Letzte Abschlüsse</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-card/80 text-muted-foreground">
+                <tr className="border-b border-line/70 bg-surface-muted/60 text-muted-foreground dark:border-white/10 dark:bg-surface-muted/30">
                   {["Plan", "Ihre Provision"].map((h) => (
                     <th key={h} className="px-4 py-2 text-left text-xs font-medium">{h}</th>
                   ))}
@@ -189,9 +195,12 @@ export function PartnerDashboardClient({
                   </tr>
                 ) : (
                   recentDeals.map((row) => (
-                    <tr key={row.id} className="border-b border-border active:bg-background/70 md:hover:bg-muted/50 transition-colors">
+                    <tr
+                      key={row.id}
+                      className="border-b border-line/70 transition-colors active:bg-background/70 md:hover:bg-surface-muted/60 dark:border-white/8"
+                    >
                       <td className="px-4 py-4 text-foreground/80">{planLabel(row.plan)}</td>
-                      <td className="px-4 py-4 text-emerald-700 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
+                      <td className="px-4 py-4 tabular-nums text-brand">{formatProvisionByPlan(row.plan)}</td>
                     </tr>
                   ))
                 )}
@@ -200,14 +209,14 @@ export function PartnerDashboardClient({
           </div>
         </div>
 
-        <div className="rounded-2xl premium-card overflow-hidden">
-          <div className="px-4 py-3 border-b border-border">
+        <div className="glass-card overflow-hidden">
+          <div className="border-b border-line/70 px-4 py-3 dark:border-white/10">
             <h2 className="font-semibold">Alle Abschlüsse</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-card/80 text-muted-foreground">
+                <tr className="border-b border-line/70 bg-surface-muted/60 text-muted-foreground dark:border-white/10 dark:bg-surface-muted/30">
                   {["Firma", "Plan", "Provision", "Status", "Abschluss", "Ausgezahlt am"].map((h) => (
                     <th key={h} className="px-4 py-2 text-left text-xs font-medium">{h}</th>
                   ))}
@@ -220,17 +229,17 @@ export function PartnerDashboardClient({
                   </tr>
                 ) : (
                   rows.map((row) => (
-                    <tr key={row.id} className="border-b border-border active:bg-background/70 md:hover:bg-muted/50 transition-colors">
+                    <tr
+                      key={row.id}
+                      className="border-b border-line/70 transition-colors active:bg-background/70 md:hover:bg-surface-muted/60 dark:border-white/8"
+                    >
                       <td className="px-4 py-4">{row.companyName}</td>
                       <td className="px-4 py-4 text-foreground/80">{planLabel(row.plan)}</td>
-                      <td className="px-4 py-4 text-emerald-700 tabular-nums">{formatProvisionByPlan(row.plan)}</td>
+                      <td className="px-4 py-4 tabular-nums text-brand">{formatProvisionByPlan(row.plan)}</td>
                       <td className="px-4 py-4">
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${statusBadgeClass(row.status)}`}
-                          title={row.status === "PENDING" ? "Kunde im Testzeitraum" : undefined}
-                        >
+                        <StatusBadge tone={statusTone(row.status)} glass size="sm">
                           {statusLabel(row.status)}
-                        </span>
+                        </StatusBadge>
                       </td>
                       <td className="px-4 py-4 text-muted-foreground">{new Date(row.createdAt).toLocaleDateString("de-DE")}</td>
                       <td className="px-4 py-4 text-muted-foreground">{row.paidAt ? new Date(row.paidAt).toLocaleDateString("de-DE") : "—"}</td>
@@ -245,4 +254,3 @@ export function PartnerDashboardClient({
     </div>
   );
 }
-

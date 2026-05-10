@@ -14,10 +14,10 @@ interface ToastProps {
 }
 
 const ICONS = { success: CheckCircle, error: XCircle, info: Info };
-const COLORS = {
-  success: "border-emerald-200 text-emerald-700",
-  error: "border-red-200 text-red-700",
-  info: "border-sky-200 text-sky-700",
+const COLORS: Record<ToastType, string> = {
+  success: "border-brand/30 text-brand dark:border-white/10",
+  error: "border-danger/30 text-danger-foreground dark:border-white/10",
+  info: "border-line text-fg-muted dark:border-white/10",
 };
 
 export function Toast({ message, type = "info", onClose, duration = 4000 }: ToastProps) {
@@ -33,18 +33,21 @@ export function Toast({ message, type = "info", onClose, duration = 4000 }: Toas
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-      className={`flex items-start gap-3 px-4 py-3 rounded-xl bg-white border border-border font-sans text-sm max-w-sm shadow-[0_20px_50px_rgba(0,0,0,0.04)] ${COLORS[type]}`}
+      className={`flex max-w-sm items-start gap-3 rounded-xl border bg-surface/90 px-4 py-3 font-sans text-sm backdrop-blur-md shadow-[var(--shadow-pop)] dark:bg-surface/75 ${COLORS[type]}`}
     >
-      <Icon className="w-4 h-4 mt-0.5 shrink-0" />
-      <span className="text-foreground flex-1">{message}</span>
-      <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
-        <X className="w-3.5 h-3.5" />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+      <span className="flex-1 text-foreground">{message}</span>
+      <button
+        onClick={onClose}
+        className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+        aria-label="Schließen"
+      >
+        <X className="h-3.5 w-3.5" />
       </button>
     </motion.div>
   );
 }
 
-// ── Hook ──────────────────────────────────────────────────────────────────────
 export function useToast() {
   const [toasts, setToasts] = useState<{ id: string; message: string; type: ToastType }[]>([]);
 
@@ -58,10 +61,9 @@ export function useToast() {
   return { toasts, show, remove };
 }
 
-// ── Container ─────────────────────────────────────────────────────────────────
 export function ToastContainer({ toasts, remove }: { toasts: ReturnType<typeof useToast>["toasts"]; remove: (id: string) => void }) {
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 items-end">
+    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-2">
       <AnimatePresence>
         {toasts.map((t) => (
           <Toast key={t.id} message={t.message} type={t.type} onClose={() => remove(t.id)} />

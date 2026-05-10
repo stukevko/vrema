@@ -12,6 +12,8 @@ import {
   createAffiliateForSuperAdmin,
   markAffiliateEarningsPaid,
 } from "@/lib/actions/super-admin";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 type Props = {
   affiliates: SuperAdminAffiliateSummary[];
@@ -141,10 +143,10 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
   };
 
   return (
-    <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden">
-      <div className="px-6 py-4 border-b border-border flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-          <Wallet className="w-4 h-4 text-emerald-400" />
+    <div className="glass-card overflow-hidden">
+      <div className="flex items-center gap-3 border-b border-line/70 px-6 py-4 dark:border-white/10">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/30 bg-brand-soft/90 backdrop-blur dark:border-white/10 dark:bg-brand/25">
+          <Wallet className="h-4 w-4 text-brand" />
         </div>
         <div>
           <h2 className="font-semibold">Affiliate & Auszahlungen</h2>
@@ -155,13 +157,13 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
         </div>
       </div>
 
-      <div className="p-6 space-y-8">
+      <div className="space-y-8 p-6">
         {(error || success) && (
           <div
-            className={`text-sm px-3 py-2 rounded-lg border ${
+            className={`rounded-lg border px-3 py-2 text-sm backdrop-blur-md ${
               error
-                ? "text-red-600 bg-red-50 border-red-200"
-                : "text-emerald-700 bg-emerald-50 border-emerald-200"
+                ? "border-danger/30 bg-danger-soft/85 text-danger-foreground dark:border-white/10 dark:bg-danger/22"
+                : "border-brand/30 bg-brand-soft/85 text-brand dark:border-white/10 dark:bg-brand/22"
             }`}
           >
             {error ?? success}
@@ -169,16 +171,16 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
         )}
 
         <div>
-          <h3 className="text-sm font-medium text-foreground mb-3">Partner-Salden</h3>
-          <p className="text-[11px] text-muted-foreground mb-2">
+          <h3 className="mb-3 text-sm font-medium text-foreground">Partner-Salden</h3>
+          <p className="mb-2 text-[11px] text-muted-foreground">
             Bounty-Modell: Starter 5,00 € · Business 15,00 € · Enterprise ohne Auto-Provision.
           </p>
-          <div className="overflow-x-auto rounded-xl border border-border bg-white">
+          <div className="overflow-x-auto rounded-xl border border-line bg-surface/85 backdrop-blur-md dark:border-white/10 dark:bg-surface/55">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-card">
+                <tr className="border-b border-line/70 bg-surface-muted/60 dark:border-white/10 dark:bg-surface-muted/30">
                   {["Partner", "Code", "Firmen", "Ausstehend", "Auszahlbar", "Ausgezahlt"].map((h) => (
-                    <th key={h} className="px-4 py-2.5 text-left text-xs text-muted-foreground font-medium">
+                    <th key={h} className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
                       {h}
                     </th>
                   ))}
@@ -187,7 +189,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
               <tbody>
                 {affiliates.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-muted-foreground text-center text-sm">
+                    <td colSpan={6} className="px-4 py-6 text-center text-sm text-muted-foreground">
                       Noch keine Partner. Unten einen Code anlegen und Registrierungs-Links mit{" "}
                       <code className="text-foreground">?ref=code</code> verteilen.
                     </td>
@@ -195,24 +197,24 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
                 ) : (
                   affiliates.map((a) => (
                     <Fragment key={a.id}>
-                      <tr className="border-b border-border hover:bg-card/70">
+                      <tr className="border-b border-line/70 hover:bg-surface-muted/50 dark:border-white/8">
                         <td className="px-4 py-3 font-medium">{a.name}</td>
                         <td className="px-4 py-3 font-sans text-xs text-muted-foreground">{a.code}</td>
                         <td className="px-4 py-3 text-muted-foreground">{a.referredCompanies}</td>
-                        <td className="px-4 py-3 text-amber-700">{formatCents(a.pendingCents, "eur")}</td>
-                        <td className="px-4 py-3 text-emerald-700">{formatCents(a.availableCents, "eur")}</td>
+                        <td className="px-4 py-3 text-warning-foreground">{formatCents(a.pendingCents, "eur")}</td>
+                        <td className="px-4 py-3 text-brand">{formatCents(a.availableCents, "eur")}</td>
                         <td className="px-4 py-3 text-muted-foreground">{formatCents(a.paidCents, "eur")}</td>
                       </tr>
                       {a.recentCommissions.length > 0 && (
-                        <tr className="border-b border-border bg-card/70">
+                        <tr className="border-b border-line/70 bg-surface-muted/40 dark:border-white/8 dark:bg-surface-muted/20">
                           <td colSpan={6} className="px-4 py-2.5">
-                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5">
+                            <p className="mb-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
                               Letzte Bounties (max. 5)
                             </p>
                             <ul className="space-y-1 text-xs text-muted-foreground">
                               {a.recentCommissions.map((r) => (
                                 <li key={r.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-                                  <span className="text-foreground tabular-nums">
+                                  <span className="tabular-nums text-foreground">
                                     {formatCents(r.commissionCents, r.currency)}
                                   </span>
                                   <span>{planDe(r.plan)}</span>
@@ -236,35 +238,38 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
         </div>
 
         <div>
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-sm font-medium text-foreground">Anstehende Auszahlungen</h3>
             <div className="flex gap-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={toggleAll}
                 disabled={availableIds.length === 0 || isPending}
-                className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:bg-card disabled:opacity-40"
               >
                 {allSelected ? "Keine" : "Alle auszahlbar"}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="brand"
+                size="sm"
                 onClick={handleMarkPaid}
                 disabled={selected.size === 0 || isPending}
-                className="text-xs px-3 py-1.5 rounded-lg bg-primary text-foreground font-semibold hover:bg-primary/90 disabled:opacity-40 flex items-center gap-1.5"
+                loading={isPending}
+                leadingIcon={isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
               >
-                {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Als erledigt markieren
-              </button>
+              </Button>
             </div>
           </div>
-          <div className="overflow-x-auto rounded-xl border border-border bg-white">
+          <div className="overflow-x-auto rounded-xl border border-line bg-surface/85 backdrop-blur-md dark:border-white/10 dark:bg-surface/55">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-card">
+                <tr className="border-b border-line/70 bg-surface-muted/60 dark:border-white/10 dark:bg-surface-muted/30">
                   <th className="w-10 px-2 py-2" />
                   {["Status", "Partner", "Firma", "Plan", "Bounty", "Rechnung", "Reif ab"].map((h) => (
-                    <th key={h} className="px-3 py-2.5 text-left text-xs text-muted-foreground font-medium">
+                    <th key={h} className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground">
                       {h}
                     </th>
                   ))}
@@ -273,43 +278,42 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
               <tbody>
                 {payoutQueue.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-6 text-muted-foreground text-center text-sm">
+                    <td colSpan={8} className="px-4 py-6 text-center text-sm text-muted-foreground">
                       Keine offenen Affiliate-Buchungen.
                     </td>
                   </tr>
                 ) : (
                   payoutQueue.map((row) => (
-                    <tr key={row.id} className="border-b border-border hover:bg-card/70">
+                    <tr key={row.id} className="border-b border-line/70 hover:bg-surface-muted/50 dark:border-white/8">
                       <td className="px-2 py-2 text-center">
                         {row.status === "AVAILABLE" ? (
                           <input
                             type="checkbox"
                             checked={selected.has(row.id)}
                             onChange={() => toggle(row.id)}
-                            className="accent-emerald-500"
+                            className="accent-brand"
                           />
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
                       </td>
                       <td className="px-3 py-2.5">
-                        <span
-                          className={
-                            row.status === "AVAILABLE"
-                              ? "text-emerald-700 text-xs font-medium"
-                              : "text-amber-700 text-xs font-medium"
-                          }
+                        <StatusBadge
+                          tone={row.status === "AVAILABLE" ? "brand" : "warning"}
+                          glass
+                          size="sm"
+                          withDot={false}
                         >
                           {queueStatusDe(row.status)}
-                        </span>
+                        </StatusBadge>
                       </td>
                       <td className="px-3 py-2.5">
                         <span className="font-medium">{row.affiliate.name}</span>
-                        <span className="block text-[10px] text-muted-foreground font-sans">{row.affiliate.code}</span>
+                        <span className="block font-sans text-[10px] text-muted-foreground">{row.affiliate.code}</span>
                       </td>
                       <td className="px-3 py-2.5 text-foreground">{row.company.name}</td>
-                      <td className="px-3 py-2.5 text-muted-foreground text-xs">{planDe(row.plan)}</td>
-                      <td className="px-3 py-2.5 text-emerald-700 font-medium tabular-nums">
+                      <td className="px-3 py-2.5 text-xs text-muted-foreground">{planDe(row.plan)}</td>
+                      <td className="px-3 py-2.5 font-medium tabular-nums text-brand">
                         {formatCents(row.commissionCents, row.currency)}
                       </td>
                       <td className="px-3 py-2.5 font-sans text-[10px] text-muted-foreground">{row.stripeInvoiceId}</td>
@@ -324,76 +328,78 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
           </div>
         </div>
 
-        <div className="border-t border-border pt-6">
-          <h3 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-            <Plus className="w-4 h-4 text-muted-foreground" />
+        <div className="border-t border-line/70 pt-6 dark:border-white/10">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-foreground">
+            <Plus className="h-4 w-4 text-muted-foreground" />
             Neuen Partner anlegen
           </h3>
-          <p className="text-[11px] text-muted-foreground mb-3">
-            Ein Klick: Name eingeben → System legt einen kurzen Code fest (z. B. kevin847) und den fertigen Ref-Link.
+          <p className="mb-3 text-[11px] text-muted-foreground">
+            Ein Klick: Name eingeben → System legt einen kurzen Code fest (z. B. kevin847) und den fertigen Ref-Link.
           </p>
           <form onSubmit={handleCreateAffiliate} className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Anzeigename</label>
+              <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Anzeigename</label>
               <input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Kevin"
                 required
-                className="mt-1 w-full px-3 py-2 rounded-lg bg-white border border-border text-sm text-foreground"
+                className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-foreground"
               />
             </div>
             <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">E-Mail</label>
+              <label className="text-[10px] uppercase tracking-wide text-muted-foreground">E-Mail</label>
               <input
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 type="email"
                 placeholder="partner@…"
-                  required
-                className="mt-1 w-full px-3 py-2 rounded-lg bg-white border border-border text-sm text-foreground"
+                required
+                className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-foreground"
               />
             </div>
             <div className="sm:col-span-2">
-              <button
+              <Button
                 type="submit"
+                variant="brand"
+                size="md"
                 disabled={isPending || !newName.trim() || !newEmail.trim()}
-                className="px-4 py-2 rounded-lg bg-primary text-sm font-semibold text-foreground hover:bg-primary/90 disabled:opacity-50"
+                loading={isPending}
               >
                 Partner erzeugen
-              </button>
+              </Button>
             </div>
           </form>
 
           {lastCreated && (
-            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-3">
-              <p className="text-xs font-medium text-emerald-700 flex items-center gap-2">
-                <Link2 className="w-3.5 h-3.5 shrink-0" />
+            <div className="mt-4 space-y-3 rounded-xl border border-brand/30 bg-brand-soft/85 p-4 backdrop-blur-md dark:border-white/10 dark:bg-brand/22">
+              <p className="flex items-center gap-2 text-xs font-medium text-brand">
+                <Link2 className="h-3.5 w-3.5 shrink-0" />
                 Ref-Link für den Partner
               </p>
               <div className="flex flex-wrap items-center gap-2">
-                <code className="text-[11px] text-foreground break-all bg-white px-2 py-1.5 rounded-lg border border-border">
+                <code className="break-all rounded-lg border border-line bg-surface px-2 py-1.5 text-[11px] text-foreground">
                   {lastCreated.refUrl}
                 </code>
                 <button
                   type="button"
                   onClick={() => void copyText(lastCreated.refUrl)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-white px-2.5 py-1.5 text-[11px] text-foreground hover:bg-card"
+                  className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[11px] text-foreground hover:bg-surface-muted"
                 >
-                  <Copy className="w-3 h-3" />
+                  <Copy className="h-3 w-3" />
                   Link kopieren
                 </button>
                 <button
                   type="button"
                   onClick={() => void copyText(lastCreated.code)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-white px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-card"
+                  className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-surface-muted"
                 >
                   Code: {lastCreated.code}
                 </button>
                 <button
                   type="button"
                   onClick={() => void copyText(lastCreated.tempPassword)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-700 hover:bg-amber-100"
+                  className="inline-flex items-center gap-1 rounded-lg border border-warning/30 bg-warning-soft/90 px-2.5 py-1.5 text-[11px] text-warning-foreground backdrop-blur hover:bg-warning-soft dark:border-white/10 dark:bg-warning/22"
                 >
                   Startpasswort: {lastCreated.tempPassword}
                 </button>

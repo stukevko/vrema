@@ -21,8 +21,9 @@ export function Avatar({ src, alt, fallback, className, fallbackClassName }: Ava
       ) : (
         <span
           className={cx(
-            "inline-flex h-full w-full items-center justify-center text-[11px] font-semibold text-white",
-            "bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500",
+            "inline-flex h-full w-full items-center justify-center text-[11px] font-semibold text-brand-foreground",
+            "bg-gradient-to-br from-brand via-brand to-brand-hover",
+            "ring-1 ring-inset ring-white/20",
             fallbackClassName
           )}
         >

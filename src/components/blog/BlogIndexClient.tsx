@@ -29,13 +29,13 @@ function formatDate(iso: string) {
 function categoryBadgeClass(cat: BlogPostCategory) {
   switch (cat) {
     case BlogPostCategory.UPDATES:
-      return "border-primary/30 bg-primary/10 text-primary";
+      return "border-brand/25 bg-brand-soft/85 text-brand backdrop-blur dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground";
     case BlogPostCategory.TUTORIALS:
-      return "border-sky-200 bg-sky-50 text-sky-800";
+      return "border-warning/25 bg-warning-soft/80 text-warning-foreground backdrop-blur dark:border-white/10 dark:bg-warning/22";
     case BlogPostCategory.KNOWLEDGE:
-      return "border-violet-200 bg-violet-50 text-violet-800";
+      return "border-line bg-surface-muted/85 text-foreground backdrop-blur dark:border-white/10 dark:bg-surface-muted/40";
     default:
-      return "border-border bg-muted text-foreground";
+      return "border-line bg-surface-muted/85 text-foreground";
   }
 }
 

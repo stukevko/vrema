@@ -71,7 +71,7 @@ function TerminalWindow({ title = "vrema — zsh", children }: { title?: string;
       <div className="flex min-w-0 items-center gap-2 border-b border-border bg-card px-4 py-3">
         <span className="w-2.5 h-2.5 shrink-0 rounded-full bg-red-400/90" />
         <span className="w-2.5 h-2.5 shrink-0 rounded-full bg-yellow-400/90" />
-        <span className="w-2.5 h-2.5 shrink-0 rounded-full bg-emerald-400/90" />
+        <span className="w-2.5 h-2.5 shrink-0 rounded-full bg-brand/90" />
         <span className="ml-1 min-w-0 truncate text-xs tracking-wider text-muted-foreground">{title}</span>
       </div>
       <div className="max-w-full min-w-0 break-words p-5 font-sans text-sm leading-relaxed">{children}</div>
@@ -497,7 +497,7 @@ export default function LandingPage() {
       {/* ── AI TEASER ───────────────────────────────────────────────────────── */}
       <section className="w-full max-w-full border-b border-slate-200 bg-slate-50 py-20">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
-          <div className="relative max-w-full rounded-2xl bg-gradient-to-r from-violet-300/40 via-sky-300/30 to-emerald-300/40 p-[1px]">
+          <div className="relative max-w-full rounded-2xl bg-gradient-to-r from-brand/35 via-brand/25 to-brand-hover/35 p-[1px]">
             <div className="max-w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
               <div className="flex min-w-0 max-w-full flex-col flex-wrap items-stretch justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="min-w-0 max-w-full">
@@ -510,7 +510,7 @@ export default function LandingPage() {
                     praezise Steuerung Ihrer Teams.
                   </p>
                 </div>
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/30 bg-brand-soft/90 text-brand backdrop-blur dark:border-white/10 dark:bg-brand/22">
                   <Sparkles className="h-5 w-5" />
                 </span>
               </div>
@@ -601,21 +601,21 @@ export default function LandingPage() {
 
           <div className="mb-10 grid gap-3 md:grid-cols-3">
             <div className="rounded-2xl glass-panel p-4">
-              <div className="flex items-center gap-2 text-emerald-700">
+              <div className="flex items-center gap-2 text-brand">
                 <ShieldCheck className="h-4 w-4" />
                 <p className="text-sm font-semibold">DATEV-Ready</p>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">Exportformate für Ihr Lohnbüro optimiert.</p>
             </div>
             <div className="rounded-2xl glass-panel p-4">
-              <div className="flex items-center gap-2 text-emerald-700">
+              <div className="flex items-center gap-2 text-brand">
                 <Scale className="h-4 w-4" />
                 <p className="text-sm font-semibold">Revisionssicher</p>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">Vollständiger Audit-Trail nach GoBD-Standards.</p>
             </div>
             <div className="rounded-2xl glass-panel p-4">
-              <div className="flex items-center gap-2 text-emerald-700">
+              <div className="flex items-center gap-2 text-brand">
                 <Server className="h-4 w-4" />
                 <p className="text-sm font-semibold">Hosted in Germany</p>
               </div>
@@ -654,7 +654,7 @@ export default function LandingPage() {
                 }`}
               >
                 {"badge" in plan && plan.badge && (
-                  <div className="absolute -top-3 left-6 z-10 whitespace-nowrap rounded-full bg-emerald-300 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground shadow-sm">
+                  <div className="absolute -top-3 left-6 z-10 whitespace-nowrap rounded-full border border-white/30 bg-gradient-to-b from-brand to-brand-hover px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-foreground shadow-[0_8px_24px_-6px_hsl(var(--brand)_/_0.5)] backdrop-blur dark:border-white/10">
                     {plan.badge}
                   </div>
                 )}

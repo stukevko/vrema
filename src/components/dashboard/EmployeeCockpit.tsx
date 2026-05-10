@@ -47,11 +47,22 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
   return (
     <section
       aria-label="Mein Cockpit"
-      className="rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/15 via-slate-50/90 to-card p-4 shadow-sm sm:p-6"
+      className="glass-card relative overflow-hidden p-4 sm:p-6"
     >
+      {/* Specular Highlight (Apple) */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/15"
+      />
+      {/* Subtiler Petrol-Lichthauch im Hintergrund */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-brand/15 blur-3xl dark:bg-brand/22"
+      />
+
       {/* Hero: Begrüßung + Status */}
-      <div className="mb-5 flex flex-col gap-1">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-primary">
+      <div className="relative mb-5 flex flex-col gap-1">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-brand">
           {greeting}, {firstName}
         </p>
         <h1 className="text-xl font-extrabold leading-tight tracking-tight text-foreground sm:text-2xl">
@@ -59,7 +70,7 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
         </h1>
         <p className="text-sm text-muted-foreground">{heroSecondary}</p>
         {data.isClockedIn && data.isOnBreak ? (
-          <span className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-amber-800">
+          <span className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-full border border-warning/30 bg-warning-soft/90 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-warning-foreground backdrop-blur dark:border-white/10 dark:bg-warning/22">
             Pause läuft
           </span>
         ) : null}
@@ -73,9 +84,9 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
       />
 
       {!data.isClockedIn && !data.nextShift ? (
-        <div className="mt-4 rounded-2xl border border-dashed border-sky-300/80 bg-sky-50/80 px-4 py-3 text-sm text-sky-950">
+        <div className="mt-4 rounded-2xl border border-dashed border-brand/30 bg-brand-soft/70 px-4 py-3 text-sm text-foreground backdrop-blur-md dark:border-white/10 dark:bg-brand/15">
           <p className="flex items-start gap-2 font-medium">
-            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" aria-hidden />
+            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
             <span>
               Kein Schicht-Slot im Plan? Das ist normal bei Ruhetagen oder wenn der Chef noch plant — der große Button oben
               stempelt trotzdem (mit Hinweis im System).
@@ -89,15 +100,17 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
         {/* Nächste Schicht */}
         <Link
           href="/dashboard/planning"
-          className={`group flex min-h-[112px] items-start gap-3 rounded-2xl border p-4 transition-all active:scale-[0.99] ${
+          className={`group flex min-h-[112px] items-start gap-3 rounded-2xl border p-4 backdrop-blur-md transition-all hover:-translate-y-px hover:scale-[1.01] active:scale-[0.99] ${
             data.nextShift
-              ? "border-border bg-white/95 hover:border-primary/40 hover:bg-card/80"
-              : "border-dashed border-sky-300/70 bg-gradient-to-br from-sky-50 to-white hover:border-sky-400/80"
+              ? "border-line bg-surface/85 hover:border-brand/40 dark:border-white/10 dark:bg-surface/55"
+              : "border-dashed border-brand/30 bg-brand-soft/65 hover:border-brand/50 dark:border-white/10 dark:bg-brand/15"
           }`}
         >
           <span
-            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-              data.nextShift ? "bg-sky-100 text-sky-700" : "bg-sky-200/80 text-sky-800"
+            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 backdrop-blur dark:border-white/10 ${
+              data.nextShift
+                ? "bg-brand-soft/90 text-brand dark:bg-brand/25"
+                : "bg-brand-soft text-brand dark:bg-brand/30"
             }`}
           >
             <CalendarClock className="h-4 w-4" aria-hidden />
@@ -117,7 +130,7 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
                 <p className="text-[11px] text-muted-foreground">
                   Im Wochenplan nachsehen — oder kurz beim Team nachfragen.
                 </p>
-                <span className="mt-2 inline-flex text-[11px] font-semibold text-sky-700 group-hover:underline">
+                <span className="mt-2 inline-flex text-[11px] font-semibold text-brand group-hover:underline">
                   Planung öffnen →
                 </span>
               </>
@@ -128,9 +141,9 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
         {/* Offener Urlaub */}
         <Link
           href="/dashboard/vacation"
-          className="group flex min-h-[112px] items-start gap-3 rounded-2xl border border-border bg-white/95 p-4 transition-all active:scale-[0.99] hover:border-primary/40 hover:bg-card/80"
+          className="group flex min-h-[112px] items-start gap-3 rounded-2xl border border-line bg-surface/85 p-4 backdrop-blur-md transition-all hover:-translate-y-px hover:scale-[1.01] hover:border-brand/40 active:scale-[0.99] dark:border-white/10 dark:bg-surface/55"
         >
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-warning-soft/90 text-warning-foreground backdrop-blur dark:border-white/10 dark:bg-warning/22">
             <Palmtree className="h-4 w-4" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
@@ -154,7 +167,7 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
                 </p>
               </>
             )}
-            <span className="mt-2 inline-flex text-[11px] font-semibold text-amber-800/90 group-hover:underline">
+            <span className="mt-2 inline-flex text-[11px] font-semibold text-warning-foreground group-hover:underline">
               Urlaub öffnen →
             </span>
           </div>
@@ -162,15 +175,17 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
 
         {/* Stunden diesen Monat */}
         <div
-          className={`flex min-h-[112px] items-start gap-3 rounded-2xl border p-4 ${
+          className={`flex min-h-[112px] items-start gap-3 rounded-2xl border p-4 backdrop-blur-md ${
             data.workedThisMonthMins > 0
-              ? "border-border bg-white/95"
-              : "border-dashed border-emerald-300/60 bg-gradient-to-br from-emerald-50/90 to-white"
+              ? "border-line bg-surface/85 dark:border-white/10 dark:bg-surface/55"
+              : "border-dashed border-brand/30 bg-brand-soft/65 dark:border-white/10 dark:bg-brand/15"
           }`}
         >
           <span
-            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-              data.workedThisMonthMins > 0 ? "bg-emerald-100 text-emerald-700" : "bg-emerald-200/70 text-emerald-900"
+            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 backdrop-blur dark:border-white/10 ${
+              data.workedThisMonthMins > 0
+                ? "bg-brand-soft/90 text-brand dark:bg-brand/25"
+                : "bg-brand-soft text-brand dark:bg-brand/30"
             }`}
           >
             <Clock3 className="h-4 w-4" aria-hidden />
@@ -186,9 +201,9 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
               {new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", month: "long" }).format(new Date())}
             </p>
             {data.workedThisMonthMins === 0 ? (
-              <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-emerald-900/85">
+              <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-brand">
                 <Coffee className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-                Sobald du einstellempelst, füllt sich diese Karte automatisch.
+                Sobald du einstempelst, füllt sich diese Karte automatisch.
               </p>
             ) : null}
           </div>
