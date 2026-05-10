@@ -86,7 +86,7 @@ export default async function PlanningPage() {
               {pendingTrades.map((trade) => {
                 const intelTone =
                   trade.intel?.badge === "green"
-                    ? "brand"
+                    ? "success"
                     : trade.intel?.badge === "amber"
                       ? "warning"
                       : "danger";

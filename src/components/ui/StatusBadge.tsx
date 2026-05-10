@@ -22,7 +22,7 @@ const tones: Record<StatusTone, string> = {
  */
 const glassTones: Record<StatusTone, string> = {
   success:
-    "border-brand/15 bg-brand-soft text-brand shadow-sm dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground",
+    "border-success/20 bg-success-soft text-success-foreground shadow-sm dark:border-white/10 dark:bg-success/25",
   warning:
     "border-warning/20 bg-warning-soft text-warning-foreground shadow-sm dark:border-white/10 dark:bg-warning/22",
   danger:
@@ -30,7 +30,7 @@ const glassTones: Record<StatusTone, string> = {
   neutral:
     "border-line bg-neutral-soft/95 text-neutral-foreground shadow-sm dark:border-white/10 dark:bg-neutral-soft/45",
   brand:
-    "border-brand/20 bg-brand-soft text-brand shadow-sm dark:border-white/10 dark:bg-brand/25 dark:text-brand-foreground",
+    "border-brand/25 bg-brand-soft text-brand shadow-sm dark:border-white/10 dark:bg-brand/20 dark:text-brand",
   info: "border-line bg-surface-muted/95 text-fg-muted shadow-sm dark:border-white/10 dark:bg-surface-muted/55",
 };
 

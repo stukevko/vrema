@@ -30,9 +30,10 @@ const base =
 const variants: Record<Variant, string> = {
   brand:
     "bg-gradient-to-b from-brand to-brand-hover text-brand-foreground " +
-    "border-white/20 shadow-[var(--shadow-button)] " +
+    "border-white/25 " +
+    "shadow-[inset_0_1px_0_0_hsl(var(--specular-line)/0.38),var(--shadow-button)] " +
     "dark:border-white/10 " +
-    "hover:brightness-[1.05] hover:shadow-[var(--shadow-button-hover)]",
+    "hover:brightness-[1.05] hover:shadow-[inset_0_1px_0_0_hsl(var(--specular-line)/0.42),var(--shadow-button-hover)]",
   outline:
     "border-line-strong/80 bg-surface/95 text-fg shadow-sm " +
     "dark:border-white/10 dark:bg-surface/65 " +
