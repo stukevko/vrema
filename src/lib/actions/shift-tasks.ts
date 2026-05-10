@@ -1,15 +1,18 @@
 "use server";
 
+// WICHTIG: Diese Datei darf laut Next.js NUR async functions exportieren.
+// Types/Konstanten/Re-Exports sind verboten und führen mit Turbopack zu
+// `ReferenceError: <Name> is not defined` beim RPC-Bridging
+// (renderSource: react-server-components-payload).
+// Type-Definitionen bleiben deshalb in `@/lib/shift-tasks/active-shift-tasks-data`
+// und werden vom Client direkt von dort importiert (mit `import type`).
+
 import { revalidatePath } from "next/cache";
-import { ShiftTaskItemStatus } from "@prisma/client";
+import type { ShiftTaskItemStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
 import { generateTaskListForShiftCore } from "@/lib/shift-tasks/generate-task-list";
-import {
-  queryActiveShiftTasks,
-  type ActiveShiftTaskItemDTO,
-  type ActiveShiftTasksDTO,
-} from "@/lib/shift-tasks/active-shift-tasks-data";
+import { queryActiveShiftTasks } from "@/lib/shift-tasks/active-shift-tasks-data";
 import { berlinStartOfDayFromInstant } from "@/lib/shift-tasks/berlin-day";
 import { getDayBoundsUtc } from "@/lib/time/timezone";
 
@@ -36,10 +39,8 @@ export async function generateTaskListForShift(shiftId: string, occurrenceDateIs
   });
 }
 
-export type { ActiveShiftTaskItemDTO, ActiveShiftTasksDTO };
-
 /** Checkliste für die aktuelle Schicht des Nutzers (heute, Berlin). */
-export async function getMyActiveShiftTasks(): Promise<ActiveShiftTasksDTO> {
+export async function getMyActiveShiftTasks() {
   const { userId, companyId } = await requireTenant();
   return queryActiveShiftTasks(userId, companyId);
 }
