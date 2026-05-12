@@ -58,6 +58,18 @@ export function VremaMarkLogo({
         )}
       >
         <title>{title}</title>
+        {/* Dark-Mode: hauchdünne weiße Lichtkante, damit sich das V vom Schwarz absetzt */}
+        <path
+          d="M14 12 L32 50 L50 12"
+          fill="none"
+          stroke="#ffffff"
+          strokeOpacity="0.05"
+          strokeWidth="13"
+          strokeLinecap="square"
+          strokeLinejoin="miter"
+          strokeMiterlimit="6"
+          className="opacity-0 dark:opacity-100"
+        />
         <path
           d="M14 12 L32 50 L50 12"
           fill="none"

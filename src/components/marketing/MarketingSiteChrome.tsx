@@ -15,21 +15,30 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-dvh flex-col bg-slate-50 text-foreground">
       <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full border-b border-slate-200 glass-nav">
-        <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-2 px-4">
-          <Link href="/" className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none" aria-label="VREMA">
-            <VremaLockup size={32} className="text-foreground" />
-          </Link>
+        <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-4 px-4">
+          <div className="flex min-w-0 items-center gap-x-8 lg:gap-x-12">
+            <Link
+              href="/"
+              className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none"
+              aria-label="VREMA"
+            >
+              <VremaLockup size={32} className="text-foreground" />
+            </Link>
 
-          <div className="hidden items-center gap-6 text-sm text-muted-foreground md:flex md:gap-8">
-            <Link href="/features" className="transition-colors hover:text-foreground">
-              Features
-            </Link>
-            <Link href="/preise" className="transition-colors hover:text-foreground">
-              Preise
-            </Link>
-            <Link href="/blog" className="font-medium text-foreground transition-colors hover:text-primary">
-              Insights
-            </Link>
+            <div className="hidden items-center gap-x-8 text-sm text-muted-foreground md:flex">
+              <Link href="/features" className="transition-colors hover:text-foreground">
+                Features
+              </Link>
+              <Link href="/preise" className="transition-colors hover:text-foreground">
+                Preise
+              </Link>
+              <Link
+                href="/blog"
+                className="font-medium text-foreground transition-colors hover:text-primary"
+              >
+                Insights
+              </Link>
+            </div>
           </div>
 
           <div className="hidden min-w-0 max-w-[55%] flex-shrink-0 flex-wrap items-center justify-end gap-x-1.5 gap-y-1 sm:max-w-none sm:gap-3 md:flex">

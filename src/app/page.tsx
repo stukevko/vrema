@@ -174,13 +174,13 @@ export default function LandingPage() {
 
   const TERMINAL_LINES = [
     "$ vrema login --company muster-gmbh",
-    "✓ Authentifiziert als kevin@muster.de",
+    "> Authentifiziert als kevin@muster.de",
     "$ vrema clock-in",
-    "✓ Eingestempelt: 08:02 Uhr · ohne Standortdaten",
+    "> Eingestempelt: 08:02 Uhr",
     "$ vrema status",
-    "→ Heute: 7h 23m · Saldo: +12h 45m · Urlaub: 18 Tage",
+    "> Heute: 7h 23m · Saldo: +12h 45m · Urlaub: 18 Tage",
     "$ vrema export --month 04-2026 --format pdf",
-    "✓ Stundenzettel April.pdf erstellt (42 Einträge)",
+    "> Stundenzettel April.pdf erstellt (42 Einträge)",
   ];
 
   const { displayed, inProgress, done } = useTypewriter(
@@ -198,21 +198,30 @@ export default function LandingPage() {
     <div className="relative flex min-h-[100dvh] w-full max-w-full flex-col overflow-x-hidden overscroll-x-none bg-background text-foreground selection:bg-brand/15">
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
       <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full overflow-x-hidden border-b border-line glass-nav">
-        <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-2 overflow-x-hidden px-4">
-          <Link href="/" className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none" aria-label="VREMA">
-            <VremaLockup size={32} className="text-foreground" />
-          </Link>
+        <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-4 overflow-x-hidden px-4">
+          <div className="flex min-w-0 items-center gap-x-8 lg:gap-x-12">
+            <Link
+              href="/"
+              className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none"
+              aria-label="VREMA"
+            >
+              <VremaLockup size={32} className="text-foreground" />
+            </Link>
 
-          <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-            <Link href="/features" className="hover:text-foreground transition-colors">
-              Features
-            </Link>
-            <Link href="/preise" className="hover:text-foreground transition-colors">
-              Preise
-            </Link>
-            <Link href="/blog" className="font-medium text-foreground transition-colors hover:text-primary">
-              Insights
-            </Link>
+            <div className="hidden items-center gap-x-8 text-sm text-muted-foreground md:flex">
+              <Link href="/features" className="transition-colors hover:text-foreground">
+                Features
+              </Link>
+              <Link href="/preise" className="transition-colors hover:text-foreground">
+                Preise
+              </Link>
+              <Link
+                href="/blog"
+                className="font-medium text-foreground transition-colors hover:text-primary"
+              >
+                Insights
+              </Link>
+            </div>
           </div>
 
           <div className="hidden min-w-0 max-w-[55%] flex-shrink-0 flex-wrap items-center justify-end gap-x-1.5 gap-y-1 sm:max-w-none sm:gap-3 md:flex">
@@ -360,16 +369,16 @@ export default function LandingPage() {
                 <div className="min-h-[260px] min-w-0 max-w-full space-y-1 break-words">
                   {displayed.map((line, i) => {
                     const isCmd = line.startsWith("$");
-                    const isSuccess = line.startsWith("✓");
-                    const isInfo = line.startsWith("→");
+                    const isOutput = line.startsWith(">");
                     return (
                       <div
                         key={i}
                         className={
-                          isCmd ? "text-foreground" :
-                          isSuccess ? "text-primary" :
-                          isInfo ? "text-[#60a5fa]" :
-                          "text-muted-foreground"
+                          isCmd
+                            ? "text-foreground"
+                            : isOutput
+                            ? "text-brand"
+                            : "text-muted-foreground"
                         }
                       >
                         {line}
@@ -377,7 +386,15 @@ export default function LandingPage() {
                     );
                   })}
                   {!done && (
-                    <div className={inProgress.startsWith("$") ? "text-foreground" : inProgress.startsWith("✓") ? "text-primary" : "text-[#60a5fa]"}>
+                    <div
+                      className={
+                        inProgress.startsWith("$")
+                          ? "text-foreground"
+                          : inProgress.startsWith(">")
+                          ? "text-brand"
+                          : "text-muted-foreground"
+                      }
+                    >
                       {inProgress}
                       <Cursor show={true} />
                     </div>
@@ -390,17 +407,33 @@ export default function LandingPage() {
                 </div>
               </TerminalWindow>
 
-              {/* Mini status badges */}
+              {/* Mini status badges – Brand-Tokens, gedämpfte Erfolg-/Warn-Töne */}
               <div className="grid grid-cols-2 gap-3 mt-4">
-                {[
-                  { label: "Live eingestempelt", value: "08:02 Uhr", color: "#22c55e" },
-                  { label: "Saldo diesen Monat", value: "+12h 45m", color: "#22c55e" },
-                  { label: "Team aktiv", value: "8 / 12", color: "#60a5fa" },
-                  { label: "Offene Anträge", value: "2 Urlaub", color: "#f59e0b" },
-                ].map((badge) => (
-                  <div key={badge.label} className="rounded-2xl glass-panel px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">{badge.label}</p>
-                    <p className="font-bold text-sm tabular-nums" style={{ color: badge.color }}>{badge.value}</p>
+                {([
+                  { label: "Live eingestempelt", value: "08:02 Uhr", tone: "brand" as const },
+                  { label: "Saldo diesen Monat", value: "+12h 45m", tone: "success" as const },
+                  { label: "Team aktiv", value: "8 / 12", tone: "brand" as const },
+                  { label: "Offene Anträge", value: "2 Urlaub", tone: "warning" as const },
+                ]).map((badge) => (
+                  <div
+                    key={badge.label}
+                    className="rounded-2xl glass-panel px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
+                  >
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">
+                      {badge.label}
+                    </p>
+                    <p
+                      className={
+                        "font-bold text-sm tabular-nums " +
+                        (badge.tone === "brand"
+                          ? "text-brand"
+                          : badge.tone === "success"
+                          ? "text-emerald-700 dark:text-emerald-400"
+                          : "text-amber-700 dark:text-amber-400")
+                      }
+                    >
+                      {badge.value}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -515,7 +548,7 @@ export default function LandingPage() {
                   <div className="text-muted-foreground">
                     <span className="text-muted-foreground">$</span> whoami --verbose
                   </div>
-                  <div className="border-l-2 border-[#22c55e]/30 pl-4 space-y-2">
+                  <div className="border-l-2 border-brand/30 pl-4 space-y-2">
                     <p className="text-primary">Kevin Konkin</p>
                     <p className="text-muted-foreground text-xs">Gründer & Entwickler, KevkoStudio</p>
                     <p className="text-muted-foreground text-xs">Kolbstr. 5 · 67346 Speyer · Deutschland</p>
