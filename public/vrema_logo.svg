@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 64" width="520" height="128" role="img" aria-label="VREMA">
+  <title>VREMA</title>
+  <defs>
+    <linearGradient id="lg-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="hsl(199 92% 60%)" />
+      <stop offset="55%" stop-color="hsl(199 92% 44%)" />
+      <stop offset="100%" stop-color="hsl(199 92% 32%)" />
+    </linearGradient>
+    <linearGradient id="lg-spec" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.6)" />
+      <stop offset="50%" stop-color="rgba(255,255,255,0.06)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+    </linearGradient>
+    <radialGradient id="lg-inner" cx="50%" cy="0%" r="80%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.45)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+    </radialGradient>
+    <clipPath id="lg-clip">
+      <rect x="2" y="2" width="60" height="60" rx="15" ry="15" />
+    </clipPath>
+  </defs>
+
+  <g>
+    <rect x="2" y="2" width="60" height="60" rx="15" ry="15" fill="url(#lg-grad)" />
+    <rect x="2" y="2" width="60" height="60" rx="15" ry="15" fill="url(#lg-inner)" clip-path="url(#lg-clip)" style="mix-blend-mode:screen" />
+    <rect x="2.5" y="2.5" width="59" height="59" rx="14.5" ry="14.5" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.6" clip-path="url(#lg-clip)" />
+    <rect x="2.5" y="2.5" width="59" height="59" rx="14.5" ry="14.5" fill="none" stroke="rgba(0,0,0,0.18)" stroke-width="0.8" transform="translate(0,1)" clip-path="url(#lg-clip)" />
+    <rect x="6" y="4.5" width="52" height="6" rx="3" fill="url(#lg-spec)" opacity="0.85" />
+
+    <g stroke="#ffffff" stroke-width="5.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.97">
+      <path d="M19 19 L32 46" />
+      <path d="M45 14 L32 46" />
+    </g>
+    <circle cx="32" cy="46" r="2.6" fill="#ffffff" />
+    <circle cx="32" cy="46" r="1.1" fill="hsl(199 92% 32%)" />
+    <circle cx="32" cy="11" r="1.2" fill="rgba(255,255,255,0.85)" />
+  </g>
+
+  <text x="78" y="44" font-family="-apple-system, 'SF Pro Display', 'Inter', system-ui, sans-serif" font-size="40" font-weight="700" letter-spacing="-1.4" fill="currentColor">VREMA</text>
+</svg>

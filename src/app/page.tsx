@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
+import { VremaLockup } from "@/components/brand/VremaMarkLogo";
 import Script from "next/script";
 import {
   Clock,
@@ -251,16 +251,8 @@ export default function LandingPage() {
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
       <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full overflow-x-hidden border-b border-line glass-nav">
         <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-2 overflow-x-hidden px-4">
-          <Link href="/" className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none">
-            <Image
-              src="/vrema_logo.png"
-              alt="VREMA"
-              width={280}
-              height={78}
-              sizes="(max-width: 640px) 45vw, 280px"
-              className="h-auto w-full max-w-full object-contain object-left max-h-9 sm:max-h-10 md:max-h-12"
-              priority
-            />
+          <Link href="/" className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none" aria-label="VREMA">
+            <VremaLockup size={32} className="text-foreground" />
           </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
@@ -798,19 +790,8 @@ export default function LandingPage() {
       {/* ── FOOTER ──────────────────────────────────────────────────────────── */}
       <footer className="w-full max-w-full border-t border-line bg-surface-muted py-10 text-fg-muted">
         <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col items-start justify-between gap-6 overflow-x-hidden px-4 md:flex-row md:items-center">
-          <div className="flex min-w-0 max-w-full items-center gap-3">
-            <Image
-              src="/vrema_logo.png"
-              alt="VREMA"
-              width={160}
-              height={44}
-              sizes="(max-width: 640px) 120px, 160px"
-              className="-my-1 h-auto w-full max-w-[120px] object-contain opacity-90 sm:max-w-[140px] md:max-h-11 md:max-w-[160px]"
-            />
-            <div className="min-w-0 max-w-full">
-              <span className="block hyphens-auto break-words text-sm font-bold text-foreground">VREMA</span>
-              <span className="mt-0.5 block text-[10px] text-fg-subtle">Intelligente Zeiterfassung</span>
-            </div>
+          <div className="flex min-w-0 max-w-full items-center gap-3 text-foreground">
+            <VremaLockup size={32} tagline="Intelligente Zeiterfassung" />
           </div>
 
           <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-fg-muted">

@@ -1,13 +1,13 @@
 "use client";
 
 import { ChevronDown, LogOut, Settings, UserCircle2 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getPersonalAccountHref } from "@/lib/dashboard/account-href";
+import { VremaLockup } from "@/components/brand/VremaMarkLogo";
 
 interface TopbarProps {
   user: {
@@ -46,15 +46,8 @@ export function DashboardTopbar({ user, unreadNotifications = 0 }: TopbarProps) 
   return (
     <header className="fixed inset-x-0 top-0 z-[60] overflow-visible border-b border-white/40 bg-background/85 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md dark:border-white/8 dark:bg-background/75 md:relative md:inset-auto md:z-30 md:border-b-0 md:bg-transparent md:pt-0 md:backdrop-blur-0">
       <div className="flex h-16 min-w-0 items-center justify-between gap-2 px-3 sm:px-4 md:px-6">
-        <Link href="/dashboard" className="shrink-0 md:hidden">
-          <Image
-            src="/vrema_logo.png"
-            alt="VREMA"
-            width={160}
-            height={44}
-            priority
-            className="h-8 w-auto max-w-[40vw] object-contain"
-          />
+        <Link href="/dashboard" className="shrink-0 md:hidden" aria-label="VREMA">
+          <VremaLockup size={28} className="text-foreground" />
         </Link>
 
         <div className="hidden md:block md:flex-1" />

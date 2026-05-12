@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { Drawer } from "vaul";
+import { VremaLockup } from "@/components/brand/VremaMarkLogo";
 
 /**
  * Gemeinsame Marketing-Navigation & Footer für Blog etc. (Landing bleibt eigenständig, gleicher Look).
@@ -16,16 +16,8 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
     <div className="flex min-h-dvh flex-col bg-slate-50 text-foreground">
       <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full border-b border-slate-200 glass-nav">
         <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-2 px-4">
-          <Link href="/" className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none">
-            <Image
-              src="/vrema_logo.png"
-              alt="VREMA"
-              width={280}
-              height={78}
-              sizes="(max-width: 640px) 45vw, 280px"
-              className="h-auto max-h-9 w-full max-w-full object-contain object-left sm:max-h-10 md:max-h-12"
-              priority
-            />
+          <Link href="/" className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none" aria-label="VREMA">
+            <VremaLockup size={32} className="text-foreground sm:[--mark:36px]" />
           </Link>
 
           <div className="hidden items-center gap-6 text-sm text-muted-foreground md:flex md:gap-8">
@@ -103,19 +95,8 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
 
       <footer className="mt-auto w-full border-t border-slate-900 bg-slate-950 py-10 text-slate-300">
         <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col items-start justify-between gap-6 px-4 md:flex-row md:items-center">
-          <Link href="/" className="flex min-w-0 max-w-full items-center gap-3">
-            <Image
-              src="/vrema_logo.png"
-              alt="VREMA"
-              width={160}
-              height={44}
-              sizes="(max-width: 640px) 120px, 160px"
-              className="-my-1 h-auto max-h-10 w-full max-w-[120px] object-contain opacity-90 sm:max-w-[140px] md:max-h-11 md:max-w-[160px]"
-            />
-            <div className="min-w-0">
-              <span className="block text-sm font-bold text-slate-100">VREMA</span>
-              <span className="mt-0.5 block text-[10px] text-slate-400">Intelligente Zeiterfassung</span>
-            </div>
+          <Link href="/" className="flex min-w-0 max-w-full items-center gap-3 text-slate-100" aria-label="VREMA">
+            <VremaLockup size={30} tagline="Intelligente Zeiterfassung" />
           </Link>
 
           <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-300">
