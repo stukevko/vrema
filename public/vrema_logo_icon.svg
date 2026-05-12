@@ -1,37 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512" role="img" aria-label="VREMA">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512" role="img" aria-label="VREMA" shape-rendering="geometricPrecision">
   <title>VREMA</title>
   <defs>
-    <linearGradient id="vrema-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="hsl(199 92% 60%)" />
-      <stop offset="55%" stop-color="hsl(199 92% 44%)" />
-      <stop offset="100%" stop-color="hsl(199 92% 32%)" />
+    <linearGradient id="vrema-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.045" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
     </linearGradient>
-    <linearGradient id="vrema-spec" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.6)" />
-      <stop offset="50%" stop-color="rgba(255,255,255,0.06)" />
-      <stop offset="100%" stop-color="rgba(255,255,255,0)" />
-    </linearGradient>
-    <radialGradient id="vrema-inner" cx="50%" cy="0%" r="80%">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.45)" />
-      <stop offset="100%" stop-color="rgba(255,255,255,0)" />
-    </radialGradient>
-    <clipPath id="vrema-clip">
-      <rect x="2" y="2" width="60" height="60" rx="15" ry="15" />
-    </clipPath>
   </defs>
-
-  <rect x="2" y="2" width="60" height="60" rx="15" ry="15" fill="url(#vrema-grad)" />
-  <rect x="2" y="2" width="60" height="60" rx="15" ry="15" fill="url(#vrema-inner)" clip-path="url(#vrema-clip)" style="mix-blend-mode:screen" />
-  <rect x="2.5" y="2.5" width="59" height="59" rx="14.5" ry="14.5" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.6" clip-path="url(#vrema-clip)" />
-  <rect x="2.5" y="2.5" width="59" height="59" rx="14.5" ry="14.5" fill="none" stroke="rgba(0,0,0,0.18)" stroke-width="0.8" transform="translate(0,1)" clip-path="url(#vrema-clip)" />
-  <rect x="6" y="4.5" width="52" height="6" rx="3" fill="url(#vrema-spec)" opacity="0.85" />
-
-  <g stroke="#ffffff" stroke-width="5.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.97">
-    <path d="M19 19 L32 46" />
-    <path d="M45 14 L32 46" />
-  </g>
-
-  <circle cx="32" cy="46" r="2.6" fill="#ffffff" />
-  <circle cx="32" cy="46" r="1.1" fill="hsl(199 92% 32%)" />
-  <circle cx="32" cy="11" r="1.2" fill="rgba(255,255,255,0.85)" />
+  <rect x="0" y="0" width="64" height="64" fill="#0a3a52" />
+  <rect x="0" y="0" width="64" height="64" fill="url(#vrema-top)" />
+  <path d="M14 12 L32 50 L50 12"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="9"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
+    stroke-miterlimit="6" />
 </svg>
