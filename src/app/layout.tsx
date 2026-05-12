@@ -4,6 +4,8 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { ServiceWorkerRegistrar } from "@/components/pwa/ServiceWorkerRegistrar";
 import { ThemeScript } from "@/components/theme/ThemeScript";
+import { SoftwareApplicationJsonLd } from "@/components/seo/SoftwareApplicationJsonLd";
+import { getSiteUrl, resolveMetadataBase, SEO_KEYWORDS } from "@/lib/seo/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,87 +17,90 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-/** Relative Metadata-URLs (Icons, OG) werden hiermit aufgelöst — lokal sonst fälschlich Produktions-Host. */
-function resolveMetadataBase(): URL {
-  if (process.env.NEXT_PUBLIC_APP_URL) return new URL(process.env.NEXT_PUBLIC_APP_URL);
-  if (process.env.VERCEL_URL) return new URL(`https://${process.env.VERCEL_URL}`);
-  if (process.env.NODE_ENV === "development") return new URL("http://localhost:3000");
-  return new URL("https://vrema.app");
-}
+const SITE_TITLE =
+  "VREMA – Die intelligente Gastro-Planung & Zeiterfassung für Restaurants und Teams";
+const SITE_DESCRIPTION =
+  "VREMA: Gastro-Planung, Schichtplanung und digitale Zeiterfassung mit Stempeluhr, Live-Reports und DATEV-Export. Privacy by Design, 100 % DSGVO-konform ohne Standort-Tracking – in Hell- und Dunkelmodus nutzbar.";
 
-export const metadata: Metadata = {
-  title: {
-    default: "VREMA - Intelligente Zeiterfassung",
-    template: "%s | VREMA - Intelligente Zeiterfassung",
-  },
-  description:
-    "VREMA: Intelligente Zeiterfassung mit Stempeluhr, Pausen, Berichten und DATEV-Export – Privacy by Design, 100 % DSGVO-konform ohne Standort-Tracking.",
-  keywords: [
-    "Zeiterfassung",
-    "Digitale Zeiterfassung",
-    "Zeiterfassung App",
-    "Stempeluhr",
-    "Arbeitszeiterfassung",
-    "Mitarbeiter Zeiterfassung",
-    "Privacy by Design",
-    "DSGVO Zeiterfassung",
-    "Ohne GPS Tracking",
-    "DATEV Export",
-    "Vrema",
-    "VREMA",
-    "KevkoStudio",
-  ],
-  metadataBase: resolveMetadataBase(),
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "VREMA",
-  },
-  applicationName: "VREMA",
-  formatDetection: {
-    telephone: false,
-  },
-  alternates: {
-    canonical: "/",
-  },
-  manifest: "/site.webmanifest",
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+export async function generateMetadata(): Promise<Metadata> {
+  const metadataBase = resolveMetadataBase();
+  const site = getSiteUrl();
+
+  return {
+    title: {
+      default: SITE_TITLE,
+      template: "%s | VREMA – Gastro-Planung & Zeiterfassung",
+    },
+    description: SITE_DESCRIPTION,
+    keywords: [
+      ...SEO_KEYWORDS,
+      "Restaurant Zeiterfassung",
+      "Hotellerie",
+      "Schichtplanung Software",
+      "DATEV Export",
+      "Privacy by Design",
+      "KevkoStudio",
+    ],
+    metadataBase,
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "VREMA – Gastro-Planung",
+    },
+    applicationName: "VREMA",
+    formatDetection: {
+      telephone: false,
+    },
+    alternates: {
+      canonical: "/",
+    },
+    manifest: "/site.webmanifest",
+    robots: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
-  },
-  openGraph: {
-    title: "VREMA - Intelligente Zeiterfassung",
-    description:
-      "Intelligente Zeiterfassung mit Stempeluhr, Berichten und DATEV-Export. Privacy by Design – ohne Standort-Tracking.",
-    url: "https://vrema.app",
-    siteName: "VREMA",
-    locale: "de_DE",
-    type: "website",
-    images: [{ url: "/vrema_logo.png", alt: "VREMA - Intelligente Zeiterfassung" }],
-  },
-  twitter: {
-    card: "summary",
-    title: "VREMA - Intelligente Zeiterfassung",
-    description: "Intelligente Zeiterfassung für Teams und Unternehmen.",
-  },
-  icons: {
-    icon: [
-      { url: "/favicon-48x48.png", type: "image/png", sizes: "48x48" },
-      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
-      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
-      { url: "/favicon.ico", type: "image/x-icon", sizes: "any" },
-    ],
-    shortcut: [{ url: "/favicon.ico", type: "image/x-icon" }],
-    apple: [{ url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" }],
-  },
-};
+    openGraph: {
+      title: "VREMA – Die intelligente Gastro-Planung",
+      description: SITE_DESCRIPTION,
+      url: site,
+      siteName: "VREMA",
+      locale: "de_DE",
+      type: "website",
+      images: [
+        {
+          url: "/vrema_logo.png",
+          alt: "VREMA Logo – Gastro-Planung, Schichtplanung und Zeiterfassung für die Gastronomie",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary",
+      title: "VREMA – Die intelligente Gastro-Planung",
+      description:
+        "Schichtplanung und Zeiterfassung für Restaurants: DSGVO-konform, ohne GPS-Tracking, mit DATEV-freundlichen Exporten.",
+    },
+    icons: {
+      icon: [
+        { url: "/favicon-48x48.png", type: "image/png", sizes: "48x48" },
+        { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+        { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+        { url: "/favicon.ico", type: "image/x-icon", sizes: "any" },
+      ],
+      shortcut: [{ url: "/favicon.ico", type: "image/x-icon" }],
+      apple: [{ url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" }],
+    },
+    other: {
+      "color-scheme": "light dark",
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: [
@@ -117,24 +122,22 @@ export default function RootLayout({
     <html lang="de" className="min-h-0 w-full overflow-x-hidden" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
-        {/* Theme VOR jedem Paint setzen → kein FOUC */}
         <ThemeScript />
-        {/* Statische Assets aus /public — gleiche URLs wie PWA-Manifest */}
         <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="manifest" href="/manifest.json" />
-        {/* PWA / iOS-Add-to-Home-Screen */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-title" content="VREMA" />
+        <meta name="apple-mobile-web-app-title" content="VREMA – Gastro-Planung" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="msapplication-TileColor" content="#131418" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-[100dvh] w-full min-w-0 antialiased bg-background text-fg`}
       >
+        <SoftwareApplicationJsonLd />
         <SessionProvider>{children}</SessionProvider>
         <ServiceWorkerRegistrar />
       </body>

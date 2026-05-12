@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { VremaLockup } from "@/components/brand/VremaMarkLogo";
-import Script from "next/script";
 import {
   Clock,
   FileText,
@@ -195,59 +194,8 @@ export default function LandingPage() {
     return () => clearTimeout(t);
   }, []);
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vrema.app";
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        "@id": `${appUrl}/#organization`,
-        name: "KevkoStudio",
-        url: appUrl,
-        email: "kontakt@kevko.studio",
-        brand: {
-          "@type": "Brand",
-          name: "Vrema",
-        },
-      },
-      {
-        "@type": "WebSite",
-        "@id": `${appUrl}/#website`,
-        url: appUrl,
-        name: "Vrema",
-        publisher: {
-          "@id": `${appUrl}/#organization`,
-        },
-        inLanguage: "de-DE",
-      },
-      {
-        "@type": "SoftwareApplication",
-        "@id": `${appUrl}/#software`,
-        name: "Vrema",
-        applicationCategory: "BusinessApplication",
-        operatingSystem: "Web",
-        description:
-          "Digitale Zeiterfassung mit Stempeluhr und Berichten. Privacy by Design: 100 % DSGVO-konform ohne Standort-Tracking, DATEV-freundlicher Export.",
-        url: appUrl,
-        brand: {
-          "@type": "Brand",
-          name: "Vrema by KevkoStudio",
-        },
-        provider: {
-          "@id": `${appUrl}/#organization`,
-        },
-      },
-    ],
-  };
-
   return (
     <div className="relative flex min-h-[100dvh] w-full max-w-full flex-col overflow-x-hidden overscroll-x-none bg-background text-foreground selection:bg-brand/15">
-      <Script
-        id="ld-json-vrema"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
       <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full overflow-x-hidden border-b border-line glass-nav">
         <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-2 overflow-x-hidden px-4">
@@ -256,8 +204,12 @@ export default function LandingPage() {
           </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-foreground transition-colors">Preise</a>
+            <Link href="/features" className="hover:text-foreground transition-colors">
+              Features
+            </Link>
+            <Link href="/preise" className="hover:text-foreground transition-colors">
+              Preise
+            </Link>
             <Link href="/blog" className="font-medium text-foreground transition-colors hover:text-primary">
               Insights
             </Link>
@@ -296,13 +248,20 @@ export default function LandingPage() {
                 <Drawer.Handle className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-muted-foreground/35" />
                 <Drawer.Title className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Menü</Drawer.Title>
                 <nav className="mt-4 space-y-2">
-                  <a
-                    href="#pricing"
+                  <Link
+                    href="/features"
+                    onClick={() => setMobileNavOpen(false)}
+                    className="flex min-h-12 items-center rounded-2xl border border-border px-4 text-base font-medium text-foreground"
+                  >
+                    Features
+                  </Link>
+                  <Link
+                    href="/preise"
                     onClick={() => setMobileNavOpen(false)}
                     className="flex min-h-12 items-center rounded-2xl border border-border px-4 text-base font-medium text-foreground"
                   >
                     Preise
-                  </a>
+                  </Link>
                   <Link
                     href="/blog"
                     onClick={() => setMobileNavOpen(false)}
@@ -362,12 +321,12 @@ export default function LandingPage() {
                   Jetzt starten
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <a
-                  href="#pricing"
+                <Link
+                  href="/preise"
                   className="flex min-w-0 max-w-full items-center gap-2 rounded-2xl border border-border px-7 py-3.5 font-medium text-muted-foreground transition-all hover:border-border hover:text-foreground"
                 >
                   Pläne ansehen
-                </a>
+                </Link>
               </div>
 
               <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -754,13 +713,13 @@ export default function LandingPage() {
                     <Zap className="w-4 h-4" />
                     Jetzt registrieren
                   </Link>
-                  <a
-                    href="#pricing"
+                  <Link
+                    href="/preise"
                     className="flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-border text-muted-foreground font-medium hover:text-foreground hover:border-border transition-all"
                   >
                     Pläne & Preise
                     <ChevronRight className="w-4 h-4" />
-                  </a>
+                  </Link>
                 </div>
               </div>
             </TerminalWindow>
@@ -834,7 +793,12 @@ export default function LandingPage() {
             <Link href="/blog" className="text-xs text-fg-muted transition-colors hover:text-foreground">
               Insights
             </Link>
-            <a href="#pricing" className="text-xs text-fg-muted transition-colors hover:text-foreground">Preise</a>
+            <Link href="/features" className="text-xs text-fg-muted transition-colors hover:text-foreground">
+              Features
+            </Link>
+            <Link href="/preise" className="text-xs text-fg-muted transition-colors hover:text-foreground">
+              Preise
+            </Link>
             <Link href="/partner" className="text-xs text-fg-muted transition-colors hover:text-foreground">
               Partner werden
             </Link>

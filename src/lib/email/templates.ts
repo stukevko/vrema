@@ -33,7 +33,7 @@ function layout(title: string, body: string): string {
             <table cellpadding="0" cellspacing="0">
               <tr>
                 <td style="vertical-align:middle;">
-                  <img src="${APP_URL}/vrema_logo_icon.png" alt="VREMA" width="40" height="40" style="display:block;" />
+                  <img src="${APP_URL}/vrema_logo_icon.png" alt="VREMA – Gastro-Planung und Zeiterfassung für Restaurants" width="40" height="40" style="display:block;" />
                 </td>
                 <td style="padding-left:10px;vertical-align:middle;">
                   <span style="color:${BASE.textPrimary};font-size:16px;font-weight:700;">Vrema</span>

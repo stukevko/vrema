@@ -1,14 +1,23 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/seo/site";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vrema.app";
+  const baseUrl = getSiteUrl();
 
   return {
     rules: [
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/dashboard/", "/auth/", "/setup/", "/super-admin/"],
+        disallow: [
+          "/api/",
+          "/dashboard/",
+          "/auth/",
+          "/setup/",
+          "/super-admin/",
+          "/join/",
+          "/terminal/",
+        ],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

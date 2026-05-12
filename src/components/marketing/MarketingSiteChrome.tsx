@@ -17,14 +17,14 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
       <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full border-b border-slate-200 glass-nav">
         <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-2 px-4">
           <Link href="/" className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none" aria-label="VREMA">
-            <VremaLockup size={32} className="text-foreground sm:[--mark:36px]" />
+            <VremaLockup size={32} className="text-foreground" />
           </Link>
 
           <div className="hidden items-center gap-6 text-sm text-muted-foreground md:flex md:gap-8">
-            <Link href="/#features" className="transition-colors hover:text-foreground">
+            <Link href="/features" className="transition-colors hover:text-foreground">
               Features
             </Link>
-            <Link href="/#pricing" className="transition-colors hover:text-foreground">
+            <Link href="/preise" className="transition-colors hover:text-foreground">
               Preise
             </Link>
             <Link href="/blog" className="font-medium text-foreground transition-colors hover:text-primary">
@@ -62,10 +62,17 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
                 <Drawer.Handle className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-muted-foreground/35" />
                 <Drawer.Title className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Menü</Drawer.Title>
                 <nav className="mt-4 space-y-2">
+                  <Link
+                    href="/features"
+                    onClick={() => setMobileNavOpen(false)}
+                    className="flex min-h-12 items-center rounded-2xl border border-border px-4 text-base font-medium text-foreground"
+                  >
+                    Features
+                  </Link>
                   <Link href="/blog" onClick={() => setMobileNavOpen(false)} className="flex min-h-12 items-center rounded-2xl border border-border px-4 text-base font-medium text-foreground">
                     Insights
                   </Link>
-                  <Link href="/#pricing" onClick={() => setMobileNavOpen(false)} className="flex min-h-12 items-center rounded-2xl border border-border px-4 text-base font-medium text-foreground">
+                  <Link href="/preise" onClick={() => setMobileNavOpen(false)} className="flex min-h-12 items-center rounded-2xl border border-border px-4 text-base font-medium text-foreground">
                     Preise
                   </Link>
                 </nav>

@@ -1,63 +1,32 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/seo/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vrema.app";
+  const baseUrl = getSiteUrl();
   const now = new Date();
 
+  const entry = (
+    path: string,
+    changeFrequency: MetadataRoute.Sitemap[0]["changeFrequency"],
+    priority: number,
+  ): MetadataRoute.Sitemap[0] => ({
+    url: `${baseUrl}${path}`,
+    lastModified: now,
+    changeFrequency,
+    priority,
+  });
+
   return [
-    {
-      url: `${baseUrl}/`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/auth/register`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/auth/login`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.4,
-    },
-    {
-      url: `${baseUrl}/impressum`,
-      lastModified: now,
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/datenschutz`,
-      lastModified: now,
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/widerruf`,
-      lastModified: now,
-      changeFrequency: "yearly",
-      priority: 0.2,
-    },
-    {
-      url: `${baseUrl}/cookies`,
-      lastModified: now,
-      changeFrequency: "yearly",
-      priority: 0.2,
-    },
-    {
-      url: `${baseUrl}/agb`,
-      lastModified: now,
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/avv`,
-      lastModified: now,
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
+    entry("/", "weekly", 1),
+    entry("/features", "weekly", 0.95),
+    entry("/preise", "weekly", 0.95),
+    entry("/blog", "weekly", 0.75),
+    entry("/partner", "monthly", 0.55),
+    entry("/impressum", "yearly", 0.3),
+    entry("/datenschutz", "yearly", 0.3),
+    entry("/widerruf", "yearly", 0.2),
+    entry("/cookies", "yearly", 0.2),
+    entry("/agb", "yearly", 0.3),
+    entry("/avv", "yearly", 0.3),
   ];
 }

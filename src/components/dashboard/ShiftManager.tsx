@@ -13,6 +13,7 @@ import {
 import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { buildComplianceFlagsByShiftId } from "@/lib/planning/compliance";
 import {
   AlarmClock,
@@ -134,6 +135,20 @@ function addDaysToDate(d: Date, days: number) {
   const x = new Date(d);
   x.setDate(x.getDate() + days);
   return x;
+}
+
+function weatherOpenWeatherAlt(w: DailyWeatherForecast): string {
+  const condDe =
+    w.condition === "RAIN"
+      ? "Regen"
+      : w.condition === "SNOW"
+        ? "Schnee"
+        : w.condition === "CLEAR"
+          ? "klarer Himmel"
+          : w.condition === "CLOUDS"
+            ? "bewölkt"
+            : "wechselhaft";
+  return `Wetter-Symbol OpenWeather (${w.openWeatherMain}, ${condDe}, ${Math.round(w.maxTempC)}°C) – VREMA Gastro-Planung und Schichtplanung`;
 }
 
 function weatherIconForDay(day: DailyWeatherForecast | null, className: string) {
@@ -2085,11 +2100,13 @@ export function ShiftManager({
                       <span className="font-semibold">{label}</span>
                       {w ? (
                         <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                          <Image
                             src={`https://openweathermap.org/img/wn/${w.iconCode}@2x.png`}
-                            alt=""
+                            alt={weatherOpenWeatherAlt(w)}
+                            width={56}
+                            height={56}
                             className="h-7 w-7"
+                            unoptimized
                           />
                           <span className="tabular-nums font-medium">{w.maxTempC}°</span>
                         </>
