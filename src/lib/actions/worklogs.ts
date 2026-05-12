@@ -145,7 +145,9 @@ export async function updateWorkLogByManager(params: {
   }
   if (params.note !== undefined) {
     const baseNote = params.note?.trim() ? params.note.trim() : "";
-    const reasonPart = params.editReason?.trim() ? `[MANAGER_EDIT:${params.editReason.trim()}]` : "[MANAGER_EDIT]";
+    const reasonPart = params.editReason?.trim()
+      ? `[MANAGER-BEARBEITUNG: ${params.editReason.trim()}]`
+      : "[MANAGER-BEARBEITUNG]";
     data.note = [baseNote, reasonPart].filter(Boolean).join(" | ");
   }
   if (params.status !== undefined) {

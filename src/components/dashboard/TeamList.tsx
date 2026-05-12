@@ -86,15 +86,15 @@ export function TeamList({
     <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90">
       {/* Desktop */}
       <div className="hidden sm:block">
-        <div className="grid grid-cols-12 items-end gap-x-4 px-5 py-3.5 text-xs font-sans uppercase tracking-widest text-muted-foreground lg:gap-x-6 xl:gap-x-8 xl:px-7">
+        <div className="grid grid-cols-12 items-center gap-x-4 border-b border-line/[0.08] px-5 py-3 text-[10px] font-sans uppercase tracking-widest text-muted-foreground lg:gap-x-6 lg:px-6 xl:gap-x-8 xl:px-7">
           <span className="col-span-4 min-w-0">Mitarbeiter</span>
           <span className="col-span-2 min-w-0">Rolle</span>
           <span className="col-span-1 min-w-0" title="Außenbereich für Wetter-Hinweise im Planer">
             Außen
           </span>
-          <span className="col-span-1 min-w-0 text-right">Std/W</span>
-          <span className="col-span-2 min-w-0">€/Std</span>
-          <span className="col-span-2 min-w-0">Personalnr.</span>
+          <span className="col-span-1 min-w-0 text-right tabular-nums">Std/W</span>
+          <span className="col-span-2 min-w-0 pl-1">€/Std</span>
+          <span className="col-span-2 min-w-0 pl-1">Personalnr.</span>
           <span className="col-span-1 min-w-0" />
         </div>
 
@@ -110,7 +110,7 @@ export function TeamList({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
                 className={clsx(
-                  "grid grid-cols-12 items-center gap-x-4 border-b border-line/[0.06] px-5 py-3.5 transition-colors last:border-b-0 hover:bg-surface-muted/40 lg:gap-x-6 xl:gap-x-8 xl:px-7",
+                  "grid grid-cols-12 items-center gap-x-4 border-b border-line/[0.06] px-5 py-3.5 transition-colors last:border-b-0 hover:bg-surface-muted/40 lg:gap-x-6 lg:px-6 xl:gap-x-8 xl:px-7",
                   !member.isActive && "opacity-40"
                 )}
               >
@@ -176,7 +176,7 @@ export function TeamList({
                         }
                         placeholder="z. B. 16,50"
                         inputMode="decimal"
-                        className="input-field-subtle h-9 min-w-0 flex-1 rounded-lg px-2.5 text-xs tabular-nums text-foreground"
+                        className="input-field-subtle h-9 min-w-0 flex-1 rounded-lg px-3 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/60"
                       />
                       <button
                         type="button"
@@ -220,7 +220,7 @@ export function TeamList({
                           setEmployeeNumberDrafts((prev) => ({ ...prev, [member.id]: e.target.value }))
                         }
                         placeholder="z. B. 10042"
-                        className="input-field-subtle h-9 min-w-0 flex-1 rounded-lg px-2.5 text-xs tabular-nums text-foreground"
+                        className="input-field-subtle h-9 min-w-0 flex-1 rounded-lg px-3 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/60"
                       />
                       <button
                         type="button"

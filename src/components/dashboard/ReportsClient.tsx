@@ -476,21 +476,48 @@ export function ReportsClient({
       const diff = userIst - userSoll;
       const ratio = userSoll > 0 ? Math.max(0, Math.min(1, userIst / userSoll)) : 0;
       const sectionStartY = 30;
+      const headerHeight = 18;
+      const headerInner = 4;
+      const nameY = sectionStartY + headerInner + 3.2;
+      const metaY = nameY;
+      const barY = sectionStartY + headerHeight - 5.2;
+      const barWidth = 64;
+
       doc.setFillColor(236, 253, 245);
-      doc.rect(10, sectionStartY, pageWidth - 20, 12, "F");
+      doc.rect(10, sectionStartY, pageWidth - 20, headerHeight, "F");
+
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
-      doc.text(`${first.userName}${first.employeeNumber ? ` (#${first.employeeNumber})` : ""}`, 12, sectionStartY + 7.5);
-      doc.setFontSize(9);
+      doc.setTextColor(20, 20, 20);
       doc.text(
-        `Ist ${decimalHoursDE(userIst)}h | Soll ${decimalHoursDE(userSoll)}h | Differenz ${decimalHoursDE(diff)}h`,
-        pageWidth - 12,
-        sectionStartY + 7.5,
-        { align: "right" }
+        `${first.userName}${first.employeeNumber ? ` (#${first.employeeNumber})` : ""}`,
+        12,
+        nameY,
       );
-      doc.setDrawColor(170);
-      doc.rect(12, sectionStartY + 9, 58, 2.8);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(50, 50, 50);
+      doc.text(
+        `Ist ${decimalHoursDE(userIst)} h   |   Soll ${decimalHoursDE(userSoll)} h   |   Differenz ${decimalHoursDE(diff)} h`,
+        pageWidth - 12,
+        metaY,
+        { align: "right" },
+      );
+
+      doc.setDrawColor(200);
+      doc.setFillColor(232, 232, 232);
+      doc.rect(12, barY, barWidth, 2.6, "F");
       doc.setFillColor(34, 197, 94);
-      doc.rect(12, sectionStartY + 9, 58 * ratio, 2.8, "F");
+      doc.rect(12, barY, barWidth * ratio, 2.6, "F");
+      doc.setFontSize(7);
+      doc.setTextColor(90, 90, 90);
+      doc.text(
+        `${Math.round(ratio * 100)}% des Solls`,
+        12 + barWidth + 3,
+        barY + 2.1,
+      );
+      doc.setTextColor(20, 20, 20);
 
       const weekBuckets = new Map<string, number>();
       const sortedLogs = userLogs
@@ -516,7 +543,7 @@ export function ReportsClient({
         });
 
       autoTable(doc, {
-        startY: sectionStartY + 15,
+        startY: sectionStartY + headerHeight + 4,
         head: [
           [
             "Datum",
@@ -882,7 +909,7 @@ export function ReportsClient({
         await updateWorkLogByManager({
           logId: log.id,
           status: next as "ON_TIME" | "LATE" | "MANUAL_ADJUSTED",
-          note: (log.note ? `${log.note} | ` : "") + "[MANUAL_OVERRIDE]",
+          note: (log.note ? `${log.note} | ` : "") + "[MANUELLE-KORREKTUR]",
           editReason: reason.trim(),
         });
         show("ABSENT-Eintrag korrigiert.", "success");
@@ -983,7 +1010,10 @@ export function ReportsClient({
           ? 0
           : finishedLogs.reduce((sum, log) => sum + Math.max(0, log.breakMins), 0) / finishedLogs.length;
       const correctionNeeds = logs.filter(
-        (log) => log.status === "MANUAL_ADJUSTED" || (log.note?.includes("MANAGER_EDIT") ?? false)
+        (log) =>
+          log.status === "MANUAL_ADJUSTED" ||
+          (log.note?.includes("MANAGER-BEARBEITUNG") ?? false) ||
+          (log.note?.includes("MANAGER_EDIT") ?? false)
       ).length;
       const analysis = buildReportAnalysisFromFacts({
         month,
