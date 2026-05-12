@@ -24,9 +24,11 @@ export function Card({
   return (
     <Comp
       className={clsx(
-        "rounded-2xl border border-line bg-surface text-fg",
+        "rounded-2xl border border-line/90 bg-surface/92 text-fg",
         "shadow-[var(--shadow-card)]",
-        "transition-[box-shadow,border-color] duration-200",
+        "backdrop-blur-xl supports-[backdrop-filter]:bg-surface/78",
+        "dark:border-white/10 dark:bg-surface/75 dark:supports-[backdrop-filter]:bg-surface/65",
+        "transition-[box-shadow,border-color,background-color] duration-200",
         hoverable && "hover:shadow-[var(--shadow-card-hover)] hover:border-brand/30",
         padded && "p-5 sm:p-6",
         className,
@@ -61,7 +63,7 @@ export function SectionTitle({
             {eyebrow}
           </div>
         )}
-        <h2 className="text-lg font-semibold text-fg sm:text-xl">{title}</h2>
+        <h2 className="text-base font-semibold tracking-tight text-fg sm:text-lg md:text-xl">{title}</h2>
         {description && <p className="mt-1 text-sm text-fg-muted">{description}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}

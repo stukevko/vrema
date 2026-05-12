@@ -273,11 +273,11 @@ export default async function DashboardPage() {
       {/* Header — für Mitarbeiter überspringen, weil das Cockpit selbst begrüßt */}
       {!isEmployee && (
         <div className="order-1 shrink-0 rounded-2xl glass-panel p-5 sm:p-8">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="text-base font-bold tracking-tight sm:text-2xl md:text-3xl">
             Guten {berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"},{" "}
             {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
             {formatBerlinDate(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
           </p>
         </div>
@@ -296,7 +296,7 @@ export default async function DashboardPage() {
           das TerminalWidget weiter unten – wir blenden es in dem Fall ein). */}
       {isEmployee && !cockpitData && (
         <div id="terminal-widget" className="order-1 rounded-2xl border border-amber-200/70 bg-amber-50/60 p-5 sm:p-6">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+          <h1 className="text-base font-bold tracking-tight sm:text-xl md:text-2xl">
             Hallo {session.user.name?.split(" ")[0] ?? ""} 👋
           </h1>
           <p className="mt-1 text-sm text-amber-900">

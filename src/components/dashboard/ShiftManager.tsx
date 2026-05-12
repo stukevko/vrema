@@ -1271,7 +1271,7 @@ export function ShiftManager({
           </div>
         ) : null}
 
-        <div className="-mx-1 overflow-x-auto pb-1">
+        <div className="-mx-1 overflow-x-auto pb-1 scrollbar-hide">
           <div className="flex min-w-max gap-2 px-1">
             {mobileOrderedDays.map((idx) => {
               const isActive = idx === mobileSelectedDay;
@@ -1846,7 +1846,8 @@ export function ShiftManager({
         </button>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="mt-4 min-w-0 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="grid min-w-max grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-0 lg:w-full lg:grid-cols-7">
         {DAY_LABELS.map((label, idx) => {
           const dayMeta = simplePlannerDayState({
             dayIdx: idx,
@@ -1903,6 +1904,7 @@ export function ShiftManager({
             </button>
           );
         })}
+        </div>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <p className="text-[11px] text-muted-foreground">Legende:</p>
@@ -1954,7 +1956,7 @@ export function ShiftManager({
         )}
 
       {viewMode === "timeline" && (
-        <div className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-xl border border-border bg-background p-3 sm:p-4">
+        <div className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-xl border border-border bg-background p-3 scrollbar-hide sm:p-4">
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">Fokusmodus: Planung zuerst, Kennzahlen optional.</p>
             <button
@@ -2119,7 +2121,7 @@ export function ShiftManager({
             </div>
           ) : null}
 
-          <div className="mt-3 max-h-[75vh] min-w-0 max-w-full overflow-x-auto overflow-y-auto overscroll-contain">
+          <div className="mt-3 max-h-[75vh] min-w-0 max-w-full overflow-x-auto overflow-y-auto overscroll-contain scrollbar-hide">
             <div className="w-full min-w-[1200px] space-y-4 py-1 lg:min-w-[1400px]">
               <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground md:grid-cols-[220px_1fr] md:items-center">
                 <div className="hidden font-medium text-foreground md:block">Mitarbeiter</div>

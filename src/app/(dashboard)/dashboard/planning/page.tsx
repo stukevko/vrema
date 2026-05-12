@@ -60,8 +60,8 @@ export default async function PlanningPage() {
     return (
       <div className="mx-auto max-w-6xl space-y-4 px-1 sm:space-y-6 sm:px-0">
         <div className="glass-card px-4 py-3 sm:px-5 sm:py-4">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Planung</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Schichtplanung für Team und Soll/Ist-Basis.</p>
+          <h1 className="text-base font-bold tracking-tight sm:text-xl md:text-2xl">Planung</h1>
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">Schichtplanung für Team und Soll/Ist-Basis.</p>
         </div>
         <ShiftManager
           members={members.map((m) => ({
@@ -81,7 +81,7 @@ export default async function PlanningPage() {
         />
         {pendingTrades.length > 0 && (
           <section id="shift-trade-approvals" className="glass-card p-5">
-            <h2 className="text-base font-semibold">Schicht-Tausch: Offene Bestätigungen</h2>
+            <h2 className="text-base font-semibold tracking-tight">Schicht-Tausch: Offene Bestätigungen</h2>
             <div className="mt-3 space-y-2">
               {pendingTrades.map((trade) => {
                 const intelTone =
@@ -154,13 +154,13 @@ export default async function PlanningPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="glass-card px-5 py-4">
-        <h1 className="text-2xl font-bold">Mein Plan</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Übersicht Ihrer hinterlegten Soll-Schichten pro Woche.</p>
+    <div className="mx-auto max-w-4xl min-w-0 space-y-6 px-1 sm:px-0">
+      <div className="glass-card px-4 py-4 sm:px-5">
+        <h1 className="text-base font-bold tracking-tight sm:text-2xl">Mein Plan</h1>
+        <p className="mt-1 text-sm text-muted-foreground sm:text-base">Übersicht Ihrer hinterlegten Soll-Schichten pro Woche.</p>
       </div>
-      <section className="glass-card p-5">
-        <div className="grid gap-3 md:grid-cols-2">
+      <section className="glass-card p-4 sm:p-5">
+        <div className="grid min-w-0 gap-3 md:grid-cols-2">
           {grouped.map((g) => (
             <div
               key={g.label}
@@ -204,7 +204,7 @@ export default async function PlanningPage() {
         </div>
       </section>
       <section className="glass-card p-5">
-        <h2 className="text-base font-semibold">Offene Tausch-Schichten</h2>
+        <h2 className="text-base font-semibold tracking-tight">Offene Tausch-Schichten</h2>
         {openTrades.length === 0 ? (
           <div className="mt-3 rounded-xl border border-dashed border-line bg-surface-muted/70 px-4 py-6 text-center dark:border-white/10 dark:bg-surface-muted/40">
             <Handshake className="mx-auto h-7 w-7 text-muted-foreground" />

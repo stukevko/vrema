@@ -31,9 +31,10 @@ const variants: Record<Variant, string> = {
   brand:
     "bg-gradient-to-b from-brand to-brand-hover text-brand-foreground " +
     "border-white/25 " +
-    "shadow-[inset_0_1px_0_0_hsl(var(--specular-line)/0.38),var(--shadow-button)] " +
-    "dark:border-white/10 " +
-    "hover:brightness-[1.05] hover:shadow-[inset_0_1px_0_0_hsl(var(--specular-line)/0.42),var(--shadow-button-hover)]",
+    "shadow-[inset_0_1px_0_0_hsl(var(--specular-line)/0.48),inset_0_-1px_0_0_hsl(0_0%_0%/0.12),var(--shadow-button)] " +
+    "dark:border-white/12 dark:shadow-[inset_0_1px_0_0_hsl(var(--specular-line)/0.22),inset_0_-1px_0_0_hsl(0_0%_0%/0.35),var(--shadow-button)] " +
+    "hover:brightness-[1.05] hover:shadow-[inset_0_1px_0_0_hsl(var(--specular-line)/0.52),inset_0_-1px_0_0_hsl(0_0%_0%/0.1),var(--shadow-button-hover)] " +
+    "dark:hover:shadow-[inset_0_1px_0_0_hsl(var(--specular-line)/0.28),inset_0_-1px_0_0_hsl(0_0%_0%/0.38),var(--shadow-button-hover)]",
   outline:
     "border-line-strong/80 bg-surface/95 text-fg shadow-sm " +
     "dark:border-white/10 dark:bg-surface/65 " +

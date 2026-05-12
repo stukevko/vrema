@@ -28,9 +28,9 @@ type Member = {
 };
 
 const ROLE_META: Record<string, { label: string; Icon: React.ElementType; color: string }> = {
-  SUPER_ADMIN: { label: "Super Admin", Icon: ShieldCheck, color: "text-amber-400" },
-  COMPANY_OWNER: { label: "Inhaber", Icon: Crown, color: "text-[#22c55e]" },
-  MANAGER: { label: "Manager", Icon: ShieldCheck, color: "text-blue-400" },
+  SUPER_ADMIN: { label: "Super Admin", Icon: ShieldCheck, color: "text-warning" },
+  COMPANY_OWNER: { label: "Inhaber", Icon: Crown, color: "text-brand" },
+  MANAGER: { label: "Manager", Icon: ShieldCheck, color: "text-fg-muted" },
   EMPLOYEE: { label: "Mitarbeiter", Icon: User, color: "text-muted-foreground" },
 };
 
@@ -86,19 +86,19 @@ export function TeamList({
     <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90">
       {/* Desktop */}
       <div className="hidden sm:block">
-        <div className="grid grid-cols-12 gap-3 border-b border-border px-5 py-3 text-xs font-sans uppercase tracking-widest text-muted-foreground">
-          <span className="col-span-3">Mitarbeiter</span>
-          <span className="col-span-2">Rolle</span>
-          <span className="col-span-1" title="Außenbereich für Wetter-Hinweise im Planer">
+        <div className="grid grid-cols-12 items-end gap-x-4 px-5 py-3.5 text-xs font-sans uppercase tracking-widest text-muted-foreground lg:gap-x-6 xl:gap-x-8 xl:px-7">
+          <span className="col-span-4 min-w-0">Mitarbeiter</span>
+          <span className="col-span-2 min-w-0">Rolle</span>
+          <span className="col-span-1 min-w-0" title="Außenbereich für Wetter-Hinweise im Planer">
             Außen
           </span>
-          <span className="col-span-1 text-right">Std/W</span>
-          <span className="col-span-2">€/Std</span>
-          <span className="col-span-2">Personalnr.</span>
-          <span className="col-span-1" />
+          <span className="col-span-1 min-w-0 text-right">Std/W</span>
+          <span className="col-span-2 min-w-0">€/Std</span>
+          <span className="col-span-2 min-w-0">Personalnr.</span>
+          <span className="col-span-1 min-w-0" />
         </div>
 
-        <div className="divide-y divide-white/[0.04]">
+        <div>
           {members.map((member, i) => {
             const meta = ROLE_META[member.role] ?? ROLE_META.EMPLOYEE;
             const isSelf = member.id === currentUserId;
@@ -110,29 +110,31 @@ export function TeamList({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
                 className={clsx(
-                  "grid grid-cols-12 items-center gap-3 px-5 py-4 transition-colors hover:bg-white/[0.02]",
+                  "grid grid-cols-12 items-center gap-x-4 border-b border-line/[0.06] px-5 py-3.5 transition-colors last:border-b-0 hover:bg-surface-muted/40 lg:gap-x-6 xl:gap-x-8 xl:px-7",
                   !member.isActive && "opacity-40"
                 )}
               >
-                <div className="col-span-3 flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-line bg-brand-soft text-sm font-bold text-brand shadow-sm dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
+                <div className="col-span-4 flex min-w-0 items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-line bg-brand-soft text-xs font-bold text-brand shadow-sm dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
                     {(member.name ?? member.email)[0].toUpperCase()}
                   </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words text-sm font-medium leading-snug">
                       {member.name ?? "–"}
                       {isSelf && <span className="ml-2 font-sans text-[10px] text-muted-foreground">(du)</span>}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">{member.email}</p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground" title={member.email}>
+                      {member.email}
+                    </p>
                   </div>
                 </div>
 
-                <div className="col-span-2 flex items-center gap-1.5">
+                <div className="col-span-2 flex min-w-0 items-center gap-1.5">
                   <meta.Icon className={clsx("h-3.5 w-3.5 shrink-0", meta.color)} />
-                  <span className={clsx("font-sans text-xs", meta.color)}>{meta.label}</span>
+                  <span className={clsx("min-w-0 break-words font-sans text-xs leading-tight", meta.color)}>{meta.label}</span>
                 </div>
 
-                <div className="col-span-1">
+                <div className="col-span-1 flex min-w-0 items-center">
                   {canManage ? (
                     <select
                       value={member.planningWorkArea ?? ""}
@@ -146,7 +148,7 @@ export function TeamList({
                           }
                         })
                       }
-                      className="h-9 w-full max-w-[5.5rem] rounded-lg border border-border bg-white px-1 text-[10px] text-foreground"
+                      className="input-field-subtle h-9 w-full max-w-[6.5rem] min-w-0 rounded-lg px-1.5 text-[10px] text-foreground"
                       aria-label="Planung Außenbereich"
                     >
                       <option value="">Innen</option>
@@ -160,13 +162,13 @@ export function TeamList({
                   )}
                 </div>
 
-                <div className="col-span-1 text-right">
+                <div className="col-span-1 flex min-h-9 items-center justify-end tabular-nums">
                   <span className="font-sans text-sm text-foreground">{member.weeklyHours}h</span>
                 </div>
 
-                <div className="col-span-2">
+                <div className="col-span-2 flex min-w-0 items-center">
                   {canManage ? (
-                    <div className="flex items-center gap-1">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5">
                       <input
                         value={hourlyWageDrafts[member.id] ?? ""}
                         onChange={(e) =>
@@ -174,7 +176,7 @@ export function TeamList({
                         }
                         placeholder="z. B. 16,50"
                         inputMode="decimal"
-                        className="h-9 w-full rounded-lg border border-border bg-white px-2 text-xs text-foreground"
+                        className="input-field-subtle h-9 min-w-0 flex-1 rounded-lg px-2.5 text-xs tabular-nums text-foreground"
                       />
                       <button
                         type="button"
@@ -192,7 +194,7 @@ export function TeamList({
                             }
                           })
                         }
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-card/80"
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent bg-surface-muted/60 text-fg-muted transition-colors hover:bg-brand-soft hover:text-brand"
                         title="Stundenlohn speichern"
                       >
                         <Save className="h-3.5 w-3.5" />
@@ -209,16 +211,16 @@ export function TeamList({
                   )}
                 </div>
 
-                <div className="col-span-2">
+                <div className="col-span-2 flex min-w-0 items-center">
                   {canManage ? (
-                    <div className="flex items-center gap-1">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5">
                       <input
                         value={employeeNumberDrafts[member.id] ?? ""}
                         onChange={(e) =>
                           setEmployeeNumberDrafts((prev) => ({ ...prev, [member.id]: e.target.value }))
                         }
                         placeholder="z. B. 10042"
-                        className="h-9 w-full rounded-lg border border-border bg-white px-2 text-xs text-foreground"
+                        className="input-field-subtle h-9 min-w-0 flex-1 rounded-lg px-2.5 text-xs tabular-nums text-foreground"
                       />
                       <button
                         type="button"
@@ -236,7 +238,7 @@ export function TeamList({
                             }
                           })
                         }
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-card/80"
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent bg-surface-muted/60 text-fg-muted transition-colors hover:bg-brand-soft hover:text-brand"
                         title="Personalnummer speichern"
                       >
                         <Save className="h-3.5 w-3.5" />
@@ -246,7 +248,7 @@ export function TeamList({
                     <div className="flex items-center gap-1">
                       <span className="text-xs text-muted-foreground">{member.employeeNumber ?? "—"}</span>
                       {!member.employeeNumber && (
-                        <span className="rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700">
+                        <span className="rounded-full border border-warning/35 bg-warning-soft px-1.5 py-0.5 text-[9px] font-semibold text-warning-foreground">
                           FEHLT
                         </span>
                       )}
@@ -254,7 +256,7 @@ export function TeamList({
                   )}
                 </div>
 
-                <div className="col-span-1 flex justify-end">
+                <div className="col-span-1 flex min-h-9 items-center justify-end">
                   {canManage && !isSelf && (
                     <button
                       type="button"
@@ -264,8 +266,8 @@ export function TeamList({
                       className={clsx(
                         "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
                         member.isActive
-                          ? "bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                          : "bg-primary/10 text-primary hover:bg-primary/20"
+                          ? "bg-danger-soft text-danger hover:bg-danger/15"
+                          : "bg-brand-soft text-brand hover:bg-brand/15"
                       )}
                     >
                       {member.isActive ? <PowerOff className="h-3.5 w-3.5" /> : <Power className="h-3.5 w-3.5" />}
@@ -295,7 +297,7 @@ export function TeamList({
                 !member.isActive && "opacity-40"
               )}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-base font-bold text-foreground">
                   {(member.name ?? member.email)[0].toUpperCase()}
                 </div>
@@ -314,8 +316,8 @@ export function TeamList({
                     className={clsx(
                       "inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-colors active:scale-95",
                       member.isActive
-                        ? "border-red-200 bg-red-500/10 text-red-600"
-                        : "border-primary/30 bg-primary/10 text-primary"
+                        ? "border-danger/30 bg-danger-soft text-danger hover:bg-danger/15"
+                        : "border-brand/30 bg-brand-soft text-brand hover:bg-brand/15"
                     )}
                     aria-label={member.isActive ? "Deaktivieren" : "Aktivieren"}
                   >
@@ -323,12 +325,12 @@ export function TeamList({
                   </button>
                 )}
               </div>
-              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/70 pt-3 text-sm">
+              <div className="mt-4 flex flex-wrap items-center gap-2 pt-3">
                 <meta.Icon className={clsx("h-4 w-4 shrink-0", meta.color)} />
                 <span className={clsx("font-medium", meta.color)}>{meta.label}</span>
                 <span className="ml-auto tabular-nums text-foreground">{member.weeklyHours} Std./Woche</span>
               </div>
-              <div className="mt-3 flex items-center gap-2">
+              <div className="mt-3 flex min-h-10 items-center gap-2">
                 <span className="text-xs text-muted-foreground whitespace-nowrap">€/Std brutto</span>
                 {canManage ? (
                   <>
@@ -339,7 +341,7 @@ export function TeamList({
                       }
                       placeholder="z. B. 16,50"
                       inputMode="decimal"
-                      className="h-10 flex-1 rounded-lg border border-border bg-white px-3 text-sm text-foreground"
+                      className="input-field-subtle h-10 min-w-0 flex-1 rounded-lg px-3 text-sm tabular-nums text-foreground"
                     />
                     <button
                       type="button"
@@ -357,7 +359,7 @@ export function TeamList({
                           }
                         })
                       }
-                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-foreground"
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-transparent bg-surface-muted/60 text-fg-muted transition-colors hover:bg-brand-soft hover:text-brand"
                       title="Stundenlohn speichern"
                     >
                       <Save className="h-4 w-4" />
@@ -373,7 +375,7 @@ export function TeamList({
                   </span>
                 )}
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="mt-3 flex min-h-10 flex-wrap items-center gap-2">
                 <span className="text-xs text-muted-foreground whitespace-nowrap">Planung</span>
                 {canManage ? (
                   <select
@@ -388,7 +390,7 @@ export function TeamList({
                         }
                       })
                     }
-                    className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-white px-2 text-sm text-foreground"
+                    className="input-field-subtle h-10 min-w-0 flex-1 rounded-lg px-2 text-sm text-foreground"
                     aria-label="Außenbereich Planung"
                   >
                     <option value="">Innen</option>
@@ -401,7 +403,7 @@ export function TeamList({
                   </span>
                 )}
               </div>
-              <div className="mt-3 flex items-center gap-2">
+              <div className="mt-3 flex min-h-10 items-center gap-2">
                 <span className="text-xs text-muted-foreground">Personalnummer</span>
                 {canManage ? (
                   <>
@@ -411,7 +413,7 @@ export function TeamList({
                         setEmployeeNumberDrafts((prev) => ({ ...prev, [member.id]: e.target.value }))
                       }
                       placeholder="z. B. 10042"
-                      className="h-10 flex-1 rounded-lg border border-border bg-white px-3 text-sm text-foreground"
+                      className="input-field-subtle h-10 min-w-0 flex-1 rounded-lg px-3 text-sm tabular-nums text-foreground"
                     />
                     <button
                       type="button"
@@ -429,7 +431,7 @@ export function TeamList({
                           }
                         })
                       }
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground"
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-transparent bg-surface-muted/60 text-fg-muted transition-colors hover:bg-brand-soft hover:text-brand"
                       title="Personalnummer speichern"
                     >
                       <Save className="h-4 w-4" />
@@ -439,7 +441,7 @@ export function TeamList({
                   <div className="flex items-center gap-1">
                     <span className="text-sm text-foreground">{member.employeeNumber ?? "—"}</span>
                     {!member.employeeNumber && (
-                      <span className="rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700">
+                      <span className="rounded-full border border-warning/35 bg-warning-soft px-1.5 py-0.5 text-[9px] font-semibold text-warning-foreground">
                         FEHLT
                       </span>
                     )}

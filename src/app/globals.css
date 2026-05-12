@@ -373,13 +373,29 @@ button[class] {
       hsl(var(--specular-line) / 0) 35%),
     linear-gradient(to bottom, hsl(var(--brand)), hsl(var(--brand-hover)));
   box-shadow:
-    inset 0 1px 0 0 hsl(var(--specular-line) / 0.35),
+    inset 0 1px 0 0 hsl(var(--specular-line) / 0.48),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.12),
     var(--shadow-button);
   transition: filter 180ms ease, box-shadow 200ms ease;
 }
 .btn-brand:hover:not(:disabled) {
   filter: brightness(1.05);
-  box-shadow: var(--shadow-button-hover);
+  box-shadow:
+    inset 0 1px 0 0 hsl(var(--specular-line) / 0.52),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.1),
+    var(--shadow-button-hover);
+}
+.dark .btn-brand {
+  box-shadow:
+    inset 0 1px 0 0 hsl(var(--specular-line) / 0.22),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.35),
+    var(--shadow-button);
+}
+.dark .btn-brand:hover:not(:disabled) {
+  box-shadow:
+    inset 0 1px 0 0 hsl(var(--specular-line) / 0.28),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.38),
+    var(--shadow-button-hover);
 }
 .btn-brand:active:not(:disabled) {
   filter: brightness(0.97);
@@ -550,13 +566,29 @@ button[class] {
       hsl(var(--specular-line) / 0) 38%),
     linear-gradient(to bottom, hsl(var(--brand)), hsl(var(--brand-hover)));
   box-shadow:
-    inset 0 1px 0 0 hsl(var(--specular-line) / 0.38),
+    inset 0 1px 0 0 hsl(var(--specular-line) / 0.48),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.12),
     var(--shadow-button);
   transition: filter 180ms ease, box-shadow 200ms ease;
 }
 .btn-primary-solid:hover:not(:disabled) {
   filter: brightness(1.05);
-  box-shadow: var(--shadow-button-hover);
+  box-shadow:
+    inset 0 1px 0 0 hsl(var(--specular-line) / 0.52),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.1),
+    var(--shadow-button-hover);
+}
+.dark .btn-primary-solid {
+  box-shadow:
+    inset 0 1px 0 0 hsl(var(--specular-line) / 0.22),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.35),
+    var(--shadow-button);
+}
+.dark .btn-primary-solid:hover:not(:disabled) {
+  box-shadow:
+    inset 0 1px 0 0 hsl(var(--specular-line) / 0.28),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.38),
+    var(--shadow-button-hover);
 }
 .btn-primary-solid:active:not(:disabled) {
   filter: brightness(0.97);
@@ -625,6 +657,38 @@ textarea[class]:focus {
 input[class]::placeholder,
 textarea[class]::placeholder {
   color: hsl(var(--foreground-subtle));
+}
+
+/**
+ * Tabellen-/Listen-Inputs: Ruhezustand ohne sichtbaren Rahmen,
+ * weicher Fläche, Brand-Glow nur bei Fokus (Apple-like).
+ */
+input.input-field-subtle,
+select.input-field-subtle {
+  border: 1px solid transparent !important;
+  background: hsl(var(--surface-muted) / 0.72) !important;
+  box-shadow: none !important;
+}
+.dark input.input-field-subtle,
+.dark select.input-field-subtle {
+  background: hsl(var(--foreground) / 0.05) !important;
+}
+input.input-field-subtle:hover:not(:focus),
+select.input-field-subtle:hover:not(:focus) {
+  background: hsl(var(--surface-muted) / 0.95) !important;
+}
+.dark input.input-field-subtle:hover:not(:focus),
+.dark select.input-field-subtle:hover:not(:focus) {
+  background: hsl(var(--foreground) / 0.07) !important;
+}
+input.input-field-subtle:focus,
+select.input-field-subtle:focus {
+  border-color: hsl(var(--brand) / 0.45) !important;
+  box-shadow: 0 0 0 3px hsl(var(--brand) / 0.16) !important;
+}
+.dark input.input-field-subtle:focus,
+.dark select.input-field-subtle:focus {
+  box-shadow: 0 0 0 3px hsl(var(--brand) / 0.22) !important;
 }
 
 /* Webkit-Scrollbar */

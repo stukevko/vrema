@@ -1013,8 +1013,8 @@ export function ReportsClient({
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Berichte</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h1 className="text-base font-bold tracking-tight sm:text-2xl md:text-3xl">Berichte</h1>
+            <p className="mt-1 text-sm text-muted-foreground sm:text-base">
               {month} · {logs.length} Einträge
             </p>
           </div>
@@ -1683,7 +1683,7 @@ export function ReportsClient({
                   );
                 })}
               </div>
-              <div className="hidden max-h-[72vh] overflow-auto overflow-x-auto sm:block">
+              <div className="hidden max-h-[72vh] overflow-auto overflow-x-auto scrollbar-hide sm:block">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="sticky top-0 z-20 border-b border-border bg-card">
