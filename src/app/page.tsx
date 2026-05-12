@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { VremaLockup } from "@/components/brand/VremaMarkLogo";
+import { VremaLockup, VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
 import {
   Clock,
   FileText,
@@ -21,77 +21,67 @@ import {
   Menu,
   ExternalLink,
   X,
+  MapPin,
+  Mail,
+  Quote,
 } from "lucide-react";
 import { Drawer } from "vaul";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
-// ─── Typing animation hook ───────────────────────────────────────────────────
-function useTypewriter(lines: string[], speed = 45, pauseMs = 900) {
-  const [displayed, setDisplayed] = useState<string[]>([]);
-  const [currentLine, setCurrentLine] = useState(0);
-  const [currentChar, setCurrentChar] = useState(0);
-  const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    if (currentLine >= lines.length) { setDone(true); return; }
-    if (currentChar < lines[currentLine].length) {
-      const t = setTimeout(() => setCurrentChar((c) => c + 1), speed);
-      return () => clearTimeout(t);
-    }
-    const t = setTimeout(() => {
-      setDisplayed((prev) => [...prev, lines[currentLine]]);
-      setCurrentLine((l) => l + 1);
-      setCurrentChar(0);
-    }, pauseMs);
-    return () => clearTimeout(t);
-  }, [currentLine, currentChar, lines, speed, pauseMs]);
-
-  const inProgress = currentLine < lines.length
-    ? lines[currentLine].slice(0, currentChar)
-    : "";
-
-  return { displayed, inProgress, done };
-}
-
-// ─── Blinking cursor ─────────────────────────────────────────────────────────
-function Cursor({ show = true }: { show?: boolean }) {
-  const [vis, setVis] = useState(true);
-  useEffect(() => {
-    if (!show) return;
-    const t = setInterval(() => setVis((v) => !v), 530);
-    return () => clearInterval(t);
-  }, [show]);
-  return <span className={`inline-block w-2 h-4 bg-primary ml-0.5 align-middle ${vis ? "opacity-100" : "opacity-0"}`} />;
-}
-
-// ─── Terminal window component ────────────────────────────────────────────────
-function TerminalWindow({ title = "vrema — zsh", children }: { title?: string; children: React.ReactNode }) {
+// ─── App window – ruhiger Produkt-Frame statt CLI/Terminal ───────────────────
+function AppWindow({
+  title,
+  subtitle,
+  live = false,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  live?: boolean;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="max-w-full rounded-2xl glass-panel overflow-hidden">
-      <div className="flex min-w-0 items-center gap-2 border-b border-border bg-card px-4 py-3">
-        <span className="w-2.5 h-2.5 shrink-0 rounded-full bg-red-400/90" />
-        <span className="w-2.5 h-2.5 shrink-0 rounded-full bg-yellow-400/90" />
-        <span className="w-2.5 h-2.5 shrink-0 rounded-full bg-brand/90" />
-        <span className="ml-1 min-w-0 truncate text-xs tracking-wider text-muted-foreground">{title}</span>
+    <div className="max-w-full overflow-hidden rounded-3xl border border-line glass-panel shadow-[0_30px_90px_-30px_rgba(15,32,55,0.18)]">
+      <div className="flex min-w-0 items-center justify-between gap-3 border-b border-line/70 bg-surface/60 px-4 py-3 backdrop-blur">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <VremaMarkLogo size={18} variant="glyph" />
+          <div className="min-w-0 leading-tight">
+            <p className="truncate text-[12px] font-semibold tracking-tight text-foreground">{title}</p>
+            {subtitle && (
+              <p className="truncate text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+                {subtitle}
+              </p>
+            )}
+          </div>
+        </div>
+        {live && (
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            </span>
+            Live
+          </span>
+        )}
       </div>
-      <div className="max-w-full min-w-0 break-words p-5 font-sans text-sm leading-relaxed">{children}</div>
+      <div className="max-w-full min-w-0 space-y-4 break-words p-5 text-sm leading-relaxed">{children}</div>
     </div>
   );
 }
 
 // ─── Feature cards ───────────────────────────────────────────────────────────
 const FEATURES = [
-  { icon: Clock, cmd: "clock-in", title: "1-Klick Stempeluhr", desc: "Start, Pause, Stop. Mehr nicht. Auf Smartphone oder Terminal." },
-  { icon: BarChart3, cmd: "report --live", title: "Echtzeit-Auswertungen", desc: "Stundenübersicht, Wochenstatistik, Abweichungen. Sofort sichtbar." },
+  { icon: Clock, tag: "Stempeluhr", title: "1-Klick Zeiterfassung", desc: "Start, Pause, Stop. Mehr nicht. Auf Smartphone oder Terminal." },
+  { icon: BarChart3, tag: "Auswertung", title: "Echtzeit-Berichte", desc: "Stundenübersicht, Wochenstatistik, Abweichungen. Sofort sichtbar." },
   {
     icon: ShieldCheck,
-    cmd: "privacy --design",
+    tag: "Compliance",
     title: "Privacy by Design",
     desc: "Kein Standort-Tracking. 100 % DSGVO-konform – klarer Vorteil gegenüber US-Zeiterfassung mit GPS.",
   },
-  { icon: FileText, cmd: "export --pdf", title: "PDF-Reports", desc: "Stundenzettel für Lohnbüro, Abrechnung oder Archiv. Ein Klick." },
-  { icon: Shield, cmd: "secure --256bit", title: "Verschlüsselt & Privat", desc: "Deine Daten bleiben bei dir. DSGVO-konform, ohne Drittanbieter." },
-  { icon: QrCode, cmd: "terminal --qr", title: "QR-Terminal Support", desc: "Physisches Terminal mit QR-Code. Robuste Hardware trifft Cloud." },
+  { icon: FileText, tag: "Reports", title: "PDF-Stundenzettel", desc: "Stundenzettel für Lohnbüro, Abrechnung oder Archiv. Ein Klick." },
+  { icon: Shield, tag: "Sicherheit", title: "Verschlüsselt & Privat", desc: "Deine Daten bleiben bei dir. DSGVO-konform, ohne Drittanbieter." },
+  { icon: QrCode, tag: "Hardware", title: "QR-Terminal Support", desc: "Physisches Terminal mit QR-Code. Robuste Hardware trifft Cloud." },
 ];
 
 const STATS = [
@@ -99,7 +89,6 @@ const STATS = [
   { value: "<50ms", label: "Latenz" },
   { value: "256bit", label: "Verschlüsselung" },
   { value: "100%", label: "DSGVO-konform" },
-  { value: "0", label: "Standort-Tracking" },
 ];
 
 const PLANS = [
@@ -168,31 +157,8 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   const [yearly, setYearly] = useState(false);
-  const [terminalReady, setTerminalReady] = useState(false);
   const [modal, setModal] = useState<"impressum" | "datenschutz" | "widerruf" | "cookies" | "agb" | "avv" | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-  const TERMINAL_LINES = [
-    "$ vrema login --company muster-gmbh",
-    "> Authentifiziert als kevin@muster.de",
-    "$ vrema clock-in",
-    "> Eingestempelt: 08:02 Uhr",
-    "$ vrema status",
-    "> Heute: 7h 23m · Saldo: +12h 45m · Urlaub: 18 Tage",
-    "$ vrema export --month 04-2026 --format pdf",
-    "> Stundenzettel April.pdf erstellt (42 Einträge)",
-  ];
-
-  const { displayed, inProgress, done } = useTypewriter(
-    terminalReady ? TERMINAL_LINES : [],
-    38,
-    600
-  );
-
-  useEffect(() => {
-    const t = setTimeout(() => setTerminalReady(true), 800);
-    return () => clearTimeout(t);
-  }, []);
 
   return (
     <div className="relative flex min-h-[100dvh] w-full max-w-full flex-col overflow-x-hidden overscroll-x-none bg-background text-foreground selection:bg-brand/15">
@@ -363,49 +329,92 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right: Terminal */}
+            {/* Right: Dashboard-Vorschau (echte App-Optik statt Terminal) */}
             <div className="min-w-0 max-w-full overflow-x-hidden transition-all duration-300">
-              <TerminalWindow title="vrema — zsh — 120×36">
-                <div className="min-h-[260px] min-w-0 max-w-full space-y-1 break-words">
-                  {displayed.map((line, i) => {
-                    const isCmd = line.startsWith("$");
-                    const isOutput = line.startsWith(">");
-                    return (
-                      <div
-                        key={i}
-                        className={
-                          isCmd
-                            ? "text-foreground"
-                            : isOutput
-                            ? "text-brand"
-                            : "text-muted-foreground"
-                        }
-                      >
-                        {line}
-                      </div>
-                    );
-                  })}
-                  {!done && (
-                    <div
-                      className={
-                        inProgress.startsWith("$")
-                          ? "text-foreground"
-                          : inProgress.startsWith(">")
-                          ? "text-brand"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      {inProgress}
-                      <Cursor show={true} />
-                    </div>
-                  )}
-                  {done && (
-                    <div className="text-muted-foreground flex items-center gap-1 mt-2">
-                      $<Cursor show={true} />
-                    </div>
-                  )}
+              <AppWindow title="Übersicht" subtitle="Mittwoch · 13. Mai" live>
+                {/* Heute / Saldo */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl border border-line bg-surface p-4">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Eingestempelt</p>
+                    <p className="mt-1 text-2xl font-bold tabular-nums text-foreground">08:02</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Kevin K. · Service</p>
+                  </div>
+                  <div className="rounded-2xl border border-line bg-surface p-4">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Saldo · Mai</p>
+                    <p className="mt-1 text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
+                      +12h 45m
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">Ziel erreicht</p>
+                  </div>
                 </div>
-              </TerminalWindow>
+
+                {/* Aktivität */}
+                <div className="rounded-2xl border border-line bg-surface p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Letzte Aktivität</p>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Heute</p>
+                  </div>
+                  <ul className="space-y-2.5">
+                    {[
+                      { name: "Kevin Konkin", action: "Start", time: "08:02", tone: "brand" as const },
+                      { name: "Lisa Bauer", action: "Pause", time: "12:30", tone: "warning" as const },
+                      { name: "Tom Heller", action: "Ende", time: "16:45", tone: "muted" as const },
+                    ].map((row) => (
+                      <li key={row.name} className="flex items-center justify-between gap-3 text-xs">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span
+                            className={
+                              "h-1.5 w-1.5 shrink-0 rounded-full " +
+                              (row.tone === "brand"
+                                ? "bg-brand"
+                                : row.tone === "warning"
+                                ? "bg-amber-500"
+                                : "bg-muted-foreground/40")
+                            }
+                          />
+                          <span className="truncate font-medium text-foreground">{row.name}</span>
+                          <span className="text-muted-foreground">·</span>
+                          <span className="truncate text-muted-foreground">{row.action}</span>
+                        </div>
+                        <span className="shrink-0 tabular-nums text-foreground">{row.time}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Wochenfortschritt */}
+                <div className="rounded-2xl border border-line bg-surface p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Diese Woche</p>
+                    <p className="text-xs font-bold tabular-nums text-brand">87 % Ziel</p>
+                  </div>
+                  <div className="grid grid-cols-7 gap-1.5">
+                    {[
+                      { d: "Mo", pct: 92 },
+                      { d: "Di", pct: 100 },
+                      { d: "Mi", pct: 95 },
+                      { d: "Do", pct: 87 },
+                      { d: "Fr", pct: 70 },
+                      { d: "Sa", pct: 0 },
+                      { d: "So", pct: 0 },
+                    ].map((day) => (
+                      <div key={day.d} className="flex flex-col items-stretch gap-1">
+                        <div className="flex h-12 items-end overflow-hidden rounded-md bg-muted/50">
+                          {day.pct > 0 && (
+                            <div
+                              className="w-full bg-gradient-to-t from-brand to-brand/60"
+                              style={{ height: `${day.pct}%` }}
+                            />
+                          )}
+                        </div>
+                        <p className="text-center text-[9px] uppercase tracking-widest text-muted-foreground">
+                          {day.d}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </AppWindow>
 
               {/* Mini status badges – Brand-Tokens, gedämpfte Erfolg-/Warn-Töne */}
               <div className="grid grid-cols-2 gap-3 mt-4">
@@ -444,7 +453,7 @@ export default function LandingPage() {
 
       {/* ── STATS BAR ───────────────────────────────────────────────────────── */}
       <section className="w-full max-w-full border-y border-line bg-surface-muted py-10">
-        <div className="mx-auto grid w-full min-w-0 max-w-7xl grid-cols-2 gap-8 px-4 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mx-auto grid w-full min-w-0 max-w-7xl grid-cols-2 gap-8 px-4 sm:grid-cols-4">
           {STATS.map((s) => <AnimatedStat key={s.label} {...s} />)}
         </div>
       </section>
@@ -462,19 +471,28 @@ export default function LandingPage() {
           </div>
 
           <div className="grid min-w-0 max-w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((feature) => (
+            {FEATURES.map((feature, index) => (
               <div
                 key={feature.title}
-                className="max-w-full min-w-0 rounded-2xl border border-line bg-surface p-7 shadow-sm transition-all duration-300 md:hover:bg-muted/50"
+                className="group relative max-w-full min-w-0 overflow-hidden rounded-2xl border border-line bg-surface p-7 shadow-sm transition-all duration-300 md:hover:border-brand/30 md:hover:bg-muted/40"
               >
+                <span className="pointer-events-none absolute right-5 top-5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
                 <div className="flex min-w-0 max-w-full items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-surface">
-                    <feature.icon className="h-5 w-5 text-foreground" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-surface text-brand">
+                    <feature.icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 max-w-full">
-                    <p className="mb-2 text-[10px] uppercase tracking-widest text-muted-foreground">{feature.cmd}</p>
-                    <h3 className="mb-1.5 max-w-full hyphens-auto break-words text-sm font-semibold text-foreground">{feature.title}</h3>
-                    <p className="hyphens-auto break-words text-sm leading-relaxed text-muted-foreground">{feature.desc}</p>
+                    <p className="mb-2 inline-flex items-center rounded-full bg-muted/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      {feature.tag}
+                    </p>
+                    <h3 className="mb-1.5 max-w-full hyphens-auto break-words text-sm font-semibold text-foreground">
+                      {feature.title}
+                    </h3>
+                    <p className="hyphens-auto break-words text-sm leading-relaxed text-muted-foreground">
+                      {feature.desc}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -541,36 +559,54 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Terminal: founder card */}
+            {/* Founder-Visitenkarte */}
             <div className="min-w-0 max-w-full overflow-x-hidden transition-all duration-300">
-              <TerminalWindow title="whoami — KevkoStudio">
-                <div className="space-y-4">
-                  <div className="text-muted-foreground">
-                    <span className="text-muted-foreground">$</span> whoami --verbose
+              <AppWindow title="Über den Gründer" subtitle="KevkoStudio · Speyer">
+                <div className="flex items-start gap-4">
+                  <div
+                    aria-hidden
+                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-2xl font-bold tracking-tight text-brand"
+                  >
+                    KK
                   </div>
-                  <div className="border-l-2 border-brand/30 pl-4 space-y-2">
-                    <p className="text-primary">Kevin Konkin</p>
-                    <p className="text-muted-foreground text-xs">Gründer & Entwickler, KevkoStudio</p>
-                    <p className="text-muted-foreground text-xs">Kolbstr. 5 · 67346 Speyer · Deutschland</p>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3 mt-4">
-                    {[{ v: "10+", l: "Jahre" }, { v: "Full", l: "Stack" }, { v: "5★", l: "Feedback" }].map((s) => (
-                      <div key={s.l} className="rounded-xl border border-line bg-surface p-2 text-center shadow-sm">
-                        <p className="text-primary font-bold text-lg">{s.v}</p>
-                        <p className="text-muted-foreground text-xs">{s.l}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
-                    <p className="text-primary/80 text-sm">
-                      &gt; "Problemlösung durch Handschlagqualität."
-                    </p>
-                  </div>
-                  <div className="text-muted-foreground flex items-center gap-1">
-                    $<Cursor show={true} />
+                  <div className="min-w-0">
+                    <p className="text-base font-semibold tracking-tight text-foreground">Kevin Konkin</p>
+                    <p className="text-xs text-muted-foreground">Gründer &amp; Entwickler · KevkoStudio</p>
                   </div>
                 </div>
-              </TerminalWindow>
+
+                <dl className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+                  <div className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-brand" />
+                    <span className="truncate text-muted-foreground">Kolbstr. 5 · 67346 Speyer</span>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2">
+                    <Mail className="h-3.5 w-3.5 shrink-0 text-brand" />
+                    <span className="truncate text-muted-foreground">kontakt@kevko.studio</span>
+                  </div>
+                </dl>
+
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { v: "10+", l: "Jahre" },
+                    { v: "Full", l: "Stack" },
+                    { v: "5★", l: "Feedback" },
+                  ].map((s) => (
+                    <div
+                      key={s.l}
+                      className="rounded-2xl border border-line bg-surface px-2 py-3 text-center shadow-sm"
+                    >
+                      <p className="text-lg font-bold tabular-nums text-foreground">{s.v}</p>
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{s.l}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <blockquote className="relative rounded-2xl border border-brand/15 bg-brand-soft/40 px-4 py-3 text-sm leading-relaxed text-foreground dark:bg-brand/10">
+                  <Quote className="absolute -top-2 left-3 h-4 w-4 rotate-180 text-brand/60" aria-hidden />
+                  <p className="pl-1 italic">Problemlösung durch Handschlagqualität.</p>
+                </blockquote>
+              </AppWindow>
             </div>
           </div>
         </div>
@@ -648,9 +684,9 @@ export default function LandingPage() {
                   </div>
                 )}
 
-                {/* Plan header as terminal comment */}
-                <div className="text-xs text-muted-foreground mb-4"># {plan.name.toLowerCase()}.plan</div>
-
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Tarif
+                </p>
                 <h3 className="mb-4 max-w-full hyphens-auto break-words text-xl font-black">{plan.name}</h3>
 
                 <AnimatePresence mode="wait">
@@ -706,7 +742,7 @@ export default function LandingPage() {
                       : "btn-secondary-outline block w-full text-center py-3 text-sm"
                   }
                 >
-                  {plan.key === "ENTERPRISE" ? "$ kontakt --plan enterprise" : `$ start --plan ${plan.key.toLowerCase()}`}
+                  {plan.key === "ENTERPRISE" ? "Enterprise anfragen" : `${plan.name} wählen`}
                 </Link>
               </div>
             ))}
@@ -728,34 +764,40 @@ export default function LandingPage() {
       {/* ── CTA ─────────────────────────────────────────────────────────────── */}
       <section className="w-full max-w-full border-t border-line bg-surface py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
-          <div className="min-w-0 max-w-full transition-all duration-300">
-            <TerminalWindow title="vrema — System-Transformation starten">
-              <div className="py-8 text-center space-y-6">
-                <p className="text-xs text-primary uppercase tracking-widest">03 / Starten</p>
-                <h2 className="max-w-full hyphens-auto break-words text-3xl font-black md:text-4xl">
-                  System-Transformation starten.
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Kostenlos testen. Keine Kosten. Keine Verpflichtungen.
+          <div className="relative max-w-full rounded-3xl bg-gradient-to-r from-brand/35 via-brand/25 to-brand-hover/35 p-[1px]">
+            <div className="relative overflow-hidden rounded-3xl border border-line bg-surface px-6 py-14 text-center shadow-[0_40px_120px_-40px_rgba(15,32,55,0.25)] sm:px-12">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 -top-1/2 mx-auto h-[520px] w-[520px] rounded-full bg-brand/12 blur-3xl"
+              />
+              <div className="relative">
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-brand">
+                  03 / Starten
                 </p>
-                <div className="flex items-center justify-center gap-4 pt-2 flex-wrap">
+                <h2 className="mx-auto max-w-3xl hyphens-auto break-words text-3xl font-black tracking-tight text-foreground md:text-4xl">
+                  Modernste Zeiterfassung — heute in 5 Minuten startklar.
+                </h2>
+                <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
+                  Kostenlos testen. Keine Kreditkarte. Keine Verpflichtungen.
+                </p>
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                   <Link
                     href="/auth/register"
                     className="btn-primary-solid flex items-center gap-2 px-8 py-3.5"
                   >
-                    <Zap className="w-4 h-4" />
+                    <Zap className="h-4 w-4" />
                     Jetzt registrieren
                   </Link>
                   <Link
                     href="/preise"
-                    className="flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-border text-muted-foreground font-medium hover:text-foreground hover:border-border transition-all"
+                    className="flex items-center gap-2 rounded-2xl border border-border bg-surface/60 px-8 py-3.5 font-medium text-muted-foreground transition-all hover:border-border hover:text-foreground"
                   >
-                    Pläne & Preise
-                    <ChevronRight className="w-4 h-4" />
+                    Pläne &amp; Preise
+                    <ChevronRight className="h-4 w-4" />
                   </Link>
                 </div>
               </div>
-            </TerminalWindow>
+            </div>
           </div>
         </div>
       </section>
