@@ -185,18 +185,18 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
         aria-label={hasUnread ? `${unread} neue Benachrichtigungen` : "Benachrichtigungen"}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className={`relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border bg-white/90 shadow-sm transition-all active:scale-95 md:h-11 md:w-11 md:hover:bg-card/70 ${
-          hasUnread ? "border-red-300/60" : "border-border"
+        className={`relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border bg-card/95 shadow-sm transition-all active:scale-95 md:h-11 md:w-11 md:hover:bg-card ${
+          hasUnread ? "border-red-300/60 dark:border-red-500/30" : "border-border"
         }`}
       >
         {hasUnread ? (
-          <BellRing className="h-4 w-4 text-red-600" aria-hidden />
+          <BellRing className="h-4 w-4 text-red-600 dark:text-red-400" aria-hidden />
         ) : (
           <Bell className="h-4 w-4 text-muted-foreground" aria-hidden />
         )}
         {hasUnread ? (
           <span
-            className="absolute -right-1 -top-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow ring-2 ring-white"
+            className="absolute -right-1 -top-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow ring-2 ring-card"
             aria-hidden
           >
             {badgeText}
@@ -212,7 +212,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
           ref={popoverRef}
           role="dialog"
           aria-label="Benachrichtigungen"
-          className="absolute right-0 top-[calc(100%+0.4rem)] z-[100] w-[min(20rem,calc(100vw-1.5rem))] rounded-2xl border border-border bg-white p-1.5 shadow-2xl"
+          className="absolute right-0 top-[calc(100%+0.4rem)] z-[100] w-[min(20rem,calc(100vw-1.5rem))] rounded-2xl border border-border bg-popover p-1.5 shadow-2xl ring-1 ring-black/5 dark:ring-white/[0.04]"
         >
           <div className="flex items-center justify-between gap-2 px-3 pb-2 pt-2">
             <div>
@@ -232,7 +232,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
             </button>
           </div>
 
-          <div className="max-h-[60vh] overflow-y-auto rounded-xl border border-border/60 bg-card/40">
+          <div className="max-h-[60vh] overflow-y-auto rounded-xl border border-border/60 bg-surface-muted/60 dark:bg-surface-muted/40">
             {loading && items === null ? (
               <div className="flex items-center justify-center gap-2 px-3 py-6 text-xs text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

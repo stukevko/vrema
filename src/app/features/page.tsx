@@ -71,7 +71,7 @@ export default function FeaturesPage() {
           Zur interaktiven Übersicht
         </Link>
         <Link
-          href="/preise"
+          href="/#pricing"
           className="inline-flex min-h-11 items-center rounded-xl border border-line bg-surface px-5 text-sm font-semibold transition-colors hover:bg-surface-muted dark:border-white/10"
         >
           Preise ansehen

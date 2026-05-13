@@ -178,7 +178,7 @@ export default function LandingPage() {
               <Link href="/features" className="transition-colors hover:text-foreground">
                 Features
               </Link>
-              <Link href="/preise" className="transition-colors hover:text-foreground">
+              <Link href="/#pricing" className="transition-colors hover:text-foreground">
                 Preise
               </Link>
               <Link
@@ -231,7 +231,7 @@ export default function LandingPage() {
                     Features
                   </Link>
                   <Link
-                    href="/preise"
+                    href="/#pricing"
                     onClick={() => setMobileNavOpen(false)}
                     className="flex min-h-12 items-center rounded-2xl border border-border px-4 text-base font-medium text-foreground"
                   >
@@ -297,7 +297,7 @@ export default function LandingPage() {
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link
-                  href="/preise"
+                  href="/#pricing"
                   className="flex min-w-0 max-w-full items-center gap-2 rounded-2xl border border-border px-7 py-3.5 font-medium text-muted-foreground transition-all hover:border-border hover:text-foreground"
                 >
                   Pläne ansehen
@@ -789,7 +789,7 @@ export default function LandingPage() {
                     Jetzt registrieren
                   </Link>
                   <Link
-                    href="/preise"
+                    href="/#pricing"
                     className="flex items-center gap-2 rounded-2xl border border-border bg-surface/60 px-8 py-3.5 font-medium text-muted-foreground transition-all hover:border-border hover:text-foreground"
                   >
                     Pläne &amp; Preise
@@ -871,7 +871,7 @@ export default function LandingPage() {
             <Link href="/features" className="text-xs text-fg-muted transition-colors hover:text-foreground">
               Features
             </Link>
-            <Link href="/preise" className="text-xs text-fg-muted transition-colors hover:text-foreground">
+            <Link href="/#pricing" className="text-xs text-fg-muted transition-colors hover:text-foreground">
               Preise
             </Link>
             <Link href="/partner" className="text-xs text-fg-muted transition-colors hover:text-foreground">

@@ -29,7 +29,7 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
               <Link href="/features" className="transition-colors hover:text-foreground">
                 Features
               </Link>
-              <Link href="/preise" className="transition-colors hover:text-foreground">
+              <Link href="/#pricing" className="transition-colors hover:text-foreground">
                 Preise
               </Link>
               <Link
@@ -81,7 +81,7 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
                   <Link href="/blog" onClick={() => setMobileNavOpen(false)} className="flex min-h-12 items-center rounded-2xl border border-border px-4 text-base font-medium text-foreground">
                     Insights
                   </Link>
-                  <Link href="/preise" onClick={() => setMobileNavOpen(false)} className="flex min-h-12 items-center rounded-2xl border border-border px-4 text-base font-medium text-foreground">
+                  <Link href="/#pricing" onClick={() => setMobileNavOpen(false)} className="flex min-h-12 items-center rounded-2xl border border-border px-4 text-base font-medium text-foreground">
                     Preise
                   </Link>
                 </nav>
