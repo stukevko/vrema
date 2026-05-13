@@ -13,9 +13,12 @@ import {
   writeWorkLogAudit,
 } from "@/lib/worklogs/clock-core";
 import { getMonthBoundsUtc } from "@/lib/time/timezone";
+import { assertClockIpAllowed } from "@/lib/security/ip-allowlist-server";
 
 export async function clockIn() {
   const { userId, companyId } = await requireTenant();
+  // Enterprise: IP-Geofencing greift, falls die Firma "Stempeln nur am Standort" aktiv hat.
+  await assertClockIpAllowed(companyId);
   const result = await createClockInEntry({ companyId, userId, actorUserId: userId });
   revalidatePath("/dashboard");
   return result;
@@ -386,7 +389,13 @@ export async function decideWorkLogCorrectionRequest(input: {
   await db.$transaction(async (tx) => {
     const noteParts = [req.requestedNote, `[REQUEST_APPROVED:${req.id}]`].filter(Boolean).join(" | ");
     if (req.workLogId) {
-      const before = await tx.workLog.findUnique({ where: { id: req.workLogId } });
+      // RLS-Defense: Doppelt absichern, dass der referenzierte WorkLog zur selben
+      // Firma gehört. Schützt vor DB-Inkonsistenzen oder zukünftigen Bugs, wo der
+      // CorrectionRequest künstlich mit fremden `workLogId` vermischt würde.
+      const before = await tx.workLog.findFirst({
+        where: tenantWhere(companyId, { id: req.workLogId }),
+      });
+      if (!before) throw new Error("Verknüpfter Zeiteintrag gehört nicht zu dieser Firma.");
       await tx.workLog.update({
         where: { id: req.workLogId },
         data: {

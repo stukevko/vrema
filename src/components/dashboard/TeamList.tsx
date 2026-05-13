@@ -18,9 +18,11 @@ import {
   Save,
   Search,
   X,
+  UserPlus,
 } from "lucide-react";
 import clsx from "clsx";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type Member = {
   id: string;
@@ -97,23 +99,26 @@ export function TeamList({
 
   if (members.length === 0) {
     return (
-      <div className="rounded-2xl border border-line bg-surface p-8 text-center shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90 sm:p-10">
-        <User className="mx-auto mb-3 h-8 w-8 text-muted-foreground" aria-hidden />
-        <p className="text-sm font-medium text-foreground">Noch keine Mitarbeiter</p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {canManage
+      <EmptyState
+        tone="celebrate"
+        icon={UserPlus}
+        title="Noch keine Mitarbeiter im Team"
+        description={
+          canManage
             ? "Laden Sie Kolleginnen und Kollegen per E-Mail ein — das Formular finden Sie rechts auf dieser Seite."
-            : "Ihre Firma hat noch keine Mitarbeitenden angelegt. Bitte wenden Sie sich an eine Administratorin."}
-        </p>
-        {canManage && (
-          <Link
-            href="#invite"
-            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-2xl bg-brand px-5 text-sm font-bold text-brand-foreground transition-colors hover:brightness-105"
-          >
-            Zum Einladungsformular
-          </Link>
-        )}
-      </div>
+            : "Ihre Firma hat noch keine Mitarbeitenden angelegt. Bitte wenden Sie sich an eine Administratorin."
+        }
+        action={
+          canManage ? (
+            <Link
+              href="#invite"
+              className="btn-brand inline-flex min-h-11 items-center justify-center rounded-2xl px-5 text-sm font-bold active:scale-[0.99]"
+            >
+              Zum Einladungsformular
+            </Link>
+          ) : null
+        }
+      />
     );
   }
 

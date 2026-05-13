@@ -175,6 +175,17 @@ model Company {
   /// Geschätzter Wochenumsatz (EUR) für Lohnquoten-Kennzahlen – optional
   estimatedWeeklyRevenue Float?
   affiliateId       String?
+  // ── Enterprise: Custom Branding ──────────────────────────────────────────
+  /// Hex-Farbe (#RRGGBB), die als Brand-Akzent im Light-Mode genutzt wird.
+  /// Wenn null → VREMA-Default (#0a3a52 Petrol).
+  brandColor        String?
+  /// Hex-Farbe für Dark-Mode (helle Variante). Wenn null → automatische Light-Variante des Brand-Colors.
+  brandColorDark    String?
+  // ── Enterprise: Privacy-First Clocking via IP-Allowlist ──────────────────
+  /// Wenn true, prüft `/clock-in` & Terminal-Auth die IP-Adresse der Anfrage gegen `clockIpAllowlist`.
+  clockIpRestrictionEnabled Boolean @default(false)
+  /// CIDR-Blöcke oder Plain-IPs (IPv4/IPv6). Beispiel: ["203.0.113.0/24", "2001:db8::/32", "198.51.100.42"]
+  clockIpAllowlist  String[] @default([])
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
@@ -195,9 +206,39 @@ model Company {
   taskTemplates     TaskTemplate[]
   shiftTaskLists    ShiftTaskList[]
   notifications     Notification[]
+  apiKeys           ApiKey[]
 
   @@index([slug])
   @@index([affiliateId])
+}
+
+/// Externer API-Key für `/api/v1/external/*`. Klartext wird ausschließlich
+/// beim Erstellen an den Owner zurückgegeben; in der DB liegt nur ein SHA-256-Hash.
+model ApiKey {
+  id          String   @id @default(cuid())
+  companyId   String
+  /// Sprechender Name z.B. "Buchhaltungs-Software" – nur für UI.
+  name        String
+  /// SHA-256(klartext-key) – deterministisch, daher Index-fähig fürs O(1)-Lookup.
+  hashedKey   String   @unique
+  /// Letzte 4 Zeichen des Klartext-Keys als Wiedererkennungs-Hinweis.
+  keyHint     String
+  /// Erlaubte Scopes (Future-proof, aktuell: ["status:read"]).
+  scopes      String[] @default([])
+  isActive    Boolean  @default(true)
+  /// User-ID des Owners, der den Key angelegt hat (für Audit).
+  createdById String?
+  createdAt   DateTime @default(now())
+  /// Wann zuletzt verwendet (Heartbeat fürs Audit-Dashboard).
+  lastUsedAt  DateTime?
+  /// Optional: harter Ablaufzeitpunkt (Rotation/Compliance).
+  expiresAt   DateTime?
+
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([hashedKey])
+  @@index([expiresAt])
 }
 
 /// OpenWeather-Antwort pro Firma, max. alle 3h aktualisiert

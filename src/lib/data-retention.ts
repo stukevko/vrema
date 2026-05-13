@@ -71,26 +71,39 @@ export async function runDataRetention(prisma: PrismaClient): Promise<DataRetent
     }),
   ]);
 
+  // System-Retention-Job: läuft über alle Tenants. Damit wir auch im Audit
+  // pro Firma sehen, was gelöscht wurde – und damit ein versehentlicher
+  // globaler `DATA_RETENTION_WORKLOG_DAYS=1` nicht unbemerkt ALLES wegrasiert –
+  // iterieren wir explizit pro `companyId`. Jeder einzelne `deleteMany`
+  // hat damit `companyId` im Where (RLS-Prinzip).
   let deletedOldWorkLogs = 0;
   if (config.workLogDays > 0) {
     const oldWorkLogCutoff = minusDays(config.workLogDays);
-    const deleted = await prisma.workLog.deleteMany({
-      where: {
-        clockIn: { lt: oldWorkLogCutoff },
-      },
+    const companies = await prisma.company.findMany({
+      select: { id: true },
+      where: { isActive: true },
     });
-    deletedOldWorkLogs = deleted.count;
+    for (const c of companies) {
+      const deleted = await prisma.workLog.deleteMany({
+        where: { companyId: c.id, clockIn: { lt: oldWorkLogCutoff } },
+      });
+      deletedOldWorkLogs += deleted.count;
+    }
   }
 
   let deletedOldVacationRequests = 0;
   if (config.vacationDays > 0) {
     const oldVacationCutoff = minusDays(config.vacationDays);
-    const deleted = await prisma.vacationRequest.deleteMany({
-      where: {
-        endDate: { lt: oldVacationCutoff },
-      },
+    const companies = await prisma.company.findMany({
+      select: { id: true },
+      where: { isActive: true },
     });
-    deletedOldVacationRequests = deleted.count;
+    for (const c of companies) {
+      const deleted = await prisma.vacationRequest.deleteMany({
+        where: { companyId: c.id, endDate: { lt: oldVacationCutoff } },
+      });
+      deletedOldVacationRequests += deleted.count;
+    }
   }
 
   return {

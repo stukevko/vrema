@@ -2229,7 +2229,13 @@ export function ShiftManager({
                     </div>
                     <div
                       data-timeline-lane
-                      className="relative h-[4.25rem] touch-manipulation rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)] md:h-16"
+                      className={`group/lane relative h-[4.25rem] touch-manipulation rounded-2xl border bg-card/60 transition-[background-color,border-color,box-shadow] duration-150 md:h-16 ${
+                        row.conflict
+                          ? row.conflict === "SICK"
+                            ? "border-rose-200/60 bg-rose-50/30 dark:border-rose-300/15 dark:bg-rose-500/[0.05]"
+                            : "border-amber-200/60 bg-amber-50/30 dark:border-amber-300/15 dark:bg-amber-500/[0.05]"
+                          : "border-slate-200/40 hover:border-slate-300/60 dark:border-white/[0.06] dark:hover:border-white/[0.12]"
+                      } ${activeDrag?.userId === row.member.id ? "border-brand/40 bg-brand-soft/40 dark:bg-brand/10" : ""}`}
                       style={{ touchAction: "pan-y" }}
                       onPointerDown={(e) => {
                         if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -2253,7 +2259,7 @@ export function ShiftManager({
                           slot.isGap ? (
                             <div
                               key={`gap-${idx}`}
-                              className="absolute top-0 bottom-0 bg-danger/10"
+                              className="absolute top-0 bottom-0 bg-rose-200/15 dark:bg-rose-400/[0.06]"
                               style={{
                                 left: `${(idx * coverageSlotMinutes / TIMELINE_TOTAL_MINUTES) * 100}%`,
                                 width: `${(coverageSlotMinutes / TIMELINE_TOTAL_MINUTES) * 100}%`,
@@ -2266,21 +2272,30 @@ export function ShiftManager({
                           return (
                             <div
                               key={`hour-line-${hour}`}
-                              className="pointer-events-none absolute top-0 bottom-0 w-px bg-surface/[0.08]"
+                              className="pointer-events-none absolute top-0 bottom-0 w-px bg-slate-200/20 dark:bg-white/[0.04]"
                               style={{ left: `${left}%` }}
                             />
                           );
                         })}
                       </div>
+                      {/* Hover-Ghost: nur sichtbar, wenn Lane leer (kein Konflikt, keine Schicht). */}
+                      {!row.conflict && widthPct === 0 ? (
+                        <div className="pointer-events-none absolute inset-2 hidden items-center justify-center rounded-xl border border-dashed border-brand/30 bg-brand/[0.04] text-[11px] font-medium text-brand/80 opacity-0 transition-opacity duration-150 group-hover/lane:opacity-100 md:flex">
+                          <Plus className="mr-1 h-3.5 w-3.5" aria-hidden />
+                          Klicken &amp; ziehen, um zu planen
+                        </div>
+                      ) : null}
                       {row.conflict ? (
-                        <div
-                          className={`absolute inset-1 rounded-lg flex items-center justify-center text-xs font-semibold ${
-                            row.conflict === "SICK"
-                              ? "bg-danger-soft text-danger-foreground"
-                              : "bg-warning-soft text-warning-foreground"
-                          }`}
-                        >
-                          {row.conflict === "SICK" ? "Krank (gesperrt)" : "Urlaub (gesperrt)"}
+                        <div className="pointer-events-none absolute inset-x-3 inset-y-2 flex items-center justify-center">
+                          <span
+                            className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                              row.conflict === "SICK"
+                                ? "border-rose-300/40 bg-white/70 text-rose-700 dark:bg-rose-950/30 dark:text-rose-200"
+                                : "border-amber-300/40 bg-white/70 text-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+                            }`}
+                          >
+                            {row.conflict === "SICK" ? "Krank · gesperrt" : "Urlaub · gesperrt"}
+                          </span>
                         </div>
                       ) : widthPct > 0 ? (
                         <>
@@ -2295,7 +2310,7 @@ export function ShiftManager({
                             </div>
                           ) : null}
                           <div
-                            className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg border px-2 text-[11px] active:cursor-grabbing ${
+                            className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg border px-2 text-xs font-medium shadow-sm active:cursor-grabbing ${
                               row.shift?.isDraft
                                 ? "border-dashed border-brand/60 bg-[repeating-linear-gradient(-45deg,rgba(22,101,52,0.28)_0px,rgba(22,101,52,0.28)_6px,transparent_6px,transparent_12px)] text-brand"
                                 : tradeOpen
@@ -2304,22 +2319,31 @@ export function ShiftManager({
                             } ${
                               activeDrag?.userId === row.member.id
                                 ? "shadow-lg shadow-black/40 transition-none"
-                                : "transition-[left,width] duration-100 ease-out"
+                                : "transition-[left,width,box-shadow,border-color] duration-150 ease-out md:hover:shadow-[0_2px_10px_-2px_rgba(10,58,82,0.18)]"
                             } ${flashAssignedKey === `${row.member.id}-${timelineDay}` ? "ring-2 ring-brand/55 animate-pulse" : ""} ${
                               row.shift && selectedShiftIds.includes(row.shift.id) ? "ring-2 ring-brand/75" : ""
-                            } ${weatherConflict ? "ring-2 ring-warning/80 animate-pulse" : ""} ${
+                            } ${weatherConflict ? "border-rose-300/40 ring-1 ring-rose-300/30" : ""} ${
                               costPeakFocusActive && !costPeakAffected ? "opacity-30 [filter:grayscale(35%)]" : ""
-                            } ${costPeakFocusActive && costPeakAffected ? "ring-2 ring-warning/85 animate-pulse" : ""}`}
+                            } ${costPeakFocusActive && costPeakAffected ? "border-rose-300/45 ring-1 ring-rose-300/35" : ""}`}
                             style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-                            title={
-                              row.shift?.isDraft
-                                ? `${barLabel} — Autopilot-Entwurf (noch nicht veröffentlicht)`
-                                : weatherConflict
-                                  ? `${barLabel} — Wetter-Konflikt: Hohe Regenwahrscheinlichkeit für Außenbereich.`
-                                  : costPeakFocusActive && costPeakAffected
-                                    ? `${barLabel} — Kosten-Peak: überdurchschnittliche Lohnkosten.`
-                                    : barLabel
-                            }
+                            title={(() => {
+                              const pauseInfo =
+                                row.shift?.breakDuration && row.shift.breakDuration > 0
+                                  ? ` · Pause ${row.shift.breakDuration} min`
+                                  : "";
+                              const compliance =
+                                rowCompliance?.pauseRisk || livePauseRisk
+                                  ? " · Pause prüfen (>6h)"
+                                  : rowCompliance?.restRisk
+                                    ? " · Ruhezeit < 11h"
+                                    : "";
+                              const baseLabel = `${barLabel}${pauseInfo}${compliance}`;
+                              if (row.shift?.isDraft) return `${baseLabel} — Autopilot-Entwurf (noch nicht veröffentlicht)`;
+                              if (weatherConflict) return `${baseLabel} — Wetter-Konflikt: Hohe Regenwahrscheinlichkeit für Außenbereich.`;
+                              if (costPeakFocusActive && costPeakAffected)
+                                return `${baseLabel} — Kosten-Peak: überdurchschnittliche Lohnkosten.`;
+                              return baseLabel;
+                            })()}
                             onPointerDown={(e) => {
                               if (e.pointerType === "mouse" && e.button !== 0) return;
                               if (!row.shift || row.conflict) return;

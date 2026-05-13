@@ -31,8 +31,20 @@ export async function decideAbsence(input: {
     throw new Error("Keine Berechtigung.");
   }
 
+  // RLS-Defense: ZUERST gegen `orgId` validieren, BEVOR wir die Mutation
+  // ausführen. Sonst könnte ein Manager mit einer geleakten/erratenen
+  // `absenceId` einer fremden Firma die Daten bereits umschreiben, bevor der
+  // nachgelagerte Check den Fehler wirft.
+  const existing = await db.absence.findFirst({
+    where: { id: input.absenceId, orgId: companyId },
+    select: { id: true },
+  });
+  if (!existing) {
+    throw new Error("Abwesenheit gehört nicht zu Ihrer Organisation.");
+  }
+
   const updated = await db.absence.update({
-    where: { id: input.absenceId },
+    where: { id: existing.id },
     data: {
       status: input.status,
       reviewedById: userId,
@@ -43,10 +55,6 @@ export async function decideAbsence(input: {
       reviewedBy: { select: { name: true } },
     },
   });
-
-  if (updated.orgId !== companyId) {
-    throw new Error("Abwesenheit gehört nicht zu Ihrer Organisation.");
-  }
 
   if (updated.sourceVacationRequestId) {
     const mappedStatus: VacationStatus =

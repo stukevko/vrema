@@ -3,10 +3,11 @@
 import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { approveVacation, rejectVacation, type VacationDecisionContext } from "@/lib/actions/vacation";
-import { Check, X, Clock, AlertTriangle, Users, ShieldCheck, Loader2, Info } from "lucide-react";
+import { Check, X, Clock, AlertTriangle, Users, ShieldCheck, Loader2, Info, Inbox } from "lucide-react";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type VacationRequest = {
   id: string;
@@ -93,15 +94,16 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
   if (requests.length === 0) {
     return (
       <>
-        <div className="glass-card p-8 text-center">
-          <Clock className="mx-auto mb-3 h-8 w-8 text-muted-foreground/60" aria-hidden />
-          <p className="text-sm font-medium text-foreground">Keine Anträge in dieser Liste</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {canApprove
-              ? "Sobald Teammitglieder Anträge stellen, erscheinen sie hier."
-              : "Nutzen Sie das Antragsformular auf dieser Seite — Zeitraum und Grund genügen."}
-          </p>
-        </div>
+        <EmptyState
+          tone="celebrate"
+          icon={Inbox}
+          title="Alles ruhig — keine offenen Anträge"
+          description={
+            canApprove
+              ? "Sobald Teammitglieder Anträge stellen, erscheinen sie hier inkl. Resturlaub und Konflikt-Hinweis."
+              : "Nutzen Sie das Antragsformular auf dieser Seite — Zeitraum und Grund genügen."
+          }
+        />
         <ToastContainer toasts={toasts} remove={remove} />
       </>
     );

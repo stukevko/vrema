@@ -6,6 +6,7 @@ import { TerminalWidget } from "@/components/dashboard/TerminalWidget";
 import { LiveOperationsWidget } from "@/components/dashboard/LiveOperationsWidget";
 import { EmployeeCockpit } from "@/components/dashboard/EmployeeCockpit";
 import { ActiveShiftTasksCard } from "@/components/dashboard/ActiveShiftTasksCard";
+import { HeroStats } from "@/components/dashboard/HeroStats";
 import { getEmployeeCockpitData } from "@/lib/dashboard/employee-cockpit-data";
 import { SaldoWidget } from "@/components/dashboard/SaldoWidget";
 import { calculateSaldo } from "@/lib/actions/worklogs";
@@ -18,7 +19,12 @@ import {
   ClipboardCheck,
   ChevronDown,
   Target,
+  CalendarPlus,
+  FileText,
+  PartyPopper,
 } from "lucide-react";
+import { IconMenu } from "@/components/ui/IconMenu";
+import { EmptyState } from "@/components/ui/EmptyState";
 import Link from "next/link";
 import {
   AbsenceRequestStatus,
@@ -163,6 +169,25 @@ export default async function DashboardPage() {
       )
     : Promise.resolve(null);
 
+  // Teamweite Heute-Logs (mit hourlyWage), nur für Manager – Basis für die
+  // Hero-KPI "Heutige Personalkosten". Limit 1.000 reicht selbst für große Teams.
+  const teamTodayLogsPromise: Promise<Array<{ clockIn: Date; clockOut: Date | null; breakMins: number; user: { hourlyWage: number | null } }> | null> = isManager
+    ? safe(
+        db.workLog.findMany({
+          where: tenantWhere(companyId, { clockIn: { gte: todayStart, lte: todayEnd } }),
+          select: {
+            clockIn: true,
+            clockOut: true,
+            breakMins: true,
+            user: { select: { hourlyWage: true } },
+          },
+          take: 1000,
+        }),
+        "dashboard.teamTodayLogs",
+        [] as Array<{ clockIn: Date; clockOut: Date | null; breakMins: number; user: { hourlyWage: number | null } }>,
+      )
+    : Promise.resolve(null);
+
   const [
     employeeCount,
     hasAnyWorkLog,
@@ -173,6 +198,7 @@ export default async function DashboardPage() {
     cockpitData,
     superAdminPayload,
     saldo,
+    teamTodayLogs,
   ] = await Promise.all([
     safe(
       db.user.count({
@@ -238,6 +264,7 @@ export default async function DashboardPage() {
       "dashboard.saldo",
       { workedMinutes: 0, expectedMinutes: 0, saldoMinutes: 0 },
     ),
+    teamTodayLogsPromise,
   ]);
 
   // shiftTasksPayload braucht activeLog → eigene zweite Welle (extrem leichtgewichtig).
@@ -268,6 +295,27 @@ export default async function DashboardPage() {
 
   const focus = teamStats ? managerPrimaryFocus(teamStats) : null;
 
+  // Hero-KPI: Personalkosten heute. Wir nutzen den effektiven Brutto-Stundenlohn,
+  // ziehen Pausen ab und beziehen offene Schichten bis "jetzt" mit ein.
+  const todayPersonnelCostsEuro = (() => {
+    if (!teamTodayLogs || teamTodayLogs.length === 0) return 0;
+    let totalCents = 0;
+    for (const log of teamTodayLogs) {
+      const wage = log.user.hourlyWage;
+      if (!wage || wage <= 0) continue;
+      const end = log.clockOut ?? now;
+      const minutes = Math.max(0, (end.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins);
+      const hours = minutes / 60;
+      totalCents += Math.round(hours * wage * 100);
+    }
+    return totalCents / 100;
+  })();
+
+  const heroAttentionCount = teamStats ? teamStats.absentToday + teamStats.lateToday : 0;
+  const heroPendingApprovalsCount = teamStats
+    ? teamStats.pendingVacations + teamStats.pendingCorrections + teamStats.pendingTradeApprovals
+    : 0;
+
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 px-1 text-foreground sm:gap-6 sm:px-2 md:gap-8 md:px-0">
       {/* Header — für Mitarbeiter überspringen, weil das Cockpit selbst begrüßt */}
@@ -280,6 +328,20 @@ export default async function DashboardPage() {
           <p className="mt-1 text-sm text-muted-foreground sm:text-base">
             {formatBerlinDate(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
           </p>
+        </div>
+      )}
+
+      {/* Hero-KPIs (Manager) — das "3-Sekunden-Prinzip" direkt unter dem Gruß. */}
+      {teamStats && (
+        <div className="order-1 mt-1 sm:mt-2">
+          <HeroStats
+            presentNow={teamStats.activeToday}
+            totalEmployees={teamStats.totalEmployees}
+            todayPersonnelCostsEuro={todayPersonnelCostsEuro}
+            attentionCount={heroAttentionCount}
+            attentionBreakdown={{ absent: teamStats.absentToday, late: teamStats.lateToday }}
+            pendingApprovalsCount={heroPendingApprovalsCount}
+          />
         </div>
       )}
 
@@ -564,22 +626,43 @@ export default async function DashboardPage() {
       {/* Today summary */}
       <div className="order-7 rounded-2xl glass-panel p-5 transition-all sm:p-8 md:hover:bg-card/80">
         <div className="mb-4 flex items-center justify-between gap-2">
-          <h2 className="font-semibold">Heute</h2>
-          <span className="text-sm text-brand tabular-nums font-bold">
-            {Math.floor(todayWorkedMins / 60)}h {Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m
-          </span>
+          <div className="flex items-center gap-3">
+            <h2 className="font-semibold">Heute</h2>
+            <span className="text-sm text-brand tabular-nums font-bold">
+              {Math.floor(todayWorkedMins / 60)}h {Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m
+            </span>
+          </div>
+          {/* Sekundäre Aktionen kompakt im Drei-Punkte-Menü statt im Header-Lärm. */}
+          <IconMenu label="Heute-Optionen">
+            <IconMenu.Label>Schnellzugriff</IconMenu.Label>
+            <IconMenu.Item asChild icon={FileText}>
+              <Link href="/dashboard/reports" className="w-full">Detailbericht öffnen</Link>
+            </IconMenu.Item>
+            <IconMenu.Item asChild icon={CalendarPlus}>
+              <Link href="/dashboard/vacation" className="w-full">Urlaub erfassen</Link>
+            </IconMenu.Item>
+            <IconMenu.Separator />
+            <IconMenu.Item asChild icon={CalendarDays}>
+              <Link href="/dashboard/planning" className="w-full">Wochenplan öffnen</Link>
+            </IconMenu.Item>
+          </IconMenu>
         </div>
 
         {todayLogs.length === 0 ? (
-          <div className="py-6 text-center">
-            <p className="text-sm text-muted-foreground">Noch kein Zeiteintrag für heute. Sie können jetzt den ersten Eintrag erfassen.</p>
-            <Link
-              href="#terminal-widget"
-              className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] sm:w-auto md:hover:bg-card/80"
-            >
-              Jetzt einstempeln
-            </Link>
-          </div>
+          <EmptyState
+            tone="celebrate"
+            icon={PartyPopper}
+            title="Noch kein Zeiteintrag für heute"
+            description="Drück den großen Stempel-Button im Terminal-Widget oben, um den Tag zu starten."
+            action={
+              <Link
+                href="#terminal-widget"
+                className="btn-brand inline-flex min-h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold active:scale-[0.99]"
+              >
+                Jetzt einstempeln
+              </Link>
+            }
+          />
         ) : (
           <div className="space-y-2">
             {todayLogs.map((log) => {

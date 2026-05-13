@@ -2,9 +2,15 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCompanySettings } from "@/lib/actions/settings";
+import { listApiKeys } from "@/lib/actions/api-keys";
+import { getBrandingSettings } from "@/lib/actions/branding";
+import { getClockGeofenceSettings } from "@/lib/actions/clock-geofence";
 import { CompanySettingsForm } from "@/components/dashboard/CompanySettingsForm";
 import { PasswordChangeForm } from "@/components/dashboard/PasswordChangeForm";
 import { PasskeySecurityForm } from "@/components/dashboard/PasskeySecurityForm";
+import { ApiKeysSection } from "@/components/dashboard/ApiKeysSection";
+import { BrandingSection } from "@/components/dashboard/BrandingSection";
+import { ClockGeofenceSection } from "@/components/dashboard/ClockGeofenceSection";
 import type { LucideIcon } from "lucide-react";
 import {
   Settings,
@@ -19,6 +25,9 @@ import {
   ChevronRight,
   UserRound,
   Rss,
+  KeyRound,
+  Palette,
+  Wifi,
 } from "lucide-react";
 import { ProfileAvatarForm } from "@/components/dashboard/ProfileAvatarForm";
 import { TerminalPinForm } from "@/components/dashboard/TerminalPinForm";
@@ -37,6 +46,9 @@ export default async function SettingsPage() {
   const showBilling = role !== "EMPLOYEE";
 
   const company = isOwner ? await getCompanySettings() : null;
+  const apiKeys = isOwner ? await listApiKeys().catch(() => []) : [];
+  const branding = isOwner ? await getBrandingSettings().catch(() => null) : null;
+  const geofence = isOwner ? await getClockGeofenceSettings().catch(() => ({ enabled: false, allowlist: [] })) : null;
 
   const mobileMoreLinks: { href: string; label: string; icon: LucideIcon }[] = [
     { href: "/dashboard/team", label: "Team", icon: Users },
@@ -131,6 +143,55 @@ export default async function SettingsPage() {
         </div>
         <TerminalPinForm />
       </section>
+
+      {/* Enterprise: Geofencing-Toggle ist auch in Business sinnvoll und sicher,
+          deshalb für alle Owner sichtbar. */}
+      {isOwner && geofence && (
+        <section
+          id="ipgeofence"
+          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <Wifi className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
+              Privacy-Stempeln · IP-Geofence
+            </h2>
+          </div>
+          <ClockGeofenceSection initial={geofence} />
+        </section>
+      )}
+
+      {/* Enterprise: Custom Branding (Plan-Gate in Action selbst). */}
+      {isOwner && branding && (
+        <section
+          id="branding"
+          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <Palette className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
+              Custom-Branding
+            </h2>
+          </div>
+          <BrandingSection initial={branding} />
+        </section>
+      )}
+
+      {/* Enterprise: External API */}
+      {isOwner && (
+        <section
+          id="api"
+          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <KeyRound className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
+              Externe API · Keys
+            </h2>
+          </div>
+          <ApiKeysSection apiKeys={apiKeys} />
+        </section>
+      )}
     </div>
   );
 }

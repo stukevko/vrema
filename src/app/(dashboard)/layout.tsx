@@ -4,6 +4,7 @@ import { DashboardLayoutClient } from "@/components/dashboard/DashboardLayoutCli
 import { db } from "@/lib/db";
 import { getMyUnreadSupportRepliesCount, countOpenSupportTicketsForSuperAdmin } from "@/lib/actions/support";
 import { countMyUnreadNotifications } from "@/lib/actions/notifications";
+import { buildBrandStyleCss, getCompanyBranding, VREMA_DEFAULT_BRAND_HEX } from "@/lib/branding/load";
 
 export default async function DashboardLayout({
   children,
@@ -52,16 +53,32 @@ export default async function DashboardLayout({
     unreadNotifications = 0;
   }
 
+  // Custom-Branding: nur applizieren, wenn Firma eine eigene Hex hinterlegt hat.
+  // Sonst bleibt VREMA-Petrol (Default-Branding) aktiv – kein Style-Injection,
+  // kein Flackern, keine zusätzliche CSS.
+  const branding = await getCompanyBranding(session.user.companyId).catch(() => null);
+  const hasCustomBrand = Boolean(branding && branding.brandHex.toLowerCase() !== VREMA_DEFAULT_BRAND_HEX.toLowerCase());
+  const brandStyleCss = hasCustomBrand && branding ? buildBrandStyleCss(branding) : null;
+
   return (
-    <DashboardLayoutClient
-      role={session.user.role ?? "EMPLOYEE"}
-      plan={session.user.plan ?? "STARTER"}
-      user={session.user}
-      supportUnreadCount={supportUnreadCount}
-      initialSuperOpenTickets={superOpenTickets}
-      initialUnreadNotifications={unreadNotifications}
-    >
-      {children}
-    </DashboardLayoutClient>
+    <div data-tenant-brand={hasCustomBrand ? "custom" : "default"} className="contents">
+      {brandStyleCss ? (
+        <style
+          id="vrema-tenant-brand"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: brandStyleCss }}
+        />
+      ) : null}
+      <DashboardLayoutClient
+        role={session.user.role ?? "EMPLOYEE"}
+        plan={session.user.plan ?? "STARTER"}
+        user={session.user}
+        supportUnreadCount={supportUnreadCount}
+        initialSuperOpenTickets={superOpenTickets}
+        initialUnreadNotifications={unreadNotifications}
+      >
+        {children}
+      </DashboardLayoutClient>
+    </div>
   );
 }

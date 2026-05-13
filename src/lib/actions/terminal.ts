@@ -1,8 +1,10 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { toggleClockForUser } from "@/lib/worklogs/clock-core";
+import { checkClockIpAllowlist, getClientIpFromHeaders } from "@/lib/security/ip-allowlist";
 
 export async function validatePinAndClock(companySlug: string, pin: string) {
   const normalizedPin = pin.trim();
@@ -12,11 +14,32 @@ export async function validatePinAndClock(companySlug: string, pin: string) {
 
   const company = await db.company.findUnique({
     where: { slug: companySlug },
-    select: { id: true, isActive: true },
+    select: { id: true, isActive: true, clockIpRestrictionEnabled: true, clockIpAllowlist: true },
   });
 
   if (!company || !company.isActive) {
     return { status: "error" as const, message: "Terminal ist nicht verfügbar." };
+  }
+
+  // Enterprise: IP-Geofencing greift, falls aktiv. Terminal-Pfad kennt keine
+  // Session, daher prüfen wir hier direkt – noch VOR dem bcrypt-Sweep.
+  if (company.clockIpRestrictionEnabled) {
+    const reqHeaders = await headers();
+    const clientIp = getClientIpFromHeaders(reqHeaders);
+    const ipResult = checkClockIpAllowlist({
+      enabled: true,
+      allowlist: company.clockIpAllowlist,
+      clientIp,
+    });
+    if (!ipResult.ok) {
+      return {
+        status: "error" as const,
+        message:
+          ipResult.reason === "no_client_ip"
+            ? "Verbindung zum Firmen-WLAN nicht erkannt. Bitte mit dem Firmen-Netz verbinden."
+            : "Stempeln nur am Standort möglich. Diese IP ist nicht freigegeben.",
+      };
+    }
   }
 
   // Kandidaten = nur Mitarbeiter mit gesetztem Terminal-PIN-Hash.
