@@ -14,8 +14,8 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-dvh flex-col bg-slate-50 text-foreground">
-      <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full border-b border-slate-200 glass-nav">
-        <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-4 px-4">
+      <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full border-b border-slate-200 glass-nav pt-[env(safe-area-inset-top)]">
+        <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
           <div className="flex min-w-0 items-center gap-x-8 lg:gap-x-12">
             <Link
               href="/"
@@ -107,7 +107,7 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
         </div>
       </nav>
 
-      <div className="flex flex-1 flex-col pt-20">{children}</div>
+      <div className="flex flex-1 flex-col pt-[calc(5rem+env(safe-area-inset-top))]">{children}</div>
 
       <footer className="mt-auto w-full border-t border-slate-900 bg-slate-950 py-10 text-slate-300">
         <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col items-start justify-between gap-6 px-4 md:flex-row md:items-center">

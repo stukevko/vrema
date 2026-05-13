@@ -163,8 +163,8 @@ export default function LandingPage() {
   return (
     <div className="relative flex min-h-[100dvh] w-full max-w-full flex-col overflow-x-hidden overscroll-x-none bg-background text-foreground selection:bg-brand/15">
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
-      <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full overflow-x-hidden border-b border-line glass-nav">
-        <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-4 overflow-x-hidden px-4">
+      <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full overflow-x-hidden border-b border-line glass-nav pt-[env(safe-area-inset-top)]">
+        <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-4 overflow-x-hidden pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
           <div className="flex min-w-0 items-center gap-x-8 lg:gap-x-12">
             <Link
               href="/"
@@ -268,7 +268,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ────────────────────────────────────────────────────────────── */}
-      <section className="relative w-full max-w-full border-b border-line bg-surface pt-32 pb-16">
+      <section className="relative w-full max-w-full border-b border-line bg-surface pb-16 pt-[calc(8rem+env(safe-area-inset-top))]">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="grid min-w-0 max-w-full items-center gap-12 lg:grid-cols-2">
 
