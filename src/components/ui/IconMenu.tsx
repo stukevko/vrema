@@ -12,9 +12,12 @@ import { MoreHorizontal } from "lucide-react";
  *
  * Verwendung:
  *   <IconMenu label="Optionen">
- *     <IconMenu.Item onSelect={...} icon={Download}>CSV-Export</IconMenu.Item>
- *     <IconMenu.Item onSelect={...} icon={Filter}>Filter ändern</IconMenu.Item>
+ *     <IconMenu.Item onSelect={...} icon={<Download className="h-4 w-4" />}>CSV-Export</IconMenu.Item>
+ *     <IconMenu.Item onSelect={...} icon={<Filter className="h-4 w-4" />}>Filter</IconMenu.Item>
  *   </IconMenu>
+ *
+ *  WICHTIG: `icon` muss als JSX (ReactNode) übergeben werden, NIE als Komponenten-Funktion
+ *  (`icon={Download}`). Der zweite Stil bricht Server→Client-Serialisierung in Next 15.
  */
 
 type IconMenuProps = {
@@ -64,7 +67,14 @@ export function IconMenu({ label = "Weitere Aktionen", children, align = "end", 
 type IconMenuItemProps = {
   children: React.ReactNode;
   onSelect?: (event: Event) => void;
-  icon?: React.ComponentType<React.SVGProps<SVGSVGElement> & { className?: string }>;
+  /**
+   *  Icon als bereits gerenderter ReactNode – z. B. `<FileText className="h-4 w-4" />`.
+   *
+   *  Wichtig: NIE die Lucide-Komponente direkt als Funktion durchreichen.
+   *  In Next 15 + React 19 wirft das Server→Client-Boundary einen Serializer-Error
+   *  (`Functions cannot be passed directly to Client Components`).
+   */
+  icon?: React.ReactNode;
   disabled?: boolean;
   tone?: "neutral" | "danger";
   asChild?: boolean;
@@ -73,7 +83,7 @@ type IconMenuItemProps = {
 function IconMenuItem({
   children,
   onSelect,
-  icon: Icon,
+  icon,
   disabled,
   tone = "neutral",
   asChild,
@@ -94,18 +104,10 @@ function IconMenuItem({
         toneClass,
       ].join(" ")}
     >
-      {asChild ? (
-        // Bei asChild reicht ein einzelnes Kind – Aufrufer kontrolliert Layout
-        <span className="flex w-full items-center gap-2">
-          {Icon ? <Icon className="h-4 w-4" aria-hidden /> : null}
-          {children}
-        </span>
-      ) : (
-        <span className="flex w-full items-center gap-2">
-          {Icon ? <Icon className="h-4 w-4" aria-hidden /> : null}
-          {children}
-        </span>
-      )}
+      <span className="flex w-full items-center gap-2">
+        {icon ? <span className="flex h-4 w-4 shrink-0 items-center justify-center">{icon}</span> : null}
+        {children}
+      </span>
     </DropdownMenu.Item>
   );
 }

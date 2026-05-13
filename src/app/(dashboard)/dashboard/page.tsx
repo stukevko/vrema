@@ -684,14 +684,14 @@ export default async function DashboardPage() {
           {/* Sekundäre Aktionen kompakt im Drei-Punkte-Menü statt im Header-Lärm. */}
           <IconMenu label="Heute-Optionen">
             <IconMenu.Label>Schnellzugriff</IconMenu.Label>
-            <IconMenu.Item asChild icon={FileText}>
+            <IconMenu.Item asChild icon={<FileText className="h-4 w-4" />}>
               <Link href="/dashboard/reports" className="w-full">Detailbericht öffnen</Link>
             </IconMenu.Item>
-            <IconMenu.Item asChild icon={CalendarPlus}>
+            <IconMenu.Item asChild icon={<CalendarPlus className="h-4 w-4" />}>
               <Link href="/dashboard/vacation" className="w-full">Urlaub erfassen</Link>
             </IconMenu.Item>
             <IconMenu.Separator />
-            <IconMenu.Item asChild icon={CalendarDays}>
+            <IconMenu.Item asChild icon={<CalendarDays className="h-4 w-4" />}>
               <Link href="/dashboard/planning" className="w-full">Wochenplan öffnen</Link>
             </IconMenu.Item>
           </IconMenu>
