@@ -6,10 +6,16 @@ import {
   recommend,
   recommendationTone,
   type DayContext,
+  type IndustryProfile,
   type StaffingRecommendation,
   type WeatherCondition,
 } from "@/lib/predictive/staffing";
 import { berlinDateKeyToDayOfWeek } from "@/lib/time/timezone";
+import {
+  getHolidayForDate,
+  isBridgeDay,
+  type GermanRegion,
+} from "@/lib/holidays/de";
 
 type WeatherForecastDay = {
   date: string;
@@ -48,7 +54,14 @@ function extractForecast(payload: unknown): Map<string, WeatherForecastDay> {
  *  Wird vom Schichtplaner (Pille pro Tagesspalte) und vom Dashboard genutzt.
  */
 export async function getStaffingRecommendations(weekStart: string): Promise<
-  Array<{ date: string; dayOfWeek: number; recommendation: StaffingRecommendation; tone: "calm" | "watch" | "urgent" }>
+  Array<{
+    date: string;
+    dayOfWeek: number;
+    recommendation: StaffingRecommendation;
+    tone: "closed" | "calm" | "watch" | "urgent";
+    holidayName?: string | null;
+    isBridge?: boolean;
+  }>
 > {
   const { companyId, role } = await requireTenant();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
@@ -62,6 +75,15 @@ export async function getStaffingRecommendations(weekStart: string): Promise<
     const t = new Date(startDate.getTime() + i * 86_400_000);
     dates.push(t.toISOString().slice(0, 10));
   }
+
+  // Firmen-Profil (Industry + Region) für Predictive v2
+  const companyProfile = await db.company.findUnique({
+    where: { id: companyId },
+    select: { industry: true, region: true },
+  });
+  const industry: IndustryProfile | undefined =
+    (companyProfile?.industry as IndustryProfile | null) ?? undefined;
+  const region = (companyProfile?.region as GermanRegion | null) ?? null;
 
   // Wetter-Snapshot aus dem Cache
   const weather = await db.weatherCache.findUnique({
@@ -101,16 +123,50 @@ export async function getStaffingRecommendations(weekStart: string): Promise<
     }
   }
 
+  // Feiertage für den gesamten Zeitraum vorbereiten
+  const holidayByDate = new Map<string, string>();
+  const bridgeByDate = new Map<string, boolean>();
+  const dayBeforeHolidaySet = new Set<string>();
+  if (region) {
+    for (const date of dates) {
+      const h = getHolidayForDate(date, region);
+      if (h) holidayByDate.set(date, h.name);
+      bridgeByDate.set(date, isBridgeDay(date, region));
+    }
+    // Auch Tag NACH dem Zeitraum prüfen → relevant für "Tag-vor-Feiertag"-Effekt am 7. Tag.
+    for (const date of dates) {
+      const [yy, mm, dd] = date.split("-").map(Number);
+      const next = new Date(Date.UTC(yy, mm - 1, dd) + 86_400_000).toISOString().slice(0, 10);
+      const nextH = getHolidayForDate(next, region);
+      if (nextH) dayBeforeHolidaySet.add(date);
+    }
+  }
+
   return dates.map((date) => {
     const dow = berlinDateKeyToDayOfWeek(date);
+    const holidayName = holidayByDate.get(date) ?? null;
+    const isHoliday = Boolean(holidayName);
+    const isBridge = bridgeByDate.get(date) ?? false;
     const ctx: DayContext = {
       date,
       plannedShifts: plannedByDow.get(dow) ?? 0,
       historicalSameDay: histByDow.get(dow) ?? [],
       tempC: forecast.get(date)?.tempC ?? null,
       condition: forecast.get(date)?.condition ?? "unknown",
+      industry,
+      isHoliday,
+      holidayName: holidayName ?? undefined,
+      isBridgeDay: isBridge,
+      isDayBeforeHoliday: dayBeforeHolidaySet.has(date),
     };
     const r = recommend(ctx);
-    return { date, dayOfWeek: dow, recommendation: r, tone: recommendationTone(r) };
+    return {
+      date,
+      dayOfWeek: dow,
+      recommendation: r,
+      tone: recommendationTone(r, { isHoliday, industry }),
+      holidayName,
+      isBridge,
+    };
   });
 }

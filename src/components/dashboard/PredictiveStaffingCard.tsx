@@ -1,5 +1,15 @@
 import Link from "next/link";
-import { Brain, ChevronRight, Sun, Cloud, CloudRain, Snowflake, Wind } from "lucide-react";
+import {
+  Brain,
+  ChevronRight,
+  Sun,
+  Cloud,
+  CloudRain,
+  Snowflake,
+  Wind,
+  CalendarOff,
+  Sparkles,
+} from "lucide-react";
 import { getStaffingRecommendations } from "@/lib/actions/predictive";
 import { getBerlinDateKey } from "@/lib/time/timezone";
 import type { WeatherCondition } from "@/lib/predictive/staffing";
@@ -55,8 +65,9 @@ export async function PredictiveStaffingCard() {
       </ul>
 
       <p className="mt-4 text-[11px] text-muted-foreground">
-        Empfehlung basiert auf Wetter, historischer Auslastung gleicher Wochentage und aktuell geplanten Schichten.
-        Wir lügen kein KI-Modell vor – die Logik ist erklärbar im Planer einsehbar.
+        Empfehlung berücksichtigt Branchen-Profil, gesetzliche Feiertage & Brückentage in deinem
+        Bundesland, Wetter und historische Auslastung. Jeder Faktor ist im Tooltip erklärbar – keine
+        Black-Box.
       </p>
     </section>
   );
@@ -66,19 +77,42 @@ function DayPill({
   date,
   recommendation,
   tone,
+  holidayName,
+  isBridge,
 }: Awaited<ReturnType<typeof getStaffingRecommendations>>[number]) {
-  const formatted = new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "Europe/Berlin" }).format(
-    new Date(`${date}T12:00:00Z`),
-  );
+  const formatted = new Intl.DateTimeFormat("de-DE", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "Europe/Berlin",
+  }).format(new Date(`${date}T12:00:00Z`));
+
   const toneStyles = {
-    calm: { ring: "border-emerald-300/40 dark:border-emerald-500/15", bg: "bg-emerald-50/60 dark:bg-emerald-500/[0.06]", label: "Entspannt" },
-    watch: { ring: "border-amber-300/45 dark:border-amber-500/15", bg: "bg-amber-50/60 dark:bg-amber-500/[0.07]", label: "Aufmerksam" },
-    urgent: { ring: "border-rose-300/45 dark:border-rose-500/15", bg: "bg-rose-50/60 dark:bg-rose-500/[0.07]", label: "Aufstocken" },
+    closed: {
+      ring: "border-slate-300/40 dark:border-slate-500/20",
+      bg: "bg-slate-100/70 dark:bg-slate-500/[0.07]",
+      label: "Geschlossen",
+    },
+    calm: {
+      ring: "border-emerald-300/40 dark:border-emerald-500/15",
+      bg: "bg-emerald-50/60 dark:bg-emerald-500/[0.06]",
+      label: "Entspannt",
+    },
+    watch: {
+      ring: "border-amber-300/45 dark:border-amber-500/15",
+      bg: "bg-amber-50/60 dark:bg-amber-500/[0.07]",
+      label: "Aufmerksam",
+    },
+    urgent: {
+      ring: "border-rose-300/45 dark:border-rose-500/15",
+      bg: "bg-rose-50/60 dark:bg-rose-500/[0.07]",
+      label: "Aufstocken",
+    },
   }[tone];
 
-  // Wir versuchen, das Wetter-Icon aus den Drivers zu erraten.
-  const weatherLabel = recommendation.drivers.find((d) => /Sonn|Bew|Regen|Sturm|Schnee/.test(d.label))?.label ?? "";
-  const Icon = weatherIconFor(weatherLabel);
+  const weatherLabel =
+    recommendation.drivers.find((d) => /Sonn|Bew|Regen|Sturm|Schnee/.test(d.label))?.label ?? "";
+  const WeatherIcon = weatherIconFor(weatherLabel);
 
   return (
     <li
@@ -87,17 +121,43 @@ function DayPill({
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-bold text-foreground">{formatted}</span>
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+        {holidayName ? (
+          <CalendarOff className="h-3.5 w-3.5 text-slate-500" aria-hidden />
+        ) : isBridge ? (
+          <Sparkles className="h-3.5 w-3.5 text-brand" aria-hidden />
+        ) : (
+          <WeatherIcon className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+        )}
       </div>
-      <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{toneStyles.label}</div>
+      {holidayName ? (
+        <div className="mt-1 truncate text-[10px] font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300" title={holidayName}>
+          {holidayName}
+        </div>
+      ) : isBridge ? (
+        <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-brand">
+          Brückentag
+        </div>
+      ) : (
+        <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {toneStyles.label}
+        </div>
+      )}
       <div className="mt-2 text-[11px] leading-tight">
-        <strong className="font-semibold text-foreground">
-          {recommendation.delta > 0 ? `+${recommendation.delta}` : recommendation.delta} Person{Math.abs(recommendation.delta) === 1 ? "" : "en"}
-        </strong>{" "}
-        <span className="text-muted-foreground">empfohlen</span>
+        {tone === "closed" ? (
+          <span className="text-muted-foreground">Keine Planung empfohlen</span>
+        ) : (
+          <>
+            <strong className="font-semibold text-foreground">
+              {recommendation.delta > 0 ? `+${recommendation.delta}` : recommendation.delta} Person
+              {Math.abs(recommendation.delta) === 1 ? "" : "en"}
+            </strong>{" "}
+            <span className="text-muted-foreground">empfohlen</span>
+          </>
+        )}
       </div>
       <div className="mt-1 text-[10px] tabular-nums text-muted-foreground">
-        {Math.round(recommendation.expectedUtilization * 100)} % Auslastung · {Math.round(recommendation.confidence * 100)} % Konfidenz
+        {Math.round(recommendation.expectedUtilization * 100)} % Auslastung ·{" "}
+        {Math.round(recommendation.confidence * 100)} % Konfidenz
       </div>
     </li>
   );

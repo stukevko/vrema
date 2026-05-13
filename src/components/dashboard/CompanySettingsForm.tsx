@@ -3,6 +3,30 @@
 import { useState, useTransition } from "react";
 import { updateCompanySettings } from "@/lib/actions/settings";
 import { Loader2, Save, ShieldCheck } from "lucide-react";
+import { GERMAN_REGION_LABELS, type GermanRegion } from "@/lib/holidays/de";
+
+type IndustryValue =
+  | "RESTAURANT"
+  | "CAFE"
+  | "BAR"
+  | "HOTEL"
+  | "BAKERY"
+  | "CANTEEN"
+  | "CLUB"
+  | "CATERING"
+  | "OTHER";
+
+const INDUSTRY_OPTIONS: Array<{ value: IndustryValue; label: string; hint: string }> = [
+  { value: "RESTAURANT", label: "Restaurant", hint: "Mittag- und Abendspitzen, klassische Service-Schichten" },
+  { value: "CAFE", label: "Café", hint: "Morgens & nachmittags stark, Sommer-Sonnenboost" },
+  { value: "BAR", label: "Bar", hint: "Abend-/Nacht-Profil, Wochenende ist Spitze" },
+  { value: "HOTEL", label: "Hotel", hint: "Stetige Auslastung, Wochenend-Brückentage stark" },
+  { value: "BAKERY", label: "Bäckerei", hint: "Sehr früher Morgen, Werktage stark" },
+  { value: "CANTEEN", label: "Kantine", hint: "Werktags Mittag, Wochenende ruhig" },
+  { value: "CLUB", label: "Club / Diskothek", hint: "Nur Wochenende, sehr lange Schichten" },
+  { value: "CATERING", label: "Catering", hint: "Event-getrieben, unregelmäßig" },
+  { value: "OTHER", label: "Sonstiges", hint: "Keine Branchen-Heuristik" },
+];
 
 interface Props {
   company: {
@@ -15,6 +39,8 @@ interface Props {
     locationZip: string | null;
     locationCity: string | null;
     estimatedWeeklyRevenue: number | null;
+    industry: IndustryValue | null;
+    region: string | null;
   };
 }
 
@@ -23,6 +49,10 @@ export function CompanySettingsForm({ company }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [shiftCycleWeeks, setShiftCycleWeeks] = useState(String(company.shiftCycleWeeks ?? 1));
+  const [industry, setIndustry] = useState<IndustryValue | "">(company.industry ?? "");
+  const [region, setRegion] = useState<GermanRegion | "">(
+    (company.region as GermanRegion | null) ?? "",
+  );
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -43,6 +73,8 @@ export function CompanySettingsForm({ company }: Props) {
             estimatedWeeklyRevenue != null && Number.isFinite(estimatedWeeklyRevenue)
               ? estimatedWeeklyRevenue
               : null,
+          industry: industry === "" ? null : industry,
+          region: region === "" ? null : region,
         });
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
@@ -119,6 +151,56 @@ export function CompanySettingsForm({ company }: Props) {
         <p className="text-[10px] text-muted-foreground -mt-2 font-sans">
           Für Wetter im Planer: OpenWeatherMap-API-Key in OPENWEATHER_API_KEY (Server). PLZ hat Vorrang vor Ort.
         </p>
+
+        {/* Betrieb & Standort – steuert Predictive- und AI-Heuristiken */}
+        <div className="rounded-xl border border-line bg-card/40 p-4 dark:bg-surface/40">
+          <p className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-3">
+            Betrieb & Standort · steuert Personal-Vorhersage und Feiertage
+          </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="min-w-0">
+              <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
+                Betriebskategorie
+              </label>
+              <select
+                value={industry}
+                onChange={(e) => setIndustry(e.target.value as IndustryValue | "")}
+                className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors dark:bg-surface"
+              >
+                <option value="">— nicht festgelegt —</option>
+                {INDUSTRY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-muted-foreground mt-1 font-sans">
+                {INDUSTRY_OPTIONS.find((o) => o.value === industry)?.hint ??
+                  "Beeinflusst Wochenprofil & Spitzen-Erkennung in der Vorhersage."}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
+                Bundesland (Feiertage)
+              </label>
+              <select
+                value={region}
+                onChange={(e) => setRegion(e.target.value as GermanRegion | "")}
+                className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors dark:bg-surface"
+              >
+                <option value="">— nicht festgelegt —</option>
+                {(Object.keys(GERMAN_REGION_LABELS) as GermanRegion[]).map((code) => (
+                  <option key={code} value={code}>
+                    {GERMAN_REGION_LABELS[code]}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-muted-foreground mt-1 font-sans">
+                Ermöglicht Feiertage, Brückentage und länderspezifische Spitzen.
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="min-w-0">
           <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">

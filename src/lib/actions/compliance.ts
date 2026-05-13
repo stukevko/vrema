@@ -77,7 +77,7 @@ export async function getWeeklyComplianceReport(weekStart: string): Promise<Week
   }
 
   const findings = evaluateShifts(shiftLikes, DEFAULT_ARBZG_CONFIG);
-  const score = complianceScore(findings);
+  const score = complianceScore(findings, shiftLikes.length);
 
   // User-IDs aus Findings raussuchen (über shiftIds) und Namen anreichern.
   const enrichedFindings = findings.map((f) => {

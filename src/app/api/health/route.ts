@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { isAvailable as isOllamaAvailable } from "@/lib/ai/local-client";
 
 /**
  *  GET /api/health
@@ -8,7 +9,7 @@ import { db } from "@/lib/db";
  */
 
 type ComponentStatus = {
-  id: "api" | "db" | "auth" | "mail";
+  id: "api" | "db" | "auth" | "mail" | "neural";
   label: string;
   state: "operational" | "degraded" | "down";
   latencyMs?: number;
@@ -46,6 +47,26 @@ export async function GET() {
     state: process.env.RESEND_API_KEY ? "operational" : "degraded",
     hint: process.env.RESEND_API_KEY ? undefined : "Resend nicht konfiguriert – Mails werden nicht versandt",
   });
+
+  // VREMA Neural Engine (Ollama lokal). Ist OPTIONAL – „degraded" statt „down".
+  try {
+    const t0 = Date.now();
+    const neuralOk = await isOllamaAvailable();
+    result.push({
+      id: "neural",
+      label: "VREMA Neural Engine",
+      state: neuralOk ? "operational" : "degraded",
+      latencyMs: Date.now() - t0,
+      hint: neuralOk ? undefined : "Lokales Modell nicht erreichbar – Empfehlungen laufen im Heuristik-Modus.",
+    });
+  } catch {
+    result.push({
+      id: "neural",
+      label: "VREMA Neural Engine",
+      state: "degraded",
+      hint: "Health-Check fehlgeschlagen – Heuristik-Fallback aktiv.",
+    });
+  }
 
   const totalLatency = Date.now() - start;
   const worst = result.some((c) => c.state === "down")

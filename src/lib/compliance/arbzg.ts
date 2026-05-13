@@ -260,17 +260,29 @@ export function evaluateShifts(
 }
 
 /**
- * 0–100-Score über alle Findings (Standard-Gewichtung).
- *  - violation = 10 Punkte Abzug
- *  - warn      =  3 Punkte Abzug
+ * 0–100-Score, **normalisiert pro Schicht**.
+ *
+ *  Hintergrund: Eine reine Summen-Logik („−10 pro Verstoß, −3 pro Warnung")
+ *  bestraft Firmen mit vielen Schichten überproportional. Ein Betrieb mit
+ *  120 Schichten/Woche und 3 Verstößen ist real „top", bekäme aber denselben
+ *  Score wie ein 20-Schichten-Betrieb mit 3 Verstößen.
+ *
+ *  Modell:
+ *    riskShare = (gewichtete Findings) / (Schichten × maxRisikoProSchicht)
+ *    score     = round((1 − riskShare) × 100)
+ *
+ *  Pro Schicht wird der Beitrag bei `cap` gekappt (Standard 1.0), damit eine
+ *  einzelne Extrem-Schicht den Score nicht alleine ins Nichts ziehen kann.
  */
-export function complianceScore(findings: ArbZgFinding[]): {
+export function complianceScore(
+  findings: ArbZgFinding[],
+  totalShifts?: number,
+): {
   score: number;
   violations: number;
   warnings: number;
   perRule: Record<ArbZgRuleId, number>;
 } {
-  let score = 100;
   const perRule: Record<ArbZgRuleId, number> = {
     max_daily_hours: 0,
     max_weekly_hours: 0,
@@ -279,17 +291,45 @@ export function complianceScore(findings: ArbZgFinding[]): {
   };
   let violations = 0;
   let warnings = 0;
+
+  // Pro-Schicht-Risiko aggregieren und cappen.
+  const perShiftRisk = new Map<string, number>();
+  const VIOLATION_WEIGHT = 1.0;
+  const WARN_WEIGHT = 0.3;
+  const PER_SHIFT_CAP = 1.0;
+
   for (const f of findings) {
     perRule[f.ruleId] += 1;
-    if (f.severity === "violation") {
-      score -= 10;
-      violations += 1;
-    } else {
-      score -= 3;
-      warnings += 1;
+    if (f.severity === "violation") violations += 1;
+    else warnings += 1;
+
+    // Wenn eine Regel mehrere Schichten gemeinsam betrifft (z. B. Ruhezeit
+    // zwischen Schichten oder Wochengrenze), teilen wir das Risiko fair auf,
+    // damit nicht jede betroffene Schicht den vollen Hit kriegt.
+    const weight = f.severity === "violation" ? VIOLATION_WEIGHT : WARN_WEIGHT;
+    const sharedWeight = weight / Math.max(1, f.shiftIds.length);
+    for (const sid of f.shiftIds) {
+      perShiftRisk.set(sid, (perShiftRisk.get(sid) ?? 0) + sharedWeight);
     }
   }
-  return { score: Math.max(0, score), violations, warnings, perRule };
+
+  // Fallback: wenn `totalShifts` nicht gegeben ist, nimmt der Score die
+  // Schicht-Menge aus den Findings selbst – konservative Schätzung.
+  const denominator = Math.max(
+    1,
+    totalShifts ?? perShiftRisk.size,
+  );
+
+  let cappedRisk = 0;
+  for (const [, r] of perShiftRisk) {
+    cappedRisk += Math.min(PER_SHIFT_CAP, r);
+  }
+
+  // Floor: pro Findung darf maximal `denominator * PER_SHIFT_CAP` herauskommen.
+  const riskShare = Math.min(1, cappedRisk / denominator);
+  const score = Math.max(0, Math.round((1 - riskShare) * 100));
+
+  return { score, violations, warnings, perRule };
 }
 
 /** Aggregierter, sprechbarer Label-String für UI-Pillen. */

@@ -101,6 +101,58 @@ enum ShiftTradeStatus {
   PENDING_APPROVAL
 }
 
+/// VREMA Neural Engine: Telemetrie zwischen Vorschlag und Realität.
+///   - `kind` beschreibt, was wir tracken (z. B. shift_plan_deviation, staffing_recommendation)
+///   - `suggestion` = was VREMA empfohlen hat (JSON-Snapshot)
+///   - `actual`     = was tatsächlich passiert ist (JSON-Snapshot)
+///   - `metrics`    = berechnete Abweichung (rmse, deltaPct, …) für späteres Fine-Tuning
+///
+/// WICHTIG: NICHTS Personenbezogenes (Namen, E-Mail) im JSON.
+/// Nur IDs und aggregierte Zahlen. DSGVO-Art-32-konform.
+enum AiTelemetryKind {
+  SHIFT_PLAN_DEVIATION
+  STAFFING_RECOMMENDATION
+  COMPLIANCE_SCORE
+  NO_SHOW_PREDICTION
+  GENERIC
+}
+
+model AiTelemetry {
+  id          String           @id @default(cuid())
+  companyId   String
+  kind        AiTelemetryKind
+  /// JSON-Snapshot des Modell-/Heuristik-Vorschlags
+  suggestion  Json
+  /// JSON-Snapshot der tatsächlichen Realität (kann null sein, bis Realität bekannt ist)
+  actual      Json?
+  /// Berechnete Abweichung – Schlüssel z. B. "rmse", "deltaPct", "matched"
+  metrics     Json?
+  /// Modell, das den Vorschlag erzeugt hat ("heuristic-v2", "ollama:mistral", …)
+  modelTag    String
+  /// Bezugs-Datum, falls der Vorschlag tagesbezogen war (z. B. KW-Tag)
+  referenceDate DateTime?
+  createdAt   DateTime         @default(now())
+  closedAt    DateTime?
+
+  company     Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, kind, createdAt])
+  @@index([companyId, referenceDate])
+}
+
+/// Betriebs-Kategorie – steuert Predictive- und AI-Heuristiken.
+enum CompanyIndustry {
+  RESTAURANT
+  CAFE
+  BAR
+  HOTEL
+  BAKERY
+  CANTEEN
+  CLUB
+  CATERING
+  OTHER
+}
+
 /// In-App-Notifications (Light-Push). Werden beim Öffnen der App angezeigt — kein OS-Push nötig.
 enum NotificationType {
   VACATION_APPROVED
@@ -172,6 +224,11 @@ model Company {
   locationZip       String?
   /// Ort für Wetter, falls keine PLZ (optional)
   locationCity      String?
+  /// Branche / Betriebskategorie – steuert Predictive-Heuristiken (Café-Spitzen morgens,
+  /// Bar-Spitzen Fr/Sa abends, Hotel = stetige Auslastung, …). Optional.
+  industry          CompanyIndustry?
+  /// Bundesland-Code (ISO 3166-2:DE, z. B. "DE-BE"). Wichtig für Feiertage in der Vorhersage.
+  region            String?
   /// Geschätzter Wochenumsatz (EUR) für Lohnquoten-Kennzahlen – optional
   estimatedWeeklyRevenue Float?
   affiliateId       String?
@@ -207,6 +264,7 @@ model Company {
   shiftTaskLists    ShiftTaskList[]
   notifications     Notification[]
   apiKeys           ApiKey[]
+  aiTelemetry       AiTelemetry[]
 
   @@index([slug])
   @@index([affiliateId])

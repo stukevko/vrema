@@ -20,6 +20,8 @@ export async function getCompanySettings() {
       locationZip: true,
       locationCity: true,
       estimatedWeeklyRevenue: true,
+      industry: true,
+      region: true,
     },
   });
 }
@@ -30,6 +32,18 @@ export async function updateCompanySettings(data: {
   locationZip?: string | null;
   locationCity?: string | null;
   estimatedWeeklyRevenue?: number | null;
+  industry?:
+    | "RESTAURANT"
+    | "CAFE"
+    | "BAR"
+    | "HOTEL"
+    | "BAKERY"
+    | "CANTEEN"
+    | "CLUB"
+    | "CATERING"
+    | "OTHER"
+    | null;
+  region?: string | null;
 }) {
   const { companyId, role } = await requireTenant();
 
@@ -56,6 +70,10 @@ export async function updateCompanySettings(data: {
         ? { locationCity: data.locationCity?.trim() ? data.locationCity.trim() : null }
         : {}),
       ...(revenue !== undefined ? { estimatedWeeklyRevenue: revenue } : {}),
+      ...(data.industry !== undefined ? { industry: data.industry } : {}),
+      ...(data.region !== undefined
+        ? { region: data.region && data.region.trim() ? data.region.trim() : null }
+        : {}),
     },
   });
 
