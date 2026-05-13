@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { DailyWeatherForecast, WeatherConditionKind } from "@/lib/weather/shared";
+import { getBerlinDateKey } from "@/lib/time/timezone";
 
 const CACHE_MS = 3 * 60 * 60 * 1000;
 
@@ -213,7 +214,7 @@ export async function getWeeklyWeatherForCompanyMemoized(companyId: string): Pro
 export function mondayOfWeekContaining(isoDate: string): string {
   const base = new Date(`${isoDate}T12:00:00`);
   if (Number.isNaN(base.getTime())) {
-    return mondayOfWeekContaining(new Date().toISOString().slice(0, 10));
+    return mondayOfWeekContaining(getBerlinDateKey(new Date()));
   }
   const d = new Date(base);
   d.setHours(0, 0, 0, 0);

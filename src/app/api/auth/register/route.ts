@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import { generateVerificationToken } from "@/lib/actions/auth";
-import { sendTeamInviteWelcomeEmail, sendVerificationEmail } from "@/lib/actions/emails";
+import { generateVerificationToken } from "@/lib/auth/tokens";
+import { sendTeamInviteWelcomeEmail, sendVerificationEmail } from "@/lib/email/transactional";
 
 const MIN_PASSWORD_LENGTH = 8;
 

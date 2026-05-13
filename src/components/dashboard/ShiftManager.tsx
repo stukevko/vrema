@@ -257,7 +257,14 @@ export function ShiftManager({
   /** Mobil: nur Einfach-Planer. Desktop: Einfach-Planer oder Timeline. */
   const [viewMode, setViewMode] = useState<"simple" | "timeline">("simple");
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<1 | 2 | 3>(1);
-  const [timelineDate, setTimelineDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [timelineDate, setTimelineDate] = useState(() =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Berlin",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date()),
+  );
   const [neededStaff, setNeededStaff] = useState(2);
   const timelineDay = useMemo(() => {
     const parsed = new Date(`${timelineDate}T12:00:00`);

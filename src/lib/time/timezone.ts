@@ -82,12 +82,32 @@ export function formatBerlinTime(date: Date, options?: Intl.DateTimeFormatOption
 }
 
 export function getBerlinNowHour(base = new Date()) {
-  return Number(
-    base.toLocaleString("en-GB", {
-      timeZone: BERLIN_TZ,
-      hour: "2-digit",
-      hour12: false,
-    })
+  const parts = new Intl.DateTimeFormat("de-DE", {
+    timeZone: BERLIN_TZ,
+    hour: "numeric",
+    hour12: false,
+  }).formatToParts(base);
+  const hour = Number(parts.find((p) => p.type === "hour")?.value);
+  return Number.isFinite(hour) ? hour : 0;
+}
+
+/**
+ * Baut aus einem Basis-Datum + Uhrzeit "HH:MM" eine `Date`-Instanz, die dem
+ * Wandkalender in `Europe/Berlin` entspricht – DST-sicher.
+ *
+ * Hintergrund: `baseDate.setHours(h, m)` operiert in der **lokalen Zeitzone
+ * des Node-Prozesses**, was auf UTC-Servern zu falschen Schicht-Starts führt.
+ */
+export function parseBerlinShiftStart(baseDate: Date, hhmm: string): Date | null {
+  const [hRaw, mRaw] = hhmm.split(":");
+  const hour = Number(hRaw);
+  const minute = Number(mRaw);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+
+  const p = extractParts(baseDate, BERLIN_TZ);
+  return zonedDateTimeToUtc(
+    { year: p.year, month: p.month, day: p.day, hour, minute, second: 0 },
+    BERLIN_TZ,
   );
 }
 

@@ -1,55 +1,11 @@
 "use server";
 
-import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/actions/emails";
+import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/email/transactional";
+import { generatePasswordResetToken, generateVerificationToken } from "@/lib/auth/tokens";
 
-const VERIFICATION_TOKEN_TTL_HOURS = 24;
-const PASSWORD_RESET_TOKEN_TTL_HOURS = 1;
 const MIN_PASSWORD_LENGTH = 8;
-
-export async function generateVerificationToken(email: string) {
-  const normalizedEmail = email.toLowerCase().trim();
-  const identifier = `verify:${normalizedEmail}`;
-  const token = randomBytes(32).toString("hex");
-  const expires = new Date(Date.now() + VERIFICATION_TOKEN_TTL_HOURS * 60 * 60 * 1000);
-
-  await db.verificationToken.deleteMany({
-    where: { identifier },
-  });
-
-  await db.verificationToken.create({
-    data: {
-      identifier,
-      token,
-      expires,
-    },
-  });
-
-  return { token, expires };
-}
-
-export async function generatePasswordResetToken(email: string) {
-  const normalizedEmail = email.toLowerCase().trim();
-  const identifier = `reset:${normalizedEmail}`;
-  const token = randomBytes(32).toString("hex");
-  const expires = new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_HOURS * 60 * 60 * 1000);
-
-  await db.verificationToken.deleteMany({
-    where: { identifier },
-  });
-
-  await db.verificationToken.create({
-    data: {
-      identifier,
-      token,
-      expires,
-    },
-  });
-
-  return { token, expires };
-}
 
 export async function requestPasswordReset(email: string) {
   const normalizedEmail = email.toLowerCase().trim();

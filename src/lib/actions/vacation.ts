@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
 import { revalidatePath } from "next/cache";
-import { sendVacationStatusEmail } from "@/lib/actions/emails";
+import { sendVacationStatusEmail } from "@/lib/email/transactional";
 import { createNotification } from "@/lib/notifications/create";
 import { AbsenceRequestStatus, AbsenceType, VacationStatus } from "@prisma/client";
 
@@ -304,123 +304,151 @@ export async function getTeamVacationRequestsWithContext() {
   const requesterIds = Array.from(new Set(requests.map((r) => r.userId)));
   if (requesterIds.length === 0) return [] as Array<typeof requests[number] & { context: VacationDecisionContext }>;
 
-  // Resturlaub im Jahr des Antrags – pro (userId, year)
-  const yearKeys = new Set<string>();
-  const requestsByUserYear = new Map<string, number>(); // sum of approved VACATION days
-  const yearRanges: Array<{ userId: string; year: number; start: Date; end: Date }> = [];
-  for (const r of requests) {
-    const year = new Date(r.startDate).getFullYear();
-    const key = `${r.userId}:${year}`;
-    if (yearKeys.has(key)) continue;
-    yearKeys.add(key);
-    yearRanges.push({
-      userId: r.userId,
-      year,
-      start: new Date(Date.UTC(year, 0, 1)),
-      end: new Date(Date.UTC(year + 1, 0, 1)),
-    });
+  // ── (1) Resturlaub pro (userId, year) – EIN Query, danach in Memory bucketn.
+  // Spannweite umfasst alle Antrags-Jahre, damit auch ältere Anträge korrekt
+  // dargestellt werden.
+  const requestYears = requests.map((r) => new Date(r.startDate).getFullYear());
+  const minYear = Math.min(...requestYears);
+  const maxYear = Math.max(...requestYears);
+  const yearRangeStart = new Date(Date.UTC(minYear, 0, 1));
+  const yearRangeEnd = new Date(Date.UTC(maxYear + 1, 0, 1));
+
+  const approvedVacationsForBuckets = await db.vacationRequest.findMany({
+    where: tenantWhere(companyId, {
+      userId: { in: requesterIds },
+      status: VacationStatus.APPROVED,
+      absenceType: AbsenceType.VACATION,
+      startDate: { gte: yearRangeStart, lt: yearRangeEnd },
+    }),
+    select: { userId: true, startDate: true, days: true },
+  });
+
+  const requestsByUserYear = new Map<string, number>();
+  for (const row of approvedVacationsForBuckets) {
+    const year = new Date(row.startDate).getFullYear();
+    const key = `${row.userId}:${year}`;
+    requestsByUserYear.set(key, (requestsByUserYear.get(key) ?? 0) + row.days);
   }
 
-  await Promise.all(
-    yearRanges.map(async ({ userId, year, start, end }) => {
-      const approved = await db.vacationRequest.findMany({
+  // ── (2) Konflikte: EIN Query pro Tabelle über die Hüllen-Zeitspanne aller
+  // PENDING-Anträge; danach im Speicher pro Request matchen.
+  const pendingRequests = requests.filter((r) => r.status === VacationStatus.PENDING);
+
+  type OverlappingVacationRow = {
+    id: string;
+    userId: string;
+    startDate: Date;
+    endDate: Date;
+    absenceType: AbsenceType;
+    user: { name: string | null; email: string; staffingRole: string | null };
+  };
+  type OverlappingAbsenceRow = {
+    id: string;
+    userId: string;
+    start: Date;
+    end: Date;
+    type: AbsenceType;
+    user: { name: string | null; email: string; staffingRole: string | null };
+  };
+  let overlappingVacations: OverlappingVacationRow[] = [];
+  let overlappingAbsences: OverlappingAbsenceRow[] = [];
+
+  if (pendingRequests.length > 0) {
+    let envelopeStart = pendingRequests[0].startDate;
+    let envelopeEnd = pendingRequests[0].endDate;
+    for (const r of pendingRequests) {
+      if (r.startDate < envelopeStart) envelopeStart = r.startDate;
+      if (r.endDate > envelopeEnd) envelopeEnd = r.endDate;
+    }
+
+    [overlappingVacations, overlappingAbsences] = await Promise.all([
+      db.vacationRequest.findMany({
         where: tenantWhere(companyId, {
-          userId,
           status: VacationStatus.APPROVED,
-          absenceType: AbsenceType.VACATION,
-          startDate: { gte: start, lt: end },
+          startDate: { lte: envelopeEnd },
+          endDate: { gte: envelopeStart },
         }),
-        select: { days: true },
-      });
-      const sum = approved.reduce((a, b) => a + b.days, 0);
-      requestsByUserYear.set(`${userId}:${year}`, sum);
-    })
-  );
+        select: {
+          id: true,
+          userId: true,
+          startDate: true,
+          endDate: true,
+          absenceType: true,
+          user: { select: { name: true, email: true, staffingRole: true } },
+        },
+      }),
+      db.absence.findMany({
+        where: {
+          orgId: companyId,
+          status: AbsenceRequestStatus.APPROVED,
+          start: { lte: envelopeEnd },
+          end: { gte: envelopeStart },
+        },
+        select: {
+          id: true,
+          userId: true,
+          start: true,
+          end: true,
+          type: true,
+          user: { select: { name: true, email: true, staffingRole: true } },
+        },
+      }),
+    ]);
+  }
 
-  // Konflikte je Antrag (nur PENDING wirklich relevant – aber wir
-  // berechnen für alle, damit ältere Anträge ihre Historie zeigen).
-  const enriched = await Promise.all(
-    requests.map(async (req) => {
-      const year = new Date(req.startDate).getFullYear();
-      const taken = requestsByUserYear.get(`${req.userId}:${year}`) ?? 0;
-      // Bei APPROVED-Eigenantrag ist `taken` inkl. dieses Antrags – Resturlaub stimmt direkt.
-      // Bei PENDING ist `taken` ohne diesen Antrag – die UI zeigt den Effekt nach Freigabe separat an.
-      const remaining = req.user.vacationDays - taken;
+  const enriched = requests.map((req) => {
+    const year = new Date(req.startDate).getFullYear();
+    const taken = requestsByUserYear.get(`${req.userId}:${year}`) ?? 0;
+    const remaining = req.user.vacationDays - taken;
 
-      let conflicts: VacationDecisionContext["conflicts"] = [];
-      if (req.status === VacationStatus.PENDING) {
-        const overlappingVacations = await db.vacationRequest.findMany({
-          where: tenantWhere(companyId, {
-            id: { not: req.id },
-            userId: { not: req.userId },
-            status: VacationStatus.APPROVED,
-            startDate: { lte: req.endDate },
-            endDate: { gte: req.startDate },
-          }),
-          select: {
-            userId: true,
-            absenceType: true,
-            user: { select: { name: true, email: true, staffingRole: true } },
-          },
-          take: 20,
-        });
-        const overlappingAbsences = await db.absence.findMany({
-          where: {
-            orgId: companyId,
-            userId: { not: req.userId },
-            status: AbsenceRequestStatus.APPROVED,
-            start: { lte: req.endDate },
-            end: { gte: req.startDate },
-          },
-          select: {
-            userId: true,
-            type: true,
-            user: { select: { name: true, email: true, staffingRole: true } },
-          },
-          take: 20,
-        });
-
-        const dedup = new Map<string, VacationDecisionContext["conflicts"][number]>();
-        const pushOne = (entry: VacationDecisionContext["conflicts"][number]) => {
-          const existing = dedup.get(entry.userId);
-          if (!existing || entry.type === "SICK") {
-            dedup.set(entry.userId, entry);
-          }
-        };
-        for (const o of overlappingVacations) {
-          const t: "VACATION" | "SICK" | "OTHER" =
-            o.absenceType === AbsenceType.SICK ? "SICK" : o.absenceType === AbsenceType.VACATION ? "VACATION" : "OTHER";
-          pushOne({
-            userId: o.userId,
-            name: o.user.name ?? o.user.email,
-            staffingRole: o.user.staffingRole ?? null,
-            type: t,
-            sameRole: Boolean(req.user.staffingRole) && o.user.staffingRole === req.user.staffingRole,
-          });
+    let conflicts: VacationDecisionContext["conflicts"] = [];
+    if (req.status === VacationStatus.PENDING) {
+      const dedup = new Map<string, VacationDecisionContext["conflicts"][number]>();
+      const pushOne = (entry: VacationDecisionContext["conflicts"][number]) => {
+        const existing = dedup.get(entry.userId);
+        if (!existing || entry.type === "SICK") {
+          dedup.set(entry.userId, entry);
         }
-        for (const o of overlappingAbsences) {
-          const t: "VACATION" | "SICK" | "OTHER" =
-            o.type === AbsenceType.SICK ? "SICK" : o.type === AbsenceType.VACATION ? "VACATION" : "OTHER";
-          pushOne({
-            userId: o.userId,
-            name: o.user.name ?? o.user.email,
-            staffingRole: o.user.staffingRole ?? null,
-            type: t,
-            sameRole: Boolean(req.user.staffingRole) && o.user.staffingRole === req.user.staffingRole,
-          });
-        }
-        conflicts = Array.from(dedup.values()).sort((a, b) => Number(b.sameRole) - Number(a.sameRole));
-      }
-
-      const context: VacationDecisionContext = {
-        vacationDays: req.user.vacationDays,
-        daysTakenThisYear: taken,
-        daysRemaining: remaining,
-        conflicts,
       };
-      return Object.assign(req, { context });
-    })
-  );
+      for (const o of overlappingVacations) {
+        if (o.userId === req.userId || o.id === req.id) continue;
+        if (o.startDate > req.endDate || o.endDate < req.startDate) continue;
+        const t: "VACATION" | "SICK" | "OTHER" =
+          o.absenceType === AbsenceType.SICK ? "SICK" : o.absenceType === AbsenceType.VACATION ? "VACATION" : "OTHER";
+        pushOne({
+          userId: o.userId,
+          name: o.user.name ?? o.user.email,
+          staffingRole: o.user.staffingRole ?? null,
+          type: t,
+          sameRole: Boolean(req.user.staffingRole) && o.user.staffingRole === req.user.staffingRole,
+        });
+      }
+      for (const o of overlappingAbsences) {
+        if (o.userId === req.userId) continue;
+        if (o.start > req.endDate || o.end < req.startDate) continue;
+        const t: "VACATION" | "SICK" | "OTHER" =
+          o.type === AbsenceType.SICK ? "SICK" : o.type === AbsenceType.VACATION ? "VACATION" : "OTHER";
+        pushOne({
+          userId: o.userId,
+          name: o.user.name ?? o.user.email,
+          staffingRole: o.user.staffingRole ?? null,
+          type: t,
+          sameRole: Boolean(req.user.staffingRole) && o.user.staffingRole === req.user.staffingRole,
+        });
+      }
+      conflicts = Array.from(dedup.values())
+        .sort((a, b) => Number(b.sameRole) - Number(a.sameRole))
+        .slice(0, 20);
+    }
+
+    const context: VacationDecisionContext = {
+      vacationDays: req.user.vacationDays,
+      daysTakenThisYear: taken,
+      daysRemaining: remaining,
+      conflicts,
+    };
+    return Object.assign(req, { context });
+  });
 
   return enriched;
 }

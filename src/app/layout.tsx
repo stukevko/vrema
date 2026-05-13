@@ -103,9 +103,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
+  // Light/Dark stimmen mit dem Manifest-Theme (Petrol) und dem App-Header ab,
+  // damit iOS-Statusbar und PWA-Splash konsistent wirken.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f9fafb" },
-    { media: "(prefers-color-scheme: dark)", color: "#131418" },
+    { media: "(prefers-color-scheme: light)", color: "#0a3a52" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a3a52" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -128,12 +130,12 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="manifest" href="/manifest.json" />
+        {/* Manifest wird über `metadata.manifest` (→ /site.webmanifest) injected; doppelte Referenz entfernt. */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="VREMA – Gastro-Planung" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="msapplication-TileColor" content="#131418" />
+        <meta name="msapplication-TileColor" content="#0a3a52" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-[100dvh] w-full min-w-0 antialiased bg-background text-fg`}

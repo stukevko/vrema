@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/tenant-guard";
-import { sendVacationStatusEmail } from "@/lib/actions/emails";
+import { sendVacationStatusEmail } from "@/lib/email/transactional";
 import type { AbsenceRequestStatus, VacationStatus } from "@prisma/client";
 import { countBerlinCalendarDaysInclusive } from "@/lib/time/timezone";
 

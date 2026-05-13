@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
-import { sendWelcomeEmail } from "@/lib/actions/emails";
+import { sendWelcomeEmail } from "@/lib/email/transactional";
 import { getWeekCycleIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 import { randomBytes } from "crypto";
 import { ShiftTradeStatus } from "@prisma/client";
@@ -726,27 +726,27 @@ export async function copyWeekToAllMembers(sourceUserId: string) {
     throw new Error("Keine weiteren aktiven Mitarbeiter gefunden.");
   }
 
+  // Bulk-Replace ohne N+1: ein deleteMany über alle Ziel-User, danach ein
+  // createMany mit dem Kreuzprodukt (targets × sourceShifts).
+  const targetIds = targets.map((t) => t.id);
+  const bulkData = targetIds.flatMap((userId) =>
+    sourceShifts.map((s) => ({
+      companyId,
+      userId,
+      weekIndex: s.weekIndex,
+      dayOfWeek: s.dayOfWeek,
+      startTime: s.startTime,
+      endTime: s.endTime,
+      breakDuration: s.breakDuration,
+    })),
+  );
+
   await db.$transaction(async (tx) => {
-    for (const target of targets) {
-      await tx.shift.deleteMany({
-        where: {
-          companyId,
-          userId: target.id,
-        },
-      });
-      if (sourceShifts.length > 0) {
-        await tx.shift.createMany({
-          data: sourceShifts.map((s) => ({
-            companyId,
-            userId: target.id,
-            weekIndex: s.weekIndex,
-            dayOfWeek: s.dayOfWeek,
-            startTime: s.startTime,
-            endTime: s.endTime,
-            breakDuration: s.breakDuration,
-          })),
-        });
-      }
+    await tx.shift.deleteMany({
+      where: { companyId, userId: { in: targetIds } },
+    });
+    if (bulkData.length > 0) {
+      await tx.shift.createMany({ data: bulkData, skipDuplicates: true });
     }
   });
 

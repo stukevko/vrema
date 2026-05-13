@@ -6,7 +6,11 @@ import { ReportsClient } from "@/components/dashboard/ReportsClient";
 import { VacationStatus } from "@prisma/client";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
 import { sumWorkedMinutes } from "@/lib/time/payroll";
-import { getMonthBoundsUtc } from "@/lib/time/timezone";
+import {
+  berlinDateKeyToDayOfWeek,
+  getMonthBoundsUtc,
+  listBerlinDateKeysInclusive,
+} from "@/lib/time/timezone";
 
 export default async function ReportsPage({
   searchParams,
@@ -118,10 +122,18 @@ export default async function ReportsPage({
 
   const monthlySollMinutesByUser: Record<string, number> = {};
   const dayCountsByWeekdayAndWeek = new Map<string, number>();
-  const loopEnd = new Date(endExclusive.getTime() - 1);
-  for (let d = new Date(start); d <= loopEnd; d.setDate(d.getDate() + 1)) {
-    const wd = d.getDay();
-    const weekIndex = getWeekCycleIndex(new Date(d), company?.shiftCycleWeeks);
+  // Berlin-Kalender iterieren: vermeidet Mitternachts-Drift, wenn der Server in
+  // einer abweichenden Zeitzone läuft (z.B. UTC). Wir nehmen jeden Tag-Key
+  // 12:00 Berlin als Zeitanker für getWeekCycleIndex – DST-stabil.
+  const monthDateKeys = listBerlinDateKeysInclusive(
+    start,
+    new Date(endExclusive.getTime() - 1),
+  );
+  for (const dateKey of monthDateKeys) {
+    const [yKey, mKey, dKey] = dateKey.split("-").map(Number);
+    const noonAnchor = new Date(Date.UTC(yKey, mKey - 1, dKey, 12, 0, 0));
+    const wd = berlinDateKeyToDayOfWeek(dateKey);
+    const weekIndex = getWeekCycleIndex(noonAnchor, company?.shiftCycleWeeks);
     const key = `${weekIndex}-${wd}`;
     dayCountsByWeekdayAndWeek.set(key, (dayCountsByWeekdayAndWeek.get(key) ?? 0) + 1);
   }

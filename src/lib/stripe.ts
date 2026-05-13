@@ -1,6 +1,19 @@
 import Stripe from "stripe";
 
-const stripeSecret = process.env.STRIPE_SECRET_KEY ?? "sk_test_dummy";
+// Hard-Fail in Production: ein fehlender Stripe-Secret darf nicht stillschweigend
+// in den Build/Boot rutschen. In Development/Test darf ein Test-Dummy laufen,
+// damit lokale Pre-Auth-Flows (Onboarding-Skip) ohne Stripe getestet werden können.
+const isProduction = process.env.NODE_ENV === "production";
+const stripeSecret = (() => {
+  const raw = process.env.STRIPE_SECRET_KEY?.trim();
+  if (raw) return raw;
+  if (isProduction) {
+    throw new Error(
+      "[VREMA] STRIPE_SECRET_KEY ist in Production zwingend erforderlich. Bitte env-Variable setzen.",
+    );
+  }
+  return "sk_test_dummy";
+})();
 
 export const stripe = new Stripe(stripeSecret, {
   apiVersion: "2026-04-22.dahlia",

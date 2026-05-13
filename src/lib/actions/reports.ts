@@ -14,6 +14,7 @@ export type DatevExportRow = {
   wageType: DatevLohnart;
 };
 
+/** All report bucketing uses Europe/Berlin (DST-safe day/month bounds). */
 const DISPLAY_TZ = "Europe/Berlin";
 
 function workedMinutes(clockIn: Date, clockOut: Date | null, breakMins: number) {
@@ -22,6 +23,10 @@ function workedMinutes(clockIn: Date, clockOut: Date | null, breakMins: number) 
   return Math.max(0, gross - Math.max(0, breakMins));
 }
 
+/**
+ * Stable sortable calendar key YYYY-MM-DD in Berlin (not for end-user UI).
+ * Locale "en-CA" yields ISO-like parts regardless of server default locale.
+ */
 function toBerlinDateKey(date: Date) {
   return date.toLocaleDateString("en-CA", {
     timeZone: DISPLAY_TZ,
@@ -31,23 +36,20 @@ function toBerlinDateKey(date: Date) {
   });
 }
 
+function getBerlinHour24(date: Date): number {
+  const parts = new Intl.DateTimeFormat("de-DE", {
+    timeZone: DISPLAY_TZ,
+    hour: "numeric",
+    hour12: false,
+  }).formatToParts(date);
+  const hour = parts.find((p) => p.type === "hour")?.value;
+  const n = Number(hour);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function inferWageType(clockIn: Date, clockOut: Date | null): DatevLohnart {
-  const startHour = Number(
-    clockIn.toLocaleString("en-GB", {
-      timeZone: DISPLAY_TZ,
-      hour: "2-digit",
-      hour12: false,
-    })
-  );
-  const endHour = clockOut
-    ? Number(
-        clockOut.toLocaleString("en-GB", {
-          timeZone: DISPLAY_TZ,
-          hour: "2-digit",
-          hour12: false,
-        })
-      )
-    : startHour;
+  const startHour = getBerlinHour24(clockIn);
+  const endHour = clockOut ? getBerlinHour24(clockOut) : startHour;
   const touchesNight = startHour >= 22 || startHour < 6 || endHour >= 22 || endHour < 6;
   return touchesNight ? "NACHT" : "STANDARD";
 }

@@ -5,6 +5,7 @@ import {
   mondayOfWeekContaining,
   sliceWeekFromMonday,
 } from "@/lib/external/weather";
+import { getBerlinDateKey } from "@/lib/time/timezone";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -13,7 +14,9 @@ export async function GET(req: Request) {
   }
   const { searchParams } = new URL(req.url);
   const anchor = searchParams.get("weekStart") ?? searchParams.get("anchorDate") ?? "";
-  const monday = anchor ? mondayOfWeekContaining(anchor.slice(0, 10)) : mondayOfWeekContaining(new Date().toISOString().slice(0, 10));
+  const monday = anchor
+    ? mondayOfWeekContaining(anchor.slice(0, 10))
+    : mondayOfWeekContaining(getBerlinDateKey(new Date()));
 
   const result = await getWeeklyWeatherForCompanyMemoized(session.user.companyId);
   const week = sliceWeekFromMonday(monday, result.daily);

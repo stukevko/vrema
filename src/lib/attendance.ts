@@ -1,16 +1,15 @@
 import type { PrismaClient } from "@prisma/client";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
 import { randomUUID } from "crypto";
-import { getDayBoundsUtc } from "@/lib/time/timezone";
+import {
+  berlinDateKeyToDayOfWeek,
+  getBerlinDateKey,
+  getDayBoundsUtc,
+  parseBerlinShiftStart,
+} from "@/lib/time/timezone";
 
 function parseShiftTimeToDate(baseDate: Date, hhmm: string) {
-  const [hRaw, mRaw] = hhmm.split(":");
-  const hours = Number(hRaw);
-  const minutes = Number(mRaw);
-  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
-  const parsed = new Date(baseDate);
-  parsed.setHours(hours, minutes, 0, 0);
-  return parsed;
+  return parseBerlinShiftStart(baseDate, hhmm);
 }
 
 function getDayBounds(now: Date) {
@@ -28,7 +27,8 @@ export type AbsentJobReport = {
 export async function createAbsentEntriesForMissingShifts(prisma: PrismaClient): Promise<AbsentJobReport> {
   const now = new Date();
   const { start, end } = getDayBounds(now);
-  const todayDow = now.getDay();
+  // Wochentag aus dem Berliner Wandkalender – nicht aus der Server-TZ.
+  const todayDow = berlinDateKeyToDayOfWeek(getBerlinDateKey(now));
 
   const shifts = await prisma.shift.findMany({
     where: {

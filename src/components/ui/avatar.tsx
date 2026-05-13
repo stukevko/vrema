@@ -16,8 +16,16 @@ export function Avatar({ src, alt, fallback, className, fallbackClassName }: Ava
   return (
     <span className={cx("relative inline-flex h-9 w-9 shrink-0 overflow-hidden rounded-full", className)}>
       {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt ?? fallback} className="h-full w-full object-cover" />
+        // eslint-disable-next-line @next/next/no-img-element -- OAuth-/Data-URIs, intentional <img>
+        <img
+          src={src}
+          alt={alt ?? fallback}
+          width={36}
+          height={36}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
       ) : (
         <span
           className={cx(

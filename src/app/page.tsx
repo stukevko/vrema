@@ -466,7 +466,7 @@ export default function LandingPage() {
             <h2 className="max-w-full hyphens-auto break-words text-4xl font-bold leading-tight text-foreground md:text-5xl">
               Modulare Funktionen für
               <br />
-              <span className="text-muted-foreground">eine verlaessliche Zeitwirtschaft.</span>
+              <span className="text-muted-foreground">eine verlässliche Zeitwirtschaft.</span>
             </h2>
           </div>
 
@@ -513,8 +513,8 @@ export default function LandingPage() {
                     KI-gestützte Analyse für operative Entscheidungen.
                   </h3>
                   <p className="mt-3 max-w-full hyphens-auto break-words text-sm text-muted-foreground md:max-w-3xl">
-                    VREMA AI erkennt Muster in Arbeitszeiten, weist auf Auffaelligkeiten hin und unterstuetzt eine
-                    praezise Steuerung Ihrer Teams.
+                    VREMA AI erkennt Muster in Arbeitszeiten, weist auf Auffälligkeiten hin und unterstützt eine
+                    präzise Steuerung Ihrer Teams.
                   </p>
                 </div>
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/30 bg-brand-soft/90 text-brand backdrop-blur dark:border-white/10 dark:bg-brand/22">

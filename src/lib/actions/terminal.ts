@@ -19,6 +19,11 @@ export async function validatePinAndClock(companySlug: string, pin: string) {
     return { status: "error" as const, message: "Terminal ist nicht verfügbar." };
   }
 
+  // Kandidaten = nur Mitarbeiter mit gesetztem Terminal-PIN-Hash.
+  // Wir können hier nicht per Email lookupen (Terminal kennt nur PIN), deshalb
+  // ist die O(n)-bcrypt-Schleife by design: bcrypt-Vergleiche sind timing-safe,
+  // und der Suchraum bleibt klein (typisch 10–50 Mitarbeiter pro Firma).
+  // Edge-Rate-Limit für `POST /terminal/*` schützt zusätzlich gegen Brute-Force.
   const users = await db.user.findMany({
     where: { companyId: company.id, isActive: true, terminalPinHash: { not: null } },
     select: { id: true, name: true, terminalPinHash: true },

@@ -4,6 +4,7 @@ import type { EntryStatus } from "@prisma/client";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
 import { generateTaskListForShiftCore } from "@/lib/shift-tasks/generate-task-list";
 import { randomUUID } from "crypto";
+import { parseBerlinShiftStart, getBerlinDateKey, berlinDateKeyToDayOfWeek } from "@/lib/time/timezone";
 
 const LATE_GRACE_MINUTES = 15;
 let constraintsEnsured = false;
@@ -66,14 +67,13 @@ export async function writeWorkLogAudit(params: {
   );
 }
 
+/**
+ * Baut den Schicht-Start als UTC-Datum auf, das dem Wandkalender in
+ * `Europe/Berlin` entspricht. Vorher wurde `setHours` in der lokalen Node-TZ
+ * verwendet – auf UTC-Servern führte das zu falsch berechneten Verspätungen.
+ */
 function parseShiftTimeToDate(baseDate: Date, hhmm: string) {
-  const [hRaw, mRaw] = hhmm.split(":");
-  const hours = Number(hRaw);
-  const minutes = Number(mRaw);
-  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
-  const parsed = new Date(baseDate);
-  parsed.setHours(hours, minutes, 0, 0);
-  return parsed;
+  return parseBerlinShiftStart(baseDate, hhmm);
 }
 
 export async function createClockInEntry(params: {
@@ -93,7 +93,9 @@ export async function createClockInEntry(params: {
 
   const now = new Date();
   const weekIndex = getWeekCycleIndex(now, company.shiftCycleWeeks);
-  const dayOfWeek = now.getDay();
+  // dayOfWeek strikt aus dem Berliner Wandkalender ableiten, damit der
+  // Schicht-Lookup nicht von der Server-TZ abhängt (siehe Audit Task 16).
+  const dayOfWeek = berlinDateKeyToDayOfWeek(getBerlinDateKey(now));
   const shift = await db.shift.findFirst({
     where: tenantWhere(companyId, { userId, dayOfWeek, weekIndex }),
     orderBy: { startTime: "asc" },
