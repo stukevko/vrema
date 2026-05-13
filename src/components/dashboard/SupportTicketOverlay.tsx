@@ -55,7 +55,10 @@ export function SupportTicketOverlay({
 
           <div
             ref={panelRef}
-            className="fixed left-1/2 top-1/2 z-[141] w-[min(92vw,720px)] max-h-[min(92vh,840px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-line bg-surface p-5 text-fg shadow-[var(--shadow-pop)] md:p-6 max-md:inset-0 max-md:left-0 max-md:top-0 max-md:h-[100dvh] max-md:max-h-none max-md:w-full max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none max-md:p-4"
+            // Auf Mobile als Vollbild-Sheet. iOS-Notch (Safe-Area-Top) und
+            // Home-Indicator (Safe-Area-Bottom) werden via env() respektiert,
+            // damit Header und Buttons nicht hinter der Statusbar verschwinden.
+            className="fixed left-1/2 top-1/2 z-[141] w-[min(92vw,720px)] max-h-[min(92vh,840px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-line bg-surface p-5 text-fg shadow-[var(--shadow-pop)] md:p-6 max-md:inset-0 max-md:left-0 max-md:top-0 max-md:h-[100dvh] max-md:max-h-none max-md:w-full max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none max-md:px-4 max-md:[padding-top:max(1rem,env(safe-area-inset-top,0px))] max-md:[padding-bottom:max(1rem,env(safe-area-inset-bottom,0px))]"
             role="dialog"
             aria-modal="true"
             aria-label="Hilfe und Support"
@@ -70,8 +73,8 @@ export function SupportTicketOverlay({
               if (endY - startY > 90) onClose();
             }}
           >
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <div className="min-w-0">
+            <div className="mb-5 flex items-start justify-between gap-3 max-md:mt-1">
+              <div className="min-w-0 pr-2">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">Support</p>
                 <h2 className="mt-0.5 text-lg font-semibold text-fg">Hilfe & Support</h2>
                 <p className="mt-0.5 text-xs text-fg-muted">Tickets lesen oder neu erstellen.</p>

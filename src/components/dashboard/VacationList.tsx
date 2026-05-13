@@ -140,12 +140,15 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {req.days} Tage · {req.absenceType === "SICK" ? "Krank" : req.absenceType === "OTHER" ? "Abwesenheit" : "Urlaub"}
                   </p>
-                  {req.reason && (
-                    <p
-                      className={`mt-1 truncate text-xs ${
-                        req.absenceType === "SICK" ? "text-danger-foreground" : "text-muted-foreground"
-                      }`}
-                    >
+                  {/*
+                    DSGVO: Bei Urlaub wird der Grund nicht angezeigt –
+                    Arbeitgeber dürfen ihn nicht erheben (BUrlG / Datenminimierung).
+                    Historische Einträge mit Grund werden im UI ausgeblendet.
+                    Bei Krankmeldungen ist die Notiz eine sachliche Info (z. B.
+                    "AU folgt"), aber niemals Diagnose – siehe Eingabe-Hinweis.
+                  */}
+                  {req.reason && req.absenceType === "SICK" && (
+                    <p className="mt-1 truncate text-xs text-danger-foreground">
                       {req.reason}
                     </p>
                   )}

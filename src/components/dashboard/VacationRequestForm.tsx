@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { requestSickLeave, requestVacation } from "@/lib/actions/vacation";
-import { CalendarDays, Loader2 } from "lucide-react";
+import { CalendarDays, Loader2, ShieldCheck } from "lucide-react";
 
 export function VacationRequestForm() {
   const [isPending, startTransition] = useTransition();
@@ -19,7 +19,10 @@ export function VacationRequestForm() {
     const data = new FormData(form);
     const startDate = new Date(data.get("startDate") as string);
     const endDate = new Date(data.get("endDate") as string);
-    const reason = data.get("reason") as string;
+    // DSGVO: Bei Urlaubsanträgen wird KEIN Grund erhoben (Datenminimierung,
+    // Art. 5 DSGVO). Nur die Krankmeldung erlaubt eine optionale Notiz – ohne
+    // medizinische Details (siehe Hinweis im UI).
+    const sickNote = mode === "sick" ? (data.get("sickNote") as string | null) : null;
 
     if (endDate < startDate) {
       setError("Enddatum muss nach dem Startdatum liegen.");
@@ -29,9 +32,9 @@ export function VacationRequestForm() {
     startTransition(async () => {
       try {
         if (mode === "sick") {
-          await requestSickLeave({ startDate, endDate, note: reason || undefined });
+          await requestSickLeave({ startDate, endDate, note: sickNote?.trim() || undefined });
         } else {
-          await requestVacation({ startDate, endDate, reason: reason || undefined });
+          await requestVacation({ startDate, endDate });
         }
         setSuccess(true);
         form.reset();
@@ -85,21 +88,39 @@ export function VacationRequestForm() {
             className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
-        <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">
-            {mode === "vacation" ? "Grund (optional)" : "Notiz (optional)"}
-          </label>
-          <textarea
-            name="reason"
-            rows={3}
-            placeholder={mode === "vacation" ? "z.B. Familienurlaub" : "z.B. krank mit Attest"}
-            className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/50 transition-colors resize-none"
-          />
-        </div>
-        {mode === "sick" && (
-          <p className="text-[11px] text-red-300">
-            Krankmeldung wird direkt als Abwesenheit eingetragen und in der Planung rot blockiert.
-          </p>
+        {mode === "vacation" ? (
+          // DSGVO: Kein Grund-Feld bei Urlaub. Arbeitgeber dürfen keinen Grund
+          // verlangen (BUrlG, Datenminimierung). Klarer Trust-Hinweis statt
+          // Eingabefeld – Mitarbeiter sieht sofort, warum nichts mehr abgefragt wird.
+          <div className="flex items-start gap-2 rounded-xl border border-emerald-200/60 bg-emerald-50 px-3 py-2.5 text-[12px] leading-snug text-emerald-900 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-200">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <span>
+              <strong className="font-semibold">Kein Grund erforderlich.</strong>{" "}
+              Dein Arbeitgeber darf den Urlaubsgrund aus Datenschutzgründen nicht abfragen.
+            </span>
+          </div>
+        ) : (
+          <>
+            <div>
+              <label htmlFor="vacation-sick-note" className="text-xs text-muted-foreground mb-1.5 block">
+                Notiz (optional, ohne medizinische Details)
+              </label>
+              <textarea
+                id="vacation-sick-note"
+                name="sickNote"
+                rows={3}
+                placeholder='z. B. "AU-Attest folgt per Post"'
+                className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/50 transition-colors resize-none"
+              />
+              <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">
+                Bitte <strong className="font-semibold">keine Diagnose oder medizinischen Angaben</strong>{" "}
+                eintragen – das ist arbeitsrechtlich nicht erforderlich.
+              </p>
+            </div>
+            <p className="text-[11px] text-red-700 dark:text-red-300">
+              Krankmeldung wird direkt als Abwesenheit eingetragen und in der Planung rot blockiert.
+            </p>
+          </>
         )}
 
         {error && <p className="text-xs text-red-400">{error}</p>}
