@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { isAvailable as isOllamaAvailable } from "@/lib/ai/local-client";
 
 /**
  *  GET /api/health
@@ -9,7 +8,7 @@ import { isAvailable as isOllamaAvailable } from "@/lib/ai/local-client";
  */
 
 type ComponentStatus = {
-  id: "api" | "db" | "auth" | "mail" | "neural";
+  id: "api" | "db" | "auth" | "mail" | "native_ai";
   label: string;
   state: "operational" | "degraded" | "down";
   latencyMs?: number;
@@ -48,23 +47,23 @@ export async function GET() {
     hint: process.env.RESEND_API_KEY ? undefined : "Resend nicht konfiguriert – Mails werden nicht versandt",
   });
 
-  // VREMA Neural Engine (Ollama lokal). Ist OPTIONAL – „degraded" statt „down".
+  // VREMA Native AI – Teil des Codes, kein externer Dienst, also IMMER aktiv.
+  // Wir prüfen lediglich, ob die AiWeights-Tabelle reagiert (= Lern-Pfad intakt).
   try {
     const t0 = Date.now();
-    const neuralOk = await isOllamaAvailable();
+    await db.aiWeights.count();
     result.push({
-      id: "neural",
-      label: "VREMA Neural Engine",
-      state: neuralOk ? "operational" : "degraded",
+      id: "native_ai",
+      label: "VREMA Native AI (Active)",
+      state: "operational",
       latencyMs: Date.now() - t0,
-      hint: neuralOk ? undefined : "Lokales Modell nicht erreichbar – Empfehlungen laufen im Heuristik-Modus.",
     });
   } catch {
     result.push({
-      id: "neural",
-      label: "VREMA Neural Engine",
+      id: "native_ai",
+      label: "VREMA Native AI (Active)",
       state: "degraded",
-      hint: "Health-Check fehlgeschlagen – Heuristik-Fallback aktiv.",
+      hint: "Lerntabelle nicht erreichbar – Empfehlungen laufen nur auf Live-Daten.",
     });
   }
 

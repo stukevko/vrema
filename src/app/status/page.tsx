@@ -13,7 +13,8 @@ const base = getSiteUrl();
 
 export const metadata: Metadata = {
   title: "System-Status · VREMA",
-  description: "Live-Status der VREMA-Plattform: API, Datenbank, Anmeldung und E-Mail-Versand.",
+  description:
+    "Live-Status der VREMA-Plattform: API, Datenbank, Anmeldung, E-Mail-Versand und VREMA Native AI (On-Premise).",
   alternates: { canonical: `${base}/status` },
 };
 

@@ -10,6 +10,8 @@ import {
 import type { ShiftPlanRow } from "@/lib/planning/compliance";
 import { createNotificationsForUsers } from "@/lib/notifications/create";
 import { revalidatePath } from "next/cache";
+import { learnFromFinalizedWeek } from "@/lib/ai/learn-on-finalize";
+import { logServerError } from "@/lib/server-logger";
 
 const CAN_RUN = new Set(["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"]);
 
@@ -102,6 +104,12 @@ export async function confirmAutopilotDrafts(weekIndex: number) {
       href: "/dashboard/planning",
     });
   }
+
+  // VREMA Native Core AI: aus dem finalisierten Plan lernen.
+  // Fire-and-forget – Fehler dürfen die Publikation nie verhindern.
+  learnFromFinalizedWeek(companyId, wk).catch((err) =>
+    logServerError("ai-learn-on-finalize", err),
+  );
 
   revalidatePath("/dashboard/planning");
   revalidatePath("/dashboard");

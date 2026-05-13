@@ -9,7 +9,7 @@ import { ActiveShiftTasksCard } from "@/components/dashboard/ActiveShiftTasksCar
 import { HeroStats } from "@/components/dashboard/HeroStats";
 import { ComplianceCard } from "@/components/dashboard/ComplianceCard";
 import { PredictiveStaffingCard } from "@/components/dashboard/PredictiveStaffingCard";
-import { VremaNeuralCard } from "@/components/dashboard/VremaNeuralCard";
+import { VremaInsightsCard } from "@/components/dashboard/VremaInsightsCard";
 import { EmptyTeamBanner } from "@/components/dashboard/EmptyTeamBanner";
 import { NoShowCard } from "@/components/dashboard/NoShowCard";
 import { getEmployeeCockpitData } from "@/lib/dashboard/employee-cockpit-data";
@@ -364,6 +364,17 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {/* VREMA Insights — Native Core AI, prominenter Trust-Anker.
+          Steht ganz oben (nach No-Show-Alarm), weil sie die zentrale
+          „aus deinen eigenen Daten gelernt"-Story trägt. */}
+      {isManager && (
+        <Suspense fallback={null}>
+          <div className="order-1">
+            <VremaInsightsCard />
+          </div>
+        </Suspense>
+      )}
+
       {/* ArbZG-Compliance-Score (Manager) — Premium-Verkaufsargument. */}
       {isManager && (
         <Suspense fallback={null}>
@@ -373,20 +384,12 @@ export default async function DashboardPage() {
         </Suspense>
       )}
 
-      {/* Predictive Staffing v1 (Manager) – „Was kommt?". */}
+      {/* Predictive Staffing (Manager) – Vorwärts gerichtet, nutzt jetzt AiWeights
+          mit Heuristik-Fallback bei wenig Trainingsdaten. */}
       {isManager && (
         <Suspense fallback={null}>
           <div className="order-1">
             <PredictiveStaffingCard />
-          </div>
-        </Suspense>
-      )}
-
-      {/* VREMA Neural Engine — On-Premise-AI / Heuristik-Fallback. */}
-      {isManager && (
-        <Suspense fallback={null}>
-          <div className="order-1">
-            <VremaNeuralCard />
           </div>
         </Suspense>
       )}

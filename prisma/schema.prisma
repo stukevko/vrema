@@ -101,7 +101,7 @@ enum ShiftTradeStatus {
   PENDING_APPROVAL
 }
 
-/// VREMA Neural Engine: Telemetrie zwischen Vorschlag und Realität.
+/// VREMA Native AI: Telemetrie zwischen Vorschlag und Realität.
 ///   - `kind` beschreibt, was wir tracken (z. B. shift_plan_deviation, staffing_recommendation)
 ///   - `suggestion` = was VREMA empfohlen hat (JSON-Snapshot)
 ///   - `actual`     = was tatsächlich passiert ist (JSON-Snapshot)
@@ -127,7 +127,7 @@ model AiTelemetry {
   actual      Json?
   /// Berechnete Abweichung – Schlüssel z. B. "rmse", "deltaPct", "matched"
   metrics     Json?
-  /// Modell, das den Vorschlag erzeugt hat ("heuristic-v2", "ollama:mistral", …)
+  /// Engine-Tag, der den Vorschlag erzeugt hat ("native-core-v1", "heuristic-v2", …)
   modelTag    String
   /// Bezugs-Datum, falls der Vorschlag tagesbezogen war (z. B. KW-Tag)
   referenceDate DateTime?
@@ -138,6 +138,30 @@ model AiTelemetry {
 
   @@index([companyId, kind, createdAt])
   @@index([companyId, referenceDate])
+}
+
+/// VREMA Native Core AI: gelernte Korrekturfaktoren pro Tenant.
+/// Keine Texte, kein LLM – ausschließlich numerische Multiplikatoren.
+/// dimension = Klasse des Faktors (z. B. "history_weekday", "weather", "event", "experience"),
+/// key       = konkreter Bucket (z. B. "MON", "RAIN", "PUBLIC_HOLIDAY_EVE", "JUNIOR_HEAVY").
+/// weight    ∈ [0.3 .. 3.0], Default 1.0 (= keine Korrektur).
+model AiWeights {
+  id          String   @id @default(cuid())
+  companyId   String
+  dimension   String
+  key         String
+  weight      Float    @default(1.0)
+  /// Anzahl der Lernzyklen, die in diesen Faktor eingeflossen sind.
+  sampleCount Int      @default(0)
+  /// Letzte beobachtete Abweichung (actual/predicted - 1). Nur Diagnose.
+  lastError   Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, dimension, key])
+  @@index([companyId, dimension])
 }
 
 /// Betriebs-Kategorie – steuert Predictive- und AI-Heuristiken.
@@ -265,6 +289,7 @@ model Company {
   notifications     Notification[]
   apiKeys           ApiKey[]
   aiTelemetry       AiTelemetry[]
+  aiWeights         AiWeights[]
 
   @@index([slug])
   @@index([affiliateId])

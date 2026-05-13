@@ -12,6 +12,7 @@ import { ApiKeysSection } from "@/components/dashboard/ApiKeysSection";
 import { TeamCsvImport } from "@/components/dashboard/TeamCsvImport";
 import { BrandingSection } from "@/components/dashboard/BrandingSection";
 import { ClockGeofenceSection } from "@/components/dashboard/ClockGeofenceSection";
+import { AiInsightsAuditSection } from "@/components/dashboard/AiInsightsAuditSection";
 import type { LucideIcon } from "lucide-react";
 import {
   Settings,
@@ -30,6 +31,7 @@ import {
   UploadCloud,
   Palette,
   Wifi,
+  Brain,
 } from "lucide-react";
 import { ProfileAvatarForm } from "@/components/dashboard/ProfileAvatarForm";
 import { TerminalPinForm } from "@/components/dashboard/TerminalPinForm";
@@ -208,6 +210,22 @@ export default async function SettingsPage() {
             </h2>
           </div>
           <ApiKeysSection apiKeys={apiKeys} />
+        </section>
+      )}
+
+      {/* VREMA Native Core AI – Audit & Reset gelernter Faktoren */}
+      {(isOwner || role === "MANAGER") && (
+        <section
+          id="ai-insights"
+          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <Brain className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
+              KI-Audit · Gelernte Faktoren
+            </h2>
+          </div>
+          <AiInsightsAuditSection />
         </section>
       )}
     </div>

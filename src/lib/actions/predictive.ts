@@ -16,6 +16,12 @@ import {
   isBridgeDay,
   type GermanRegion,
 } from "@/lib/holidays/de";
+import {
+  predictDemand,
+  type WeatherKey,
+  type EventKey,
+  type ExperienceKey,
+} from "@/lib/ai/core-engine";
 
 type WeatherForecastDay = {
   date: string;
@@ -61,6 +67,9 @@ export async function getStaffingRecommendations(weekStart: string): Promise<
     tone: "closed" | "calm" | "watch" | "urgent";
     holidayName?: string | null;
     isBridge?: boolean;
+    /** "native" = Vorhersage stammt aus gelernten AiWeights (sampleCount > 3),
+     *  "heuristic" = reiner Regel-Fallback. */
+    source: "native" | "heuristic";
   }>
 > {
   const { companyId, role } = await requireTenant();
@@ -142,31 +151,135 @@ export async function getStaffingRecommendations(weekStart: string): Promise<
     }
   }
 
-  return dates.map((date) => {
-    const dow = berlinDateKeyToDayOfWeek(date);
-    const holidayName = holidayByDate.get(date) ?? null;
-    const isHoliday = Boolean(holidayName);
-    const isBridge = bridgeByDate.get(date) ?? false;
-    const ctx: DayContext = {
-      date,
-      plannedShifts: plannedByDow.get(dow) ?? 0,
-      historicalSameDay: histByDow.get(dow) ?? [],
-      tempC: forecast.get(date)?.tempC ?? null,
-      condition: forecast.get(date)?.condition ?? "unknown",
-      industry,
-      isHoliday,
-      holidayName: holidayName ?? undefined,
-      isBridgeDay: isBridge,
-      isDayBeforeHoliday: dayBeforeHolidaySet.has(date),
-    };
-    const r = recommend(ctx);
-    return {
-      date,
-      dayOfWeek: dow,
-      recommendation: r,
-      tone: recommendationTone(r, { isHoliday, industry }),
-      holidayName,
-      isBridge,
-    };
+  // Team-Erfahrung 1× für alle Tage gemeinsam bestimmen (günstig, einmaliger Query).
+  const experience = await classifyTeamExperience(companyId);
+
+  // Heuristik + Native pro Tag parallel ausführen.
+  const days = await Promise.all(
+    dates.map(async (date) => {
+      const dow = berlinDateKeyToDayOfWeek(date);
+      const holidayName = holidayByDate.get(date) ?? null;
+      const isHoliday = Boolean(holidayName);
+      const isBridge = bridgeByDate.get(date) ?? false;
+      const plannedShifts = plannedByDow.get(dow) ?? 0;
+
+      const ctx: DayContext = {
+        date,
+        plannedShifts,
+        historicalSameDay: histByDow.get(dow) ?? [],
+        tempC: forecast.get(date)?.tempC ?? null,
+        condition: forecast.get(date)?.condition ?? "unknown",
+        industry,
+        isHoliday,
+        holidayName: holidayName ?? undefined,
+        isBridgeDay: isBridge,
+        isDayBeforeHoliday: dayBeforeHolidaySet.has(date),
+      };
+      const heuristic = recommend(ctx);
+
+      // VREMA Native AI – greift, sobald wenigstens 4 Lernzyklen vorhanden sind.
+      const native = await predictDemand(companyId, {
+        date,
+        weather: mapToNativeWeather(ctx.condition, ctx.tempC ?? null),
+        event: classifyEvent(isHoliday, isBridge, dayBeforeHolidaySet.has(date), dow),
+        experience,
+      });
+
+      const useNative = native.sampleSize > 3 && native.rawHeadcount > 0;
+      const merged: StaffingRecommendation = useNative
+        ? mergeNativeIntoHeuristic(heuristic, native, plannedShifts)
+        : heuristic;
+
+      return {
+        date,
+        dayOfWeek: dow,
+        recommendation: merged,
+        tone: recommendationTone(merged, { isHoliday, industry }),
+        holidayName,
+        isBridge,
+        source: useNative ? ("native" as const) : ("heuristic" as const),
+      };
+    }),
+  );
+
+  return days;
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+//  Native-AI ↔ Heuristik – Adapter
+// ──────────────────────────────────────────────────────────────────────────
+
+/**
+ *  Verschmilzt die gelernte Vorhersage der Native-AI mit der Heuristik:
+ *    - `delta` wird auf den absoluten Native-Headcount ↔ tatsächlich geplante Schichten
+ *       umgerechnet (entscheidet die UI-Pille „mehr/weniger Personal").
+ *    - `confidence` wird durch die Native-Konfidenz ersetzt – sie spiegelt die
+ *       Größe des Trainings-Samples wider.
+ *    - Heuristik-Driver bleiben erhalten – plus ein neuer „Native-AI"-Eintrag,
+ *       der die zusammengefasste Korrektur der gelernten Faktoren transportiert.
+ */
+function mergeNativeIntoHeuristic(
+  h: StaffingRecommendation,
+  n: { headcount: number; rawHeadcount: number; confidence: number; breakdown: { historyWeight: number; weatherImpact: number; eventBonus: number; staffExperience: number; baseline: number } },
+  plannedShifts: number,
+): StaffingRecommendation {
+  const delta = n.headcount - plannedShifts;
+  // Aggregierter Lernfaktor relativ zur Baseline – nur zur Erklärung im Driver.
+  const combined =
+    n.breakdown.historyWeight *
+    n.breakdown.weatherImpact *
+    n.breakdown.eventBonus *
+    n.breakdown.staffExperience;
+  const impactPct = (combined - 1) * 100;
+  return {
+    expectedUtilization: h.expectedUtilization,
+    delta,
+    confidence: n.confidence,
+    drivers: [
+      {
+        label: `Native AI · Lernhistorie ${impactPct >= 0 ? "+" : ""}${impactPct.toFixed(1)} %`,
+        impact: combined - 1,
+      },
+      ...h.drivers,
+    ],
+  };
+}
+
+function mapToNativeWeather(condition: WeatherCondition | undefined, tempC: number | null): WeatherKey {
+  if (condition === "rainy" || condition === "stormy" || condition === "snow") return "RAIN";
+  if (condition === "sunny") {
+    if (typeof tempC === "number" && tempC > 28) return "HOT";
+    return "SUNNY";
+  }
+  if (typeof tempC === "number" && tempC < 5) return "COLD";
+  if (condition === "cloudy") return "CLOUDY";
+  return "CLOUDY";
+}
+
+function classifyEvent(
+  isHoliday: boolean,
+  isBridge: boolean,
+  isDayBeforeHoliday: boolean,
+  dayOfWeek: number,
+): EventKey {
+  if (isHoliday) return "PUBLIC_HOLIDAY";
+  if (isBridge) return "BRIDGE_DAY";
+  if (isDayBeforeHoliday) return "PUBLIC_HOLIDAY_EVE";
+  if (dayOfWeek === 0 || dayOfWeek === 6) return "WEEKEND";
+  return "NONE";
+}
+
+async function classifyTeamExperience(companyId: string): Promise<ExperienceKey> {
+  const users = await db.user.findMany({
+    where: tenantWhere(companyId, { role: { not: "COMPANY_OWNER" as const } }),
+    select: { createdAt: true },
   });
+  if (users.length === 0) return "UNKNOWN";
+  const now = Date.now();
+  const avgMonths =
+    users.reduce((acc, u) => acc + (now - u.createdAt.getTime()) / (30 * 86_400_000), 0) /
+    users.length;
+  if (avgMonths > 12) return "SENIOR_HEAVY";
+  if (avgMonths < 3) return "JUNIOR_HEAVY";
+  return "BALANCED";
 }

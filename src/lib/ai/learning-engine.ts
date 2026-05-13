@@ -1,13 +1,11 @@
 /**
- * VREMA Neural Engine · Learning Engine
- * ──────────────────────────────────────
+ * VREMA Native AI · Telemetrie & Treffsicherheits-Layer
+ * ─────────────────────────────────────────────────────
  *
- * Sammelt Telemetrie zwischen Vorschlag (Heuristik / Modell) und Realität.
- *
- *  Ehrlicher Hinweis: dies ist NICHT „Training" im ML-Sinn. Wir speichern
- *  strukturierte Plan-vs-Realität-Datensätze, die später ein echtes Training-
- *  oder Kalibrierungs-Run anstoßen kann. Heute ist es RAG-Brennstoff +
- *  Auditing für den Owner.
+ * Sammelt Plan-vs-Realität-Datensätze für Audit und Treffsicherheits-Reports.
+ * Das eigentliche Lernen passiert in `core-engine.ts` + `recalibrate.ts` über
+ * die Tabelle `AiWeights`. Dieses Modul ergänzt das um eine geschichtliche
+ * Sicht (welche Empfehlung wurde wann mit welchem Ergebnis erzeugt).
  *
  *  Alle Funktionen sind Tenant-strikt: nichts wird ohne `companyId` geschrieben.
  */

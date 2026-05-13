@@ -9,6 +9,7 @@ import {
   Wind,
   CalendarOff,
   Sparkles,
+  Cpu,
 } from "lucide-react";
 import { getStaffingRecommendations } from "@/lib/actions/predictive";
 import { getBerlinDateKey } from "@/lib/time/timezone";
@@ -37,25 +38,45 @@ export async function PredictiveStaffingCard() {
 
   if (!rows || rows.length === 0) return null;
 
+  const nativeDays = rows.filter((r) => r.source === "native").length;
+  const usesNative = nativeDays > 0;
+
   return (
     <section
       className="rounded-2xl border border-border bg-card p-5 shadow-sm dark:border-white/[0.06] dark:bg-surface/70"
       aria-label="Personal-Empfehlung"
     >
-      <header className="flex items-center justify-between gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Brain className="h-4 w-4 text-brand" aria-hidden />
           <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
             Personal-Vorhersage · KW {rows[0]?.date}
           </h2>
         </div>
-        <Link
-          href="/dashboard/planning"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-brand hover:underline"
-        >
-          Im Planer öffnen
-          <ChevronRight className="h-3 w-3" aria-hidden />
-        </Link>
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
+              usesNative
+                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200"
+                : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200"
+            }`}
+            title={
+              usesNative
+                ? `${nativeDays} von ${rows.length} Tagen nutzen die gelernten Faktoren der Native AI.`
+                : "Noch zu wenige Lernzyklen – Empfehlung läuft auf Heuristik."
+            }
+          >
+            <Cpu className="h-3 w-3" aria-hidden />
+            {usesNative ? "Native AI · gelernt" : "Heuristik"}
+          </span>
+          <Link
+            href="/dashboard/planning"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-brand hover:underline"
+          >
+            Im Planer öffnen
+            <ChevronRight className="h-3 w-3" aria-hidden />
+          </Link>
+        </div>
       </header>
 
       <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
@@ -65,9 +86,9 @@ export async function PredictiveStaffingCard() {
       </ul>
 
       <p className="mt-4 text-[11px] text-muted-foreground">
-        Empfehlung berücksichtigt Branchen-Profil, gesetzliche Feiertage & Brückentage in deinem
-        Bundesland, Wetter und historische Auslastung. Jeder Faktor ist im Tooltip erklärbar – keine
-        Black-Box.
+        {usesNative
+          ? "Die Vorhersage nutzt die in den Settings einsehbaren AiWeights (Wochentag · Wetter · Event · Team-Mix). Tage ohne grünes Badge laufen auf der reinen Heuristik."
+          : "Empfehlung basiert auf Branchen-Profil, Feiertagen, Wetter und Historie. Sobald genug Wochen finalisiert sind (mind. 4 Lernzyklen je Faktor), übernimmt die Native AI automatisch."}
       </p>
     </section>
   );
@@ -79,6 +100,7 @@ function DayPill({
   tone,
   holidayName,
   isBridge,
+  source,
 }: Awaited<ReturnType<typeof getStaffingRecommendations>>[number]) {
   const formatted = new Intl.DateTimeFormat("de-DE", {
     weekday: "short",
@@ -155,9 +177,19 @@ function DayPill({
           </>
         )}
       </div>
-      <div className="mt-1 text-[10px] tabular-nums text-muted-foreground">
-        {Math.round(recommendation.expectedUtilization * 100)} % Auslastung ·{" "}
-        {Math.round(recommendation.confidence * 100)} % Konfidenz
+      <div className="mt-1 flex items-center justify-between gap-1 text-[10px] tabular-nums text-muted-foreground">
+        <span>
+          {Math.round(recommendation.expectedUtilization * 100)} % · {Math.round(recommendation.confidence * 100)} %
+        </span>
+        {source === "native" && (
+          <span
+            className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1 py-0.5 text-[9px] font-bold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200"
+            title="Vorhersage stammt aus gelernten Faktoren (AiWeights)."
+          >
+            <Cpu className="h-2 w-2" aria-hidden />
+            AI
+          </span>
+        )}
       </div>
     </li>
   );
