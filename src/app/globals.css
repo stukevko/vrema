@@ -259,27 +259,40 @@
    - Mobile: blur deaktiviert (zu teuer für Compositor)
    ========================================================================= */
 .glass-nav {
-  background: hsl(0 0% 100% / 0.82);
-  backdrop-filter: saturate(140%) blur(20px);
-  -webkit-backdrop-filter: saturate(140%) blur(20px);
-  border: 1px solid hsl(0 0% 100% / 0.55);
+  background: hsl(var(--background) / 0.85);
+  /* Reduzierte blur-Stärke (von 20px auf 10px): minimaler visueller Unterschied,
+     aber deutlich weniger Compositor-Last vor allem auf älteren Macs / iOS. */
+  backdrop-filter: saturate(130%) blur(10px);
+  -webkit-backdrop-filter: saturate(130%) blur(10px);
+  border: 1px solid hsl(var(--border) / 1);
   box-shadow: var(--shadow-card);
 }
 .dark .glass-nav {
-  background: hsl(var(--surface) / 0.7);
+  background: hsl(var(--surface) / 0.72);
   border: 1px solid hsl(var(--specular-line) / 0.08);
 }
 
 .glass-panel {
-  background: hsl(0 0% 100% / 0.86);
-  backdrop-filter: saturate(140%) blur(14px);
-  -webkit-backdrop-filter: saturate(140%) blur(14px);
-  border: 1px solid hsl(0 0% 100% / 0.55);
+  background: hsl(var(--background) / 0.88);
+  backdrop-filter: saturate(125%) blur(8px);
+  -webkit-backdrop-filter: saturate(125%) blur(8px);
+  border: 1px solid hsl(var(--border) / 1);
   box-shadow: var(--shadow-card);
 }
 .dark .glass-panel {
   background: hsl(var(--surface) / 0.68);
   border: 1px solid hsl(var(--specular-line) / 0.08);
+}
+
+/* Reduced-Transparency / Low-Power: blur komplett aus → liefert solide Performance
+   auf Safari iOS, älteren Intel-Macs und im Battery-Saver-Modus. */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-nav,
+  .glass-panel {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: hsl(var(--surface));
+  }
 }
 
 /**

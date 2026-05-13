@@ -13,8 +13,8 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 text-foreground">
-      <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full border-b border-slate-200 glass-nav pt-[env(safe-area-inset-top)]">
+    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+      <nav className="fixed inset-x-0 top-0 z-50 w-full max-w-full border-b border-border bg-background/85 backdrop-blur-md pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex h-16 w-full min-w-0 max-w-7xl items-center justify-between gap-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
           <div className="flex min-w-0 items-center gap-x-8 lg:gap-x-12">
             <Link
@@ -60,14 +60,14 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
             type="button"
             aria-label="Menü öffnen"
             onClick={() => setMobileNavOpen(true)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-white text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-colors active:scale-95 md:hidden"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-colors active:scale-95 md:hidden"
           >
             <Menu className="h-5 w-5" />
           </button>
           <Drawer.Root open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
             <Drawer.Portal>
               <Drawer.Overlay className="fixed inset-0 z-[120] bg-black/45" />
-              <Drawer.Content className="fixed inset-x-0 bottom-0 z-[121] rounded-t-[28px] border border-border bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.18)] outline-none">
+              <Drawer.Content className="fixed inset-x-0 bottom-0 z-[121] rounded-t-[28px] border border-border bg-popover p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(0,0,0,0.18)] outline-none">
                 <Drawer.Handle className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-muted-foreground/35" />
                 <Drawer.Title className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Menü</Drawer.Title>
                 <nav className="mt-4 space-y-2">
@@ -109,7 +109,7 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
 
       <div className="flex flex-1 flex-col pt-[calc(5rem+env(safe-area-inset-top))]">{children}</div>
 
-      <footer className="mt-auto w-full border-t border-slate-900 bg-slate-950 py-10 text-slate-300">
+      <footer className="mt-auto w-full border-t border-slate-900 bg-slate-950 py-10 text-slate-300 dark:border-white/[0.06] dark:bg-[#0a0c10]">
         <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col items-start justify-between gap-6 px-4 md:flex-row md:items-center">
           <Link href="/" className="flex min-w-0 max-w-full items-center gap-3 text-slate-100" aria-label="VREMA">
             <VremaLockup size={30} tagline="Intelligente Zeiterfassung" />
