@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 import { Drawer } from "vaul";
 import { VremaLockup } from "@/components/brand/VremaMarkLogo";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 /**
  * Gemeinsame Marketing-Navigation & Footer für Blog etc. (Landing bleibt eigenständig, gleicher Look).
@@ -42,6 +43,7 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
           </div>
 
           <div className="hidden min-w-0 max-w-[55%] flex-shrink-0 flex-wrap items-center justify-end gap-x-1.5 gap-y-1 sm:max-w-none sm:gap-3 md:flex">
+            <ThemeToggle />
             <Link
               href="/auth/login"
               className="max-w-full break-words rounded-xl px-2 py-1.5 text-right text-sm text-muted-foreground transition-colors hover:bg-card hover:text-foreground sm:px-3 md:whitespace-nowrap"
@@ -50,7 +52,7 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
             </Link>
             <Link
               href="/auth/register"
-              className="max-w-full break-words rounded-xl border border-border bg-card px-3 py-2 text-right text-sm font-semibold text-foreground shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all hover:bg-card/70 sm:px-4 md:whitespace-nowrap"
+              className="max-w-full break-words rounded-xl border border-border bg-card px-3 py-2 text-right text-sm font-semibold text-foreground shadow-sm transition-all hover:bg-card/70 sm:px-4 md:whitespace-nowrap"
             >
               Registrieren
             </Link>
