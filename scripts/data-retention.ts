@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { createScriptPrisma } from "./prisma-script-client";
 import { runDataRetention } from "../src/lib/data-retention";
 
-const prisma = new PrismaClient();
+const prisma = createScriptPrisma();
 
 async function main() {
   const report = await runDataRetention(prisma);

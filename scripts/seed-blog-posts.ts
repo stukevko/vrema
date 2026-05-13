@@ -2,11 +2,9 @@
  * Idempotent: upsertet die drei Standard-Artikel anhand des Slugs.
  * Ausführen: `npm run blog:seed` (DATABASE_URL in `.env` im Projektroot)
  */
-import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
-import { DEFAULT_BLOG_SEED_ROWS } from "../src/lib/blog/seed-default-posts";
+import { createScriptPrisma } from "./prisma-script-client";
 
-const prisma = new PrismaClient();
+const prisma = createScriptPrisma();
 
 async function main() {
   for (const row of DEFAULT_BLOG_SEED_ROWS) {

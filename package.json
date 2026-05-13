@@ -8,6 +8,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "db:push": "prisma db push",
+    "db:setup": "prisma db push && prisma db seed",
     "db:seed": "prisma db seed",
     "test:everything": "tsx scripts/test-everything.ts",
     "prod:cleanup": "tsx scripts/prod-cleanup.ts",

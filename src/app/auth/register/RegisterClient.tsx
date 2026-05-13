@@ -144,7 +144,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName, inv
 
         const loginTarget = isInviteFlow
           ? `/auth/login?registered=1&callbackUrl=${encodeURIComponent("/dashboard/welcome")}`
-          : "/auth/login?registered=1";
+          : `/auth/login?registered=1&callbackUrl=${encodeURIComponent("/onboarding")}`;
         router.push(loginTarget);
       } catch {
         setError("Ein unerwarteter Fehler ist aufgetreten.");

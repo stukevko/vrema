@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { createScriptPrisma } from "./prisma-script-client";
 import { createAbsentEntriesForMissingShifts } from "../src/lib/attendance";
 
-const prisma = new PrismaClient();
+const prisma = createScriptPrisma();
 
 async function main() {
   const report = await createAbsentEntriesForMissingShifts(prisma);

@@ -7,6 +7,10 @@ import { LiveOperationsWidget } from "@/components/dashboard/LiveOperationsWidge
 import { EmployeeCockpit } from "@/components/dashboard/EmployeeCockpit";
 import { ActiveShiftTasksCard } from "@/components/dashboard/ActiveShiftTasksCard";
 import { HeroStats } from "@/components/dashboard/HeroStats";
+import { ComplianceCard } from "@/components/dashboard/ComplianceCard";
+import { PredictiveStaffingCard } from "@/components/dashboard/PredictiveStaffingCard";
+import { EmptyTeamBanner } from "@/components/dashboard/EmptyTeamBanner";
+import { NoShowCard } from "@/components/dashboard/NoShowCard";
 import { getEmployeeCockpitData } from "@/lib/dashboard/employee-cockpit-data";
 import { SaldoWidget } from "@/components/dashboard/SaldoWidget";
 import { calculateSaldo } from "@/lib/actions/worklogs";
@@ -343,6 +347,38 @@ export default async function DashboardPage() {
             pendingApprovalsCount={heroPendingApprovalsCount}
           />
         </div>
+      )}
+
+      {/* Empty-State Banner (Owner ohne Team) — niemals „toter" leerer Bildschirm. */}
+      {isManager && teamStats && teamStats.totalEmployees <= 1 && (
+        <div className="order-1">
+          <EmptyTeamBanner teamSize={teamStats.totalEmployees} />
+        </div>
+      )}
+
+      {/* No-Show-Alarm (Manager) — höchste Priorität, ganz oben sichtbar. */}
+      {isManager && (
+        <div className="order-1">
+          <NoShowCard />
+        </div>
+      )}
+
+      {/* ArbZG-Compliance-Score (Manager) — Premium-Verkaufsargument. */}
+      {isManager && (
+        <Suspense fallback={null}>
+          <div className="order-1">
+            <ComplianceCard />
+          </div>
+        </Suspense>
+      )}
+
+      {/* Predictive Staffing v1 (Manager) – „Was kommt?". */}
+      {isManager && (
+        <Suspense fallback={null}>
+          <div className="order-1">
+            <PredictiveStaffingCard />
+          </div>
+        </Suspense>
       )}
 
       {/* Mitarbeiter: Personal Cockpit – Hero + Stempel + Quick-Stats.

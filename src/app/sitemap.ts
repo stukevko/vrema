@@ -19,6 +19,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     entry("/", "weekly", 1),
     entry("/features", "weekly", 0.95),
+    entry("/demo", "weekly", 0.85),
+    entry("/status", "daily", 0.4),
     // `/preise` ist 308-redirect auf `/#pricing` (Landingpage-Anker) – kein eigener Sitemap-Eintrag.
     entry("/blog", "weekly", 0.75),
     entry("/partner", "monthly", 0.55),

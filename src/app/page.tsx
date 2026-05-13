@@ -4,6 +4,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { VremaLockup, VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
+import { RoiCalculator } from "@/components/marketing/RoiCalculator";
+import { SocialProofStrip } from "@/components/marketing/SocialProofStrip";
 import {
   Clock,
   FileText,
@@ -295,6 +297,12 @@ export default function LandingPage() {
                 >
                   Jetzt starten
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link
+                  href="/demo"
+                  className="flex min-w-0 max-w-full items-center gap-2 rounded-2xl border border-border px-7 py-3.5 font-medium text-foreground transition-all hover:border-brand/40 hover:bg-brand-soft/40"
+                >
+                  Live-Demo öffnen
                 </Link>
                 <Link
                   href="/#pricing"
@@ -611,6 +619,12 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── SOCIAL-PROOF ──────────────────────────────────────────────────── */}
+      <SocialProofStrip />
+
+      {/* ── ROI-CALCULATOR ────────────────────────────────────────────────── */}
+      <RoiCalculator />
 
       {/* ── PRICING ─────────────────────────────────────────────────────────── */}
       <section id="pricing" className="w-full max-w-full border-t border-line bg-surface-muted py-24">

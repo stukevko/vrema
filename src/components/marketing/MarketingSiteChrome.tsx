@@ -130,6 +130,9 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
             <Link href="/#pricing" className="transition-colors hover:text-white">
               Preise
             </Link>
+            <Link href="/status" className="transition-colors hover:text-white">
+              System-Status
+            </Link>
             <Link href="/partner" className="transition-colors hover:text-white">
               Partner werden
             </Link>

@@ -9,6 +9,7 @@ import { CompanySettingsForm } from "@/components/dashboard/CompanySettingsForm"
 import { PasswordChangeForm } from "@/components/dashboard/PasswordChangeForm";
 import { PasskeySecurityForm } from "@/components/dashboard/PasskeySecurityForm";
 import { ApiKeysSection } from "@/components/dashboard/ApiKeysSection";
+import { TeamCsvImport } from "@/components/dashboard/TeamCsvImport";
 import { BrandingSection } from "@/components/dashboard/BrandingSection";
 import { ClockGeofenceSection } from "@/components/dashboard/ClockGeofenceSection";
 import type { LucideIcon } from "lucide-react";
@@ -26,6 +27,7 @@ import {
   UserRound,
   Rss,
   KeyRound,
+  UploadCloud,
   Palette,
   Wifi,
 } from "lucide-react";
@@ -174,6 +176,22 @@ export default async function SettingsPage() {
             </h2>
           </div>
           <BrandingSection initial={branding} />
+        </section>
+      )}
+
+      {/* Team-Import via CSV */}
+      {isOwner && (
+        <section
+          id="team-import"
+          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <UploadCloud className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
+              Team-Import · CSV
+            </h2>
+          </div>
+          <TeamCsvImport />
         </section>
       )}
 

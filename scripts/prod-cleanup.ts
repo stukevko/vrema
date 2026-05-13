@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { createScriptPrisma } from "./prisma-script-client";
 
-const prisma = new PrismaClient();
+const prisma = createScriptPrisma();
 
 function isTestEmail(email: string) {
   const normalized = email.toLowerCase().trim();

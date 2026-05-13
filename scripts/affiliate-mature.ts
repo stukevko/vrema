@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { createScriptPrisma } from "./prisma-script-client";
 import { runMatureAffiliateEarnings } from "../src/lib/affiliate-earnings";
 
-const prisma = new PrismaClient();
+const prisma = createScriptPrisma();
 
 async function main() {
   const report = await runMatureAffiliateEarnings(prisma);

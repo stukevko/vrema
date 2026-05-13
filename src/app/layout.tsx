@@ -5,6 +5,7 @@ import { SessionProvider } from "next-auth/react";
 import { ServiceWorkerRegistrar } from "@/components/pwa/ServiceWorkerRegistrar";
 import { ThemeScript } from "@/components/theme/ThemeScript";
 import { SoftwareApplicationJsonLd } from "@/components/seo/SoftwareApplicationJsonLd";
+import { PlausibleAnalytics } from "@/components/analytics/PlausibleStub";
 import { getSiteUrl, resolveMetadataBase, SEO_KEYWORDS } from "@/lib/seo/site";
 
 const geistSans = Geist({
@@ -141,6 +142,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} min-h-[100dvh] w-full min-w-0 antialiased bg-background text-fg`}
       >
         <SoftwareApplicationJsonLd />
+        <PlausibleAnalytics />
         <SessionProvider>{children}</SessionProvider>
         <ServiceWorkerRegistrar />
       </body>
