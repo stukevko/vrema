@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
+import { ensureEmployeeNumbersAssigned } from "@/lib/actions/team";
 import { ReportsClient } from "@/components/dashboard/ReportsClient";
 import { VacationStatus } from "@prisma/client";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
@@ -24,6 +25,12 @@ export default async function ReportsPage({
   const role = session.user.role ?? "EMPLOYEE";
   if (role === "EMPLOYEE") {
     redirect("/dashboard");
+  }
+
+  try {
+    await ensureEmployeeNumbersAssigned();
+  } catch {
+    // seltene DB-Serialisierung: Berichte trotzdem laden
   }
 
   const plan = session.user.plan ?? "STARTER";

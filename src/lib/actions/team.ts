@@ -7,9 +7,13 @@ import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "@/lib/email/transactional";
 import { getWeekCycleIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 import { randomBytes } from "crypto";
-import { ShiftTradeStatus } from "@prisma/client";
+import { ShiftTradeStatus, Prisma } from "@prisma/client";
 import { evaluateShiftTradeProposal } from "@/lib/planning/intelligence";
 import type { TradeApprovalIntel } from "@/lib/planning/intelligence";
+import {
+  assignMissingEmployeeNumbersForCompany,
+  nextNumericEmployeeNumber,
+} from "@/lib/team/allocate-employee-number";
 
 const MINUTES_PER_DAY = 24 * 60;
 const DAYS_PER_WEEK = 7;
@@ -109,20 +113,31 @@ export async function inviteEmployeeForCompany(
   const terminalPin = Math.floor(1000 + Math.random() * 9000).toString();
   const terminalPinHash = await bcrypt.hash(terminalPin, 12);
 
-  const user = await db.user.create({
-    data: {
-      companyId,
-      name: data.name.trim(),
-      email: data.email.toLowerCase().trim(),
-      password: hashedPassword,
-      emailVerified: new Date(),
-      terminalPin,
-      terminalPinHash,
-      role: data.role ?? "EMPLOYEE",
-      weeklyHours: data.weeklyHours ?? 40,
+  const user = await db.$transaction(
+    async (tx) => {
+      const employeeNumber = await nextNumericEmployeeNumber(companyId, tx);
+      return tx.user.create({
+        data: {
+          companyId,
+          name: data.name.trim(),
+          email: data.email.toLowerCase().trim(),
+          password: hashedPassword,
+          emailVerified: new Date(),
+          terminalPin,
+          terminalPinHash,
+          role: data.role ?? "EMPLOYEE",
+          weeklyHours: data.weeklyHours ?? 40,
+          employeeNumber,
+        },
+        select: { id: true, name: true, email: true },
+      });
     },
-    select: { id: true, name: true, email: true },
-  });
+    {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      maxWait: 5000,
+      timeout: 10000,
+    },
+  );
 
   // Fire-and-forget welcome email (non-fatal if Resend is not configured)
   const company = await db.company.findUnique({
@@ -138,6 +153,18 @@ export async function inviteEmployeeForCompany(
   });
 
   return { user, tempPassword, terminalPin };
+}
+
+/** Vergibt fehlende Personalnummern (nur Leitung). Idempotent; revalidiert nur bei Änderungen. */
+export async function ensureEmployeeNumbersAssigned(): Promise<number> {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) return 0;
+  const n = await assignMissingEmployeeNumbersForCompany(companyId);
+  if (n > 0) {
+    revalidatePath("/dashboard/team");
+    revalidatePath("/dashboard/reports");
+  }
+  return n;
 }
 
 export async function getTeamMembers() {

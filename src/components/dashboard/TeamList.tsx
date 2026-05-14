@@ -5,8 +5,6 @@ import { motion } from "framer-motion";
 import {
   toggleEmployeeActive,
   updateEmployeeHourlyWage,
-  updateEmployeeNumber,
-  updateEmployeePlanningWorkArea,
   updateEmployeeWeeklyHours,
 } from "@/lib/actions/team";
 import Link from "next/link";
@@ -35,7 +33,6 @@ type Member = {
   vacationDays: number;
   employeeNumber: string | null;
   hourlyWage: number | null;
-  planningWorkArea: string | null;
   createdAt: Date;
 };
 
@@ -55,9 +52,9 @@ const FILTER_TABS: { key: FilterKey; label: string }[] = [
   { key: "inactive", label: "Inaktiv" },
 ];
 
-/** Einheitliche Spalten: mehr Platz für Person + Rolle, kompakte aber bedienbare Zahlfelder */
+/** Einheitliche Spalten: Person, Rolle, Zahlfelder, Personalnr. (lesend), Aktion */
 const TEAM_TABLE_GRID_CLASS =
-  "[grid-template-columns:minmax(0,2.75fr)_minmax(0,1.05fr)_minmax(7.25rem,1fr)_minmax(5.5rem,0.85fr)_minmax(6.75rem,1.05fr)_minmax(6.75rem,1.05fr)_minmax(2.75rem,auto)]";
+  "[grid-template-columns:minmax(0,3fr)_minmax(0,1.15fr)_minmax(5.5rem,0.9fr)_minmax(6.75rem,1.1fr)_minmax(7.5rem,1.15fr)_minmax(2.75rem,auto)]";
 
 export function TeamList({
   members,
@@ -69,7 +66,6 @@ export function TeamList({
   currentUserId: string;
 }) {
   const [isPending, startTransition] = useTransition();
-  const [employeeNumberDrafts, setEmployeeNumberDrafts] = useState<Record<string, string>>({});
   const [hourlyWageDrafts, setHourlyWageDrafts] = useState<Record<string, string>>({});
   const [weeklyHoursDrafts, setWeeklyHoursDrafts] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -79,11 +75,9 @@ export function TeamList({
   const [filter, setFilter] = useState<FilterKey>("all");
 
   useEffect(() => {
-    const next: Record<string, string> = {};
     const wageNext: Record<string, string> = {};
     const hoursNext: Record<string, string> = {};
     for (const member of members) {
-      next[member.id] = member.employeeNumber ?? "";
       wageNext[member.id] = member.hourlyWage != null ? String(member.hourlyWage) : "";
       const whNum = Number(member.weeklyHours);
       if (!Number.isFinite(whNum) || whNum <= 0) {
@@ -93,7 +87,6 @@ export function TeamList({
         hoursNext[member.id] = Number.isInteger(rounded) ? String(rounded) : String(rounded);
       }
     }
-    setEmployeeNumberDrafts(next);
     setHourlyWageDrafts(wageNext);
     setWeeklyHoursDrafts(hoursNext);
   }, [members]);
@@ -211,20 +204,19 @@ export function TeamList({
         <>
           {/* Desktop: horizontales Scrollen, falls Viewport schmaler als Tabellen-Minimum */}
           <div className="hidden min-w-0 overflow-x-auto sm:block">
-            <div className="min-w-[52rem]">
+            <div className="min-w-[42rem]">
             <div
               className={`grid items-center gap-x-3 border-b border-line/[0.08] px-4 py-3 text-[10px] font-sans uppercase tracking-widest text-muted-foreground sm:px-5 lg:gap-x-4 lg:px-6 ${TEAM_TABLE_GRID_CLASS}`}
             >
               <span className="min-w-0">Mitarbeiter</span>
               <span className="min-w-0">Rolle</span>
-              <span className="min-w-0" title="Außenbereich für Wetter-Hinweise im Planer">
-                Plan-Ort
-              </span>
               <span className="min-w-0 text-right tabular-nums" title="Soll-Stunden pro Woche">
                 Std/W
               </span>
               <span className="min-w-0 pl-0.5">€/Std</span>
-              <span className="min-w-0 pl-0.5">Personalnr.</span>
+              <span className="min-w-0 pl-0.5" title="Automatisch vergeben, eindeutig pro Firma">
+                Personalnr.
+              </span>
               <span className="min-w-0 text-right">Aktion</span>
             </div>
 
@@ -286,38 +278,6 @@ export function TeamList({
                       >
                         {meta.label}
                       </span>
-                    </div>
-
-                    <div className="flex min-w-0 items-center">
-                      {canManage ? (
-                        <select
-                          value={member.planningWorkArea ?? ""}
-                          onChange={(e) =>
-                            startTransition(async () => {
-                              try {
-                                await updateEmployeePlanningWorkArea(member.id, e.target.value);
-                                show("Planungsbereich gespeichert.", "success");
-                              } catch (err) {
-                                show(err instanceof Error ? err.message : "Fehler.", "error");
-                              }
-                            })
-                          }
-                          className="input-field-subtle h-9 w-full min-w-0 rounded-lg px-2 text-[11px] text-foreground"
-                          aria-label="Planungsbereich"
-                        >
-                          <option value="">Innen</option>
-                          <option value="OUTDOOR">Außen</option>
-                          <option value="TERRACE">Terrasse</option>
-                        </select>
-                      ) : (
-                        <span className="text-[11px] text-muted-foreground">
-                          {!member.planningWorkArea
-                            ? "Innen"
-                            : member.planningWorkArea === "TERRACE"
-                              ? "Außen (überd.)"
-                              : "Außen"}
-                        </span>
-                      )}
                     </div>
 
                     <div className="flex min-w-0 items-center justify-end">
@@ -418,60 +378,15 @@ export function TeamList({
                       )}
                     </div>
 
-                    <div className="flex min-w-0 items-center">
-                      {canManage ? (
-                        <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                          <input
-                            value={employeeNumberDrafts[member.id] ?? ""}
-                            onChange={(e) =>
-                              setEmployeeNumberDrafts((prev) => ({
-                                ...prev,
-                                [member.id]: e.target.value,
-                              }))
-                            }
-                            placeholder="10042"
-                            aria-label={`Personalnummer ${member.name ?? member.email}`}
-                            className="input-field-subtle h-9 min-w-[3.25rem] flex-1 rounded-lg px-2.5 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/55 sm:px-3"
-                          />
-                          <button
-                            type="button"
-                            disabled={isPending}
-                            onClick={() =>
-                              startTransition(async () => {
-                                try {
-                                  await updateEmployeeNumber(
-                                    member.id,
-                                    employeeNumberDrafts[member.id] ?? ""
-                                  );
-                                  setFeedback("Personalnummer gespeichert.");
-                                  show("Personalnummer erfolgreich gespeichert.", "success");
-                                } catch (err) {
-                                  const message =
-                                    err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
-                                  setFeedback(message);
-                                  show(message, "error");
-                                }
-                              })
-                            }
-                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent bg-surface-muted/60 text-fg-muted transition-colors hover:bg-brand-soft hover:text-brand"
-                            title="Personalnummer speichern"
-                            aria-label="Personalnummer speichern"
-                          >
-                            <Save className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-muted-foreground">
-                            {member.employeeNumber ?? "—"}
-                          </span>
-                          {!member.employeeNumber && (
-                            <span className="rounded-full border border-warning/35 bg-warning-soft px-1.5 py-0.5 text-[9px] font-semibold text-warning-foreground">
-                              FEHLT
-                            </span>
-                          )}
-                        </div>
-                      )}
+                    <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                      <span className="font-mono text-xs font-semibold tabular-nums text-foreground sm:text-sm">
+                        {member.employeeNumber ?? "—"}
+                      </span>
+                      {!member.employeeNumber ? (
+                        <span className="rounded-full border border-warning/35 bg-warning-soft px-1.5 py-0.5 text-[9px] font-semibold text-warning-foreground">
+                          folgt
+                        </span>
+                      ) : null}
                     </div>
 
                     <div className="flex min-h-9 items-center justify-end">
@@ -681,97 +596,22 @@ export function TeamList({
 
                     <div className="space-y-1">
                       <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                        Personalnr.
+                        Personalnr.{" "}
+                        <span className="font-sans font-normal normal-case text-[10px] text-muted-foreground/75">
+                          (automatisch)
+                        </span>
                       </span>
-                      {canManage ? (
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            value={employeeNumberDrafts[member.id] ?? ""}
-                            onChange={(e) =>
-                              setEmployeeNumberDrafts((prev) => ({
-                                ...prev,
-                                [member.id]: e.target.value,
-                              }))
-                            }
-                            placeholder="10042"
-                            aria-label="Personalnummer"
-                            className="input-field-subtle h-10 min-w-0 flex-1 rounded-lg px-3 text-sm tabular-nums text-foreground placeholder:text-muted-foreground/55"
-                          />
-                          <button
-                            type="button"
-                            disabled={isPending}
-                            onClick={() =>
-                              startTransition(async () => {
-                                try {
-                                  await updateEmployeeNumber(
-                                    member.id,
-                                    employeeNumberDrafts[member.id] ?? ""
-                                  );
-                                  setFeedback("Personalnummer gespeichert.");
-                                  show("Personalnummer erfolgreich gespeichert.", "success");
-                                } catch (err) {
-                                  const message =
-                                    err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
-                                  setFeedback(message);
-                                  show(message, "error");
-                                }
-                              })
-                            }
-                            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-transparent bg-surface-muted/60 text-fg-muted transition-colors hover:bg-brand-soft hover:text-brand"
-                            title="Speichern"
-                            aria-label="Personalnummer speichern"
-                          >
-                            <Save className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm font-medium text-foreground">
-                            {member.employeeNumber ?? "—"}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                          {member.employeeNumber ?? "—"}
+                        </span>
+                        {!member.employeeNumber ? (
+                          <span className="rounded-full border border-warning/35 bg-warning-soft px-1.5 py-0.5 text-[9px] font-semibold text-warning-foreground">
+                            folgt
                           </span>
-                          {!member.employeeNumber && (
-                            <span className="rounded-full border border-warning/35 bg-warning-soft px-1.5 py-0.5 text-[9px] font-semibold text-warning-foreground">
-                              FEHLT
-                            </span>
-                          )}
-                        </div>
-                      )}
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="mt-3 flex items-center gap-2">
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Planung
-                    </span>
-                    {canManage ? (
-                      <select
-                        value={member.planningWorkArea ?? ""}
-                        onChange={(e) =>
-                          startTransition(async () => {
-                            try {
-                              await updateEmployeePlanningWorkArea(member.id, e.target.value);
-                              show("Planungsbereich gespeichert.", "success");
-                            } catch (err) {
-                              show(err instanceof Error ? err.message : "Fehler.", "error");
-                            }
-                          })
-                        }
-                        className="input-field-subtle h-9 min-w-0 flex-1 rounded-lg px-2 text-sm text-foreground"
-                        aria-label="Planungsbereich"
-                      >
-                        <option value="">Innen</option>
-                        <option value="OUTDOOR">Außen</option>
-                        <option value="TERRACE">Terrasse</option>
-                      </select>
-                    ) : (
-                      <span className="text-sm text-foreground">
-                        {!member.planningWorkArea
-                          ? "Innen"
-                          : member.planningWorkArea === "TERRACE"
-                            ? "Außen (überd.)"
-                            : "Außen"}
-                      </span>
-                    )}
                   </div>
                 </motion.div>
               );

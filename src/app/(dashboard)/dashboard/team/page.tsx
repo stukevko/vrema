@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { getTeamMembers } from "@/lib/actions/team";
+import { getTeamMembers, ensureEmployeeNumbersAssigned } from "@/lib/actions/team";
 import { TeamList } from "@/components/dashboard/TeamList";
 import { InviteForm } from "@/components/dashboard/InviteForm";
 import { TeamInviteLinkCard } from "@/components/dashboard/TeamInviteLinkCard";
@@ -12,6 +12,14 @@ export default async function TeamPage() {
 
   const role = session.user.role ?? "EMPLOYEE";
   const canManage = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
+
+  if (canManage) {
+    try {
+      await ensureEmployeeNumbersAssigned();
+    } catch {
+      // Seltene DB-Serialisierung: Team-Seite trotzdem laden
+    }
+  }
 
   const members = await getTeamMembers();
 

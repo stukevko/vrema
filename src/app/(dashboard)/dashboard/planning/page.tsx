@@ -7,6 +7,7 @@ import {
   getShiftCycleWeeks,
   getShifts,
   getTeamMembers,
+  ensureEmployeeNumbersAssigned,
 } from "@/lib/actions/team";
 import { getVacationConflictDaysForPlanning } from "@/lib/actions/vacation";
 import {
@@ -32,6 +33,11 @@ export default async function PlanningPage() {
   const canManage = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
 
   if (canManage) {
+    try {
+      await ensureEmployeeNumbersAssigned();
+    } catch {
+      // bei Serialisierungskonflikten Planung trotzdem laden
+    }
     const settled = await Promise.allSettled([
       getTeamMembers(),
       getShifts(),

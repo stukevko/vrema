@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { generateVerificationToken } from "@/lib/auth/tokens";
 import { sendTeamInviteWelcomeEmail, sendVerificationEmail } from "@/lib/email/transactional";
+import {
+  EMPLOYEE_NUMBER_AUTO_START,
+  nextNumericEmployeeNumber,
+} from "@/lib/team/allocate-employee-number";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -83,6 +88,7 @@ export async function POST(req: NextRequest) {
       }
 
       await db.$transaction(async (tx) => {
+        const employeeNumber = await nextNumericEmployeeNumber(invite.orgId, tx);
         await tx.user.create({
           data: {
             name: normalizedName,
@@ -91,6 +97,7 @@ export async function POST(req: NextRequest) {
             role: invite.role === "MANAGER" ? "MANAGER" : "EMPLOYEE",
             companyId: invite.orgId,
             emailVerified: new Date(),
+            employeeNumber,
           },
         });
 
@@ -98,7 +105,13 @@ export async function POST(req: NextRequest) {
           where: { id: invite.id },
           data: { usedCount: { increment: 1 } },
         });
-      });
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        maxWait: 5000,
+        timeout: 10000,
+      },
+    );
 
       // Keep mail logic aligned with standard registration: send an email right after persistence.
       await sendTeamInviteWelcomeEmail({
@@ -143,8 +156,9 @@ export async function POST(req: NextRequest) {
           create: {
             name: normalizedName,
             email: normalizedEmail,
-            password: hashedPassword,   // ← stored on User, not Account
+            password: hashedPassword, // ← stored on User, not Account
             role: "COMPANY_OWNER",
+            employeeNumber: String(EMPLOYEE_NUMBER_AUTO_START),
           },
         },
       },
