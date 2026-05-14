@@ -49,13 +49,22 @@ export async function assertNoShiftOverlap(input: {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
+  /** Eine Schicht ignorieren (z. B. beim Bearbeiten derselben Zeile). */
   ignoredShiftId?: string;
+  /** Mehrere Schichten ignorieren (z. B. alle Slots eines Tages vor Replace). */
+  ignoredShiftIds?: string[];
   ignoreSameDay?: boolean;
 }) {
   const candidate = shiftToInterval(input.dayOfWeek, input.startTime, input.endTime);
   if (!candidate) {
     throw new Error("Ungültige Schichtzeit. Start und Ende dürfen nicht identisch sein.");
   }
+  const ignored =
+    input.ignoredShiftIds && input.ignoredShiftIds.length > 0
+      ? input.ignoredShiftIds
+      : input.ignoredShiftId
+        ? [input.ignoredShiftId]
+        : [];
   const existing = await db.shift.findMany({
     where: {
       ...tenantWhere(input.companyId, {
@@ -63,7 +72,7 @@ export async function assertNoShiftOverlap(input: {
         weekIndex: input.weekIndex,
       }),
       ...(input.ignoreSameDay ? { dayOfWeek: { not: input.dayOfWeek } } : {}),
-      ...(input.ignoredShiftId ? { id: { not: input.ignoredShiftId } } : {}),
+      ...(ignored.length > 0 ? { id: { notIn: ignored } } : {}),
     },
     select: { id: true, dayOfWeek: true, startTime: true, endTime: true },
   });
@@ -445,6 +454,17 @@ export async function setShiftForDay(input: {
   if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
     throw new Error("Ungültiges Zeitformat. Erwartet HH:MM.");
   }
+
+  const replacedSameDay = await db.shift.findMany({
+    where: tenantWhere(companyId, {
+      userId: input.userId,
+      weekIndex,
+      dayOfWeek: input.dayOfWeek,
+    }),
+    select: { id: true },
+  });
+  const ignoredShiftIds = replacedSameDay.map((s) => s.id);
+
   await assertNoShiftOverlap({
     companyId,
     userId: input.userId,
@@ -452,6 +472,7 @@ export async function setShiftForDay(input: {
     dayOfWeek: input.dayOfWeek,
     startTime,
     endTime,
+    ignoredShiftIds,
   });
 
   await db.$transaction([
