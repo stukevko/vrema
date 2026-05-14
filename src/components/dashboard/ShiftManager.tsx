@@ -120,6 +120,12 @@ function shiftKey(startTime: string, endTime: string) {
   return `${startTime}-${endTime}`;
 }
 
+/** Mo–So × Tagesraster: Obergrenze für „Lücken“-Zählung (Fortschrittsbalken / Farbe). */
+function maxWeekCoverageSlots(coverageSlotMinutes: number) {
+  const perDay = Math.ceil(TIMELINE_TOTAL_MINUTES / Math.max(1, coverageSlotMinutes));
+  return 7 * perDay;
+}
+
 function dayOrderMonFirst(dayOfWeek: number) {
   return (dayOfWeek + 6) % 7;
 }
@@ -337,6 +343,10 @@ export function ShiftManager({
   const [simpleSheetDay, setSimpleSheetDay] = useState(1);
   const [showDetails, setShowDetails] = useState(false);
   const [showPlannerInfo, setShowPlannerInfo] = useState(false);
+  /** Desktop Einfach-/Timeline: ausführliche Hilfe hinter (i), Standard schlank. */
+  const [desktopPlannerHelpOpen, setDesktopPlannerHelpOpen] = useState(false);
+  /** Leitungs-Statuszeile: Fußnote zu Lücken/Ruhezeit optional. */
+  const [planStatusMetricsHelpOpen, setPlanStatusMetricsHelpOpen] = useState(false);
   const [showMobilePlannerInfo, setShowMobilePlannerInfo] = useState(false);
   const [mobileSelectedDay, setMobileSelectedDay] = useState(() => {
     const d = new Date().getDay();
@@ -587,6 +597,14 @@ export function ShiftManager({
     neededStaff,
     coverageSlotMinutes,
   ]);
+  const weekMaxCoverageGapSlots = useMemo(
+    () => maxWeekCoverageSlots(coverageSlotMinutes),
+    [coverageSlotMinutes],
+  );
+  const weekCoverageGapFillRatio = useMemo(() => {
+    if (weekMaxCoverageGapSlots <= 0) return 1;
+    return Math.max(0, Math.min(1, 1 - weekCoverageGapSlots / weekMaxCoverageGapSlots));
+  }, [weekCoverageGapSlots, weekMaxCoverageGapSlots]);
   const restRiskShiftCount = useMemo(() => {
     let n = 0;
     for (const s of shifts) {
@@ -1870,10 +1888,43 @@ export function ShiftManager({
             Timeline
           </button>
         </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">
-          <strong className="text-foreground">Einfach-Planer</strong>: eine Person, Woche per Tippen.{" "}
-          <strong className="text-foreground">Timeline</strong>: einen Wochentag, alle Mitarbeitenden als Balken (ziehen und klicken).
-        </p>
+        <div className="mt-2 flex items-start gap-2">
+          <button
+            type="button"
+            onClick={() => setDesktopPlannerHelpOpen((v) => !v)}
+            className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            aria-expanded={desktopPlannerHelpOpen}
+            aria-controls="vrema-desktop-planner-help"
+            title={desktopPlannerHelpOpen ? "Hilfe ausblenden" : "So funktioniert der Planer"}
+          >
+            <Info className="h-4 w-4" aria-hidden />
+            <span className="sr-only">Planer-Hilfe {desktopPlannerHelpOpen ? "ausblenden" : "anzeigen"}</span>
+          </button>
+          <div className="min-w-0 flex-1 space-y-2">
+            {!desktopPlannerHelpOpen ? (
+              <p className="text-[11px] leading-snug text-muted-foreground/90">
+                Kurz: <span className="text-foreground/90">Einfach-Planer</span> = eine Person, Tage tippen.{" "}
+                <span className="text-foreground/90">Timeline</span> = ein Tag, alle als Balken.
+              </p>
+            ) : null}
+            {desktopPlannerHelpOpen ? (
+              <div
+                id="vrema-desktop-planner-help"
+                className="rounded-xl border border-border bg-surface-muted/40 px-3 py-2.5 text-[11px] leading-relaxed text-muted-foreground"
+              >
+                <p>
+                  <strong className="text-foreground">Einfach-Planer:</strong> eine Person auswählen, Start/Ende oben
+                  setzen (oder Früh/Standard/Spät), dann Wochentage antippen – speichert sofort. Gleiche Zeit erneut
+                  antippen löscht den Tag.
+                </p>
+                <p className="mt-2">
+                  <strong className="text-foreground">Timeline:</strong> einen Kalendertag wählen, alle Mitarbeitenden
+                  als Zeilen; Balken ziehen oder klicken zum Bearbeiten. Hilfslinien im 15-Minuten-Raster.
+                </p>
+              </div>
+            ) : null}
+          </div>
+        </div>
 
         {enableTaskListActions ? (
           <div className="glass-card mt-4 px-4 py-3">
@@ -1900,10 +1951,18 @@ export function ShiftManager({
                 </>
               ) : null}
             </div>
-            <p className="mt-2 text-[11px] text-fg-muted">
-              Füllt freie Schicht-Slots (Woche {selectedWeekIndex}) mit KI-Logik: Ruhezeit, Abwesenheit, Soll-Stunden,
-              Wochenend-Fairness. Entwürfe: gestrichelte Petrol-Balken – erst nach Bestätigung fest.
-            </p>
+            {!desktopPlannerHelpOpen ? (
+              <p className="mt-1.5 text-[10px] text-muted-foreground/80">
+                Kurzinfo zu Autopilot und Schritten: Planer-Hilfe über das (i) oben.
+              </p>
+            ) : null}
+            {desktopPlannerHelpOpen ? (
+              <p className="mt-2 text-[11px] text-fg-muted">
+                <strong className="text-foreground">Autopilot:</strong> füllt freie Schicht-Slots (Woche{" "}
+                {selectedWeekIndex}) mit KI-Logik: Ruhezeit, Abwesenheit, Soll-Stunden, Wochenend-Fairness. Entwürfe:
+                gestrichelte Petrol-Balken – erst nach Bestätigung fest.
+              </p>
+            ) : null}
             {autopilotBusy ? (
               <div className="mt-3 space-y-2">
                 <div className="h-2 overflow-hidden rounded-full bg-brand-soft">
@@ -1977,7 +2036,11 @@ export function ShiftManager({
         <p className="mt-2 text-xs font-medium text-brand">Hinweis: Schicht endet am Folgetag (+1 Tag).</p>
       ) : null}
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <p className="text-[11px] text-muted-foreground">Tipp: Zeit oben einstellen und Tage direkt antippen. Erneuter Klick mit gleicher Zeit löscht den Tag.</p>
+        {desktopPlannerHelpOpen ? (
+          <p className="text-[11px] text-muted-foreground">
+            Tipp: Zeit oben einstellen und Tage direkt antippen. Erneuter Klick mit gleicher Zeit löscht den Tag.
+          </p>
+        ) : null}
         {selectedUserVacationDays.size > 0 && (
           <p className="text-[11px] text-warning-foreground">
             Abwesenheit: {Array.from(selectedUserVacationDays).map((d) => DAY_LABELS[d]).join(", ")}
@@ -1985,16 +2048,18 @@ export function ShiftManager({
           </p>
         )}
       </div>
-      <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
-        <div className="rounded-xl border border-border bg-background px-3 py-2">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 1</p>
-          <p className="text-sm text-foreground">Zeit oben wählen (oder Früh/Standard/Spät klicken).</p>
+      {desktopPlannerHelpOpen ? (
+        <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+          <div className="rounded-xl border border-border bg-background px-3 py-2">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 1</p>
+            <p className="text-sm text-foreground">Zeit oben wählen (oder Früh/Standard/Spät klicken).</p>
+          </div>
+          <div className="rounded-xl border border-border bg-background px-3 py-2">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 2</p>
+            <p className="text-sm text-foreground">Tage antippen. Jeder Klick speichert sofort.</p>
+          </div>
         </div>
-        <div className="rounded-xl border border-border bg-background px-3 py-2">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 2</p>
-          <p className="text-sm text-foreground">Tage antippen. Jeder Klick speichert sofort.</p>
-        </div>
-      </div>
+      ) : null}
       {hasInvalidRange && (
         <p className="mt-2 text-xs text-warning-foreground">Bitte gültige Zeit wählen: Start und Ende dürfen nicht gleich sein.</p>
       )}
@@ -2096,7 +2161,7 @@ export function ShiftManager({
         </div>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <p className="text-[11px] text-muted-foreground">Legende:</p>
+        <p className="text-[11px] text-muted-foreground/80">Legende:</p>
         <StatusBadge tone="neutral" size="sm" glass withDot={false}>
           Frei
         </StatusBadge>
@@ -2109,7 +2174,9 @@ export function ShiftManager({
         <StatusBadge tone="danger" size="sm" glass withDot={false}>
           Krank
         </StatusBadge>
-        <span className="text-[11px] text-muted-foreground">· Klick übernimmt die oben gewählte Zeit für den Tag.</span>
+        {desktopPlannerHelpOpen ? (
+          <span className="text-[11px] text-muted-foreground">· Klick übernimmt die oben gewählte Zeit für den Tag.</span>
+        ) : null}
       </div>
 
       <div className="mt-4">
@@ -2149,6 +2216,13 @@ export function ShiftManager({
           id="planner-timeline-region"
           className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-xl border border-border bg-background p-3 scrollbar-hide sm:p-4"
         >
+          <div className="mb-3 hidden items-start gap-2 rounded-lg border border-border/50 bg-muted/15 px-2.5 py-2 text-[10px] leading-snug text-muted-foreground md:flex lg:hidden">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+            <span>
+              Die Timeline ist absichtlich breit (24 h). Bitte horizontal wischen; bei Bedarf im Browser mit zwei Fingern
+              leicht zoomen.
+            </span>
+          </div>
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">Fokusmodus: Planung zuerst, Kennzahlen optional.</p>
             <button
@@ -2315,8 +2389,8 @@ export function ShiftManager({
             </div>
           ) : null}
 
-          <div className="mt-3 max-h-[75vh] min-w-0 max-w-full overflow-x-auto overflow-y-auto overscroll-contain scrollbar-hide">
-            <div className="w-full min-w-[1200px] space-y-4 py-1 lg:min-w-[1400px]">
+          <div className="mt-3 max-h-[75vh] min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-auto overscroll-contain scrollbar-hide">
+            <div className="w-full min-w-[720px] space-y-4 py-1 sm:min-w-[900px] md:min-w-[1040px] lg:min-w-[1400px]">
               <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground md:grid-cols-[220px_1fr] md:items-center">
                 <div className="hidden font-medium text-foreground md:block">Mitarbeiter</div>
                 <div className="grid grid-cols-12 font-sans">
@@ -2907,18 +2981,56 @@ export function ShiftManager({
                 Plan-Status · Zyklus-Woche {selectedWeekIndex}
               </p>
               <div className="flex flex-wrap gap-2 text-sm">
-                <span
+                <div
                   className={
-                    weekCoverageGapSlots > 0
-                      ? "inline-flex items-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-50 px-3 py-1 text-amber-950 dark:border-amber-500/40 dark:bg-amber-500/12 dark:text-amber-100"
-                      : "inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100"
+                    weekCoverageGapSlots === 0
+                      ? "inline-flex min-w-0 max-w-full flex-col gap-1.5 rounded-2xl border border-emerald-200/90 bg-emerald-50/90 px-3 py-2 text-emerald-950 shadow-sm dark:border-emerald-500/35 dark:bg-emerald-500/12 dark:text-emerald-50"
+                      : "inline-flex min-w-0 max-w-full flex-col gap-1.5 rounded-2xl border border-border bg-background/80 px-3 py-2 text-foreground shadow-sm dark:border-white/[0.08] dark:bg-surface-muted/40"
                   }
                 >
-                  <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                  {weekCoverageGapSlots === 0
-                    ? "Mindestbesetzung erreicht (Zeitfenster)"
-                    : `${weekCoverageGapSlots} Zeitfenster unter Sollbesetzung`}
-                </span>
+                  <span className="inline-flex items-center gap-1.5 font-medium leading-snug">
+                    <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    {weekCoverageGapSlots === 0 ? (
+                      <>Mindestbesetzung erreicht · alle Zeitfenster (Mo–So)</>
+                    ) : (
+                      <>
+                        <span className="min-w-0">
+                          Noch{" "}
+                          <span className="tabular-nums font-semibold text-foreground">{weekCoverageGapSlots}</span>{" "}
+                          von{" "}
+                          <span className="tabular-nums text-muted-foreground">{weekMaxCoverageGapSlots}</span>{" "}
+                          Fenstern offen
+                        </span>
+                        <span className="hidden text-xs font-normal text-muted-foreground sm:inline">
+                          ({Math.round(weekCoverageGapFillRatio * 100)} % geschlossen)
+                        </span>
+                      </>
+                    )}
+                  </span>
+                  {weekCoverageGapSlots > 0 ? (
+                    <div
+                      className="h-1.5 w-full min-w-[10rem] max-w-[14rem] overflow-hidden rounded-full bg-amber-200/50 dark:bg-amber-950/40"
+                      role="progressbar"
+                      aria-valuenow={Math.round(weekCoverageGapFillRatio * 100)}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label="Anteil der Zeitfenster mit ausreichender Mindestbesetzung"
+                    >
+                      <div
+                        className="h-full rounded-full transition-[width] duration-300 ease-out"
+                        style={{
+                          width: `${Math.round(weekCoverageGapFillRatio * 100)}%`,
+                          background: "linear-gradient(90deg, #facc15, #22c55e)",
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                  {weekCoverageGapSlots > 0 ? (
+                    <span className="text-[10px] font-normal text-muted-foreground sm:hidden">
+                      {Math.round(weekCoverageGapFillRatio * 100)} % der Fenster erfüllen die Mindestbesetzung
+                    </span>
+                  ) : null}
+                </div>
                 <span
                   className={
                     restRiskShiftCount > 0
@@ -2932,10 +3044,25 @@ export function ShiftManager({
                     : `${restRiskShiftCount} Ruhezeit-Warnung${restRiskShiftCount === 1 ? "" : "en"} (< 11h)`}
                 </span>
               </div>
-              <p className="text-[10px] leading-snug text-muted-foreground">
-                Lücken = Stundenfenster ohne genügend parallele Schichten (laut Mindestbesetzung). Ruhezeit = weniger als
-                11 Stunden zwischen zwei Schichten derselben Person in dieser Zykluswoche.
-              </p>
+              <div className="flex items-start gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPlanStatusMetricsHelpOpen((v) => !v)}
+                  className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  aria-expanded={planStatusMetricsHelpOpen}
+                  title={planStatusMetricsHelpOpen ? "Legende ausblenden" : "Was bedeuten die Zahlen?"}
+                >
+                  <Info className="h-3.5 w-3.5" aria-hidden />
+                  <span className="sr-only">Zahlen-Legende</span>
+                </button>
+                {planStatusMetricsHelpOpen ? (
+                  <p className="text-[10px] leading-snug text-muted-foreground">
+                    Zeitfenster: jeweils {coverageSlotMinutes} Minuten von 0–24 Uhr, Mo–So. Ein Fenster zählt als offen,
+                    wenn dort weniger parallele Schichten liegen als die Mindestbesetzung (Zahl neben der Timeline).
+                    Ruhezeit: weniger als 11 Stunden Pause zwischen zwei Schichten derselben Person in dieser Zykluswoche.
+                  </p>
+                ) : null}
+              </div>
             </div>
             <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap lg:flex-col lg:items-end">
               <button
