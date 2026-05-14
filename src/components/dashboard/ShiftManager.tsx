@@ -75,6 +75,8 @@ const TIMELINE_START_HOUR = 0;
 const TIMELINE_END_HOUR = 24;
 const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
 const TIMELINE_SNAP_MINUTES = 15;
+/** Vertikale Hilfslinien im Raster (24 h × 4 Viertel). */
+const TIMELINE_QUARTER_STRIPES = 24 * (60 / TIMELINE_SNAP_MINUTES);
 
 function toMinutes(value: string) {
   const [h, m] = value.split(":").map(Number);
@@ -427,7 +429,7 @@ export function ShiftManager({
       .then((data: { week?: Array<DailyWeatherForecast | null>; mondayIso?: string; error?: string | null }) => {
         if (cancelled) return;
         if (data.error === "no_api_key") {
-          setWeatherFetchErr("Wetter: OPENWEATHER_API_KEY fehlt.");
+          setWeatherFetchErr("Wetter-Anzeige aus: API-Key nicht gesetzt (optional).");
           setWeatherWeek([]);
           setWeatherMondayIso(null);
           return;
@@ -717,13 +719,20 @@ export function ShiftManager({
     }
     return slots;
   }, [timelineRows, neededStaff, coverageSlotMinutes]);
-  const firstCriticalSlot = useMemo(
-    () => timelineCoverage.find((slot) => slot.isGap)?.label ?? null,
-    [timelineCoverage]
-  );
-  const hourMarkers = useMemo(
-    () => Array.from({ length: TIMELINE_END_HOUR - TIMELINE_START_HOUR }, (_, i) => TIMELINE_START_HOUR + i + 1),
-    []
+  const firstGapWindow = useMemo(() => {
+    const idx = timelineCoverage.findIndex((slot) => slot.isGap);
+    if (idx < 0) return null;
+    const slotStart = idx * coverageSlotMinutes;
+    const slotEnd = Math.min(TIMELINE_END_HOUR * 60, slotStart + coverageSlotMinutes);
+    return {
+      startMinutes: slotStart,
+      label: `${minutesToHHMM(slotStart)}–${minutesToHHMM(slotEnd)}`,
+    };
+  }, [timelineCoverage, coverageSlotMinutes]);
+  /** Stunden-Grenzen 0:00 … 24:00 als Prozent (0 % … 100 %). */
+  const hourLinePercents = useMemo(
+    () => Array.from({ length: 25 }, (_, i) => (i / 24) * 100),
+    [],
   );
   const selectedShifts = useMemo(
     () => shifts.filter((s) => selectedShiftIds.includes(s.id)),
@@ -931,9 +940,8 @@ export function ShiftManager({
   };
 
   const suggestAutofillForFirstGap = () => {
-    if (!firstCriticalSlot) return;
-    const slotStart = toMinutes(firstCriticalSlot);
-    if (slotStart === null) return;
+    if (!firstGapWindow) return;
+    const slotStart = firstGapWindow.startMinutes;
     const slotEnd = Math.min(TIMELINE_END_HOUR * 60, slotStart + coverageSlotMinutes);
     const roleWeight: Record<string, number> = {
       EMPLOYEE: 3,
@@ -2280,17 +2288,17 @@ export function ShiftManager({
               />
             </div>
             <p className="hidden items-center text-[11px] text-muted-foreground leading-snug md:flex">
-              15-Minuten-Raster · Hilfslinien · Balken ziehen oder anklicken zum Bearbeiten
+              Stundenlinien und feines Viertelstunden-Raster · 15-Minuten-Snap beim Ziehen · Balken klicken zum Bearbeiten
             </p>
           </div>
           <div className="mt-2 flex justify-end">
-            {firstCriticalSlot ? (
+            {firstGapWindow ? (
               <button
                 type="button"
                 onClick={suggestAutofillForFirstGap}
                 className="inline-flex items-center rounded-full border border-danger/30 bg-danger-soft px-3 py-2 text-xs font-medium text-danger-foreground underline-offset-2 hover:underline sm:text-[11px]"
               >
-                Erste Lücke ab {firstCriticalSlot}
+                Erste Unterdeckung {firstGapWindow.label}
               </button>
             ) : null}
           </div>
@@ -2393,11 +2401,16 @@ export function ShiftManager({
             <div className="w-full min-w-[720px] space-y-4 py-1 sm:min-w-[900px] md:min-w-[1040px] lg:min-w-[1400px]">
               <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground md:grid-cols-[220px_1fr] md:items-center">
                 <div className="hidden font-medium text-foreground md:block">Mitarbeiter</div>
-                <div className="grid grid-cols-12 font-sans">
-                  {Array.from({ length: 12 }).map((_, idx) => {
-                    const hour = TIMELINE_START_HOUR + idx * 2;
+                <div className="grid grid-cols-24 font-sans tabular-nums">
+                  {Array.from({ length: 24 }).map((_, idx) => {
+                    const hour = TIMELINE_START_HOUR + idx;
                     return (
-                      <span key={hour} className="text-center text-[10px] sm:text-[11px]">
+                      <span
+                        key={hour}
+                        className={`text-center text-[9px] leading-none sm:text-[10px] ${
+                          hour % 6 === 0 ? "font-semibold text-foreground/90" : "text-muted-foreground"
+                        }`}
+                      >
                         {String(hour).padStart(2, "0")}
                       </span>
                     );
@@ -2499,6 +2512,19 @@ export function ShiftManager({
                       }}
                     >
                       <div className="absolute inset-0">
+                        <div
+                          className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-30"
+                          style={{
+                            backgroundImage: `repeating-linear-gradient(
+                              90deg,
+                              transparent 0,
+                              transparent calc(100% / ${TIMELINE_QUARTER_STRIPES} - 0.5px),
+                              rgb(148 163 184 / 0.22) calc(100% / ${TIMELINE_QUARTER_STRIPES} - 0.5px),
+                              rgb(148 163 184 / 0.22) calc(100% / ${TIMELINE_QUARTER_STRIPES})
+                            )`,
+                          }}
+                          aria-hidden
+                        />
                         {timelineCoverage.map((slot, idx) =>
                           slot.isGap ? (
                             <div
@@ -2511,16 +2537,17 @@ export function ShiftManager({
                             />
                           ) : null
                         )}
-                        {hourMarkers.map((hour) => {
-                          const left = (((hour * 60 - TIMELINE_START_HOUR * 60) / TIMELINE_TOTAL_MINUTES) * 100).toFixed(4);
-                          return (
-                            <div
-                              key={`hour-line-${hour}`}
-                              className="pointer-events-none absolute top-0 bottom-0 w-px bg-slate-200/20 dark:bg-white/[0.04]"
-                              style={{ left: `${left}%` }}
-                            />
-                          );
-                        })}
+                        {hourLinePercents.map((leftLine, idx) => (
+                          <div
+                            key={`hour-line-${idx}`}
+                            className={`pointer-events-none absolute top-0 bottom-0 w-px ${
+                              idx % 6 === 0
+                                ? "bg-slate-400/55 dark:bg-white/[0.14]"
+                                : "bg-slate-300/40 dark:bg-white/[0.09]"
+                            }`}
+                            style={{ left: `${leftLine.toFixed(4)}%` }}
+                          />
+                        ))}
                       </div>
                       {/* Hover-Ghost: nur sichtbar, wenn Lane leer (kein Konflikt, keine Schicht). */}
                       {!row.conflict && widthPct === 0 ? (
