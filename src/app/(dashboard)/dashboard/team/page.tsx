@@ -43,7 +43,7 @@ export default async function TeamPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5 px-1 sm:space-y-6 sm:px-0">
+    <div className="mx-auto max-w-6xl space-y-5 px-1 sm:space-y-6 sm:px-0">
       {/* Hero */}
       <section className="flex flex-col gap-4">
         <div className="min-w-0">

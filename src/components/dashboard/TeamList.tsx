@@ -7,6 +7,7 @@ import {
   updateEmployeeHourlyWage,
   updateEmployeeNumber,
   updateEmployeePlanningWorkArea,
+  updateEmployeeWeeklyHours,
 } from "@/lib/actions/team";
 import Link from "next/link";
 import {
@@ -54,6 +55,10 @@ const FILTER_TABS: { key: FilterKey; label: string }[] = [
   { key: "inactive", label: "Inaktiv" },
 ];
 
+/** Einheitliche Spalten: mehr Platz für Person + Rolle, kompakte aber bedienbare Zahlfelder */
+const TEAM_TABLE_GRID_CLASS =
+  "[grid-template-columns:minmax(0,2.75fr)_minmax(0,1.05fr)_minmax(7.25rem,1fr)_minmax(5.5rem,0.85fr)_minmax(6.75rem,1.05fr)_minmax(6.75rem,1.05fr)_minmax(2.75rem,auto)]";
+
 export function TeamList({
   members,
   canManage,
@@ -66,6 +71,7 @@ export function TeamList({
   const [isPending, startTransition] = useTransition();
   const [employeeNumberDrafts, setEmployeeNumberDrafts] = useState<Record<string, string>>({});
   const [hourlyWageDrafts, setHourlyWageDrafts] = useState<Record<string, string>>({});
+  const [weeklyHoursDrafts, setWeeklyHoursDrafts] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<string | null>(null);
   const { toasts, show, remove } = useToast();
 
@@ -75,12 +81,21 @@ export function TeamList({
   useEffect(() => {
     const next: Record<string, string> = {};
     const wageNext: Record<string, string> = {};
+    const hoursNext: Record<string, string> = {};
     for (const member of members) {
       next[member.id] = member.employeeNumber ?? "";
       wageNext[member.id] = member.hourlyWage != null ? String(member.hourlyWage) : "";
+      const whNum = Number(member.weeklyHours);
+      if (!Number.isFinite(whNum) || whNum <= 0) {
+        hoursNext[member.id] = "40";
+      } else {
+        const rounded = Math.round(whNum * 10) / 10;
+        hoursNext[member.id] = Number.isInteger(rounded) ? String(rounded) : String(rounded);
+      }
     }
     setEmployeeNumberDrafts(next);
     setHourlyWageDrafts(wageNext);
+    setWeeklyHoursDrafts(hoursNext);
   }, [members]);
 
   const filtered = useMemo(() => {
@@ -194,17 +209,22 @@ export function TeamList({
         </div>
       ) : (
         <>
-          {/* Desktop */}
-          <div className="hidden sm:block">
-            <div className="grid items-center gap-x-4 border-b border-line/[0.08] px-5 py-3 text-[10px] font-sans uppercase tracking-widest text-muted-foreground lg:gap-x-6 lg:px-6 xl:gap-x-8 xl:px-7 [grid-template-columns:2.2fr_1.3fr_0.7fr_0.5fr_1.4fr_1.3fr_auto]">
+          {/* Desktop: horizontales Scrollen, falls Viewport schmaler als Tabellen-Minimum */}
+          <div className="hidden min-w-0 overflow-x-auto sm:block">
+            <div className="min-w-[52rem]">
+            <div
+              className={`grid items-center gap-x-3 border-b border-line/[0.08] px-4 py-3 text-[10px] font-sans uppercase tracking-widest text-muted-foreground sm:px-5 lg:gap-x-4 lg:px-6 ${TEAM_TABLE_GRID_CLASS}`}
+            >
               <span className="min-w-0">Mitarbeiter</span>
               <span className="min-w-0">Rolle</span>
               <span className="min-w-0" title="Außenbereich für Wetter-Hinweise im Planer">
-                Außen
+                Plan-Ort
               </span>
-              <span className="min-w-0 text-right tabular-nums">Std/W</span>
-              <span className="min-w-0 pl-1">€/Std</span>
-              <span className="min-w-0 pl-1">Personalnr.</span>
+              <span className="min-w-0 text-right tabular-nums" title="Soll-Stunden pro Woche">
+                Std/W
+              </span>
+              <span className="min-w-0 pl-0.5">€/Std</span>
+              <span className="min-w-0 pl-0.5">Personalnr.</span>
               <span className="min-w-0 text-right">Aktion</span>
             </div>
 
@@ -220,7 +240,7 @@ export function TeamList({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
                     className={clsx(
-                      "grid items-center gap-x-4 border-b border-line/[0.06] px-5 py-3.5 transition-colors last:border-b-0 hover:bg-surface-muted/40 lg:gap-x-6 lg:px-6 xl:gap-x-8 xl:px-7 [grid-template-columns:2.2fr_1.3fr_0.7fr_0.5fr_1.4fr_1.3fr_auto]",
+                      `grid items-center gap-x-3 border-b border-line/[0.06] px-4 py-3.5 transition-colors last:border-b-0 hover:bg-surface-muted/40 sm:px-5 lg:gap-x-4 lg:px-6 ${TEAM_TABLE_GRID_CLASS}`,
                       !member.isActive && "opacity-55"
                     )}
                   >
@@ -240,7 +260,9 @@ export function TeamList({
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="flex items-center gap-1.5 text-sm font-medium leading-snug">
-                          <span className="truncate">{member.name ?? "–"}</span>
+                          <span className="min-w-0 truncate" title={member.name ?? member.email ?? undefined}>
+                            {member.name ?? "–"}
+                          </span>
                           {isSelf && (
                             <span className="shrink-0 rounded-full bg-brand-soft px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-brand">
                               du
@@ -257,7 +279,7 @@ export function TeamList({
                       <meta.Icon className={clsx("h-3.5 w-3.5 shrink-0", meta.color)} />
                       <span
                         className={clsx(
-                          "min-w-0 truncate font-sans text-xs leading-tight",
+                          "line-clamp-2 min-w-0 break-words font-sans text-xs leading-tight",
                           meta.color
                         )}
                         title={meta.label}
@@ -283,9 +305,9 @@ export function TeamList({
                           className="input-field-subtle h-9 w-full min-w-0 rounded-lg px-2 text-[11px] text-foreground"
                           aria-label="Planungsbereich"
                         >
-                          <option value="">Innenbereich</option>
-                          <option value="OUTDOOR">Außenbereich</option>
-                          <option value="TERRACE">Überdachter Außenbereich</option>
+                          <option value="">Innen</option>
+                          <option value="OUTDOOR">Außen</option>
+                          <option value="TERRACE">Terrasse</option>
                         </select>
                       ) : (
                         <span className="text-[11px] text-muted-foreground">
@@ -298,10 +320,51 @@ export function TeamList({
                       )}
                     </div>
 
-                    <div className="flex min-h-9 items-center justify-end tabular-nums">
-                      <span className="font-sans text-sm font-medium text-foreground">
-                        {member.weeklyHours}h
-                      </span>
+                    <div className="flex min-w-0 items-center justify-end">
+                      {canManage ? (
+                        <div className="flex w-full max-w-[6.5rem] items-center gap-1.5 justify-end sm:max-w-none sm:justify-start">
+                          <input
+                            value={weeklyHoursDrafts[member.id] ?? ""}
+                            onChange={(e) =>
+                              setWeeklyHoursDrafts((prev) => ({ ...prev, [member.id]: e.target.value }))
+                            }
+                            placeholder="40"
+                            inputMode="decimal"
+                            aria-label={`Wochenstunden ${member.name ?? member.email}`}
+                            className="input-field-subtle h-9 min-w-0 w-full max-w-[4.25rem] flex-1 rounded-lg px-2 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/55 sm:max-w-[5rem]"
+                          />
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() =>
+                              startTransition(async () => {
+                                try {
+                                  await updateEmployeeWeeklyHours(
+                                    member.id,
+                                    weeklyHoursDrafts[member.id] ?? ""
+                                  );
+                                  setFeedback("Wochenstunden gespeichert.");
+                                  show("Wochenstunden gespeichert.", "success");
+                                } catch (err) {
+                                  const message =
+                                    err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
+                                  setFeedback(message);
+                                  show(message, "error");
+                                }
+                              })
+                            }
+                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent bg-surface-muted/60 text-fg-muted transition-colors hover:bg-brand-soft hover:text-brand"
+                            title="Wochenstunden speichern"
+                            aria-label="Wochenstunden speichern"
+                          >
+                            <Save className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="font-sans text-sm font-medium tabular-nums text-foreground">
+                          {member.weeklyHours}h
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex min-w-0 items-center">
@@ -315,7 +378,7 @@ export function TeamList({
                             placeholder="16,50"
                             inputMode="decimal"
                             aria-label={`Stundenlohn ${member.name ?? member.email}`}
-                            className="input-field-subtle h-9 min-w-0 flex-1 rounded-lg px-3 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/55"
+                            className="input-field-subtle h-9 min-w-[3.25rem] flex-1 rounded-lg px-2.5 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/55 sm:px-3"
                           />
                           <button
                             type="button"
@@ -368,7 +431,7 @@ export function TeamList({
                             }
                             placeholder="10042"
                             aria-label={`Personalnummer ${member.name ?? member.email}`}
-                            className="input-field-subtle h-9 min-w-0 flex-1 rounded-lg px-3 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/55"
+                            className="input-field-subtle h-9 min-w-[3.25rem] flex-1 rounded-lg px-2.5 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/55 sm:px-3"
                           />
                           <button
                             type="button"
@@ -442,6 +505,7 @@ export function TeamList({
                 );
               })}
             </div>
+            </div>
           </div>
 
           {/* Mobile */}
@@ -476,14 +540,18 @@ export function TeamList({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-1.5 text-base font-semibold text-foreground">
-                        <span className="truncate">{member.name ?? "–"}</span>
+                        <span className="min-w-0 truncate" title={member.name ?? member.email ?? undefined}>
+                          {member.name ?? "–"}
+                        </span>
                         {isSelf && (
                           <span className="shrink-0 rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand">
                             du
                           </span>
                         )}
                       </p>
-                      <p className="mt-0.5 truncate text-sm text-muted-foreground">{member.email}</p>
+                      <p className="mt-0.5 truncate text-sm text-muted-foreground" title={member.email}>
+                        {member.email}
+                      </p>
                     </div>
                     {canManage && !isSelf && (
                       <button
@@ -507,12 +575,57 @@ export function TeamList({
                     )}
                   </div>
 
-                  <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line/[0.08] pt-3 text-sm">
-                    <meta.Icon className={clsx("h-4 w-4 shrink-0", meta.color)} />
-                    <span className={clsx("font-medium", meta.color)}>{meta.label}</span>
-                    <span className="ml-auto tabular-nums font-medium text-foreground">
-                      {member.weeklyHours} Std./Woche
+                  <div className="mt-4 flex flex-wrap items-start gap-2 border-t border-line/[0.08] pt-3 text-sm">
+                    <meta.Icon className={clsx("mt-0.5 h-4 w-4 shrink-0", meta.color)} />
+                    <span className={clsx("min-w-0 flex-1 font-medium leading-snug", meta.color)}>{meta.label}</span>
+                  </div>
+
+                  <div className="mt-3 space-y-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Wochenstunden (Soll)
                     </span>
+                    {canManage ? (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          value={weeklyHoursDrafts[member.id] ?? ""}
+                          onChange={(e) =>
+                            setWeeklyHoursDrafts((prev) => ({ ...prev, [member.id]: e.target.value }))
+                          }
+                          placeholder="40"
+                          inputMode="decimal"
+                          aria-label="Wochenstunden"
+                          className="input-field-subtle h-10 min-w-0 max-w-[8rem] flex-1 rounded-lg px-3 text-sm tabular-nums text-foreground placeholder:text-muted-foreground/55"
+                        />
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() =>
+                            startTransition(async () => {
+                              try {
+                                await updateEmployeeWeeklyHours(
+                                  member.id,
+                                  weeklyHoursDrafts[member.id] ?? ""
+                                );
+                                setFeedback("Wochenstunden gespeichert.");
+                                show("Wochenstunden gespeichert.", "success");
+                              } catch (err) {
+                                const message =
+                                  err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
+                                setFeedback(message);
+                                show(message, "error");
+                              }
+                            })
+                          }
+                          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-transparent bg-surface-muted/60 text-fg-muted transition-colors hover:bg-brand-soft hover:text-brand"
+                          title="Speichern"
+                          aria-label="Wochenstunden speichern"
+                        >
+                          <Save className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-sm font-medium tabular-nums text-foreground">{member.weeklyHours} Std./Woche</p>
+                    )}
                   </div>
 
                   <div className="mt-3 grid grid-cols-2 gap-2">
@@ -646,9 +759,9 @@ export function TeamList({
                         className="input-field-subtle h-9 min-w-0 flex-1 rounded-lg px-2 text-sm text-foreground"
                         aria-label="Planungsbereich"
                       >
-                        <option value="">Innenbereich</option>
-                        <option value="OUTDOOR">Außenbereich</option>
-                        <option value="TERRACE">Überdachter Außenbereich</option>
+                        <option value="">Innen</option>
+                        <option value="OUTDOOR">Außen</option>
+                        <option value="TERRACE">Terrasse</option>
                       </select>
                     ) : (
                       <span className="text-sm text-foreground">

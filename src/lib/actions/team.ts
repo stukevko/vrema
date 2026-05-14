@@ -282,6 +282,35 @@ export async function updateEmployeeHourlyWage(userId: string, hourlyWageRaw: st
   revalidatePath("/dashboard/planning");
 }
 
+export async function updateEmployeeWeeklyHours(userId: string, weeklyHoursRaw: string) {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
+    throw new Error("Keine Berechtigung.");
+  }
+  const trimmed = weeklyHoursRaw.trim().replace(",", ".");
+  const member = await db.user.findFirst({
+    where: tenantWhere(companyId, { id: userId }),
+    select: { id: true },
+  });
+  if (!member) throw new Error("Mitarbeiter nicht gefunden.");
+
+  const n = Number.parseFloat(trimmed);
+  if (!Number.isFinite(n) || n < 1 || n > 60) {
+    throw new Error("Wochenstunden zwischen 1 und 60 (Dezimalstellen erlaubt, z. B. 38,5).");
+  }
+  const weeklyHours = Math.round(n * 10) / 10;
+
+  await db.user.update({
+    where: { id: userId },
+    data: { weeklyHours },
+  });
+
+  revalidatePath("/dashboard/team");
+  revalidatePath("/dashboard/planning");
+  revalidatePath("/dashboard/reports");
+  revalidatePath("/dashboard");
+}
+
 export async function getShifts() {
   const { companyId, role } = await requireTenant();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) return [];
