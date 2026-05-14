@@ -17,6 +17,7 @@ import {
 import { ShiftManager } from "@/components/dashboard/ShiftManager";
 import { TradePushHint } from "@/components/planning/TradePushHint";
 import { dateForPlannerCycleDay, dayOrderMonFirst } from "@/lib/planning/cycle-display-date";
+import { logServerError } from "@/lib/server-logger";
 import { Handshake, Inbox } from "lucide-react";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -31,14 +32,24 @@ export default async function PlanningPage() {
   const canManage = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
 
   if (canManage) {
-    const [members, shifts, vacationConflictDays, shiftCycleWeeks, pendingTradesResult] = await Promise.all([
+    const settled = await Promise.allSettled([
       getTeamMembers(),
       getShifts(),
       getVacationConflictDaysForPlanning(),
       getShiftCycleWeeks(),
-      getPendingTradeApprovals().catch(() => [] as Awaited<ReturnType<typeof getPendingTradeApprovals>>),
+      getPendingTradeApprovals(),
     ]);
-    const pendingTrades = pendingTradesResult;
+    const members = settled[0].status === "fulfilled" ? settled[0].value : [];
+    const shifts = settled[1].status === "fulfilled" ? settled[1].value : [];
+    const vacationConflictDays = settled[2].status === "fulfilled" ? settled[2].value : [];
+    const shiftCycleWeeks = settled[3].status === "fulfilled" ? settled[3].value : 1;
+    const pendingTrades =
+      settled[4].status === "fulfilled" ? settled[4].value : ([] as Awaited<ReturnType<typeof getPendingTradeApprovals>>);
+    settled.forEach((r, i) => {
+      if (r.status === "rejected") {
+        logServerError(`planning.page.data[${i}]`, r.reason, { step: i });
+      }
+    });
     return (
       <div className="mx-auto max-w-6xl space-y-4 px-1 sm:space-y-6 sm:px-0">
         <div className="glass-card px-4 py-3 sm:px-5 sm:py-4">

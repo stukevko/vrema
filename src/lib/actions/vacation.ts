@@ -517,8 +517,19 @@ export async function getVacationConflictDaysForPlanning() {
     }
   }
 
-  return Array.from(conflicts.entries()).map(([entry, type]) => {
-    const [userId, dayOfWeek] = JSON.parse(entry) as [string, number];
-    return { userId, dayOfWeek, type };
-  });
+  return Array.from(conflicts.entries())
+    .map(([entry, type]) => {
+      try {
+        const parsed = JSON.parse(entry) as unknown;
+        if (!Array.isArray(parsed) || parsed.length !== 2) return null;
+        const [userId, dow] = parsed;
+        if (typeof userId !== "string" || !userId) return null;
+        const dayOfWeek = Number(dow);
+        if (!Number.isInteger(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6) return null;
+        return { userId, dayOfWeek, type };
+      } catch {
+        return null;
+      }
+    })
+    .filter((x): x is { userId: string; dayOfWeek: number; type: "VACATION" | "SICK" } => x != null);
 }

@@ -19,7 +19,11 @@ function parseTimeToMinutes(value: string) {
   if (!/^\d{2}:\d{2}$/.test(value)) return null;
   const [h, m] = value.split(":").map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return null;
-  if (h < 0 || h > 23 || m < 0 || m > 59) return null;
+  if (m < 0 || m > 59) return null;
+  if (h < 0) return null;
+  /** Tagesende im Planer (Timeline bis 24:00) – vorher schlug assertNoShiftOverlap fehl und konnte Folgefehler erzeugen. */
+  if (h === 24 && m === 0) return 24 * 60;
+  if (h > 23) return null;
   return h * 60 + m;
 }
 

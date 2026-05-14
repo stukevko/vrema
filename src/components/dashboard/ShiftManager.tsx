@@ -298,6 +298,8 @@ export function ShiftManager({
   } | null>(null);
   const dragDraftRef = useRef<{ userId: string; startMinute: number; endMinute: number } | null>(null);
   const dragSnapshotRef = useRef<{ start: number; end: number } | null>(null);
+  const shiftsRef = useRef(shifts);
+  shiftsRef.current = shifts;
   const [activeDrag, setActiveDrag] = useState<{
     userId: string;
     mode: "create" | "move" | "resize-start" | "resize-end";
@@ -916,6 +918,14 @@ export function ShiftManager({
       setMessage(`Schicht blockiert: ${conflict === "SICK" ? "Krank" : "Urlaub"}.`);
       return;
     }
+    const existingShift = shiftsRef.current.find(
+      (s) =>
+        s.userId === userId &&
+        s.weekIndex === selectedWeekIndex &&
+        s.dayOfWeek === timelineDay &&
+        !s.isDraft,
+    );
+    const breakDuration = existingShift?.breakDuration ?? 0;
     const clampedStart = Math.max(TIMELINE_START_HOUR * 60, Math.min(endMinute - TIMELINE_SNAP_MINUTES, startMinute));
     const clampedEnd = Math.min(TIMELINE_END_HOUR * 60, Math.max(startMinute + TIMELINE_SNAP_MINUTES, endMinute));
     const snappedStart = snapMinutes(clampedStart);
@@ -931,6 +941,7 @@ export function ShiftManager({
           dayOfWeek: timelineDay,
           startTime: startTimeValue,
           endTime: endTimeValue,
+          breakDuration,
         });
         setMessage(`Schicht gesetzt: ${DAY_LABELS[timelineDay]} (${startTimeValue}-${endTimeValue}).`);
       } catch (e: unknown) {
