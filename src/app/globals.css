@@ -1,6 +1,17 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* iOS Home-Indicator / Notch – nutzbar als `pb-safe`, `pt-safe`, `mb-safe` in className */
+@utility pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+@utility pt-safe {
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+}
+@utility mb-safe {
+  margin-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+
 /* Tailwind v4: Dark-Variant über .dark-Klasse (next-themes-kompatibel) */
 @custom-variant dark (&:where(.dark, .dark *));
 

@@ -172,74 +172,26 @@ export function DashboardSidebar({
   );
 }
 
-export function DashboardMobileBottomNav({
-  role,
-  unreadReplies = 0,
-  onOpenSupport,
-  supportOverlayOpen = false,
-}: {
-  role: string;
-  unreadReplies?: number;
-  onOpenSupport?: (mode?: "default" | "unread") => void;
-  supportOverlayOpen?: boolean;
-}) {
+export function DashboardMobileBottomNav({ role }: { role: string }) {
   const pathname = usePathname();
   const items = getMobileBottomNavItems(role);
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/40 bg-white/80 px-1 pt-1 shadow-[0_-8px_28px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-white/10 dark:bg-background/80 md:hidden pb-safe"
       aria-label="Hauptnavigation"
     >
-      <div
-        className={clsx(
-          "mx-auto grid max-w-lg gap-0.5",
-          items.length <= 4 ? "grid-cols-4" : "grid-cols-5",
-        )}
-      >
+      <div className="mx-auto grid max-w-lg grid-cols-5 gap-0.5">
         {items.map((item) => {
           const isActive =
             pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
-          if (item.href === "/dashboard/support") {
-            return (
-              <div
-                key={item.href}
-                className={clsx(
-                  "flex min-h-14 min-w-0 items-stretch rounded-2xl border border-transparent",
-                  supportOverlayOpen ? "border-primary/20 bg-primary/12" : ""
-                )}
-              >
-                <button
-                  type="button"
-                  onClick={() => onOpenSupport?.("default")}
-                  className={clsx(
-                    "flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1 text-[10px] font-semibold leading-tight transition-transform duration-100 active:scale-95",
-                    supportOverlayOpen ? "text-primary" : "text-muted-foreground"
-                  )}
-                >
-                  <item.icon className="h-6 w-6 shrink-0 stroke-[1.75]" aria-hidden />
-                  <span className="line-clamp-2 text-center">{item.label}</span>
-                </button>
-                {unreadReplies > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => onOpenSupport?.("unread")}
-                    className="flex w-10 shrink-0 flex-col items-center justify-center rounded-r-2xl bg-primary text-[11px] font-bold leading-none text-foreground active:scale-95"
-                    aria-label="Ungelesene Support-Antwort öffnen"
-                  >
-                    {unreadReplies > 9 ? "9+" : unreadReplies}
-                  </button>
-                ) : null}
-              </div>
-            );
-          }
           return (
             <Link
               key={item.href}
               href={item.href}
               className={clsx(
                 "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1 text-[10px] font-semibold leading-tight transition-transform duration-100 active:scale-95",
-                isActive ? "bg-primary/12 text-primary" : "text-muted-foreground"
+                isActive ? "bg-primary/12 text-primary" : "text-muted-foreground",
               )}
             >
               <item.icon className="h-6 w-6 shrink-0 stroke-[1.75]" aria-hidden />

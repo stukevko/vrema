@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { updateCompanySettings } from "@/lib/actions/settings";
 import { Loader2, Save, ShieldCheck } from "lucide-react";
 import { GERMAN_REGION_LABELS, type GermanRegion } from "@/lib/holidays/de";
+import { CategoryIcon } from "@/components/dashboard/CategoryIcon";
 
 type IndustryValue =
   | "RESTAURANT"
@@ -17,15 +18,15 @@ type IndustryValue =
   | "OTHER";
 
 const INDUSTRY_OPTIONS: Array<{ value: IndustryValue; label: string; hint: string }> = [
-  { value: "RESTAURANT", label: "Restaurant", hint: "Mittag- und Abendspitzen, klassische Service-Schichten" },
-  { value: "CAFE", label: "Café", hint: "Morgens & nachmittags stark, Sommer-Sonnenboost" },
-  { value: "BAR", label: "Bar", hint: "Abend-/Nacht-Profil, Wochenende ist Spitze" },
-  { value: "HOTEL", label: "Hotel", hint: "Stetige Auslastung, Wochenend-Brückentage stark" },
-  { value: "BAKERY", label: "Bäckerei", hint: "Sehr früher Morgen, Werktage stark" },
-  { value: "CANTEEN", label: "Kantine", hint: "Werktags Mittag, Wochenende ruhig" },
-  { value: "CLUB", label: "Club / Diskothek", hint: "Nur Wochenende, sehr lange Schichten" },
-  { value: "CATERING", label: "Catering", hint: "Event-getrieben, unregelmäßig" },
-  { value: "OTHER", label: "Sonstiges", hint: "Keine Branchen-Heuristik" },
+  { value: "RESTAURANT", label: "Gastgewerbe (Restaurant)", hint: "Mittag- und Abendspitzen, klassische Dienst-Schichten" },
+  { value: "CAFE", label: "Café", hint: "Morgens & nachmittags stärker, wetterabhängige Außenbereiche" },
+  { value: "BAR", label: "Bar / Nachtbetrieb", hint: "Abend-/Nacht-Profil, Wochenende oft höher" },
+  { value: "HOTEL", label: "Hotel", hint: "Stetigere Auslastung, Wochenend-Brückentage stärker" },
+  { value: "BAKERY", label: "Bäckerei", hint: "Sehr früher Tagesbeginn, Werktage stärker" },
+  { value: "CANTEEN", label: "Kantine / Gemeinschaftsverpflegung", hint: "Werktags Mittag, Wochenende ruhiger" },
+  { value: "CLUB", label: "Veranstaltung / Club", hint: "Schwerpunkt Wochenende, längere Schichtfenster" },
+  { value: "CATERING", label: "Catering / Events", hint: "Event-getrieben, unregelmäßige Spitzen" },
+  { value: "OTHER", label: "Sonstiges", hint: "Keine branchenspezifische Heuristik" },
 ];
 
 interface Props {
@@ -159,7 +160,8 @@ export function CompanySettingsForm({ company }: Props) {
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="min-w-0">
-              <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
+              <label className="mb-1.5 flex items-center gap-2 font-sans text-[10px] uppercase tracking-widest text-muted-foreground">
+                <CategoryIcon industry={industry || null} className="h-4 w-4 text-brand" aria-hidden />
                 Betriebskategorie
               </label>
               <select

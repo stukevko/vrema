@@ -281,18 +281,18 @@ export function TeamList({
                             })
                           }
                           className="input-field-subtle h-9 w-full min-w-0 rounded-lg px-2 text-[11px] text-foreground"
-                          aria-label="Planung Außenbereich"
+                          aria-label="Planungsbereich"
                         >
-                          <option value="">Innen</option>
-                          <option value="OUTDOOR">Außen</option>
-                          <option value="TERRACE">Terrasse</option>
+                          <option value="">Innenbereich</option>
+                          <option value="OUTDOOR">Außenbereich</option>
+                          <option value="TERRACE">Überdachter Außenbereich</option>
                         </select>
                       ) : (
                         <span className="text-[11px] text-muted-foreground">
                           {!member.planningWorkArea
                             ? "Innen"
                             : member.planningWorkArea === "TERRACE"
-                              ? "Terr."
+                              ? "Außen (überd.)"
                               : "Außen"}
                         </span>
                       )}
@@ -644,18 +644,18 @@ export function TeamList({
                           })
                         }
                         className="input-field-subtle h-9 min-w-0 flex-1 rounded-lg px-2 text-sm text-foreground"
-                        aria-label="Außenbereich Planung"
+                        aria-label="Planungsbereich"
                       >
-                        <option value="">Innen</option>
-                        <option value="OUTDOOR">Außen</option>
-                        <option value="TERRACE">Terrasse</option>
+                        <option value="">Innenbereich</option>
+                        <option value="OUTDOOR">Außenbereich</option>
+                        <option value="TERRACE">Überdachter Außenbereich</option>
                       </select>
                     ) : (
                       <span className="text-sm text-foreground">
                         {!member.planningWorkArea
                           ? "Innen"
                           : member.planningWorkArea === "TERRACE"
-                            ? "Terrasse"
+                            ? "Außen (überd.)"
                             : "Außen"}
                       </span>
                     )}

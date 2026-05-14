@@ -46,7 +46,7 @@ export type DayContext = {
   holidayName?: string;
   /** Brückentag (Werktag zwischen Feiertag und Wochenende). */
   isBridgeDay?: boolean;
-  /** Tag direkt VOR einem Feiertag (typischerweise hohes Geschäft in Restaurants/Bars). */
+  /** Tag direkt VOR einem Feiertag (häufig höhere Auslastung im Gastgewerbe und ähnlichen Betrieben). */
   isDayBeforeHoliday?: boolean;
 };
 
@@ -63,7 +63,7 @@ export type StaffingRecommendation = {
 
 function weatherIndex(c: DayContext): { index: number; label: string } {
   // Heuristik:
-  //   sunny + warm = höherer Druck (Terrasse, Eis-Cafés voll)
+  //   sunny + warm = höherer Druck (Außenbereiche, saisonale Betriebe)
   //   rainy = neutral/leicht negativ
   //   stormy/snow = deutlich negativ
   let idx = 0;
@@ -116,7 +116,7 @@ function median(values: number[]): number {
 
 /**
  *  Branchen-typisches Wochenprofil – Multiplikator pro Wochentag.
- *  Werte sind Erfahrungswerte aus dem deutschen Gastro-Markt, konservativ kalibriert.
+ *  Werte sind konservative Erfahrungswerte aus dem Dienstleistungs- und Schichtbetrieb, kalibriert branchenneutral.
  *  1.0 = neutral, > 1 = Spitze, < 1 = ruhiger.
  *
  *  Index: Mo=0, Di=1, Mi=2, Do=3, Fr=4, Sa=5, So=6
@@ -131,19 +131,19 @@ function industryWeekdayProfile(industry: IndustryProfile | undefined): {
       return {
         weights: [0.85, 0.85, 0.9, 1.05, 1.25, 1.35, 1.0],
         weatherSensitivity: 0.8,
-        label: "Restaurant-Profil",
+        label: "Gastgewerbe (Mittag/Abend)",
       };
     case "CAFE":
       return {
         weights: [0.95, 0.95, 0.95, 1.0, 1.15, 1.35, 1.25],
         weatherSensitivity: 1.3,
-        label: "Café-Profil",
+        label: "Café / Tagesgastronomie",
       };
     case "BAR":
       return {
         weights: [0.55, 0.55, 0.7, 0.9, 1.45, 1.6, 0.75],
         weatherSensitivity: 0.6,
-        label: "Bar-Profil",
+        label: "Abend- & Nachtbetrieb",
       };
     case "HOTEL":
       return {
@@ -207,9 +207,9 @@ export function recommend(ctx: DayContext): StaffingRecommendation {
 
   // ── Feiertags-Effekte ────────────────────────────────────────────────────
   // Auf einen gesetzlichen Feiertag:
-  //   Gastronomie/Hotel = oft offen mit Sonntags-Profil
+  //   Hotel / Gastgewerbe / Café = oft geöffnet mit eher Sonntags-Profil
   //   Kantine/Bäckerei  = meist geschlossen
-  //   Club/Bar          = manchmal Spitze, je nach Anlass
+  //   Club / Nachtbetrieb = je nach Anlass variabel
   let holidayImpact = 0;
   let holidayLabel = "";
   if (ctx.isHoliday) {
@@ -239,7 +239,7 @@ export function recommend(ctx: DayContext): StaffingRecommendation {
   if (ctx.isBridgeDay && !ctx.isHoliday) {
     bridgeLabel = "Brückentag";
     // Brückentag = Werktag, der wie Wochenende wirkt.
-    // Cafés/Restaurants/Hotels typischerweise voller.
+    // Cafés / Gastgewerbe / Hotels typischerweise voller.
     switch (ctx.industry) {
       case "CANTEEN":
         bridgeImpact = -0.7;

@@ -38,6 +38,7 @@ export async function VremaInsightsCard() {
 
   return (
     <section
+      id="vrema-insights"
       className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm dark:border-white/[0.06] dark:bg-surface/70"
       aria-label="VREMA Insights"
     >

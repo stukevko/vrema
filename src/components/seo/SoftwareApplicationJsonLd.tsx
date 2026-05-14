@@ -1,7 +1,7 @@
 import { getSiteUrl } from "@/lib/seo/site";
 
 /**
- * Globales Schema.org JSON-LD: SoftwareApplication (BusinessApplication, Gastronomie-Fokus)
+ * Globales Schema.org JSON-LD: SoftwareApplication (BusinessApplication)
  * + Organization + WebSite. Einmal im Root-Layout einbinden.
  */
 export function SoftwareApplicationJsonLd() {
@@ -23,7 +23,7 @@ export function SoftwareApplicationJsonLd() {
       "@type": "WebSite",
       "@id": `${appUrl}/#website`,
       url: appUrl,
-      name: "VREMA – Die intelligente Gastro-Planung",
+      name: "VREMA – Schichtplanung & Zeiterfassung",
       inLanguage: "de-DE",
       publisher: { "@id": `${appUrl}/#organization` },
     },
@@ -32,19 +32,17 @@ export function SoftwareApplicationJsonLd() {
       "@id": `${appUrl}/#software`,
       name: "VREMA",
       applicationCategory: "BusinessApplication",
-      applicationSubCategory: "RestaurantManagement",
+      applicationSubCategory: "WorkforceManagement",
       operatingSystem: "Web",
       description:
-        "VREMA – Die intelligente Gastro-Planung: Schichtplanung, Zeiterfassung und Stempeluhr für Restaurants & Teams. Privacy by Design, DSGVO-konform, DATEV-freundlich – ohne Standort-Tracking.",
+        "VREMA: Schichtplanung, Zeiterfassung und Stempeluhr für Teams. Privacy by Design, DSGVO-konform, DATEV-freundlich – ohne Standort-Tracking.",
       url: appUrl,
-      keywords: "Gastro-Planung, Schichtplanung, Zeiterfassung Gastronomie, Restaurant, Stempeluhr, DSGVO, DATEV",
+      keywords: "Schichtplanung, Zeiterfassung, Stempeluhr, Teams, DSGVO, DATEV",
       audience: {
         "@type": "BusinessAudience",
-        audienceType: "Gastronomie und Hotellerie",
+        audienceType: "Betriebe und Teams",
       },
       knowsAbout: [
-        "Gastronomie",
-        "Restaurant",
         "Schichtplanung",
         "Zeiterfassung",
         "Stempeluhr",

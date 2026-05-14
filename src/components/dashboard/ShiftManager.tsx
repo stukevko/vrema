@@ -10,6 +10,7 @@ import {
   setShiftForDay,
   toggleShiftTradeOffer,
 } from "@/lib/actions/team";
+import { getPlannerQuickSuggest, type PlannerQuickSuggestRow } from "@/lib/actions/planner-quick-suggest";
 import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
 import { useRouter } from "next/navigation";
@@ -17,9 +18,11 @@ import Image from "next/image";
 import { buildComplianceFlagsByShiftId } from "@/lib/planning/compliance";
 import {
   AlarmClock,
+  Brain,
   Coffee,
   CornerDownRight,
   Info,
+  Loader2,
   Plus,
   CloudSun,
   CloudRain,
@@ -43,7 +46,7 @@ type Member = {
   image?: string | null;
   weeklyHours?: number;
   hourlyWage?: number | null;
-  /** OUTDOOR | TERRACE für Regen-Hinweise */
+  /** Außenbereich / Terrasse – für Wetter-Hinweise im Planer */
   planningWorkArea?: string | null;
 };
 
@@ -148,7 +151,7 @@ function weatherOpenWeatherAlt(w: DailyWeatherForecast): string {
           : w.condition === "CLOUDS"
             ? "bewölkt"
             : "wechselhaft";
-  return `Wetter-Symbol OpenWeather (${w.openWeatherMain}, ${condDe}, ${Math.round(w.maxTempC)}°C) – VREMA Gastro-Planung und Schichtplanung`;
+  return `Wetter-Symbol OpenWeather (${w.openWeatherMain}, ${condDe}, ${Math.round(w.maxTempC)}°C) – VREMA Planung und Schichten`;
 }
 
 function weatherIconForDay(day: DailyWeatherForecast | null, className: string) {
@@ -170,7 +173,7 @@ function dateForCycleDay(weekIndex: number, dayOfWeek: number) {
   return d;
 }
 
-function getRoleShiftBarTone(role?: string | null) {
+function getRoleTimelineSegmentTone(role?: string | null) {
   const inset =
     "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]";
   if (role === "MANAGER")
@@ -342,6 +345,11 @@ export function ShiftManager({
   const [mobileEndPickerOpen, setMobileEndPickerOpen] = useState(false);
   const [mobileStartPickerCustom, setMobileStartPickerCustom] = useState(false);
   const [mobileEndPickerCustom, setMobileEndPickerCustom] = useState(false);
+  /** Mobil: Native-AI-Schnellvorschlag bei leerem Tag */
+  const [aiQuickOpen, setAiQuickOpen] = useState(false);
+  const [aiQuickLoading, setAiQuickLoading] = useState(false);
+  const [aiQuickRows, setAiQuickRows] = useState<PlannerQuickSuggestRow[]>([]);
+  const [aiQuickError, setAiQuickError] = useState<string | null>(null);
   const mobileSwipeStartXRef = useRef<number | null>(null);
   const mobileDayLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mobileDayLongPressFiredRef = useRef(false);
@@ -1236,7 +1244,11 @@ export function ShiftManager({
   };
 
   const mobileOverlayOpen =
-    simpleAddSheetOpen || mobileMemberPickerOpen || mobileStartPickerOpen || mobileEndPickerOpen;
+    simpleAddSheetOpen ||
+    mobileMemberPickerOpen ||
+    mobileStartPickerOpen ||
+    mobileEndPickerOpen ||
+    aiQuickOpen;
 
   const openMobileQuickAdd = (dayIdx = 1) => {
     setSimpleSheetDay(dayIdx);
@@ -1348,9 +1360,26 @@ export function ShiftManager({
           }}
         >
           {mobileDayShifts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-background px-4 py-6 text-center text-sm text-muted-foreground">
-              Keine Schicht für {MOBILE_DAY_NAMES[mobileSelectedDay]}.
-            </div>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => {
+                setAiQuickOpen(true);
+                setAiQuickLoading(true);
+                setAiQuickError(null);
+                void getPlannerQuickSuggest({ weekIndex: selectedWeekIndex, dayOfWeek: mobileSelectedDay })
+                  .then((rows) => setAiQuickRows(rows))
+                  .catch(() => setAiQuickError("Vorschläge konnten nicht geladen werden."))
+                  .finally(() => setAiQuickLoading(false));
+              }}
+              className="w-full rounded-2xl border border-dashed border-border bg-background px-4 py-6 text-center text-sm text-muted-foreground transition-colors active:bg-muted/30"
+            >
+              <span className="block">Keine Schicht für {MOBILE_DAY_NAMES[mobileSelectedDay]}.</span>
+              <span className="mt-3 inline-flex items-center justify-center gap-2 rounded-full border border-brand/30 bg-brand-soft px-3 py-1.5 text-xs font-semibold text-brand">
+                <Brain className="h-4 w-4 shrink-0" aria-hidden />
+                Native AI: passende Kolleg:innen vorschlagen
+              </span>
+            </button>
           ) : (
             mobileDayShifts.map((shift) => {
               const member = members.find((m) => m.id === shift.userId);
@@ -1424,13 +1453,104 @@ export function ShiftManager({
             </p>
           )}
         </div>
-      </div>
+        </div>
 
-      {!mobileOverlayOpen && (
+        {aiQuickOpen ? (
+          <>
+            <button
+              type="button"
+              className="fixed inset-0 z-[51] bg-black/45 backdrop-blur-[2px]"
+              aria-label="Schließen"
+              onClick={() => {
+                setAiQuickOpen(false);
+                setAiQuickRows([]);
+                setAiQuickError(null);
+              }}
+            />
+            <div
+              className="fixed left-3 right-3 z-[52] max-h-[min(52vh,420px)] overflow-y-auto rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-pop)]"
+              style={{ bottom: "max(5.75rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem))" }}
+              role="dialog"
+              aria-label="Native AI Schnellvorschlag"
+            >
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-sm font-bold text-fg">AI-Quick-Suggest</p>
+                <button
+                  type="button"
+                  className="rounded-lg border border-line px-2 py-1 text-xs font-semibold text-fg-muted"
+                  onClick={() => {
+                    setAiQuickOpen(false);
+                    setAiQuickRows([]);
+                    setAiQuickError(null);
+                  }}
+                >
+                  Schließen
+                </button>
+              </div>
+              <p className="mb-3 text-xs text-fg-muted">
+                Basierend auf Historie (gleicher Wochentag) und freier Kapazität – ein Tipp legt die Schicht an.
+              </p>
+              {aiQuickLoading ? (
+                <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin text-brand" aria-hidden />
+                  Analysiere…
+                </div>
+              ) : aiQuickError ? (
+                <p className="py-4 text-sm text-danger">{aiQuickError}</p>
+              ) : aiQuickRows.length === 0 ? (
+                <p className="py-4 text-sm text-muted-foreground">
+                  Keine freien Kolleg:innen mit Historie für diesen Tag – nutze „+“ oder wähle manuell eine Person.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {aiQuickRows.map((row) => (
+                    <li key={row.userId}>
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        className="flex w-full flex-col items-start gap-1 rounded-xl border border-border bg-background px-4 py-3 text-left transition-colors active:bg-muted/40"
+                        onClick={() => {
+                          setMessage(null);
+                          startTransition(async () => {
+                            try {
+                              await setShiftForDay({
+                                userId: row.userId,
+                                weekIndex: selectedWeekIndex,
+                                dayOfWeek: mobileSelectedDay,
+                                startTime: row.startTime,
+                                endTime: row.endTime,
+                              });
+                              setSelectedUserId(row.userId);
+                              setStartTime(row.startTime);
+                              setEndTime(row.endTime);
+                              setAiQuickOpen(false);
+                              setAiQuickRows([]);
+                              router.refresh();
+                              setMessage(`Schicht für ${row.displayName} angelegt (${row.startTime}–${row.endTime}).`);
+                            } catch (e: unknown) {
+                              setMessage(e instanceof Error ? e.message : "Speichern fehlgeschlagen.");
+                            }
+                          });
+                        }}
+                      >
+                        <span className="text-base font-semibold text-foreground">{row.displayName}</span>
+                        <span className="text-xs tabular-nums text-muted-foreground">
+                          {row.startTime.slice(0, 5)} – {row.endTime.slice(0, 5)} · Score {row.score}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </>
+        ) : null}
+
+        {!mobileOverlayOpen && (
         <button
           type="button"
           onClick={() => openMobileQuickAdd(mobileSelectedDay)}
-          className="fixed bottom-5 right-5 z-[50] inline-flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-[var(--shadow-card-hover)] active:scale-[0.98]"
+          className="fixed bottom-[max(6.25rem,calc(env(safe-area-inset-bottom,0px)+5.25rem))] right-5 z-[52] inline-flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-[var(--shadow-card-hover)] active:scale-[0.98] md:bottom-5"
           aria-label="Neue Schicht hinzufügen"
         >
           <Plus className="h-6 w-6" />
@@ -2209,7 +2329,7 @@ export function ShiftManager({
                     ? draftForRow.endMinute - draftForRow.startMinute
                     : null;
                 const livePauseRisk = liveDuration !== null ? liveDuration > 6 * 60 : Boolean(rowCompliance?.pauseRisk);
-                const roleTone = getRoleShiftBarTone(row.member.role);
+                const roleTone = getRoleTimelineSegmentTone(row.member.role);
                 return (
                   <div
                     key={row.member.id}

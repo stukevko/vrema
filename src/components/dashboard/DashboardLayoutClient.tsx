@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { Toaster } from "sonner";
 import { DashboardSidebar, DashboardMobileBottomNav } from "@/components/dashboard/Sidebar";
 import { DashboardTopbar } from "@/components/dashboard/Topbar";
 import { SupportTicketOverlay } from "@/components/dashboard/SupportTicketOverlay";
+import { DashboardPullToRefresh } from "@/components/dashboard/DashboardPullToRefresh";
 import { getMyUnreadSupportRepliesCount } from "@/lib/actions/support";
 
 type SessionUser = {
@@ -58,6 +59,8 @@ export function DashboardLayoutClient({
     setSupportNonce((x) => x + 1);
   }, []);
 
+  const mainScrollRef = useRef<HTMLElement | null>(null);
+
   return (
     <div className="flex h-screen min-h-0 w-full min-w-0 overflow-hidden overflow-x-hidden bg-background text-foreground">
       <Toaster richColors position="top-center" closeButton duration={2200} />
@@ -73,15 +76,24 @@ export function DashboardLayoutClient({
         supportOverlayOpen={supportOverlayOpen}
       />
       <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-background">
-        <DashboardTopbar user={user} unreadNotifications={initialUnreadNotifications} />
+        <DashboardTopbar
+          user={user}
+          unreadNotifications={initialUnreadNotifications}
+          onOpenSupport={(mode) => {
+            setSupportInitialUnread(mode === "unread");
+            setSupportOverlayOpen(true);
+          }}
+          unreadSupportReplies={unreadReplies}
+        />
         <main
+          ref={mainScrollRef}
           className={clsx(
-            "dashboard-touch-scroll native-app-tap flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-manipulation pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-0",
-            role === "EMPLOYEE"
-              ? "px-[max(0.25rem,env(safe-area-inset-left))] pr-[max(0.25rem,env(safe-area-inset-right))] pb-[max(7.5rem,calc(env(safe-area-inset-bottom)+6rem))] sm:px-2 md:px-8 md:pb-6"
-              : "px-2 pb-32 sm:px-3 md:px-8 md:pb-6",
+            "dashboard-touch-scroll native-app-tap relative flex-1 min-h-0 overflow-y-auto overscroll-y-contain overscroll-behavior-y-contain touch-manipulation pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-0",
+            "px-[max(0.25rem,env(safe-area-inset-left))] pr-[max(0.25rem,env(safe-area-inset-right))] sm:px-2 md:px-8",
+            "pb-[max(5.75rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] md:pb-6",
           )}
         >
+          <DashboardPullToRefresh scrollRef={mainScrollRef} />
           {unreadReplies > 0 ? (
             <div className="mb-4 rounded-2xl border border-brand/25 bg-brand-soft/80 px-4 py-3 text-sm text-foreground dark:border-white/10 dark:bg-brand/18 md:mb-5">
               <p className="font-medium">Du hast eine Antwort auf dein Support-Ticket erhalten.</p>
@@ -101,15 +113,7 @@ export function DashboardLayoutClient({
           <footer className="mb-2 mt-8 text-center text-xs text-muted-foreground">VREMA – Intelligente Zeiterfassung</footer>
         </main>
       </div>
-      <DashboardMobileBottomNav
-        role={role}
-        unreadReplies={unreadReplies}
-        onOpenSupport={(mode) => {
-          setSupportInitialUnread(mode === "unread");
-          setSupportOverlayOpen(true);
-        }}
-        supportOverlayOpen={supportOverlayOpen}
-      />
+      <DashboardMobileBottomNav role={role} />
       <SupportTicketOverlay
         open={supportOverlayOpen}
         initialFocusUnread={supportInitialUnread}

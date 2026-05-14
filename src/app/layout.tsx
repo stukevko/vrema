@@ -18,10 +18,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_TITLE =
-  "VREMA – Die intelligente Gastro-Planung & Zeiterfassung für Restaurants und Teams";
+const SITE_TITLE = "VREMA – Schichtplanung & Zeiterfassung für Teams";
 const SITE_DESCRIPTION =
-  "VREMA: Gastro-Planung, Schichtplanung und digitale Zeiterfassung mit Stempeluhr, Live-Reports und DATEV-Export. Privacy by Design, 100 % DSGVO-konform ohne Standort-Tracking – in Hell- und Dunkelmodus nutzbar.";
+  "VREMA: Schichtplanung, Zeiterfassung und Stempeluhr mit Live-Reports und DATEV-Export. Privacy by Design, DSGVO-konform ohne Standort-Tracking – in Hell- und Dunkelmodus nutzbar.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const metadataBase = resolveMetadataBase();
@@ -30,13 +29,13 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: {
       default: SITE_TITLE,
-      template: "%s | VREMA – Gastro-Planung & Zeiterfassung",
+      template: "%s | VREMA – Schichtplanung & Zeiterfassung",
     },
     description: SITE_DESCRIPTION,
     keywords: [
       ...SEO_KEYWORDS,
       "Restaurant Zeiterfassung",
-      "Hotellerie",
+      "Schichtplanung Teams",
       "Schichtplanung Software",
       "DATEV Export",
       "Privacy by Design",
@@ -46,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
     appleWebApp: {
       capable: true,
       statusBarStyle: "black-translucent",
-      title: "VREMA – Gastro-Planung",
+      title: "VREMA – Schichtplanung",
     },
     applicationName: "VREMA",
     formatDetection: {
@@ -68,7 +67,7 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     openGraph: {
-      title: "VREMA – Die intelligente Gastro-Planung",
+      title: "VREMA – Schichtplanung & Zeiterfassung",
       description: SITE_DESCRIPTION,
       url: site,
       siteName: "VREMA",
@@ -77,15 +76,15 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [
         {
           url: "/vrema_logo.png",
-          alt: "VREMA Logo – Gastro-Planung, Schichtplanung und Zeiterfassung für die Gastronomie",
+          alt: "VREMA Logo – Schichtplanung und Zeiterfassung für Teams",
         },
       ],
     },
     twitter: {
       card: "summary",
-      title: "VREMA – Die intelligente Gastro-Planung",
+      title: "VREMA – Schichtplanung & Zeiterfassung",
       description:
-        "Schichtplanung und Zeiterfassung für Restaurants: DSGVO-konform, ohne GPS-Tracking, mit DATEV-freundlichen Exporten.",
+        "Schichtplanung und Zeiterfassung für Teams: DSGVO-konform, ohne GPS-Tracking, mit DATEV-freundlichen Exporten.",
     },
     icons: {
       icon: [
@@ -134,7 +133,7 @@ export default function RootLayout({
         {/* Manifest wird über `metadata.manifest` (→ /site.webmanifest) injected; doppelte Referenz entfernt. */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-title" content="VREMA – Gastro-Planung" />
+        <meta name="apple-mobile-web-app-title" content="VREMA" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="msapplication-TileColor" content="#0a3a52" />
       </head>

@@ -13,6 +13,8 @@ import {
   ClipboardCheck,
   MessagesSquare,
   ListTodo,
+  Brain,
+  UserCircle2,
 } from "lucide-react";
 
 export type MobileBottomNavItem = {
@@ -30,29 +32,24 @@ export type DashboardNavItem = {
 
 const ALL_PLANS = ["STARTER", "BUSINESS", "ENTERPRISE"] as const;
 
-/** Mobil-Bottom-Nav (< md): Daumen-Zone — EMPLOYEE ohne Berichte/Admin-URLs. */
+/**
+ * Mobil-Bottom-Nav (< md): feste 5 Tabs (App-Store-Niveau).
+ * Support ist oben links (Glocke/Lifebuoy) erreichbar – nicht in der Leiste.
+ */
 export function getMobileBottomNavItems(role: string): MobileBottomNavItem[] {
-  const base: MobileBottomNavItem[] = [
+  const profileHref = role === "EMPLOYEE" ? "/dashboard/account" : "/dashboard/settings";
+  return [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/dashboard/planning", label: "Planen", icon: CalendarClock },
-    { href: "/dashboard/reports", label: "Berichte", icon: FileText },
-    { href: "/dashboard/support", label: "Support", icon: LifeBuoy },
-    { href: "/dashboard/settings", label: "Einstellungen", icon: Settings },
+    { href: "/dashboard/planning", label: "Planer", icon: CalendarDays },
+    { href: "/dashboard/team", label: "Team", icon: Users },
+    { href: "/dashboard/insights", label: "Insights", icon: Brain },
+    { href: profileHref, label: "Profil", icon: UserCircle2 },
   ];
-  if (role === "EMPLOYEE") {
-    return base
-      .filter((i) => i.href !== "/dashboard/reports")
-      .map((i) =>
-        i.href === "/dashboard/settings"
-          ? { ...i, href: "/dashboard/account", label: "Konto" }
-          : i,
-      );
-  }
-  return base;
 }
 
 const BASE_NAV: DashboardNavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, plans: ALL_PLANS },
+  { href: "/dashboard/insights", label: "Insights", icon: Brain, plans: ALL_PLANS },
   { href: "/dashboard/team", label: "Team", icon: Users, plans: ALL_PLANS },
   { href: "/dashboard/team/absences", label: "Abwesenheiten", icon: ClipboardCheck, plans: ALL_PLANS },
   { href: "/dashboard/planning", label: "Planung", icon: CalendarClock, plans: ALL_PLANS },
@@ -76,6 +73,7 @@ export function getDashboardNavItems(role: string, plan: string): DashboardNavIt
     if (!item.plans.includes(plan)) return false;
     if (item.href === "/dashboard/billing" && role === "EMPLOYEE") return false;
     if (item.href === "/dashboard/reports" && role === "EMPLOYEE") return false;
+    if (item.href === "/dashboard/insights" && role === "EMPLOYEE") return false;
     if (item.href === "/dashboard/team/absences" && role === "EMPLOYEE") return false;
     if (item.href === "/dashboard/tasks" && role === "EMPLOYEE") return false;
     return true;

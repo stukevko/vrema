@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, LogOut, Settings, UserCircle2 } from "lucide-react";
+import { ChevronDown, LifeBuoy, LogOut, Settings, UserCircle2 } from "lucide-react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
@@ -17,9 +17,17 @@ interface TopbarProps {
     role?: string | null;
   };
   unreadNotifications?: number;
+  /** Mobil: Support-Overlay öffnen (Bottom-Nav hat keinen Support-Tab mehr). */
+  onOpenSupport?: (mode?: "default" | "unread") => void;
+  unreadSupportReplies?: number;
 }
 
-export function DashboardTopbar({ user, unreadNotifications = 0 }: TopbarProps) {
+export function DashboardTopbar({
+  user,
+  unreadNotifications = 0,
+  onOpenSupport,
+  unreadSupportReplies = 0,
+}: TopbarProps) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const accountHref = getPersonalAccountHref(user.role);
@@ -45,14 +53,39 @@ export function DashboardTopbar({ user, unreadNotifications = 0 }: TopbarProps) 
 
   return (
     <header className="fixed inset-x-0 top-0 z-[60] overflow-visible border-b border-white/40 bg-background/85 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md dark:border-white/8 dark:bg-background/75 md:relative md:inset-auto md:z-30 md:border-b-0 md:bg-transparent md:pt-0 md:backdrop-blur-0">
-      <div className="flex h-16 min-w-0 items-center justify-between gap-2 px-3 sm:px-4 md:px-6">
-        <Link href="/dashboard" className="shrink-0 md:hidden" aria-label="VREMA">
+      <div className="relative flex h-16 min-w-0 items-center justify-between gap-2 px-3 sm:px-4 md:px-6">
+        <div className="relative z-10 flex w-11 shrink-0 items-center md:hidden">
+          {onOpenSupport ? (
+            <button
+              type="button"
+              onClick={() => onOpenSupport("default")}
+              className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-line bg-surface text-fg-muted transition-colors active:scale-95 md:hover:bg-surface-muted"
+              aria-label="Hilfe und Support"
+            >
+              <LifeBuoy className="h-5 w-5 shrink-0" aria-hidden />
+              {unreadSupportReplies > 0 ? (
+                <span
+                  className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-background"
+                  aria-hidden
+                />
+              ) : null}
+            </button>
+          ) : (
+            <span className="block h-11 w-11 shrink-0" aria-hidden />
+          )}
+        </div>
+
+        <Link
+          href="/dashboard"
+          className="absolute left-1/2 top-1/2 z-[1] -translate-x-1/2 -translate-y-1/2 md:hidden"
+          aria-label="VREMA"
+        >
           <VremaLockup size={28} className="text-foreground" />
         </Link>
 
         <div className="hidden md:block md:flex-1" />
 
-        <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 sm:gap-3">
+        <div className="relative z-10 flex min-w-0 max-w-[48%] shrink-0 items-center justify-end gap-2 sm:max-w-none sm:gap-3">
           {user.role === "SUPER_ADMIN" && (
             <span className="hidden rounded-full border border-warning/30 bg-warning-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-warning-foreground sm:inline-flex">
               Super Admin

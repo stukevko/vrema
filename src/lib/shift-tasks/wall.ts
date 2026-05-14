@@ -9,7 +9,7 @@ export type ShiftTaskWallRow = {
   userName: string | null;
   userEmail: string;
   shiftLabel: string;
-  /** Anzeige z. B. „Küche“ für Live-Operations */
+  /** Anzeige z. B. Teambereich für Live-Operations */
   roleLabel: string;
   doneCount: number;
   totalCount: number;
