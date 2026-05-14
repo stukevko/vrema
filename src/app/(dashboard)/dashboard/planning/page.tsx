@@ -13,6 +13,8 @@ import {
 } from "@/lib/actions/team";
 import { getVacationConflictDaysForPlanning } from "@/lib/actions/vacation";
 import { ShiftManager } from "@/components/dashboard/ShiftManager";
+import { TradePushHint } from "@/components/planning/TradePushHint";
+import { dateForPlannerCycleDay, dayOrderMonFirst } from "@/lib/planning/cycle-display-date";
 import { Handshake, Inbox } from "lucide-react";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -60,8 +62,10 @@ export default async function PlanningPage() {
     return (
       <div className="mx-auto max-w-6xl space-y-4 px-1 sm:space-y-6 sm:px-0">
         <div className="glass-card px-4 py-3 sm:px-5 sm:py-4">
-          <h1 className="text-base font-bold tracking-tight sm:text-xl md:text-2xl">Planung</h1>
-          <p className="mt-1 text-sm text-muted-foreground sm:text-base">Schichtplanung für Team und Soll/Ist-Basis.</p>
+          <h1 className="text-base font-bold tracking-tight sm:text-xl md:text-2xl">Schichtplanung</h1>
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+            Leitung: Plan, Status und Freigaben. Mitarbeitende sehen unter demselben Menüpunkt nur „Mein Dienstplan“.
+          </p>
         </div>
         <ShiftManager
           members={members.map((m) => ({
@@ -148,80 +152,95 @@ export default async function PlanningPage() {
   }
 
   const [myShifts, openTrades] = await Promise.all([getMyShifts(), getOpenShiftTradesForMyRole()]);
-  const grouped = DAY_LABELS.map((label, dayOfWeek) => ({
-    label,
-    rows: myShifts.filter((s) => s.dayOfWeek === dayOfWeek),
-  }));
+
+  const sortedShifts = [...myShifts].sort((a, b) => {
+    const da = dayOrderMonFirst(a.dayOfWeek);
+    const db = dayOrderMonFirst(b.dayOfWeek);
+    if (da !== db) return da - db;
+    return String(a.startTime).localeCompare(String(b.startTime), "de");
+  });
 
   return (
-    <div className="mx-auto max-w-4xl min-w-0 space-y-6 px-1 sm:px-0">
+    <div className="mx-auto max-w-lg min-w-0 space-y-5 px-1 sm:max-w-xl sm:space-y-6 sm:px-0">
       <div className="glass-card px-4 py-4 sm:px-5">
-        <h1 className="text-base font-bold tracking-tight sm:text-2xl">Mein Plan</h1>
-        <p className="mt-1 text-sm text-muted-foreground sm:text-base">Übersicht Ihrer hinterlegten Soll-Schichten pro Woche.</p>
+        <h1 className="text-base font-bold tracking-tight sm:text-2xl">Mein Dienstplan</h1>
+        <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+          Nur deine Soll-Schichten – getrennt vom Planer der Führungskraft. Zeiten und Tausch an einem Ort.
+        </p>
       </div>
+
+      <TradePushHint />
+
       <section className="glass-card p-4 sm:p-5">
-        <div className="grid min-w-0 gap-3 md:grid-cols-2">
-          {grouped.map((g) => (
-            <div
-              key={g.label}
-              className="rounded-xl border border-line bg-surface px-4 py-3 dark:border-white/10 dark:bg-surface/85"
-            >
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">{g.label}</p>
-              {g.rows.length === 0 ? (
-                <p className="mt-1 text-sm text-muted-foreground">Frei</p>
-              ) : (
-                <div className="mt-2 space-y-1">
-                  {g.rows.map((r) => (
-                    <div
-                      key={r.id}
-                      className="rounded-lg border border-line bg-surface px-3 py-2 dark:border-white/10 dark:bg-surface/90"
-                    >
-                      <p className="font-sans text-sm text-brand">
-                        {r.startTime} - {r.endTime}
-                      </p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2">
-                        {r.isOpenForTrade ? (
-                          <StatusBadge tone="warning" glass size="sm" withDot={false}>
-                            🔄 Zum Tausch angeboten
-                          </StatusBadge>
-                        ) : null}
-                        <form action={toggleOfferFormAction}>
-                          <input type="hidden" name="shiftId" value={r.id} />
-                          <input type="hidden" name="makeOpen" value={r.isOpenForTrade ? "false" : "true"} />
-                          <FormSubmitButton
-                            label={r.isOpenForTrade ? "Tausch beenden" : "Schicht zum Tausch anbieten"}
-                            pendingLabel="Speichere..."
-                            className="btn-outline text-[11px]"
-                          />
-                        </form>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Nächste Einsätze</h2>
+        {sortedShifts.length === 0 ? (
+          <div className="mt-4 rounded-xl border border-dashed border-line bg-surface-muted/60 px-4 py-8 text-center dark:border-white/10">
+            <Inbox className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden />
+            <p className="mt-2 text-sm font-medium text-foreground">Noch keine Schichten</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Sobald dich dein Team einplant, erscheinen die Termine hier als Liste.
+            </p>
+          </div>
+        ) : (
+          <ul className="mt-4 space-y-3">
+            {sortedShifts.map((r) => {
+              const wk = (r.weekIndex ?? 1) as 1 | 2 | 3;
+              const when = dateForPlannerCycleDay(wk, r.dayOfWeek);
+              const dateLine = when.toLocaleDateString("de-DE", {
+                weekday: "long",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              });
+              return (
+                <li
+                  key={r.id}
+                  className="rounded-2xl border border-line bg-surface px-4 py-3 shadow-sm dark:border-white/10 dark:bg-surface/90"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{dateLine}</p>
+                  <p className="mt-1 font-sans text-lg font-bold tabular-nums text-brand">
+                    {String(r.startTime).slice(0, 5)} – {String(r.endTime).slice(0, 5)} Uhr
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {r.isOpenForTrade ? (
+                      <StatusBadge tone="warning" glass size="sm" withDot={false}>
+                        Zum Tausch angeboten
+                      </StatusBadge>
+                    ) : null}
+                    <form action={toggleOfferFormAction} className="inline">
+                      <input type="hidden" name="shiftId" value={r.id} />
+                      <input type="hidden" name="makeOpen" value={r.isOpenForTrade ? "false" : "true"} />
+                      <FormSubmitButton
+                        label={r.isOpenForTrade ? "Tausch beenden" : "Zum Tausch anbieten"}
+                        pendingLabel="Speichere..."
+                        className="btn-outline text-xs"
+                      />
+                    </form>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
+
       <section className="glass-card p-5">
         <h2 className="text-base font-semibold tracking-tight">Offene Tausch-Schichten</h2>
         {openTrades.length === 0 ? (
           <div className="mt-3 rounded-xl border border-dashed border-line bg-surface-muted/70 px-4 py-6 text-center dark:border-white/10 dark:bg-surface-muted/40">
-            <Handshake className="mx-auto h-7 w-7 text-muted-foreground" />
-            <p className="mt-2 text-sm font-medium text-foreground">Noch keine Tauschanfragen</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Alles im grünen Bereich – aktuell ist kein Tausch offen.
-            </p>
+            <Handshake className="mx-auto h-7 w-7 text-muted-foreground" aria-hidden />
+            <p className="mt-2 text-sm font-medium text-foreground">Keine offenen Tausche</p>
+            <p className="mt-1 text-sm text-muted-foreground">Wenn Kolleg:innen eine Schicht tauschen möchten, erscheint das hier.</p>
           </div>
         ) : (
-          <div className="mt-3 space-y-2">
+          <ul className="mt-3 space-y-2">
             {openTrades.map((trade) => (
-              <div
+              <li
                 key={trade.id}
                 className="rounded-xl border border-warning/30 bg-warning-soft px-4 py-3 dark:border-white/10 dark:bg-warning/22"
               >
                 <p className="text-sm font-medium text-warning-foreground">
-                  🔄 {trade.ownerName}: {DAY_LABELS[trade.dayOfWeek]} {trade.startTime}-{trade.endTime}
+                  Tausch: {trade.ownerName} · {DAY_LABELS[trade.dayOfWeek]} {trade.startTime}–{trade.endTime}
                 </p>
                 <form action={requestTakeoverFormAction} className="mt-2">
                   <input type="hidden" name="shiftId" value={trade.id} />
@@ -231,20 +250,11 @@ export default async function PlanningPage() {
                     className="btn-brand text-xs"
                   />
                 </form>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
-      {myShifts.length === 0 ? (
-        <section className="glass-card border-dashed p-6 text-center">
-          <Inbox className="mx-auto h-8 w-8 text-muted-foreground" />
-          <p className="mt-2 text-sm font-medium text-foreground">Noch keine eigenen Schichten</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Sobald dein Team dich einplant, siehst du hier deinen Wochenplan.
-          </p>
-        </section>
-      ) : null}
     </div>
   );
 }

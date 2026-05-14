@@ -15,7 +15,8 @@ import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { buildComplianceFlagsByShiftId } from "@/lib/planning/compliance";
+import { buildComplianceFlagsByShiftId, type ShiftPlanRow } from "@/lib/planning/compliance";
+import { countWeekCoverageGapSlots } from "@/lib/planning/planner-coverage-metrics";
 import {
   AlarmClock,
   Brain,
@@ -30,6 +31,7 @@ import {
   Sun,
   HelpCircle,
   Sparkles,
+  Users,
 } from "lucide-react";
 import type { DailyWeatherForecast } from "@/lib/weather/shared";
 import { isRainLikeCondition } from "@/lib/weather/shared";
@@ -558,6 +560,41 @@ export function ShiftManager({
     () => buildComplianceFlagsByShiftId(shifts, selectedWeekIndex),
     [shifts, selectedWeekIndex]
   );
+  const weekCoverageGapSlots = useMemo(() => {
+    const shiftRows: ShiftPlanRow[] = shifts
+      .filter((s) => s.weekIndex === selectedWeekIndex && !s.isDraft)
+      .map((s) => ({
+        id: s.id,
+        userId: s.userId,
+        weekIndex: s.weekIndex,
+        dayOfWeek: s.dayOfWeek,
+        startTime: s.startTime,
+        endTime: s.endTime,
+      }));
+    return countWeekCoverageGapSlots({
+      members,
+      shifts: shiftRows,
+      selectedWeekIndex,
+      conflictEntries: vacationConflictDays ?? [],
+      neededStaff,
+      coverageSlotMinutes,
+    });
+  }, [
+    shifts,
+    selectedWeekIndex,
+    members,
+    vacationConflictDays,
+    neededStaff,
+    coverageSlotMinutes,
+  ]);
+  const restRiskShiftCount = useMemo(() => {
+    let n = 0;
+    for (const s of shifts) {
+      if (s.weekIndex !== selectedWeekIndex || s.isDraft) continue;
+      if (complianceByShiftId.get(s.id)?.restRisk) n += 1;
+    }
+    return n;
+  }, [shifts, selectedWeekIndex, complianceByShiftId]);
   const mobileDayShifts = useMemo(() => {
     return shifts
       .filter((s) => s.weekIndex === selectedWeekIndex && s.dayOfWeek === mobileSelectedDay)
@@ -1179,6 +1216,16 @@ export function ShiftManager({
         setAutopilotBusy(false);
       }
     });
+  };
+
+  const onOptimizeWeekClick = () => {
+    if (
+      !window.confirm(
+        "„Woche optimieren“ startet den Planungs-Autopilot (Native AI / Heuristik): Entwurfs-Schichten für diese Planwoche werden neu erzeugt. Bereits vorhandene Entwürfe derselben Woche werden ersetzt. Fortfahren?"
+      )
+    )
+      return;
+    startAutopilot();
   };
 
   const confirmAutopilot = () => {
@@ -2098,7 +2145,10 @@ export function ShiftManager({
         )}
 
       {viewMode === "timeline" && (
-        <div className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-xl border border-border bg-background p-3 scrollbar-hide sm:p-4">
+        <div
+          id="planner-timeline-region"
+          className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-xl border border-border bg-background p-3 scrollbar-hide sm:p-4"
+        >
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">Fokusmodus: Planung zuerst, Kennzahlen optional.</p>
             <button
@@ -2849,6 +2899,81 @@ export function ShiftManager({
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
+      {enableTaskListActions ? (
+        <div className="mb-4 rounded-2xl border border-brand/20 bg-gradient-to-br from-brand/[0.07] to-card px-4 py-3 shadow-sm sm:px-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                Plan-Status · Zyklus-Woche {selectedWeekIndex}
+              </p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span
+                  className={
+                    weekCoverageGapSlots > 0
+                      ? "inline-flex items-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-50 px-3 py-1 text-amber-950 dark:border-amber-500/40 dark:bg-amber-500/12 dark:text-amber-100"
+                      : "inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100"
+                  }
+                >
+                  <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  {weekCoverageGapSlots === 0
+                    ? "Mindestbesetzung erreicht (Zeitfenster)"
+                    : `${weekCoverageGapSlots} Zeitfenster unter Sollbesetzung`}
+                </span>
+                <span
+                  className={
+                    restRiskShiftCount > 0
+                      ? "inline-flex items-center gap-1.5 rounded-full border border-orange-300/80 bg-orange-50 px-3 py-1 text-orange-950 dark:border-orange-500/40 dark:bg-orange-500/12 dark:text-orange-100"
+                      : "inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1 text-foreground"
+                  }
+                >
+                  <AlarmClock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  {restRiskShiftCount === 0
+                    ? "Keine Ruhezeit-Konflikte"
+                    : `${restRiskShiftCount} Ruhezeit-Warnung${restRiskShiftCount === 1 ? "" : "en"} (< 11h)`}
+                </span>
+              </div>
+              <p className="text-[10px] leading-snug text-muted-foreground">
+                Lücken = Stundenfenster ohne genügend parallele Schichten (laut Mindestbesetzung). Ruhezeit = weniger als
+                11 Stunden zwischen zwei Schichten derselben Person in dieser Zykluswoche.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap lg:flex-col lg:items-end">
+              <button
+                type="button"
+                disabled={isPending || autopilotBusy}
+                onClick={onOptimizeWeekClick}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand/35 bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm ring-1 ring-inset ring-white/15 transition-colors hover:bg-brand/90 disabled:opacity-50"
+              >
+                <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
+                {autopilotBusy ? "Optimiere…" : "Woche optimieren"}
+              </button>
+              {renderDesktopTree && viewMode !== "timeline" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode("timeline");
+                    window.requestAnimationFrame(() => {
+                      document.getElementById("planner-timeline-region")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    });
+                  }}
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
+                >
+                  Timeline und Lücken anzeigen
+                </button>
+              ) : null}
+              {renderDesktopTree && viewMode === "timeline" ? (
+                <a
+                  href="#planner-compliance-radar"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-background px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
+                >
+                  Zu Ruhezeit und Budget
+                </a>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {!renderDesktopTree ? (
         <div className="block">
           <h2 className="text-lg font-semibold tracking-tight">Einfach-Planer</h2>
@@ -3018,7 +3143,10 @@ export function ShiftManager({
       ) : null}
 
       {renderDesktopTree ? (
-        <div className="mt-4 space-y-2 rounded-xl border border-border bg-background px-3 py-3 text-[11px] text-muted-foreground">
+        <div
+          id="planner-compliance-radar"
+          className="mt-4 space-y-2 rounded-xl border border-border bg-background px-3 py-3 text-[11px] text-muted-foreground"
+        >
         <p className="font-semibold text-foreground">Compliance-Radar · Budget</p>
         <div className="flex flex-wrap gap-3">
           <span className="inline-flex items-center gap-1">
