@@ -454,6 +454,7 @@ export async function setShiftForDay(input: {
     db.shift.deleteMany({
       where: tenantWhere(companyId, {
         userId: input.userId,
+        weekIndex,
         dayOfWeek: input.dayOfWeek,
       }),
     }),

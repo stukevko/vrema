@@ -491,12 +491,14 @@ export async function getVacationConflictDaysForPlanning() {
     },
   });
 
+  /** JSON-Key: User-IDs können Bindestriche enthalten (z. B. UUID) — kein „split("-")“. */
   const conflicts = new Map<string, "VACATION" | "SICK">();
+  const conflictKey = (userId: string, dayOfWeek: number) => JSON.stringify([userId, dayOfWeek]);
   for (const req of requests) {
     const conflictType: "VACATION" | "SICK" = req.absenceType === AbsenceType.SICK ? "SICK" : "VACATION";
     const dateKeys = listBerlinDateKeysInclusive(req.startDate, req.endDate);
     for (const dateKey of dateKeys) {
-      const key = `${req.userId}-${berlinDateKeyToDayOfWeek(dateKey)}`;
+      const key = conflictKey(req.userId, berlinDateKeyToDayOfWeek(dateKey));
       const existing = conflicts.get(key);
       if (existing !== "SICK") {
         conflicts.set(key, conflictType);
@@ -507,7 +509,7 @@ export async function getVacationConflictDaysForPlanning() {
     const conflictType: "VACATION" | "SICK" = req.type === AbsenceType.SICK ? "SICK" : "VACATION";
     const dateKeys = listBerlinDateKeysInclusive(req.start, req.end);
     for (const dateKey of dateKeys) {
-      const key = `${req.userId}-${berlinDateKeyToDayOfWeek(dateKey)}`;
+      const key = conflictKey(req.userId, berlinDateKeyToDayOfWeek(dateKey));
       const existing = conflicts.get(key);
       if (existing !== "SICK") {
         conflicts.set(key, conflictType);
@@ -516,7 +518,7 @@ export async function getVacationConflictDaysForPlanning() {
   }
 
   return Array.from(conflicts.entries()).map(([entry, type]) => {
-    const [userId, day] = entry.split("-");
-    return { userId, dayOfWeek: Number(day), type };
+    const [userId, dayOfWeek] = JSON.parse(entry) as [string, number];
+    return { userId, dayOfWeek, type };
   });
 }

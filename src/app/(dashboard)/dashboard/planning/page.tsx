@@ -7,11 +7,13 @@ import {
   getShiftCycleWeeks,
   getShifts,
   getTeamMembers,
-  requestShiftTradeTakeover,
-  toggleShiftTradeOffer,
-  decideShiftTradeApproval,
 } from "@/lib/actions/team";
 import { getVacationConflictDaysForPlanning } from "@/lib/actions/vacation";
+import {
+  planningDecideTradeFormAction,
+  planningRequestTakeoverFormAction,
+  planningToggleTradeOfferFormAction,
+} from "@/app/(dashboard)/dashboard/planning/planning-trade-actions";
 import { ShiftManager } from "@/components/dashboard/ShiftManager";
 import { TradePushHint } from "@/components/planning/TradePushHint";
 import { dateForPlannerCycleDay, dayOrderMonFirst } from "@/lib/planning/cycle-display-date";
@@ -28,37 +30,15 @@ export default async function PlanningPage() {
   const role = session.user.role ?? "EMPLOYEE";
   const canManage = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
 
-  async function toggleOfferFormAction(formData: FormData) {
-    "use server";
-    const shiftId = String(formData.get("shiftId") ?? "");
-    const makeOpen = String(formData.get("makeOpen") ?? "") === "true";
-    if (!shiftId) return;
-    await toggleShiftTradeOffer(shiftId, makeOpen);
-  }
-
-  async function requestTakeoverFormAction(formData: FormData) {
-    "use server";
-    const shiftId = String(formData.get("shiftId") ?? "");
-    if (!shiftId) return;
-    await requestShiftTradeTakeover(shiftId);
-  }
-
-  async function decideTradeFormAction(formData: FormData) {
-    "use server";
-    const shiftId = String(formData.get("shiftId") ?? "");
-    const approve = String(formData.get("approve") ?? "") === "true";
-    if (!shiftId) return;
-    await decideShiftTradeApproval(shiftId, approve);
-  }
-
   if (canManage) {
-    const [members, shifts, vacationConflictDays, shiftCycleWeeks, pendingTrades] = await Promise.all([
+    const [members, shifts, vacationConflictDays, shiftCycleWeeks, pendingTradesResult] = await Promise.all([
       getTeamMembers(),
       getShifts(),
       getVacationConflictDaysForPlanning(),
       getShiftCycleWeeks(),
-      getPendingTradeApprovals(),
+      getPendingTradeApprovals().catch(() => [] as Awaited<ReturnType<typeof getPendingTradeApprovals>>),
     ]);
+    const pendingTrades = pendingTradesResult;
     return (
       <div className="mx-auto max-w-6xl space-y-4 px-1 sm:space-y-6 sm:px-0">
         <div className="glass-card px-4 py-3 sm:px-5 sm:py-4">
@@ -73,12 +53,26 @@ export default async function PlanningPage() {
             name: m.name,
             email: m.email,
             role: m.role,
-            image: m.image ?? null,
-            weeklyHours: m.weeklyHours,
-            hourlyWage: m.hourlyWage ?? null,
-            planningWorkArea: m.planningWorkArea ?? null,
+            image: m.image != null ? String(m.image) : null,
+            weeklyHours: m.weeklyHours != null ? Number(m.weeklyHours) : undefined,
+            hourlyWage:
+              m.hourlyWage != null && Number.isFinite(Number(m.hourlyWage)) ? Number(m.hourlyWage) : null,
+            planningWorkArea: m.planningWorkArea != null ? String(m.planningWorkArea) : null,
           }))}
-          shifts={shifts}
+          shifts={shifts.map((s) => ({
+            id: s.id,
+            userId: s.userId,
+            weekIndex: Number(s.weekIndex),
+            dayOfWeek: Number(s.dayOfWeek),
+            startTime: String(s.startTime),
+            endTime: String(s.endTime),
+            breakDuration: Number(s.breakDuration ?? 0),
+            isDraft: Boolean(s.isDraft),
+            staffingRole: s.staffingRole != null ? String(s.staffingRole) : null,
+            isOpenForTrade: Boolean(s.isOpenForTrade),
+            tradeStatus: s.tradeStatus as "NONE" | "OPEN" | "PENDING_APPROVAL",
+            tradeRequestedBy: s.tradeRequestedBy ?? null,
+          }))}
           shiftCycleWeeks={shiftCycleWeeks}
           vacationConflictDays={vacationConflictDays}
           enableTaskListActions={canManage}
@@ -97,7 +91,7 @@ export default async function PlanningPage() {
                 return (
                   <form
                     key={trade.id}
-                    action={decideTradeFormAction}
+                    action={planningDecideTradeFormAction}
                     className="rounded-xl border border-line bg-surface px-4 py-3 dark:border-white/10 dark:bg-surface/85"
                   >
                     <input type="hidden" name="shiftId" value={trade.id} />
@@ -207,7 +201,7 @@ export default async function PlanningPage() {
                         Zum Tausch angeboten
                       </StatusBadge>
                     ) : null}
-                    <form action={toggleOfferFormAction} className="inline">
+                    <form action={planningToggleTradeOfferFormAction} className="inline">
                       <input type="hidden" name="shiftId" value={r.id} />
                       <input type="hidden" name="makeOpen" value={r.isOpenForTrade ? "false" : "true"} />
                       <FormSubmitButton
@@ -242,7 +236,7 @@ export default async function PlanningPage() {
                 <p className="text-sm font-medium text-warning-foreground">
                   Tausch: {trade.ownerName} · {DAY_LABELS[trade.dayOfWeek]} {trade.startTime}–{trade.endTime}
                 </p>
-                <form action={requestTakeoverFormAction} className="mt-2">
+                <form action={planningRequestTakeoverFormAction} className="mt-2">
                   <input type="hidden" name="shiftId" value={trade.id} />
                   <FormSubmitButton
                     label="Übernahme anfragen"

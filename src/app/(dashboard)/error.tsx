@@ -20,11 +20,24 @@ export default function DashboardSegmentError({
       <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-red-700">
         <AlertTriangle className="h-6 w-6" aria-hidden />
       </span>
-      <div className="space-y-1">
-        <h1 className="text-lg font-bold tracking-tight">Bereich konnte nicht geladen werden</h1>
-        <p className="text-sm text-muted-foreground">
-          {error.message || "Bitte versuchen Sie es erneut oder kehren Sie zum Dashboard zurück."}
+      <div className="mx-auto w-full max-w-md space-y-3 text-left">
+        <h1 className="text-center text-lg font-bold tracking-tight">Bereich konnte nicht geladen werden</h1>
+        <p className="text-center text-sm text-muted-foreground">
+          {error.message?.trim()
+            ? error.message
+            : "Bitte erneut versuchen oder zum Dashboard zurück. Details siehe unten."}
         </p>
+        <p className="rounded-lg border border-border/70 bg-background/60 px-3 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
+          An error occurred in the Server Components render. The specific message is omitted in production builds to
+          avoid leaking sensitive details. A digest property is included on this error instance which may provide
+          additional details about the nature of the error.
+        </p>
+        {error.digest ? (
+          <p className="text-center text-[11px] text-muted-foreground">
+            Digest:{" "}
+            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-foreground">{String(error.digest)}</code>
+          </p>
+        ) : null}
       </div>
       <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
         <button
