@@ -44,7 +44,7 @@ export async function VremaInsightsCard() {
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-brand/15 blur-3xl"
+        className="pointer-events-none absolute -top-12 left-0 h-44 w-44 rounded-full bg-brand/15 blur-3xl max-md:opacity-60 md:-left-12"
       />
       <header className="relative flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">

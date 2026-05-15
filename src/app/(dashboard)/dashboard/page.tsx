@@ -322,11 +322,11 @@ export default async function DashboardPage() {
     : 0;
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-4 overflow-x-hidden px-4 text-foreground sm:gap-6 sm:px-2 md:gap-8 md:px-0">
+    <div className="dashboard-page-root mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 overflow-x-clip px-0 text-foreground sm:max-w-6xl sm:gap-6 sm:px-2 md:gap-8 md:px-0">
       {/* Header — für Mitarbeiter überspringen, weil das Cockpit selbst begrüßt */}
       {!isEmployee && (
-        <div className="order-1 min-w-0 shrink-0 rounded-2xl glass-panel p-5 sm:p-8">
-          <h1 className="text-base font-bold tracking-tight sm:text-2xl md:text-3xl">
+        <div className="order-1 min-w-0 max-w-full shrink-0 overflow-hidden rounded-2xl glass-panel p-5 sm:p-8">
+          <h1 className="break-words text-base font-bold tracking-tight sm:text-2xl md:text-3xl">
             Guten {berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"},{" "}
             {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
           </h1>

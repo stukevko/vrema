@@ -44,15 +44,15 @@ export function HeroStats({
   return (
     <section
       aria-label="Heutige Kennzahlen"
-      className="grid w-full min-w-0 max-w-full grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4"
+      className="dashboard-kpi-grid grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-3 sm:gap-4"
     >
       {/* KPI 1 – Anwesend jetzt (Petrol, ruhig) */}
       <Link
         href="/dashboard/reports"
-        className="group/kpi block min-w-0 max-w-full overflow-hidden rounded-2xl border border-line/60 bg-white/55 p-5 backdrop-blur-md transition-[box-shadow,border-color] duration-150 hover:border-brand/35 hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025] sm:p-6"
+        className="group/kpi block min-w-0 max-w-full overflow-hidden rounded-2xl border border-line/60 bg-white/55 p-5 transition-[box-shadow,border-color] duration-150 max-md:shadow-none md:backdrop-blur-md md:hover:border-brand/35 md:hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025] sm:p-6"
       >
         <div className="flex min-w-0 items-center justify-between gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
+          <p className="min-w-0 text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
             <Tooltip content="Mitarbeiter, die jetzt eingestempelt sind.">
               <span className="cursor-help">Anwesend jetzt</span>
             </Tooltip>
@@ -77,10 +77,10 @@ export function HeroStats({
       {/* KPI 2 – Heutige Personalkosten (Petrol, Detail über Tooltip) */}
       <Link
         href="/dashboard/reports"
-        className="group/kpi block min-w-0 max-w-full overflow-hidden rounded-2xl border border-line/60 bg-white/55 p-5 backdrop-blur-md transition-[box-shadow,border-color] duration-150 hover:border-brand/35 hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025] sm:p-6"
+        className="group/kpi block min-w-0 max-w-full overflow-hidden rounded-2xl border border-line/60 bg-white/55 p-5 transition-[box-shadow,border-color] duration-150 max-md:shadow-none md:backdrop-blur-md md:hover:border-brand/35 md:hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025] sm:p-6"
       >
         <div className="flex min-w-0 items-center justify-between gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
+          <p className="min-w-0 text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
             <Tooltip content="Hochrechnung: gestempelte Stunden heute × hinterlegter Stundenlohn.">
               <span className="cursor-help">Heutige Personalkosten</span>
             </Tooltip>
@@ -106,16 +106,16 @@ export function HeroStats({
       <Link
         href="/dashboard/reports"
         className={[
-          "group/kpi block min-w-0 max-w-full overflow-hidden rounded-2xl border p-5 backdrop-blur-md transition-[box-shadow,border-color] duration-150 sm:p-6",
+          "group/kpi block min-w-0 max-w-full overflow-hidden rounded-2xl border p-5 transition-[box-shadow,border-color] duration-150 max-md:shadow-none md:backdrop-blur-md sm:p-6",
           attentionTone === "brand"
-            ? "border-line/60 bg-white/55 hover:border-brand/35 hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025]"
+            ? "border-line/60 bg-white/55 md:hover:border-brand/35 md:hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025]"
             : attentionTone === "warning"
-              ? "border-amber-300/40 bg-amber-50/70 hover:border-amber-400/55 hover:shadow-[0_18px_42px_-22px_rgba(180,83,9,0.25)] dark:border-amber-300/15 dark:bg-amber-500/[0.05]"
-              : "border-rose-300/45 bg-rose-50/70 hover:border-rose-400/55 hover:shadow-[0_18px_42px_-22px_rgba(190,18,60,0.25)] dark:border-rose-300/20 dark:bg-rose-500/[0.06]",
+              ? "border-amber-300/40 bg-amber-50/70 md:hover:border-amber-400/55 md:hover:shadow-[0_18px_42px_-22px_rgba(180,83,9,0.25)] dark:border-amber-300/15 dark:bg-amber-500/[0.05]"
+              : "border-rose-300/45 bg-rose-50/70 md:hover:border-rose-400/55 md:hover:shadow-[0_18px_42px_-22px_rgba(190,18,60,0.25)] dark:border-rose-300/20 dark:bg-rose-500/[0.06]",
         ].join(" ")}
       >
         <div className="flex min-w-0 items-center justify-between gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
+          <p className="min-w-0 text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
             <Tooltip content="Verspätet + Fehlend zusammen, plus offene Anträge & Korrekturen, die auf Freigabe warten.">
               <span className="cursor-help">Heute prüfen</span>
             </Tooltip>

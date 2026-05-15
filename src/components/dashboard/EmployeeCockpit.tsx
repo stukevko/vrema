@@ -57,7 +57,7 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
       {/* Subtiler Petrol-Lichthauch im Hintergrund */}
       <span
         aria-hidden
-        className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-brand/15 blur-3xl dark:bg-brand/22"
+        className="pointer-events-none absolute -top-16 right-0 h-48 w-48 rounded-full bg-brand/15 blur-3xl max-md:opacity-50 md:-right-10 dark:bg-brand/22"
       />
 
       {/* Hero: Begrüßung + Status */}
