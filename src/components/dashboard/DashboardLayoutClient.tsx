@@ -65,6 +65,7 @@ export function DashboardLayoutClient({
     <div className="flex h-screen min-h-0 w-full min-w-0 overflow-hidden overflow-x-hidden bg-background text-foreground">
       <Toaster richColors position="top-center" closeButton duration={2200} />
       <DashboardSidebar
+        className="no-print"
         role={role}
         plan={plan}
         initialSuperOpenTickets={initialSuperOpenTickets}
@@ -77,6 +78,7 @@ export function DashboardLayoutClient({
       />
       <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-background">
         <DashboardTopbar
+          className="no-print"
           user={user}
           unreadNotifications={initialUnreadNotifications}
           onOpenSupport={(mode) => {
@@ -88,14 +90,14 @@ export function DashboardLayoutClient({
         <main
           ref={mainScrollRef}
           className={clsx(
-            "dashboard-touch-scroll native-app-tap relative flex-1 min-h-0 overflow-y-auto overscroll-y-contain overscroll-behavior-y-contain touch-manipulation pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-0",
+            "dashboard-touch-scroll native-app-tap relative flex-1 min-h-0 min-w-0 max-w-full overflow-x-hidden overflow-y-auto overscroll-y-contain overscroll-x-none overscroll-behavior-y-contain touch-manipulation pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-0",
             "px-[max(0.25rem,env(safe-area-inset-left))] pr-[max(0.25rem,env(safe-area-inset-right))] sm:px-2 md:px-8",
             "pb-[max(5.75rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] md:pb-6",
           )}
         >
           <DashboardPullToRefresh scrollRef={mainScrollRef} />
           {unreadReplies > 0 ? (
-            <div className="mb-4 rounded-2xl border border-brand/25 bg-brand-soft/80 px-4 py-3 text-sm text-foreground dark:border-white/10 dark:bg-brand/18 md:mb-5">
+            <div className="no-print mb-4 rounded-2xl border border-brand/25 bg-brand-soft/80 px-4 py-3 text-sm text-foreground dark:border-white/10 dark:bg-brand/18 md:mb-5">
               <p className="font-medium">Du hast eine Antwort auf dein Support-Ticket erhalten.</p>
               <button
                 type="button"
@@ -110,10 +112,10 @@ export function DashboardLayoutClient({
             </div>
           ) : null}
           {children}
-          <footer className="mb-2 mt-8 text-center text-xs text-muted-foreground">VREMA – Intelligente Zeiterfassung</footer>
+          <footer className="no-print mb-2 mt-8 text-center text-xs text-muted-foreground">VREMA – Intelligente Zeiterfassung</footer>
         </main>
       </div>
-      <DashboardMobileBottomNav role={role} />
+      <DashboardMobileBottomNav className="no-print" role={role} />
       <SupportTicketOverlay
         open={supportOverlayOpen}
         initialFocusUnread={supportInitialUnread}

@@ -1,7 +1,21 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, Mail, Clock, Lock, Download, FileSpreadsheet, Sparkles, Loader2, CheckCircle2, Check, X } from "lucide-react";
+import {
+  FileText,
+  Mail,
+  Clock,
+  Lock,
+  Download,
+  FileSpreadsheet,
+  Sparkles,
+  Loader2,
+  CheckCircle2,
+  Check,
+  X,
+  Printer,
+} from "lucide-react";
+import { VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
@@ -272,6 +286,22 @@ function statusLabel(status: LogRow["status"]) {
   return "Manuell";
 }
 
+/** Schwarz-Weiß-taugliche Status für Druck & PDF (Symbol statt Farbe). */
+function statusPrintLabel(status: LogRow["status"]) {
+  const label = statusLabel(status);
+  if (status === "LATE") return `▲ ${label}`;
+  if (status === "ABSENT") return `■ ${label}`;
+  if (status === "MANUAL_ADJUSTED") return `◆ ${label}`;
+  return `● ${label}`;
+}
+
+function statusPrintClass(status: LogRow["status"]) {
+  if (status === "LATE" || status === "ABSENT") return "print-status--emphasis";
+  if (status === "MANUAL_ADJUSTED") return "print-status--emphasis print-status--manual";
+  if (status === "ON_TIME") return "print-status--ok";
+  return "print-status--ok";
+}
+
 function logEntryStatusTone(status: LogRow["status"]): "success" | "warning" | "danger" | "brand" {
   if (status === "ABSENT") return "danger";
   if (status === "LATE") return "warning";
@@ -441,20 +471,39 @@ export function ReportsClient({
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const drawHeader = () => {
-      doc.setFillColor(16, 16, 16);
-      doc.rect(0, 0, pageWidth, 24, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(14);
-      doc.text("VREMA", 10, 11);
-      doc.setFontSize(10);
-      doc.text(pdfHeaderFirmenzeile(companyName), pageWidth / 2, 11, { align: "center" });
-      doc.text(month, pageWidth - 10, 11, { align: "right" });
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.2);
+      doc.line(10, 20, pageWidth - 10, 20);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("VREMA", 10, 10);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(pdfHeaderFirmenzeile(companyName), 10, 15);
+      doc.text(month, pageWidth - 10, 10, { align: "right" });
       doc.setFontSize(8);
-      doc.setTextColor(210, 210, 210);
-      doc.text(`Gesamtstunden Firma: ${decimalHoursDE(totalMinutes)}h`, 10, 18);
-      doc.text(`Mitarbeiter im Report: ${Object.keys(byUser).length}`, 70, 18);
-      doc.text(`Einträge: ${logs.length}`, pageWidth - 10, 18, { align: "right" });
-      doc.setTextColor(20, 20, 20);
+      doc.text(`Erstellt: ${formatDateDE(new Date())}`, pageWidth - 10, 15, { align: "right" });
+
+      const colW = (pageWidth - 20) / 3;
+      const summaryY = 24;
+      const boxH = 12;
+      doc.setDrawColor(226, 232, 240);
+      doc.rect(10, summaryY, pageWidth - 20, boxH);
+      doc.line(10 + colW, summaryY, 10 + colW, summaryY + boxH);
+      doc.line(10 + colW * 2, summaryY, 10 + colW * 2, summaryY + boxH);
+      doc.setFontSize(6.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text("MANDANT", 12, summaryY + 4);
+      doc.text("ZEITRAUM", 12 + colW, summaryY + 4);
+      doc.text("GESAMTSTUNDEN", 12 + colW * 2, summaryY + 4);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      doc.text(pdfHeaderFirmenzeile(companyName), 12, summaryY + 9.5);
+      doc.text(month, 12 + colW, summaryY + 9.5);
+      doc.text(`${decimalHoursDE(totalMinutes)} h`, 12 + colW * 2, summaryY + 9.5);
+      doc.setFont("helvetica", "normal");
     };
     drawHeader();
 
@@ -475,20 +524,18 @@ export function ReportsClient({
       const userSoll = monthlySollMinutesByUser[first.userId] ?? Math.round(first.weeklyHours * 60 * 4.33);
       const diff = userIst - userSoll;
       const ratio = userSoll > 0 ? Math.max(0, Math.min(1, userIst / userSoll)) : 0;
-      const sectionStartY = 30;
-      const headerHeight = 18;
-      const headerInner = 4;
-      const nameY = sectionStartY + headerInner + 3.2;
-      const metaY = nameY;
-      const barY = sectionStartY + headerHeight - 5.2;
-      const barWidth = 64;
+      const sectionStartY = 40;
+      const headerHeight = 11;
+      const nameY = sectionStartY + 4.5;
 
-      doc.setFillColor(236, 253, 245);
-      doc.rect(10, sectionStartY, pageWidth - 20, headerHeight, "F");
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.15);
+      doc.line(10, sectionStartY, pageWidth - 10, sectionStartY);
+      doc.line(10, sectionStartY + headerHeight, pageWidth - 10, sectionStartY + headerHeight);
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.setTextColor(20, 20, 20);
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
       doc.text(
         `${first.userName}${first.employeeNumber ? ` (#${first.employeeNumber})` : ""}`,
         12,
@@ -496,28 +543,14 @@ export function ReportsClient({
       );
 
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(50, 50, 50);
+      doc.setFontSize(8.5);
+      doc.setTextColor(0, 0, 0);
       doc.text(
-        `Ist ${decimalHoursDE(userIst)} h   |   Soll ${decimalHoursDE(userSoll)} h   |   Differenz ${decimalHoursDE(diff)} h`,
+        `Ist ${decimalHoursDE(userIst)} h · Soll ${decimalHoursDE(userSoll)} h · Diff. ${decimalHoursDE(diff)} h · ${Math.round(ratio * 100)} % Soll`,
         pageWidth - 12,
-        metaY,
+        nameY,
         { align: "right" },
       );
-
-      doc.setDrawColor(200);
-      doc.setFillColor(232, 232, 232);
-      doc.rect(12, barY, barWidth, 2.6, "F");
-      doc.setFillColor(34, 197, 94);
-      doc.rect(12, barY, barWidth * ratio, 2.6, "F");
-      doc.setFontSize(7);
-      doc.setTextColor(90, 90, 90);
-      doc.text(
-        `${Math.round(ratio * 100)}% des Solls`,
-        12 + barWidth + 3,
-        barY + 2.1,
-      );
-      doc.setTextColor(20, 20, 20);
 
       const weekBuckets = new Map<string, number>();
       const sortedLogs = userLogs
@@ -537,13 +570,13 @@ export function ReportsClient({
             log.breakMins,
             netMin !== null ? netMin : "—",
             netMin !== null ? decimalHoursDE(netMin) : "—",
-            statusLabel(log.status),
+            statusPrintLabel(log.status),
             log.note ?? "",
           ];
         });
 
       autoTable(doc, {
-        startY: sectionStartY + headerHeight + 4,
+        startY: sectionStartY + headerHeight + 3,
         head: [
           [
             "Datum",
@@ -557,10 +590,24 @@ export function ReportsClient({
           ],
         ],
         body: sortedLogs,
-        theme: "grid",
-        styles: { fontSize: 8, cellPadding: 1.4, lineColor: [220, 220, 220], lineWidth: 0.1 },
-        headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 7 },
-        alternateRowStyles: { fillColor: [248, 248, 248] },
+        theme: "plain",
+        styles: {
+          fontSize: 8,
+          cellPadding: 1.4,
+          lineColor: [226, 232, 240],
+          lineWidth: 0.1,
+          textColor: [0, 0, 0],
+          fillColor: [255, 255, 255],
+        },
+        headStyles: {
+          fillColor: [255, 255, 255],
+          textColor: [0, 0, 0],
+          fontStyle: "bold",
+          fontSize: 7,
+          lineWidth: 0.15,
+          lineColor: [203, 213, 225],
+        },
+        alternateRowStyles: { fillColor: [255, 255, 255] },
         columnStyles: {
           0: { cellWidth: 22 },
           1: { cellWidth: 22 },
@@ -574,11 +621,9 @@ export function ReportsClient({
         didParseCell: (data) => {
           if (data.section !== "body" || data.column.index !== 6) return;
           const raw = String(data.cell.raw ?? "");
-          if (raw.includes("Zu spät") || raw.includes("Fehlend")) {
-            data.cell.styles.textColor = [180, 0, 0];
+          if (raw.includes("▲") || raw.includes("■") || raw.includes("◆")) {
             data.cell.styles.fontStyle = "bold";
-          } else if (raw.includes("Pünktlich")) {
-            data.cell.styles.textColor = [0, 120, 50];
+            data.cell.styles.textColor = [0, 0, 0];
           }
         },
       });
@@ -638,6 +683,10 @@ export function ReportsClient({
   const exportPdf = () => {
     const { doc, fileName } = buildPdfDocAndName();
     doc.save(fileName);
+  };
+
+  const printReport = () => {
+    window.print();
   };
   const buildCsv = () => {
     const separator = ";";
@@ -1035,13 +1084,51 @@ export function ReportsClient({
   return (
     <>
       <div
-        className={`fixed top-16 left-0 right-0 z-40 h-0.5 bg-primary/70 origin-left transition-transform duration-300 ${
+        className={`no-print fixed top-16 left-0 right-0 z-40 h-0.5 bg-primary/70 origin-left transition-transform duration-300 ${
           isRoutePending ? "scale-x-100" : "scale-x-0"
         }`}
       />
-      <div className="mx-auto max-w-6xl space-y-5 px-1 sm:space-y-6 sm:px-0">
+      <motion.div className="print-root mx-auto max-w-6xl space-y-5 px-1 sm:space-y-6 sm:px-0">
+        <header className="print-only print-header">
+          <div className="print-header__brand">
+            <VremaMarkLogo size={28} className="!text-black dark:!text-black" />
+            <span className="text-sm font-bold tracking-tight">VREMA</span>
+          </div>
+          <div className="print-header__meta">
+            <p className="font-semibold">{pdfHeaderFirmenzeile(companyName)}</p>
+            <p>{month}</p>
+            <p className="mt-0.5 text-[8pt] text-slate-600">
+              Erstellt {formatDateDE(new Date())} · {logs.length} Einträge
+            </p>
+          </div>
+        </header>
+
+        <dl className="print-only print-summary-grid">
+          <div>
+            <dt>Mandant</dt>
+            <dd>{pdfHeaderFirmenzeile(companyName)}</dd>
+          </div>
+          <div>
+            <dt>Zeitraum</dt>
+            <dd>{month}</dd>
+          </div>
+          <div>
+            <dt>Gesamtstunden</dt>
+            <dd>{totalHoursDecimal} h</dd>
+          </div>
+        </dl>
+
+        {isManager && (
+          <div className="print-only print-legend">
+            <span className="print-status--ok">Pünktlich</span>
+            <span className="print-status--late">Zu spät</span>
+            <span className="print-status--absent">Fehlend</span>
+            <span className="print-status--manual">Manuell</span>
+          </div>
+        )}
+
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="no-print flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <h1 className="text-base font-bold tracking-tight sm:text-2xl md:text-3xl">Berichte</h1>
             <p className="mt-1 text-sm text-muted-foreground sm:text-base">
@@ -1093,6 +1180,18 @@ export function ReportsClient({
               {hasBusinessAccess ? <Download className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
               PDF exportieren
             </button>
+            <button
+              type="button"
+              onClick={hasBusinessAccess ? printReport : lockedMsg}
+              className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 md:min-h-0 md:w-auto ${
+                hasBusinessAccess
+                  ? "border-border bg-surface text-foreground md:hover:bg-muted/50"
+                  : "border border-border bg-card text-muted-foreground md:hover:bg-muted/50"
+              }`}
+            >
+              {hasBusinessAccess ? <Printer className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+              Drucken
+            </button>
             <PlanGateButton
               icon={Mail}
               label="An Lohnbüro senden"
@@ -1132,7 +1231,7 @@ export function ReportsClient({
         </div>
 
         {/* Summary cards */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+        <div className="no-print grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
           {[
             { label: "Gesamtstunden", value: `${totalHoursDecimal} h`, tone: "text-foreground", note: "Zusammenfassung der monatlichen Arbeitszeiten" },
             { label: costSummaryLabel, value: costSummaryValue, tone: "text-foreground", note: costSummaryNote },
@@ -1153,7 +1252,7 @@ export function ReportsClient({
           ))}
         </div>
 
-        <div className="rounded-2xl border border-brand/20 bg-brand-soft/50 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
+        <div className="no-print rounded-2xl border border-brand/20 bg-brand-soft/50 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
             <div className="flex items-start gap-3">
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
                 <CheckCircle2 className="h-5 w-5" aria-hidden />
@@ -1197,7 +1296,7 @@ export function ReportsClient({
           </div>
 
         {(isAIAnalyzing || aiAnalysis) && (
-          <div className="rounded-2xl border border-brand/20 bg-surface p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+          <div className="no-print rounded-2xl border border-brand/20 bg-surface p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <div className="mb-3 flex items-center gap-2">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-brand-soft text-brand">
                 <Sparkles className="h-4 w-4" />
@@ -1230,7 +1329,7 @@ export function ReportsClient({
         )}
 
         {isManager && (
-          <div className="rounded-2xl border border-line bg-surface px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+          <motion.div className="no-print rounded-2xl border border-line bg-surface px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-fg-muted">Status-Legende</p>
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge tone="success" size="sm">
@@ -1246,13 +1345,13 @@ export function ReportsClient({
                 Manuell angepasst
               </StatusBadge>
             </div>
-          </div>
+          </motion.div>
         )}
 
         <div
           id="zeitkorrekturen"
           ref={correctionSectionRef}
-          className={`scroll-mt-24 rounded-2xl bg-card border p-4 md:p-5 space-y-3 transition-all duration-500 ${
+          className={`no-print scroll-mt-24 rounded-2xl bg-card border p-4 md:p-5 space-y-3 transition-all duration-500 ${
             highlightCorrections
               ? "border-brand ring-4 ring-brand/40 shadow-[0_24px_60px_rgba(0,0,0,0.10)]"
               : "border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
@@ -1603,11 +1702,12 @@ export function ReportsClient({
         </div>
 
         {/* Table */}
-        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden">
-          <div className="px-4 md:px-5 py-3 bg-card/80 flex items-center gap-2">
+        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden print:overflow-visible print:rounded-none print:border print:border-slate-200 print:shadow-none">
+          <div className="no-print px-4 md:px-5 py-3 bg-card/80 flex items-center gap-2">
             <FileText className="w-4 h-4 text-muted-foreground" />
             <span className="text-xl font-bold tracking-wide">Work-Logs – {month}</span>
           </div>
+          <h2 className="print-only print-section-title">Work-Logs – {month}</h2>
 
           {logs.length === 0 ? (
             <div className="py-16 text-center">
@@ -1622,7 +1722,7 @@ export function ReportsClient({
             </div>
           ) : (
             <>
-              <div className="space-y-3 p-3 sm:hidden">
+              <div className="no-print space-y-3 p-3 sm:hidden">
                 {logs.map((log, i) => {
                   const dur = durationMins(log);
                   const clockInDate = new Date(log.clockIn);
@@ -1713,10 +1813,10 @@ export function ReportsClient({
                   );
                 })}
               </div>
-              <div className="hidden max-h-[72vh] overflow-auto overflow-x-auto scrollbar-hide sm:block">
-                <table className="w-full text-sm">
+              <div className="print-table-wrap hidden max-h-[72vh] overflow-auto overflow-x-auto scrollbar-hide sm:block print:block print:max-h-none">
+                <table className="print-table w-full text-sm">
                   <thead>
-                    <tr className="sticky top-0 z-20 border-b border-border bg-card">
+                    <tr className="sticky top-0 z-20 border-b border-border bg-card print:static print:bg-white">
                       {[
                         isManager ? "Mitarbeiter" : null,
                         "Datum",
@@ -1731,7 +1831,10 @@ export function ReportsClient({
                       ]
                         .filter(Boolean)
                         .map((h) => (
-                          <th key={h!} className="px-5 py-3 text-left text-[10px] text-muted-foreground uppercase tracking-widest">
+                          <th
+                            key={h!}
+                            className={`px-5 py-3 text-left text-[10px] text-muted-foreground uppercase tracking-widest ${h === "Aktion" ? "no-print" : ""}`}
+                          >
                             {h}
                           </th>
                         ))}
@@ -1747,7 +1850,7 @@ export function ReportsClient({
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: i * 0.025 }}
-                          className="even:bg-muted/40/50 hover:bg-muted/50 transition-colors"
+                          className="even:bg-muted/40/50 hover:bg-muted/50 transition-colors print:bg-white print:even:bg-white"
                         >
                           {isManager && (
                             <td className="px-5 py-4">
@@ -1775,7 +1878,12 @@ export function ReportsClient({
                             {dur !== null ? decimalHoursDE(Math.round(dur)) : "–"}
                           </td>
                           <td className="px-5 py-4">
-                            <StatusBadge tone={logEntryStatusTone(log.status)} size="sm" withDot={false}>
+                            <span
+                              className={`hidden print:inline text-xs ${statusPrintClass(log.status)} print-status--${log.status === "LATE" ? "late" : log.status === "ABSENT" ? "absent" : log.status === "MANUAL_ADJUSTED" ? "manual" : "ok"}`}
+                            >
+                              {statusPrintLabel(log.status)}
+                            </span>
+                            <StatusBadge tone={logEntryStatusTone(log.status)} size="sm" withDot={false} className="print:hidden">
                               {statusLabel(log.status)}
                             </StatusBadge>
                           </td>
@@ -1783,7 +1891,7 @@ export function ReportsClient({
                             {log.note ?? "–"}
                           </td>
                           {isManager && (
-                            <td className="px-5 py-4">
+                            <td className="no-print px-5 py-4">
                               <div className="flex items-center gap-2">
                                 <button
                                   type="button"
@@ -1828,7 +1936,7 @@ export function ReportsClient({
 
         {/* Upgrade hint for locked features */}
         {plan === "STARTER" && (
-          <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-5 flex items-center justify-between gap-4">
+          <div className="no-print rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-5 flex items-center justify-between gap-4">
             <div>
               <p className="font-semibold text-sm">PDF-Export & Lohnbüro-Versand freischalten</p>
               <p className="text-xs text-muted-foreground mt-1">
@@ -1843,11 +1951,11 @@ export function ReportsClient({
             </a>
           </div>
         )}
-      </div>
+      </motion.div>
 
       <ToastContainer toasts={toasts} remove={remove} />
       {editingLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/75 px-4">
+        <motion.div className="no-print fixed inset-0 z-50 flex items-center justify-center bg-background/75 px-4">
           <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <h3 className="text-base font-semibold">Zeiteintrag bearbeiten</h3>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -1918,10 +2026,10 @@ export function ReportsClient({
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
       {showPayrollModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/75 px-4">
+        <div className="no-print fixed inset-0 z-50 flex items-center justify-center bg-background/75 px-4">
           <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             <h3 className="text-base font-semibold">An Lohnbüro senden</h3>
             <p className="mt-1 text-xs text-muted-foreground">Der aktuelle PDF-Report wird als Anhang per E-Mail versendet.</p>

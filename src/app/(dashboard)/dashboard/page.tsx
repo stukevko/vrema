@@ -322,10 +322,10 @@ export default async function DashboardPage() {
     : 0;
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4 px-1 text-foreground sm:gap-6 sm:px-2 md:gap-8 md:px-0">
+    <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-4 overflow-x-hidden px-4 text-foreground sm:gap-6 sm:px-2 md:gap-8 md:px-0">
       {/* Header — für Mitarbeiter überspringen, weil das Cockpit selbst begrüßt */}
       {!isEmployee && (
-        <div className="order-1 shrink-0 rounded-2xl glass-panel p-5 sm:p-8">
+        <div className="order-1 min-w-0 shrink-0 rounded-2xl glass-panel p-5 sm:p-8">
           <h1 className="text-base font-bold tracking-tight sm:text-2xl md:text-3xl">
             Guten {berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"},{" "}
             {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
@@ -338,7 +338,7 @@ export default async function DashboardPage() {
 
       {/* Hero-KPIs (Manager) — das "3-Sekunden-Prinzip" direkt unter dem Gruß. */}
       {teamStats && (
-        <div className="order-1 mt-1 sm:mt-2">
+        <div className="order-1 mt-1 min-w-0 sm:mt-2">
           <HeroStats
             presentNow={teamStats.activeToday}
             totalEmployees={teamStats.totalEmployees}
@@ -456,7 +456,7 @@ export default async function DashboardPage() {
 
       {/* Team stats (for owners/managers) — Fokus-Karte + Details für Kennzahlen */}
       {teamStats && focus && (
-        <div className="order-5 space-y-4 md:order-4">
+        <div className="order-5 min-w-0 space-y-4 md:order-4">
           <div className="glass-card border-brand/25 bg-gradient-to-br from-brand/14 via-surface/30 to-transparent p-5 sm:p-6 dark:from-brand/18 dark:via-surface/20">
             <div className="flex items-start gap-3">
               <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand-soft text-brand shadow-sm dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
@@ -570,7 +570,8 @@ export default async function DashboardPage() {
                   </div>
                 )}
               </div>
-              <div className="-mx-2 flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-visible pb-2 pt-1 scrollbar-hide md:mx-0 md:grid md:snap-none md:grid-cols-2 md:gap-4 md:overflow-visible md:pb-0 md:pt-0 xl:grid-cols-3 2xl:grid-cols-6">
+              <div className="min-w-0 max-w-full overflow-x-clip md:overflow-visible">
+                <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-visible pb-2 pt-1 scrollbar-hide md:grid md:snap-none md:grid-cols-2 md:gap-4 md:overflow-visible md:pb-0 md:pt-0 xl:grid-cols-3 2xl:grid-cols-6">
                 {(
                   [
                     { label: "Mitarbeiter gesamt", value: teamStats.totalEmployees, icon: Users, iconClass: "text-brand", valueClass: "text-brand", href: "/dashboard/team" },
@@ -595,7 +596,7 @@ export default async function DashboardPage() {
                         <p className="text-xs text-muted-foreground">{stat.label}</p>
                         <stat.icon className={`h-4 w-4 ${stat.iconClass}`} />
                       </div>
-                      <p className={`text-3xl font-bold ${stat.valueClass}`}>
+                      <p className={`min-w-0 max-w-full text-[clamp(1.25rem,5vw,1.875rem)] font-bold leading-tight tabular-nums ${stat.valueClass}`}>
                         {stat.value}
                       </p>
                       {stat.actionable ? (
@@ -606,7 +607,7 @@ export default async function DashboardPage() {
                     </>
                   );
                   const baseClass =
-                    "w-[min(88vw,20rem)] shrink-0 snap-center rounded-2xl glass-panel p-5 transition-all sm:p-6 md:w-auto md:min-w-0";
+                    "w-[calc(100%-0.5rem)] max-w-[min(100%,20rem)] shrink-0 snap-center rounded-2xl glass-panel p-5 transition-all max-[380px]:w-full sm:p-6 md:w-auto md:max-w-none md:min-w-0";
                   if (stat.href && stat.value > 0) {
                     return (
                       <Link
@@ -627,6 +628,7 @@ export default async function DashboardPage() {
                     </div>
                   );
                 })}
+                </div>
               </div>
             </div>
           </details>

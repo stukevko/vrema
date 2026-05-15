@@ -47,7 +47,7 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
   return (
     <section
       aria-label="Mein Cockpit"
-      className="glass-card relative overflow-hidden p-4 sm:p-6"
+      className="glass-card relative min-w-0 max-w-full overflow-hidden p-4 sm:p-6"
     >
       {/* Specular Highlight (Apple) */}
       <span

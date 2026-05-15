@@ -745,3 +745,236 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 [data-vaul-drawer][data-state="closed"] {
   pointer-events: none !important;
 }
+
+/* =========================================================================
+   VREMA Clean Print – dokumentenartige Ausdrucke & „Als PDF speichern“
+   ========================================================================= */
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 14mm 12mm;
+    size: A4 landscape;
+  }
+
+  :root,
+  html.dark {
+    color-scheme: light;
+    --background: 0 0% 100%;
+    --surface: 0 0% 100%;
+    --surface-muted: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --foreground-muted: 0 0% 25%;
+    --foreground-subtle: 0 0% 40%;
+    --border: 214 20% 88%;
+    --border-strong: 214 16% 75%;
+    --brand: 0 0% 0%;
+    --brand-soft: 0 0% 100%;
+    --success: 0 0% 0%;
+    --success-soft: 0 0% 100%;
+    --warning: 0 0% 0%;
+    --warning-soft: 0 0% 100%;
+    --danger: 0 0% 0%;
+    --danger-soft: 0 0% 100%;
+    --neutral-soft: 0 0% 100%;
+    --shadow-card: none;
+    --shadow-card-hover: none;
+    --shadow-pop: none;
+    --shadow-button: none;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    overflow: visible !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  body {
+    font-size: 10pt;
+    line-height: 1.35;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  main,
+  .dashboard-touch-scroll {
+    overflow: visible !important;
+    padding: 0 !important;
+    max-height: none !important;
+  }
+
+  .no-print,
+  [data-sonner-toaster],
+  [data-vaul-drawer],
+  [data-vaul-overlay] {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-root {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print-root .premium-card,
+  .print-root .glass-card,
+  .print-root [class*="shadow-"],
+  .print-root [class*="ring-"],
+  .print-root [class*="animate-"] {
+    box-shadow: none !important;
+    animation: none !important;
+  }
+
+  .print-header {
+    display: flex !important;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .print-header__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #000 !important;
+  }
+
+  .print-header__brand svg {
+    color: #000 !important;
+    filter: none !important;
+  }
+
+  .print-header__meta {
+    text-align: right;
+    font-size: 9pt;
+    color: #000 !important;
+  }
+
+  .print-summary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .print-summary-grid > * {
+    padding: 0.5rem 0.65rem;
+    border-right: 1px solid #e2e8f0;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .print-summary-grid > *:last-child {
+    border-right: none;
+  }
+
+  .print-summary-grid dt {
+    font-size: 7pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #475569 !important;
+    margin-bottom: 0.15rem;
+  }
+
+  .print-summary-grid dd {
+    margin: 0;
+    font-size: 11pt;
+    font-weight: 700;
+    color: #000 !important;
+  }
+
+  .print-table-wrap {
+    display: block !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+  }
+
+  .print-table thead tr {
+    border-bottom: 1px solid #cbd5e1;
+    background: #fff !important;
+  }
+
+  .print-table th {
+    padding: 0.35rem 0.5rem;
+    text-align: left;
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #334155 !important;
+    background: #fff !important;
+  }
+
+  .print-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    background: #fff !important;
+  }
+
+  .print-table tbody tr:nth-child(even) {
+    background: #fff !important;
+  }
+
+  .print-table td {
+    padding: 0.3rem 0.5rem;
+    vertical-align: top;
+    color: #000 !important;
+    background: transparent !important;
+  }
+
+  .print-status--emphasis {
+    font-weight: 700;
+  }
+
+  .print-status--late::before,
+  .print-status--absent::before,
+  .print-status--manual::before,
+  .print-status--ok::before {
+    display: inline-block;
+    margin-right: 0.25rem;
+    font-weight: 700;
+  }
+
+  .print-status--late::before { content: "▲"; }
+  .print-status--absent::before { content: "■"; }
+  .print-status--manual::before { content: "◆"; }
+  .print-status--ok::before { content: "●"; }
+
+  .print-section-title {
+    font-size: 11pt;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    color: #000 !important;
+  }
+
+  .print-legend {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 8pt;
+    color: #000 !important;
+  }
+
+  .print-legend span {
+    color: #000 !important;
+  }
+}

@@ -44,14 +44,14 @@ export function HeroStats({
   return (
     <section
       aria-label="Heutige Kennzahlen"
-      className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4"
+      className="grid w-full min-w-0 max-w-full grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4"
     >
       {/* KPI 1 – Anwesend jetzt (Petrol, ruhig) */}
       <Link
         href="/dashboard/reports"
-        className="group/kpi block rounded-2xl border border-line/60 bg-white/55 p-5 backdrop-blur-md transition-[box-shadow,border-color] duration-150 hover:border-brand/35 hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025] sm:p-6"
+        className="group/kpi block min-w-0 max-w-full overflow-hidden rounded-2xl border border-line/60 bg-white/55 p-5 backdrop-blur-md transition-[box-shadow,border-color] duration-150 hover:border-brand/35 hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025] sm:p-6"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex min-w-0 items-center justify-between gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
             <Tooltip content="Mitarbeiter, die jetzt eingestempelt sind.">
               <span className="cursor-help">Anwesend jetzt</span>
@@ -61,7 +61,9 @@ export function HeroStats({
             <Users className="h-4 w-4" aria-hidden />
           </span>
         </div>
-        <p className={`mt-3 text-3xl font-bold tabular-nums ${presentTone === "brand" ? "text-brand" : "text-fg"}`}>
+        <p
+          className={`mt-3 min-w-0 max-w-full text-[clamp(1.35rem,5.5vw,1.875rem)] font-bold leading-tight tabular-nums ${presentTone === "brand" ? "text-brand" : "text-fg"}`}
+        >
           {presentNow}
           <span className="ml-1 text-base font-medium text-fg-muted">/ {totalEmployees}</span>
         </p>
@@ -75,9 +77,9 @@ export function HeroStats({
       {/* KPI 2 – Heutige Personalkosten (Petrol, Detail über Tooltip) */}
       <Link
         href="/dashboard/reports"
-        className="group/kpi block rounded-2xl border border-line/60 bg-white/55 p-5 backdrop-blur-md transition-[box-shadow,border-color] duration-150 hover:border-brand/35 hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025] sm:p-6"
+        className="group/kpi block min-w-0 max-w-full overflow-hidden rounded-2xl border border-line/60 bg-white/55 p-5 backdrop-blur-md transition-[box-shadow,border-color] duration-150 hover:border-brand/35 hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025] sm:p-6"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex min-w-0 items-center justify-between gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
             <Tooltip content="Hochrechnung: gestempelte Stunden heute × hinterlegter Stundenlohn.">
               <span className="cursor-help">Heutige Personalkosten</span>
@@ -87,7 +89,10 @@ export function HeroStats({
             <Wallet className="h-4 w-4" aria-hidden />
           </span>
         </div>
-        <p className="mt-3 text-3xl font-bold tabular-nums text-brand">
+        <p
+          className="mt-3 min-w-0 max-w-full text-[clamp(1.1rem,4.8vw,1.875rem)] font-bold leading-tight tabular-nums text-brand break-all sm:break-normal"
+          title={todayPersonnelCostsEuro > 0 ? formatEuroCents(todayPersonnelCostsEuro) : undefined}
+        >
           {todayPersonnelCostsEuro > 0 ? formatEuroCents(todayPersonnelCostsEuro) : "—"}
         </p>
         <p className="mt-1 text-xs text-fg-muted">
@@ -101,7 +106,7 @@ export function HeroStats({
       <Link
         href="/dashboard/reports"
         className={[
-          "group/kpi block rounded-2xl border p-5 backdrop-blur-md transition-[box-shadow,border-color] duration-150 sm:p-6",
+          "group/kpi block min-w-0 max-w-full overflow-hidden rounded-2xl border p-5 backdrop-blur-md transition-[box-shadow,border-color] duration-150 sm:p-6",
           attentionTone === "brand"
             ? "border-line/60 bg-white/55 hover:border-brand/35 hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025]"
             : attentionTone === "warning"
@@ -109,7 +114,7 @@ export function HeroStats({
               : "border-rose-300/45 bg-rose-50/70 hover:border-rose-400/55 hover:shadow-[0_18px_42px_-22px_rgba(190,18,60,0.25)] dark:border-rose-300/20 dark:bg-rose-500/[0.06]",
         ].join(" ")}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex min-w-0 items-center justify-between gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
             <Tooltip content="Verspätet + Fehlend zusammen, plus offene Anträge & Korrekturen, die auf Freigabe warten.">
               <span className="cursor-help">Heute prüfen</span>
@@ -130,7 +135,7 @@ export function HeroStats({
         </div>
         <p
           className={[
-            "mt-3 text-3xl font-bold tabular-nums",
+            "mt-3 min-w-0 max-w-full text-[clamp(1.35rem,5.5vw,1.875rem)] font-bold leading-tight tabular-nums",
             attentionTone === "brand"
               ? "text-brand"
               : attentionTone === "warning"

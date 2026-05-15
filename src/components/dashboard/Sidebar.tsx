@@ -16,6 +16,7 @@ import { VremaLockup } from "@/components/brand/VremaMarkLogo";
 interface SidebarProps {
   role: string;
   plan: string;
+  className?: string;
   initialSuperOpenTickets?: number;
   unreadReplies?: number;
   onOpenSupport?: (mode?: "default" | "unread") => void;
@@ -25,6 +26,7 @@ interface SidebarProps {
 export function DashboardSidebar({
   role,
   plan,
+  className,
   initialSuperOpenTickets = 0,
   unreadReplies = 0,
   onOpenSupport,
@@ -73,7 +75,12 @@ export function DashboardSidebar({
   }, [canManageTrades]);
 
   return (
-    <aside className="hidden w-72 shrink-0 flex-col overflow-y-auto border-r border-border glass-nav md:flex md:w-80 md:min-h-0">
+    <aside
+      className={clsx(
+        "hidden w-72 shrink-0 flex-col overflow-y-auto border-r border-border glass-nav md:flex md:w-80 md:min-h-0",
+        className,
+      )}
+    >
       <Link
         href="/dashboard"
         className="group flex flex-col items-center border-b border-border px-4 py-5 text-center transition-colors md:px-5 md:hover:bg-muted/25"
@@ -172,13 +179,16 @@ export function DashboardSidebar({
   );
 }
 
-export function DashboardMobileBottomNav({ role }: { role: string }) {
+export function DashboardMobileBottomNav({ role, className }: { role: string; className?: string }) {
   const pathname = usePathname();
   const items = getMobileBottomNavItems(role);
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/40 bg-white/80 px-1 pt-1 shadow-[0_-8px_28px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-white/10 dark:bg-background/80 md:hidden pb-safe"
+      className={clsx(
+        "fixed bottom-0 left-0 right-0 z-50 border-t border-white/40 bg-white/80 px-1 pt-1 shadow-[0_-8px_28px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-white/10 dark:bg-background/80 md:hidden pb-safe",
+        className,
+      )}
       aria-label="Hauptnavigation"
     >
       <div className="mx-auto grid max-w-lg grid-cols-5 gap-0.5">

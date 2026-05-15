@@ -7,9 +7,11 @@ import { useEffect, useRef, useState } from "react";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getPersonalAccountHref } from "@/lib/dashboard/account-href";
+import clsx from "clsx";
 import { VremaLockup } from "@/components/brand/VremaMarkLogo";
 
 interface TopbarProps {
+  className?: string;
   user: {
     name?: string | null;
     email?: string | null;
@@ -23,6 +25,7 @@ interface TopbarProps {
 }
 
 export function DashboardTopbar({
+  className,
   user,
   unreadNotifications = 0,
   onOpenSupport,
@@ -52,7 +55,12 @@ export function DashboardTopbar({
     : user.email?.[0]?.toUpperCase() ?? "?";
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[60] overflow-visible border-b border-white/40 bg-background/85 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md dark:border-white/8 dark:bg-background/75 md:relative md:inset-auto md:z-30 md:border-b-0 md:bg-transparent md:pt-0 md:backdrop-blur-0">
+    <header
+      className={clsx(
+        "fixed inset-x-0 top-0 z-[60] overflow-visible border-b border-white/40 bg-background/85 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md dark:border-white/8 dark:bg-background/75 md:relative md:inset-auto md:z-30 md:border-b-0 md:bg-transparent md:pt-0 md:backdrop-blur-0",
+        className,
+      )}
+    >
       <div className="relative flex h-16 min-w-0 items-center justify-between gap-2 px-3 sm:px-4 md:px-6">
         <div className="relative z-10 flex w-11 shrink-0 items-center md:hidden">
           {onOpenSupport ? (
