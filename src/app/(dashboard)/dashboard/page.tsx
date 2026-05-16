@@ -48,6 +48,7 @@ import { queryActiveShiftTasks } from "@/lib/shift-tasks/active-shift-tasks-data
 import { getTodayShiftTaskWall } from "@/lib/shift-tasks/wall";
 import { formatBerlinDate, formatBerlinTime, getBerlinNowHour, getDayBoundsUtc } from "@/lib/time/timezone";
 import { logServerError } from "@/lib/server-logger";
+import { resolveLucideIcon } from "@/lib/icons/safe-lucide";
 
 /**
  * Defensive: optionale Sektionen dürfen niemals die ganze Seite zerschießen.
@@ -322,7 +323,7 @@ export default async function DashboardPage() {
     : 0;
 
   return (
-    <div className="dashboard-page-root mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 overflow-x-clip px-0 text-foreground sm:max-w-6xl sm:gap-6 sm:px-2 md:gap-8 md:px-0">
+    <div className="dashboard-page-root mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 overflow-x-hidden px-0 text-foreground sm:max-w-6xl sm:gap-6 sm:px-2 md:gap-8 md:px-0">
       {/* Header — für Mitarbeiter überspringen, weil das Cockpit selbst begrüßt */}
       {!isEmployee && (
         <div className="order-1 min-w-0 max-w-full shrink-0 overflow-hidden rounded-2xl glass-panel p-5 sm:p-8">
@@ -570,7 +571,7 @@ export default async function DashboardPage() {
                   </div>
                 )}
               </div>
-              <div className="min-w-0 max-w-full overflow-x-clip md:overflow-visible">
+              <div className="min-w-0 max-w-full overflow-x-hidden md:overflow-visible">
                 <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-visible pb-2 pt-1 scrollbar-hide md:grid md:snap-none md:grid-cols-2 md:gap-4 md:overflow-visible md:pb-0 md:pt-0 xl:grid-cols-3 2xl:grid-cols-6">
                 {(
                   [
@@ -590,11 +591,12 @@ export default async function DashboardPage() {
                     actionable?: string;
                   }>
                 ).map((stat) => {
+                  const StatIcon = resolveLucideIcon(stat.icon);
                   const inner = (
                     <>
                       <div className="mb-3 flex items-center justify-between">
                         <p className="text-xs text-muted-foreground">{stat.label}</p>
-                        <stat.icon className={`h-4 w-4 ${stat.iconClass}`} />
+                        <StatIcon className={`h-4 w-4 ${stat.iconClass}`} aria-hidden />
                       </div>
                       <p className={`min-w-0 max-w-full text-[clamp(1.25rem,5vw,1.875rem)] font-bold leading-tight tabular-nums ${stat.valueClass}`}>
                         {stat.value}

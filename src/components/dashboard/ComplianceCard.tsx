@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ShieldCheck, AlertTriangle, AlertOctagon, ChevronRight } from "lucide-react";
+import { SafeLucideIcon } from "@/lib/icons/safe-lucide";
 import { getWeeklyComplianceReport } from "@/lib/actions/compliance";
 import { getBerlinDateKey } from "@/lib/time/timezone";
 import { shortLabelForRule, type ArbZgRuleId } from "@/lib/compliance/arbzg";
@@ -57,8 +58,6 @@ export async function ComplianceCard() {
     },
   }[status];
 
-  const Icon = tone.icon;
-
   // Pro-Regel-Counter für die Detailzeile
   const ruleEntries = (Object.entries(report.perRule) as [ArbZgRuleId, number][]).filter(
     ([, count]) => count > 0,
@@ -71,7 +70,7 @@ export async function ComplianceCard() {
     >
       <div className="flex items-start gap-3">
         <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-card/80 text-foreground shadow-sm dark:bg-surface/70">
-          <Icon className="h-5 w-5" aria-hidden />
+          <SafeLucideIcon icon={tone.icon} className="h-5 w-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">

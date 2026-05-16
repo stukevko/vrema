@@ -8,7 +8,7 @@ import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getPersonalAccountHref } from "@/lib/dashboard/account-href";
 import clsx from "clsx";
-import { VremaLockup } from "@/components/brand/VremaMarkLogo";
+import { VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
 
 interface TopbarProps {
   className?: string;
@@ -57,7 +57,7 @@ export function DashboardTopbar({
   return (
     <header
       className={clsx(
-        "fixed inset-x-0 top-0 z-[60] overflow-visible border-b border-white/40 bg-background/85 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md dark:border-white/8 dark:bg-background/75 md:relative md:inset-auto md:z-30 md:border-b-0 md:bg-transparent md:pt-0 md:backdrop-blur-0",
+        "fixed inset-x-0 top-0 z-[60] w-full max-w-full overflow-x-hidden border-b border-white/40 bg-background/85 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md dark:border-white/8 dark:bg-background/75 md:relative md:inset-auto md:z-30 md:overflow-visible md:border-b-0 md:bg-transparent md:pt-0 md:backdrop-blur-0",
         className,
       )}
     >
@@ -85,10 +85,13 @@ export function DashboardTopbar({
 
         <Link
           href="/dashboard"
-          className="absolute left-1/2 top-1/2 z-[1] -translate-x-1/2 -translate-y-1/2 md:hidden"
+          className="absolute left-1/2 top-1/2 z-[1] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 md:hidden"
           aria-label="VREMA"
         >
-          <VremaLockup size={28} className="text-foreground" />
+          <VremaMarkLogo size={28} className="shrink-0 text-foreground" />
+          <span className="hidden font-bold tracking-tighter text-foreground sm:block" style={{ fontSize: 17 }}>
+            VREMA
+          </span>
         </Link>
 
         <div className="hidden md:block md:flex-1" />

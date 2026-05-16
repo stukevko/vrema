@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 
 const THRESHOLD = 72;
+const ARM_MIN_PULL = 14;
 const PETROL = "#0a3a52";
 
 type Props = {
@@ -15,6 +16,8 @@ type Props = {
 /**
  * Pull-to-Refresh: am Listenanfang nach unten ziehen → `router.refresh()`.
  * Petrolfarbener Loader (#0a3a52), nur mobil (`md:hidden` im Render).
+ *
+ * Defensiv: kein Refresh bei normalem Scrollen/Wischen – nur bei bewusstem Zug am Seitenanfang.
  */
 export function DashboardPullToRefresh({ scrollRef, enabled = true }: Props) {
   const router = useRouter();
@@ -24,6 +27,14 @@ export function DashboardPullToRefresh({ scrollRef, enabled = true }: Props) {
   const armedRef = useRef(false);
   const startYRef = useRef(0);
   const refreshingRef = useRef(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     refreshingRef.current = refreshing;
@@ -34,35 +45,40 @@ export function DashboardPullToRefresh({ scrollRef, enabled = true }: Props) {
     const el = scrollRef.current;
     if (!el) return;
 
+    const disarm = () => {
+      armedRef.current = false;
+      pullRef.current = 0;
+      if (mountedRef.current) setPull(0);
+    };
+
     const onStart = (e: TouchEvent) => {
       if (refreshingRef.current) return;
-      if (el.scrollTop <= 0) {
-        armedRef.current = true;
-        startYRef.current = e.touches[0]?.clientY ?? 0;
-      } else {
+      if (el.scrollTop > 2) {
         armedRef.current = false;
+        return;
       }
+      armedRef.current = true;
+      startYRef.current = e.touches[0]?.clientY ?? 0;
     };
 
     const onMove = (e: TouchEvent) => {
       if (!armedRef.current || refreshingRef.current) return;
-      if (el.scrollTop > 0) {
-        armedRef.current = false;
-        pullRef.current = 0;
-        setPull(0);
+      if (el.scrollTop > 2) {
+        disarm();
         return;
       }
       const y = e.touches[0]?.clientY ?? 0;
       const dy = y - startYRef.current;
       if (dy <= 0) {
-        pullRef.current = 0;
-        setPull(0);
+        disarm();
         return;
       }
       const damped = Math.min(THRESHOLD * 1.15, dy * 0.45);
       pullRef.current = damped;
-      setPull(damped);
-      if (dy > THRESHOLD * 0.85) e.preventDefault();
+      if (mountedRef.current) setPull(damped);
+      if (dy > THRESHOLD * 0.85 && damped >= ARM_MIN_PULL) {
+        e.preventDefault();
+      }
     };
 
     const onEnd = () => {
@@ -70,17 +86,29 @@ export function DashboardPullToRefresh({ scrollRef, enabled = true }: Props) {
       armedRef.current = false;
       const p = pullRef.current;
       pullRef.current = 0;
-      if (p >= THRESHOLD * 0.75 && !refreshingRef.current) {
+      const shouldRefresh = p >= THRESHOLD * 0.75 && !refreshingRef.current;
+      if (!shouldRefresh) {
+        if (mountedRef.current) setPull(0);
+        return;
+      }
+      refreshingRef.current = true;
+      if (mountedRef.current) {
         setRefreshing(true);
         setPull(THRESHOLD);
-        router.refresh();
-        window.setTimeout(() => {
-          setRefreshing(false);
-          setPull(0);
-        }, 650);
-      } else {
-        setPull(0);
       }
+      startTransition(() => {
+        try {
+          router.refresh();
+        } catch {
+          /* Router-Refresh darf UI nicht crashen */
+        }
+      });
+      window.setTimeout(() => {
+        refreshingRef.current = false;
+        if (!mountedRef.current) return;
+        setRefreshing(false);
+        setPull(0);
+      }, 650);
     };
 
     el.addEventListener("touchstart", onStart, { passive: true });

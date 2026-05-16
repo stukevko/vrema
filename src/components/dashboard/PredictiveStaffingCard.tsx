@@ -14,6 +14,7 @@ import {
 import { getStaffingRecommendations } from "@/lib/actions/predictive";
 import { getBerlinDateKey } from "@/lib/time/timezone";
 import type { WeatherCondition } from "@/lib/predictive/staffing";
+import { SafeLucideIcon } from "@/lib/icons/safe-lucide";
 
 /**
  * Dashboard-Widget: Wochen-Vorschau mit Personal-Empfehlung pro Tag.
@@ -109,28 +110,33 @@ function DayPill({
     timeZone: "Europe/Berlin",
   }).format(new Date(`${date}T12:00:00Z`));
 
-  const toneStyles = {
-    closed: {
-      ring: "border-slate-300/40 dark:border-slate-500/20",
-      bg: "bg-slate-100/70 dark:bg-slate-500/[0.07]",
-      label: "Geschlossen",
-    },
-    calm: {
-      ring: "border-emerald-300/40 dark:border-emerald-500/15",
-      bg: "bg-emerald-50/60 dark:bg-emerald-500/[0.06]",
-      label: "Entspannt",
-    },
-    watch: {
-      ring: "border-amber-300/45 dark:border-amber-500/15",
-      bg: "bg-amber-50/60 dark:bg-amber-500/[0.07]",
-      label: "Aufmerksam",
-    },
-    urgent: {
-      ring: "border-rose-300/45 dark:border-rose-500/15",
-      bg: "bg-rose-50/60 dark:bg-rose-500/[0.07]",
-      label: "Aufstocken",
-    },
-  }[tone];
+  const toneStyles =
+    {
+      closed: {
+        ring: "border-slate-300/40 dark:border-slate-500/20",
+        bg: "bg-slate-100/70 dark:bg-slate-500/[0.07]",
+        label: "Geschlossen",
+      },
+      calm: {
+        ring: "border-emerald-300/40 dark:border-emerald-500/15",
+        bg: "bg-emerald-50/60 dark:bg-emerald-500/[0.06]",
+        label: "Entspannt",
+      },
+      watch: {
+        ring: "border-amber-300/45 dark:border-amber-500/15",
+        bg: "bg-amber-50/60 dark:bg-amber-500/[0.07]",
+        label: "Aufmerksam",
+      },
+      urgent: {
+        ring: "border-rose-300/45 dark:border-rose-500/15",
+        bg: "bg-rose-50/60 dark:bg-rose-500/[0.07]",
+        label: "Aufstocken",
+      },
+    }[tone] ?? {
+      ring: "border-border dark:border-white/10",
+      bg: "bg-card dark:bg-surface/70",
+      label: "Planung",
+    };
 
   const weatherLabel =
     recommendation.drivers.find((d) => /Sonn|Bew|Regen|Sturm|Schnee/.test(d.label))?.label ?? "";
@@ -148,7 +154,7 @@ function DayPill({
         ) : isBridge ? (
           <Sparkles className="h-3.5 w-3.5 text-brand" aria-hidden />
         ) : (
-          <WeatherIcon className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+          <SafeLucideIcon icon={WeatherIcon} className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
         )}
       </div>
       {holidayName ? (

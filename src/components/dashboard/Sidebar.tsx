@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { countOpenSupportTicketsForSuperAdmin } from "@/lib/actions/support";
 import { countPendingShiftTradeApprovals } from "@/lib/actions/team";
 import { VremaLockup } from "@/components/brand/VremaMarkLogo";
+import { SafeLucideIcon } from "@/lib/icons/safe-lucide";
 
 /** Nur Mobil (< md): Daumen-Zone — Items aus `getMobileBottomNavItems(role)`. */
 
@@ -118,7 +119,7 @@ export function DashboardSidebar({
                   onClick={() => onOpenSupport?.("default")}
                   className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium"
                 >
-                  <item.icon className="h-4 w-4 shrink-0" />
+                  <SafeLucideIcon icon={item.icon} className="h-4 w-4 shrink-0" />
                   <span className="truncate">{item.label}</span>
                 </button>
                 {unreadReplies > 0 ? (
@@ -146,7 +147,7 @@ export function DashboardSidebar({
                   : "text-muted-foreground md:hover:bg-card/70 md:hover:text-foreground"
               )}
             >
-              <item.icon className="h-4 w-4 shrink-0" />
+              <SafeLucideIcon icon={item.icon} className="h-4 w-4 shrink-0" />
               {item.label}
               {item.href === "/dashboard/planning" && canManageTrades && pendingTradeApprovals > 0 ? (
                 <span
@@ -186,12 +187,12 @@ export function DashboardMobileBottomNav({ role, className }: { role: string; cl
   return (
     <nav
       className={clsx(
-        "fixed bottom-0 left-0 right-0 z-50 border-t border-white/40 bg-white/80 px-1 pt-1 shadow-[0_-8px_28px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-white/10 dark:bg-background/80 md:hidden pb-safe",
+        "fixed bottom-0 left-0 right-0 z-50 w-full max-w-full overflow-x-hidden border-t border-white/40 bg-white/80 px-1 pt-1 shadow-[0_-8px_28px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-white/10 dark:bg-background/80 md:hidden pb-safe",
         className,
       )}
       aria-label="Hauptnavigation"
     >
-      <div className="mx-auto grid max-w-lg grid-cols-5 gap-0.5">
+      <div className="mx-auto grid w-full min-w-0 max-w-lg grid-cols-5 gap-0.5 overflow-hidden">
         {items.map((item) => {
           const isActive =
             pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
@@ -201,10 +202,10 @@ export function DashboardMobileBottomNav({ role, className }: { role: string; cl
               href={item.href}
               className={clsx(
                 "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1 text-[10px] font-semibold leading-tight transition-transform duration-100 active:scale-95",
-                isActive ? "bg-primary/12 text-primary" : "text-muted-foreground",
+                isActive ? "bg-brand/12 text-brand" : "text-muted-foreground",
               )}
             >
-              <item.icon className="h-6 w-6 shrink-0 stroke-[1.75]" aria-hidden />
+              <SafeLucideIcon icon={item.icon} className="h-6 w-6 shrink-0 stroke-[1.75]" />
               <span className="line-clamp-2 text-center">{item.label}</span>
             </Link>
           );

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { getInsightsForOwner } from "@/lib/actions/insights";
 import type { Insight, InsightSeverity, InsightSource } from "@/lib/ai/insights";
+import { SafeLucideIcon } from "@/lib/icons/safe-lucide";
 
 /**
  *  VREMA Insights – Dashboard-Widget der Native Core AI.
@@ -112,19 +113,19 @@ export async function VremaInsightsCard() {
 
 function InsightItem({ insight }: { insight: Insight }) {
   const tone = severityTone(insight.severity);
-  const SourceIcon = sourceIcon(insight.source);
-  const SeverityIcon = severityIcon(insight.severity);
+  const sourceIconComponent = sourceIcon(insight.source);
+  const severityIconComponent = severityIcon(insight.severity);
 
   return (
     <li className={`rounded-xl border ${tone.ring} ${tone.bg} px-4 py-3`}>
       <div className="flex items-start gap-3">
         <span className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${tone.iconBg}`}>
-          <SourceIcon className={`h-3.5 w-3.5 ${tone.iconText}`} aria-hidden />
+          <SafeLucideIcon icon={sourceIconComponent} className={`h-3.5 w-3.5 ${tone.iconText}`} />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <p className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-              <SeverityIcon className={`h-3.5 w-3.5 ${tone.iconText}`} aria-hidden />
+              <SafeLucideIcon icon={severityIconComponent} className={`h-3.5 w-3.5 ${tone.iconText}`} />
               {insight.title}
             </p>
             <span className="font-mono text-xs font-bold tabular-nums text-foreground">{insight.metric}</span>

@@ -90,13 +90,13 @@ export function DashboardLayoutClient({
         <main
           ref={mainScrollRef}
           className={clsx(
-            "dashboard-touch-scroll native-app-tap relative flex-1 min-h-0 min-w-0 max-w-full overflow-x-clip overflow-y-auto overscroll-y-contain overscroll-x-none overscroll-behavior-y-contain touch-manipulation pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-0",
+            "dashboard-touch-scroll native-app-tap relative w-full max-w-full flex-1 min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-y-contain overscroll-x-none overscroll-behavior-y-contain touch-pan-y pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-0",
             "px-4 max-md:pl-[max(1rem,env(safe-area-inset-left,0px))] max-md:pr-[max(1rem,env(safe-area-inset-right,0px))] sm:px-2 md:px-8",
             "pb-[max(5.75rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] md:pb-6",
           )}
         >
           <DashboardPullToRefresh scrollRef={mainScrollRef} />
-          <div className="dashboard-shell w-full min-w-0 max-w-full overflow-x-clip">
+          <div className="dashboard-shell w-full min-w-0 max-w-full overflow-x-hidden">
           {unreadReplies > 0 ? (
             <div className="no-print mb-4 min-w-0 max-w-full rounded-2xl border border-brand/25 bg-brand-soft/80 px-4 py-3 text-sm text-foreground dark:border-white/10 dark:bg-brand/18 md:mb-5">
               <p className="font-medium">Du hast eine Antwort auf dein Support-Ticket erhalten.</p>
