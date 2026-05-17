@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -107,7 +108,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
         setSuccess(`${ids.length} Auszahlung(en) als erledigt markiert.`);
         router.refresh();
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Aktion fehlgeschlagen.");
+        setError(userErrorMessage(e, "Aktion fehlgeschlagen."));
       }
     });
   };
@@ -128,7 +129,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
         setSuccess("Partner angelegt. Code und Link unten kopieren.");
         router.refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Anlegen fehlgeschlagen.");
+        setError(userErrorMessage(err, "Anlegen fehlgeschlagen."));
       }
     });
   };

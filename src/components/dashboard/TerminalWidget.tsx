@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useEffect, useState, useTransition, useOptimistic } from "react";
 import { useRouter } from "next/navigation";
@@ -108,7 +109,7 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
           await runAfterSuccess("Eingestempelt.");
         }
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "Fehler beim Einstempeln");
+        setError(userErrorMessage(e, "Fehler beim Einstempeln"));
       }
     });
   };
@@ -125,7 +126,7 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
         await clockOut();
         await runAfterSuccess("Ausgestempelt.");
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "Fehler beim Ausstempeln");
+        setError(userErrorMessage(e, "Fehler beim Ausstempeln"));
       }
     });
   };
@@ -144,7 +145,7 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
         await toggleBreak();
         await runAfterSuccess(next ? "Pause gestartet." : "Pause beendet.");
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "Fehler beim Pausenwechsel");
+        setError(userErrorMessage(e, "Fehler beim Pausenwechsel"));
       }
     });
   };

@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -54,7 +55,7 @@ export function ProfileAvatarForm({ imageUrl }: { imageUrl: string | null }) {
         setTimeout(() => setSuccess(false), 2500);
         router.refresh();
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Upload fehlgeschlagen.");
+        setError(userErrorMessage(err, "Upload fehlgeschlagen."));
       }
     });
   };
@@ -69,7 +70,7 @@ export function ProfileAvatarForm({ imageUrl }: { imageUrl: string | null }) {
         setTimeout(() => setSuccess(false), 2500);
         router.refresh();
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Konnte Profilbild nicht entfernen.");
+        setError(userErrorMessage(err, "Konnte Profilbild nicht entfernen."));
       }
     });
   };

@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { motion } from "framer-motion";
@@ -307,7 +308,7 @@ export function TeamList({
                                   show("Wochenstunden gespeichert.", "success");
                                 } catch (err) {
                                   const message =
-                                    err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
+                                    userErrorMessage(err, "Speichern fehlgeschlagen.");
                                   setFeedback(message);
                                   show(message, "error");
                                 }
@@ -354,7 +355,7 @@ export function TeamList({
                                   show("Stundenlohn gespeichert.", "success");
                                 } catch (err) {
                                   const message =
-                                    err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
+                                    userErrorMessage(err, "Speichern fehlgeschlagen.");
                                   setFeedback(message);
                                   show(message, "error");
                                 }
@@ -525,7 +526,7 @@ export function TeamList({
                                 show("Wochenstunden gespeichert.", "success");
                               } catch (err) {
                                 const message =
-                                  err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
+                                  userErrorMessage(err, "Speichern fehlgeschlagen.");
                                 setFeedback(message);
                                 show(message, "error");
                               }
@@ -574,7 +575,7 @@ export function TeamList({
                                   show("Stundenlohn gespeichert.", "success");
                                 } catch (err) {
                                   const message =
-                                    err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
+                                    userErrorMessage(err, "Speichern fehlgeschlagen.");
                                   setFeedback(message);
                                   show(message, "error");
                                 }

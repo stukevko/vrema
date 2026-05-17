@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -125,7 +126,7 @@ export function BigClockButton({
                     toast.success("Wieder eingestempelt.");
                     router.refresh();
                   } catch (e: unknown) {
-                    toast.error(e instanceof Error ? e.message : "Konnte Stempel nicht wiederherstellen.");
+                    toast.error(userErrorMessage(e, "Konnte Stempel nicht wiederherstellen."));
                   }
                 });
               },
@@ -133,7 +134,7 @@ export function BigClockButton({
           });
           router.refresh();
         } catch (e: unknown) {
-          toast.error(e instanceof Error ? e.message : "Konnte nicht ausstempeln.");
+          toast.error(userErrorMessage(e, "Konnte nicht ausstempeln."));
           router.refresh();
         }
       });
@@ -156,7 +157,7 @@ export function BigClockButton({
         }
         router.refresh();
       } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : "Konnte nicht einstempeln.");
+        toast.error(userErrorMessage(e, "Konnte nicht einstempeln."));
         router.refresh();
       }
     });
@@ -179,7 +180,7 @@ export function BigClockButton({
         });
         router.refresh();
       } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : "Konnte Pause nicht ändern.");
+        toast.error(userErrorMessage(e, "Konnte Pause nicht ändern."));
         router.refresh();
       }
     });

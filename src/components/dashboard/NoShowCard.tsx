@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useEffect, useState, useTransition } from "react";
 import { AlertOctagon, BellRing, CheckCircle2 } from "lucide-react";
@@ -35,7 +36,7 @@ export function NoShowCard() {
         setReminded((prev) => new Set(prev).add(shiftId));
         show("Erinnerung versendet.", "success");
       } catch (e) {
-        show(e instanceof Error ? e.message : "Erinnerung fehlgeschlagen.", "error");
+        show(userErrorMessage(e, "Erinnerung fehlgeschlagen."), "error");
       }
     });
   }

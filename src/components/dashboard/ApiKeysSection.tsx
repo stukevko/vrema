@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
 import { createApiKey, deleteApiKey, revokeApiKey } from "@/lib/actions/api-keys";
@@ -54,7 +55,7 @@ export function ApiKeysSection({ apiKeys }: Props) {
         setName("");
         show("API-Key erstellt — Klartext wird nur einmal angezeigt.", "success");
       } catch (err) {
-        show(err instanceof Error ? err.message : "Erstellung fehlgeschlagen.", "error");
+        show(userErrorMessage(err, "Erstellung fehlgeschlagen."), "error");
       }
     });
   };
@@ -65,7 +66,7 @@ export function ApiKeysSection({ apiKeys }: Props) {
         await revokeApiKey(id);
         show("Key deaktiviert.", "success");
       } catch (err) {
-        show(err instanceof Error ? err.message : "Fehler beim Revoken.", "error");
+        show(userErrorMessage(err, "Fehler beim Revoken."), "error");
       }
     });
   };
@@ -77,7 +78,7 @@ export function ApiKeysSection({ apiKeys }: Props) {
         await deleteApiKey(id);
         show("Key gelöscht.", "success");
       } catch (err) {
-        show(err instanceof Error ? err.message : "Fehler beim Löschen.", "error");
+        show(userErrorMessage(err, "Fehler beim Löschen."), "error");
       }
     });
   };

@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
 import { requestSickLeave, requestVacation } from "@/lib/actions/vacation";
@@ -39,7 +40,7 @@ export function VacationRequestForm() {
         setSuccess(true);
         form.reset();
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Fehler beim Einreichen");
+        setError(userErrorMessage(err, "Fehler beim Einreichen"));
       }
     });
   };

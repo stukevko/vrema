@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useTransition, useState } from "react";
 import Link from "next/link";
@@ -56,7 +57,7 @@ export function BlogAdminPanel({
           router.refresh();
         }
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Speichern fehlgeschlagen.");
+        setError(userErrorMessage(err, "Speichern fehlgeschlagen."));
       }
     });
   };
@@ -70,7 +71,7 @@ export function BlogAdminPanel({
         router.replace("/dashboard/super-admin/blog");
         router.refresh();
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Löschen fehlgeschlagen.");
+        setError(userErrorMessage(err, "Löschen fehlgeschlagen."));
       }
     });
   };

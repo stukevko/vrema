@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { Suspense, useState, useTransition } from "react";
 import Link from "next/link";
@@ -36,7 +37,7 @@ function ResetPasswordForm() {
         show("Passwort erfolgreich aktualisiert. Sie können sich jetzt anmelden.", "success");
         setTimeout(() => router.push("/auth/login"), 1200);
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Reset fehlgeschlagen.";
+        const message = userErrorMessage(err, "Reset fehlgeschlagen.");
         show(message, "error");
       }
     });

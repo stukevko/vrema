@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
 import { changePassword } from "@/lib/actions/settings";
@@ -34,7 +35,7 @@ export function PasswordChangeForm() {
         (e.target as HTMLFormElement).reset();
         setTimeout(() => setSuccess(false), 4000);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Fehler beim Ändern.");
+        setError(userErrorMessage(err, "Fehler beim Ändern."));
       }
     });
   };

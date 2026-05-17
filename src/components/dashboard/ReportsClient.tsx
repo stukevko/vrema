@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -851,7 +852,7 @@ export function ReportsClient({
         show(`PDF-Report wurde erfolgreich an ${recipientEmail} versendet.`, "success");
         setShowPayrollModal(false);
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
+        show(userErrorMessage(err, "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen."), "error");
       }
     });
   };
@@ -899,7 +900,7 @@ export function ReportsClient({
       URL.revokeObjectURL(url);
       show(`DATEV-CSV wurde heruntergeladen (${rowsCount} Zeilen).`, "success");
     } catch (err: unknown) {
-      show(err instanceof Error ? err.message : "DATEV-Export fehlgeschlagen.", "error");
+      show(userErrorMessage(err, "DATEV-Export fehlgeschlagen."), "error");
     } finally {
       setIsDatevDownloading(false);
     }
@@ -934,7 +935,7 @@ export function ReportsClient({
         show("Eintrag aktualisiert und protokolliert.", "success");
         setEditingLog(null);
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
+        show(userErrorMessage(err, "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen."), "error");
       }
     });
   };
@@ -963,7 +964,7 @@ export function ReportsClient({
         });
         show("Fehlender Tag wurde korrigiert.", "success");
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
+        show(userErrorMessage(err, "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen."), "error");
       }
     });
   };
@@ -979,7 +980,7 @@ export function ReportsClient({
         await deleteWorkLogByManager(log.id, reason.trim());
         show("Eintrag gelöscht.", "success");
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
+        show(userErrorMessage(err, "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen."), "error");
       }
     });
   };
@@ -1016,7 +1017,7 @@ export function ReportsClient({
         setRequestReason("");
         setRequestNote("");
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
+        show(userErrorMessage(err, "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen."), "error");
       }
     });
   };
@@ -1044,7 +1045,7 @@ export function ReportsClient({
         );
         setCorrectionDecision(null);
       } catch (err: unknown) {
-        show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden.", "error");
+        show(userErrorMessage(err, "Die Aktion konnte nicht abgeschlossen werden."), "error");
       }
     });
   };
@@ -1283,7 +1284,7 @@ export function ReportsClient({
                           show("Stunden für den Monat bestätigt.", "success");
                           router.refresh();
                         } catch (err: unknown) {
-                          show(err instanceof Error ? err.message : "Bestätigung fehlgeschlagen.", "error");
+                          show(userErrorMessage(err, "Bestätigung fehlgeschlagen."), "error");
                         }
                       });
                     }}

@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -86,7 +87,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
         }
         setDecision(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Aktion konnte nicht abgeschlossen werden.");
+        setError(userErrorMessage(err, "Aktion konnte nicht abgeschlossen werden."));
       }
     });
   };

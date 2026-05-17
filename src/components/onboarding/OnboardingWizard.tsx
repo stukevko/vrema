@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -92,7 +93,7 @@ export function OnboardingWizard({ companyName, initial }: Props) {
         }
         next();
       } catch (e) {
-        show(e instanceof Error ? e.message : "Speichern fehlgeschlagen.", "error");
+        show(userErrorMessage(e, "Speichern fehlgeschlagen."), "error");
       }
     });
   }

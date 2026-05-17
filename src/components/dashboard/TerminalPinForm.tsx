@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
 import { KeyRound, Loader2 } from "lucide-react";
@@ -37,7 +38,7 @@ export function TerminalPinForm() {
         setPin("");
         setConfirmPin("");
       } catch (err) {
-        const message = err instanceof Error ? err.message : "PIN konnte nicht gespeichert werden.";
+        const message = userErrorMessage(err, "PIN konnte nicht gespeichert werden.");
         setError(message);
         show(message, "error");
       }

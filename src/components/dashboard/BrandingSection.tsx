@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useMemo, useState, useTransition } from "react";
 import { updateBranding } from "@/lib/actions/branding";
@@ -42,7 +43,7 @@ export function BrandingSection({ initial }: Props) {
         await updateBranding({ brandColor: light, brandColorDark: dark });
         show("Branding gespeichert — das Team sieht den neuen Look nach dem nächsten Seitenaufruf.", "success");
       } catch (err) {
-        show(err instanceof Error ? err.message : "Speichern fehlgeschlagen.", "error");
+        show(userErrorMessage(err, "Speichern fehlgeschlagen."), "error");
       }
     });
   };
@@ -55,7 +56,7 @@ export function BrandingSection({ initial }: Props) {
         setDark(DEFAULT_DARK);
         show("Auf VREMA-Standard zurückgesetzt.", "success");
       } catch (err) {
-        show(err instanceof Error ? err.message : "Reset fehlgeschlagen.", "error");
+        show(userErrorMessage(err, "Reset fehlgeschlagen."), "error");
       }
     });
   };

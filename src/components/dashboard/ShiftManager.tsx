@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Drawer } from "vaul";
@@ -945,7 +946,7 @@ export function ShiftManager({
         });
         setMessage(`Schicht gesetzt: ${DAY_LABELS[timelineDay]} (${startTimeValue}-${endTimeValue}).`);
       } catch (e: unknown) {
-        setMessage(e instanceof Error ? e.message : "Speichern fehlgeschlagen.");
+        setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
       }
     });
   };
@@ -1182,7 +1183,7 @@ export function ShiftManager({
         setMessage(`Schicht für ${DAY_LABELS[dayOfWeek]} gesetzt (${startTime}-${endTime}).`);
         setRecentDayAction({ dayOfWeek, action: "saved" });
       } catch (e: unknown) {
-        setMessage(e instanceof Error ? e.message : "Speichern fehlgeschlagen.");
+        setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
       }
     });
   };
@@ -1199,7 +1200,7 @@ export function ShiftManager({
         await applyStandardWeek({ userId: selectedUserId, weekIndex: selectedWeekIndex, startTime, endTime });
         setMessage("Standardwoche (Mo-Fr) gespeichert.");
       } catch (e: unknown) {
-        setMessage(e instanceof Error ? e.message : "Speichern fehlgeschlagen.");
+        setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
       }
     });
   };
@@ -1213,7 +1214,7 @@ export function ShiftManager({
         const result = await copyWeekToAllMembers(selectedUserId);
         setMessage(`Woche auf ${result.copiedTo} Mitarbeiter übertragen.`);
       } catch (e: unknown) {
-        setMessage(e instanceof Error ? e.message : "Übertragen fehlgeschlagen.");
+        setMessage(userErrorMessage(e, "Übertragen fehlgeschlagen."));
       }
     });
   };
@@ -1248,7 +1249,7 @@ export function ShiftManager({
         router.refresh();
       } catch (e: unknown) {
         setAutopilotReport(null);
-        setMessage(e instanceof Error ? e.message : "Autopilot fehlgeschlagen.");
+        setMessage(userErrorMessage(e, "Autopilot fehlgeschlagen."));
       } finally {
         setAutopilotBusy(false);
       }
@@ -1275,7 +1276,7 @@ export function ShiftManager({
         router.refresh();
         setMessage("Autopilot-Entwürfe übernommen.");
       } catch (e: unknown) {
-        setMessage(e instanceof Error ? e.message : "Freigabe fehlgeschlagen.");
+        setMessage(userErrorMessage(e, "Freigabe fehlgeschlagen."));
       }
     });
   };
@@ -1290,7 +1291,7 @@ export function ShiftManager({
         router.refresh();
         setMessage("Entwürfe verworfen.");
       } catch (e: unknown) {
-        setMessage(e instanceof Error ? e.message : "Verwerfen fehlgeschlagen.");
+        setMessage(userErrorMessage(e, "Verwerfen fehlgeschlagen."));
       }
     });
   };
@@ -1612,7 +1613,7 @@ export function ShiftManager({
                               router.refresh();
                               setMessage(`Schicht für ${row.displayName} angelegt (${row.startTime}–${row.endTime}).`);
                             } catch (e: unknown) {
-                              setMessage(e instanceof Error ? e.message : "Speichern fehlgeschlagen.");
+                              setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
                             }
                           });
                         }}
@@ -2738,9 +2739,10 @@ export function ShiftManager({
                                       });
                                     } catch (err: unknown) {
                                       setMessage(
-                                        err instanceof Error
-                                          ? err.message
-                                          : "Schicht konnte nicht gelöscht werden. Bitte erneut versuchen."
+                                        userErrorMessage(
+                                          err,
+                                          "Schicht konnte nicht gelöscht werden. Bitte erneut versuchen.",
+                                        ),
                                       );
                                     }
                                   });
@@ -3201,7 +3203,7 @@ export function ShiftManager({
                   setShiftEdit(null);
                   setMessage("Schicht gespeichert.");
                 } catch (err: unknown) {
-                  setMessage(err instanceof Error ? err.message : "Speichern fehlgeschlagen.");
+                  setMessage(userErrorMessage(err, "Speichern fehlgeschlagen."));
                 }
               });
             }
@@ -3264,7 +3266,7 @@ export function ShiftManager({
                       setShiftEdit(null);
                       setMessage("Schicht gespeichert.");
                     } catch (err: unknown) {
-                      setMessage(err instanceof Error ? err.message : "Speichern fehlgeschlagen.");
+                      setMessage(userErrorMessage(err, "Speichern fehlgeschlagen."));
                     }
                   });
                 }}
@@ -3287,7 +3289,7 @@ export function ShiftManager({
                       setShiftEdit(null);
                       setMessage("Schicht gelöscht.");
                     } catch (err: unknown) {
-                      setMessage(err instanceof Error ? err.message : "Löschen fehlgeschlagen.");
+                      setMessage(userErrorMessage(err, "Löschen fehlgeschlagen."));
                     }
                   });
                 }}

@@ -1,5 +1,6 @@
 "use client";
 
+import { userErrorMessage } from "@/lib/errors/user-message";
 import { useTransition } from "react";
 import Link from "next/link";
 import { createCompanyBySuperAdmin, deleteCompanyBySuperAdmin, updateCompanyBySuperAdmin } from "@/lib/actions/super-admin";
@@ -139,7 +140,7 @@ export function SuperAdminInlinePanel({
               );
               form.reset();
             } catch (err: unknown) {
-              setResultMsg(err instanceof Error ? `Fehler: ${err.message}` : "Fehler beim Erstellen.");
+              setResultMsg(userErrorMessage(err, "Firma konnte nicht erstellt werden."));
             }
           });
         }}

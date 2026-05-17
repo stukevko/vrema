@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
 import { updateCompanySettings } from "@/lib/actions/settings";
@@ -80,7 +81,7 @@ export function CompanySettingsForm({ company }: Props) {
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Fehler beim Speichern.");
+        setError(userErrorMessage(err, "Fehler beim Speichern."));
       }
     });
   };

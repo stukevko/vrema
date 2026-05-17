@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { toggleClockForUser } from "@/lib/worklogs/clock-core";
 import { checkClockIpAllowlist, getClientIpFromHeaders } from "@/lib/security/ip-allowlist";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 export async function validatePinAndClock(companySlug: string, pin: string) {
   const normalizedPin = pin.trim();
@@ -75,7 +76,7 @@ export async function validatePinAndClock(companySlug: string, pin: string) {
   } catch (error: unknown) {
     return {
       status: "error" as const,
-      message: error instanceof Error ? error.message : "Stempeln fehlgeschlagen.",
+      message: userErrorMessage(error, "Stempeln fehlgeschlagen."),
     };
   }
 

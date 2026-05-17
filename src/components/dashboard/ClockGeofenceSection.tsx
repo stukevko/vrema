@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
 import { updateClockGeofence } from "@/lib/actions/clock-geofence";
@@ -46,7 +47,7 @@ export function ClockGeofenceSection({ initial }: Props) {
           "success",
         );
       } catch (err) {
-        show(err instanceof Error ? err.message : "Speichern fehlgeschlagen.", "error");
+        show(userErrorMessage(err, "Speichern fehlgeschlagen."), "error");
       }
     });
   };

@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useRef, useState } from "react";
 import { Send } from "lucide-react";
@@ -28,7 +29,7 @@ export function SupportTicketCreateForm({
           form.reset();
           onSuccess?.();
         } catch (err: unknown) {
-          onError?.(err instanceof Error ? err.message : "Ticket konnte nicht erstellt werden.");
+          onError?.(userErrorMessage(err, "Ticket konnte nicht erstellt werden."));
         } finally {
           setIsSubmitting(false);
         }

@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/tenant-guard";
 import { inviteEmployeeForCompany } from "@/lib/actions/team";
 import { parseCsv, diagnoseRows, type ImportRowDiagnosis } from "@/lib/team/csv-import";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 /**
  *  Preview ohne Schreibvorgänge – frontend rendert die Diagnose-Tabelle daraus.
@@ -94,7 +95,7 @@ export async function commitTeamImport(csv: string): Promise<{
       imported += 1;
     } catch (e) {
       failed += 1;
-      failures.push({ email: row.email, reason: e instanceof Error ? e.message : "Unbekannter Fehler" });
+      failures.push({ email: row.email, reason: userErrorMessage(e, "Unbekannter Fehler") });
     }
   }
 

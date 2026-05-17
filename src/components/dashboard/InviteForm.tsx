@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -35,7 +36,7 @@ export function InviteForm() {
         setResult({ name: user.name ?? "", email: user.email, tempPassword, terminalPin });
         form.reset();
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Fehler beim Einladen.");
+        setError(userErrorMessage(err, "Fehler beim Einladen."));
       }
     });
   };

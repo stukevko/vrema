@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
 import { CheckCircle2, AlertTriangle, AlertOctagon, Upload, Download } from "lucide-react";
@@ -42,7 +43,7 @@ export function TeamCsvImport() {
         setRows(res.rows);
         setSummary({ ok: res.okCount, warn: res.warnCount, err: res.errorCount });
       } catch (e) {
-        show(e instanceof Error ? e.message : "Vorschau fehlgeschlagen.", "error");
+        show(userErrorMessage(e, "Vorschau fehlgeschlagen."), "error");
       }
     });
   }
@@ -64,7 +65,7 @@ export function TeamCsvImport() {
         setRows(null);
         setSummary(null);
       } catch (e) {
-        show(e instanceof Error ? e.message : "Import fehlgeschlagen.", "error");
+        show(userErrorMessage(e, "Import fehlgeschlagen."), "error");
       }
     });
   }

@@ -1,4 +1,5 @@
 "use client";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useOptimistic, useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -64,7 +65,7 @@ export function ActiveShiftTasks({ initial }: { initial: Initial }) {
 
         await router.refresh();
       } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : "Konnte nicht speichern.");
+        toast.error(userErrorMessage(e, "Konnte nicht speichern."));
         await router.refresh();
       } finally {
         setPendingId(null);

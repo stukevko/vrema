@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import { berlinStartOfDayFromInstant, berlinStartOfDayFromIsoDate } from "@/lib/shift-tasks/berlin-day";
+import { userErrorMessage } from "@/lib/errors/user-message";
 
 export type GenerateTaskListResult =
   | { ok: true; shiftTaskListId: string; created: boolean; skipped: false }
@@ -106,7 +107,7 @@ export async function generateTaskListForShiftCore(params: {
     });
     return { ok: true, shiftTaskListId: list.id, created: true, skipped: false };
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Unbekannter Fehler";
+    const message = userErrorMessage(e, "Unbekannter Fehler");
     return { ok: false, error: message };
   }
 }
