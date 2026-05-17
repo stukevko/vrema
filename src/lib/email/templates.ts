@@ -261,3 +261,47 @@ export function verificationEmailHtml(data: {
 
   return layout("VREMA - E-Mail bestätigen", body);
 }
+
+// ── No-Show / Schicht-Erinnerung ─────────────────────────────────────────────
+export function noShowReminderEmailHtml(data: {
+  recipientName: string;
+  companyName: string;
+  startTime: string;
+  endTime: string;
+  minutesLate: number;
+  clockInUrl: string;
+}): string {
+  const body = /* html */ `
+    <h1 style="color:${BASE.textPrimary};font-size:22px;font-weight:700;margin:0 0 8px;">
+      Schicht hat begonnen
+    </h1>
+    <p style="color:${BASE.textMuted};font-size:14px;margin:0 0 28px;line-height:1.6;">
+      Hi <strong style="color:${BASE.textPrimary};">${data.recipientName}</strong>,<br/>
+      laut Plan bei <strong style="color:${BASE.textPrimary};">${data.companyName}</strong> hast du eine laufende Schicht,
+      bist aber noch nicht eingestempelt.
+    </p>
+
+    <div style="background:${BASE.bg};border:1px solid #7f1d1d;border-radius:12px;padding:20px 24px;margin-bottom:28px;">
+      <div style="color:#f87171;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">
+        # schicht.status
+      </div>
+      <table cellpadding="0" cellspacing="0" width="100%">
+        ${kv("schicht", `${data.startTime} – ${data.endTime}`)}
+        ${kv("überfällig", `${data.minutesLate} Min`)}
+        ${kv("aktion", "Bitte jetzt einstempeln")}
+      </table>
+    </div>
+
+    <table cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="background:${BASE.accent};border-radius:10px;">
+          <a href="${data.clockInUrl}"
+             style="display:inline-block;padding:12px 28px;color:#000;font-weight:700;font-size:14px;text-decoration:none;">
+            $ clock-in --now →
+          </a>
+        </td>
+      </tr>
+    </table>`;
+
+  return layout("Erinnerung: Bitte einstempeln – Vrema", body);
+}

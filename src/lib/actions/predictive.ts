@@ -10,6 +10,7 @@ import {
   type StaffingRecommendation,
   type WeatherCondition,
 } from "@/lib/predictive/staffing";
+import { buildForecastHorizon, type ForecastWeekSlot } from "@/lib/planning/forecast-horizon";
 import { berlinDateKeyToDayOfWeek } from "@/lib/time/timezone";
 import {
   getHolidayForDate,
@@ -55,11 +56,50 @@ function extractForecast(payload: unknown): Map<string, WeatherForecastDay> {
   return out;
 }
 
+export type StaffingForecastHorizon = {
+  cycleWeeks: number;
+  weeks: Array<
+    ForecastWeekSlot & {
+      days: Awaited<ReturnType<typeof getStaffingRecommendations>>;
+    }
+  >;
+};
+
 /**
- *  Liefert pro Tag eine Auslastungs-Empfehlung für die kommenden 7 Tage.
- *  Wird vom Schichtplaner (Pille pro Tagesspalte) und vom Dashboard genutzt.
+ *  Vorwärts gerichtete Personal-Vorhersage für alle relevanten Planungswochen.
+ *  (Nächste KW ab Fr/Sa/So, sonst aktuelle KW + Zyklus.)
  */
-export async function getStaffingRecommendations(weekStart: string): Promise<
+export async function getStaffingForecastHorizon(): Promise<StaffingForecastHorizon> {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
+    throw new Error("Keine Berechtigung.");
+  }
+
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+    select: { shiftCycleWeeks: true },
+  });
+  const cycleWeeks = company?.shiftCycleWeeks ?? 1;
+  const slots = buildForecastHorizon(cycleWeeks);
+
+  const weeks = await Promise.all(
+    slots.map(async (slot) => ({
+      ...slot,
+      days: await getStaffingRecommendations(slot.weekStart, { weekIndex: slot.weekIndex }),
+    })),
+  );
+
+  return { cycleWeeks, weeks };
+}
+
+/**
+ *  Liefert pro Tag eine Auslastungs-Empfehlung für 7 Tage ab `weekStart`.
+ *  Optional gefiltert auf eine Planer-Zykluswoche (`weekIndex`).
+ */
+export async function getStaffingRecommendations(
+  weekStart: string,
+  options?: { weekIndex?: number },
+): Promise<
   Array<{
     date: string;
     dayOfWeek: number;
@@ -88,7 +128,7 @@ export async function getStaffingRecommendations(weekStart: string): Promise<
   // Firmen-Profil (Industry + Region) für Predictive v2
   const companyProfile = await db.company.findUnique({
     where: { id: companyId },
-    select: { industry: true, region: true },
+    select: { industry: true, region: true, shiftCycleWeeks: true },
   });
   const industry: IndustryProfile | undefined =
     (companyProfile?.industry as IndustryProfile | null) ?? undefined;
@@ -101,9 +141,17 @@ export async function getStaffingRecommendations(weekStart: string): Promise<
   });
   const forecast = extractForecast(weather?.payload ?? null);
 
-  // Geplante Schichten je Wochentag
+  const weekIndexFilter =
+    options?.weekIndex != null
+      ? Math.min(3, Math.max(1, Math.floor(options.weekIndex)))
+      : undefined;
+
+  // Geplante Schichten je Wochentag (nur die Zykluswoche, die wir vorhersagen)
   const shifts = await db.shift.findMany({
-    where: tenantWhere(companyId, { isDraft: false }),
+    where: tenantWhere(companyId, {
+      isDraft: false,
+      ...(weekIndexFilter != null ? { weekIndex: weekIndexFilter } : {}),
+    }),
     select: { dayOfWeek: true },
   });
   const plannedByDow = new Map<number, number>();

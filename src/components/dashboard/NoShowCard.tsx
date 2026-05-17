@@ -34,7 +34,7 @@ export function NoShowCard() {
       try {
         await sendNoShowReminder(shiftId);
         setReminded((prev) => new Set(prev).add(shiftId));
-        show("Erinnerung versendet.", "success");
+        show("E-Mail und App-Benachrichtigung gesendet.", "success");
       } catch (e) {
         show(userErrorMessage(e, "Erinnerung fehlgeschlagen."), "error");
       }
@@ -78,7 +78,7 @@ export function NoShowCard() {
                   className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-rose-600 px-3 text-xs font-bold text-white shadow-sm transition-[transform,box-shadow] hover:bg-rose-600/90 hover:shadow-md active:scale-[0.98] disabled:opacity-60"
                 >
                   <BellRing className="h-3.5 w-3.5" />
-                  Erinnerung senden
+                  Per E-Mail erinnern
                 </button>
               )}
             </li>

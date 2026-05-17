@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import { sendNoShowReminderEmail } from "@/lib/email/transactional";
 import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
 import { getBerlinDateKey, berlinDateKeyToDayOfWeek } from "@/lib/time/timezone";
 
@@ -85,9 +86,7 @@ export async function listNoShows(): Promise<NoShowEntry[]> {
 }
 
 /**
- *  Schickt eine Push/In-App-Notification an den Mitarbeiter mit Schicht-Details
- *  und Stempel-Link. Wir nutzen die existierende `Notification`-Tabelle,
- *  E-Mail bleibt für eine Folge-Etappe.
+ *  Erinnerung an fehlendes Einstempeln: In-App-Notification + E-Mail (Resend).
  */
 export async function sendNoShowReminder(shiftId: string): Promise<void> {
   const { companyId, role } = await requireTenant();
@@ -97,9 +96,31 @@ export async function sendNoShowReminder(shiftId: string): Promise<void> {
 
   const shift = await db.shift.findFirst({
     where: tenantWhere(companyId, { id: shiftId }),
-    select: { id: true, userId: true, startTime: true, endTime: true, user: { select: { name: true } } },
+    select: {
+      id: true,
+      userId: true,
+      startTime: true,
+      endTime: true,
+      user: { select: { name: true, email: true } },
+      company: { select: { name: true } },
+    },
   });
   if (!shift) throw new Error("Schicht nicht gefunden.");
+  if (!shift.user?.email?.trim()) {
+    throw new Error("Mitarbeiter hat keine E-Mail-Adresse hinterlegt.");
+  }
+
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Berlin",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const [hStr, mStr] = fmt.format(now).split(":");
+  const nowMinutes = Number(hStr) * 60 + Number(mStr);
+  const [sh, sm] = shift.startTime.split(":").map(Number);
+  const minutesLate = Math.max(0, nowMinutes - (sh * 60 + sm));
 
   await db.notification.create({
     data: {
@@ -110,6 +131,15 @@ export async function sendNoShowReminder(shiftId: string): Promise<void> {
       body: `Deine Schicht ${shift.startTime} – ${shift.endTime} hat begonnen. Bitte stempel dich jetzt ein.`,
       href: "/dashboard?action=clockin",
     },
+  });
+
+  await sendNoShowReminderEmail({
+    recipientName: shift.user.name?.trim() || "Team",
+    recipientEmail: shift.user.email.trim(),
+    companyName: shift.company.name,
+    startTime: shift.startTime,
+    endTime: shift.endTime,
+    minutesLate,
   });
 
   revalidatePath("/dashboard");

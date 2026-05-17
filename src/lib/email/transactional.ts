@@ -15,6 +15,7 @@ import {
   passwordResetEmailHtml,
   vacationStatusEmailHtml,
   verificationEmailHtml,
+  noShowReminderEmailHtml,
 } from "@/lib/email/templates";
 
 const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -148,6 +149,38 @@ export async function sendVacationStatusEmail(data: {
       decisionNote: data.decisionNote,
     }),
   );
+}
+
+// ─── No-Show / Schicht-Erinnerung ─────────────────────────────────────────────
+export async function sendNoShowReminderEmail(data: {
+  recipientName: string;
+  recipientEmail: string;
+  companyName: string;
+  startTime: string;
+  endTime: string;
+  minutesLate: number;
+}) {
+  if (!resendClient) {
+    throw new Error("E-Mail-Versand ist nicht eingerichtet. Bitte RESEND_API_KEY setzen.");
+  }
+  const clockInUrl = `${APP_URL}/dashboard?action=clockin`;
+  const { error } = await resendClient.emails.send({
+    from: FROM,
+    to: data.recipientEmail,
+    subject: `Erinnerung: Schicht ${data.startTime} – ${data.endTime} · ${data.companyName}`,
+    html: noShowReminderEmailHtml({
+      recipientName: data.recipientName,
+      companyName: data.companyName,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      minutesLate: data.minutesLate,
+      clockInUrl,
+    }),
+  });
+  if (error) {
+    console.error("[Resend] No-Show-Erinnerung fehlgeschlagen:", error);
+    throw new Error("E-Mail konnte nicht gesendet werden.");
+  }
 }
 
 // ─── E-Mail-Verifizierung ─────────────────────────────────────────────────────

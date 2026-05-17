@@ -11,37 +11,27 @@ import {
   Sparkles,
   Cpu,
 } from "lucide-react";
-import { getStaffingRecommendations } from "@/lib/actions/predictive";
-import { getBerlinDateKey } from "@/lib/time/timezone";
+import { getStaffingForecastHorizon } from "@/lib/actions/predictive";
 import type { WeatherCondition } from "@/lib/predictive/staffing";
 import { SafeLucideIcon } from "@/lib/icons/safe-lucide";
 
 /**
- * Dashboard-Widget: Wochen-Vorschau mit Personal-Empfehlung pro Tag.
- *  Server Component – fetched eigene Daten, fail-silent wenn keine Wetter-Cache vorhanden.
+ * Dashboard: Personal-Vorhersage **vorwärts** (kommende Planungswochen, nicht Vergangenheit).
  */
 export async function PredictiveStaffingCard() {
-  const today = new Date();
-  const day = getBerlinDateKey(today);
-  const [y, m, d] = day.split("-").map(Number);
-  const date = new Date(Date.UTC(y, m - 1, d));
-  const dayOfWeek = date.getUTCDay();
-  const offsetToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const mondayDate = new Date(date.getTime() + offsetToMonday * 86_400_000);
-  const weekStart = getBerlinDateKey(mondayDate);
-
-  let rows: Awaited<ReturnType<typeof getStaffingRecommendations>> | null = null;
+  let horizon: Awaited<ReturnType<typeof getStaffingForecastHorizon>> | null = null;
   try {
-    rows = await getStaffingRecommendations(weekStart);
+    horizon = await getStaffingForecastHorizon();
   } catch {
     return null;
   }
 
-  if (!rows || rows.length === 0) return null;
+  if (!horizon?.weeks.length) return null;
 
-  const nativeDays = rows.filter((r) => r.source === "native").length;
+  const allDays = horizon.weeks.flatMap((w) => w.days);
+  const nativeDays = allDays.filter((r) => r.source === "native").length;
   const usesNative = nativeDays > 0;
-  const weekLabel = formatWeekRangeLabel(weekStart);
+  const primary = horizon.weeks.find((w) => w.isPrimary) ?? horizon.weeks[0];
 
   return (
     <section
@@ -51,9 +41,15 @@ export async function PredictiveStaffingCard() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Brain className="h-4 w-4 text-brand" aria-hidden />
-          <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
-            Personal-Vorhersage · {weekLabel}
-          </h2>
+          <div>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
+              Personal-Vorhersage · Planung voraus
+            </h2>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Fokus: {primary.label}
+              {horizon.cycleWeeks > 1 ? ` · ${horizon.weeks.length}-Wochen-Zyklus` : ""}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <span
@@ -64,8 +60,8 @@ export async function PredictiveStaffingCard() {
             }`}
             title={
               usesNative
-                ? `${nativeDays} von ${rows.length} Tagen basieren auf deinen bisherigen Plänen.`
-                : "Noch wenig Planungsverlauf – Standard-Schätzung aus Branche und Wetter."
+                ? `${nativeDays} Tage basieren auf deinen bisherigen Plänen.`
+                : "Noch wenig Planungsverlauf – Schätzung aus Branche, Feiertagen und Wetter."
             }
           >
             <Cpu className="h-3 w-3" aria-hidden />
@@ -81,16 +77,36 @@ export async function PredictiveStaffingCard() {
         </div>
       </header>
 
-      <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-        {rows.map((r) => (
-          <DayPill key={r.date} {...r} />
+      <div className="mt-5 space-y-6">
+        {horizon.weeks.map((week) => (
+          <div key={week.weekStart}>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <h3
+                className={`text-xs font-bold uppercase tracking-widest ${
+                  week.isPrimary ? "text-brand" : "text-muted-foreground"
+                }`}
+              >
+                {week.isPrimary ? "Nächste Woche" : "Danach"} · {week.label}
+              </h3>
+              {horizon.cycleWeeks > 1 && (
+                <span className="rounded-full bg-foreground/[0.05] px-2 py-0.5 text-[10px] font-semibold text-muted-foreground dark:bg-white/[0.06]">
+                  Planer Woche {week.weekIndex}
+                </span>
+              )}
+            </div>
+            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+              {week.days.map((r) => (
+                <DayPill key={r.date} {...r} />
+              ))}
+            </ul>
+          </div>
         ))}
-      </ul>
+      </div>
 
       <p className="mt-4 text-[11px] text-muted-foreground">
         {usesNative
-          ? "Die Empfehlung berücksichtigt Wochentag, Wetter, Feiertage und dein Team. Tage ohne grünes Badge nutzen noch die Standard-Schätzung."
-          : "Empfehlung aus Branche, Feiertagen, Wetter und bisherigen Plänen. Nach einigen abgeschlossenen Wochenplänen wird sie genauer."}
+          ? "Vorhersage für die Wochen, die du jetzt planst – mit Wetter, Feiertagen und deinen bisherigen Plänen. Ab Freitag springt der Fokus automatisch auf die nächste Kalenderwoche."
+          : "Empfehlung für kommende Planungswochen (Branche, Feiertage, Wetter). Nach einigen abgeschlossenen Wochenplänen wird sie genauer."}
       </p>
     </section>
   );
@@ -103,7 +119,7 @@ function DayPill({
   holidayName,
   isBridge,
   source,
-}: Awaited<ReturnType<typeof getStaffingRecommendations>>[number]) {
+}: Awaited<ReturnType<typeof getStaffingForecastHorizon>>["weeks"][number]["days"][number]) {
   const formatted = new Intl.DateTimeFormat("de-DE", {
     weekday: "short",
     day: "2-digit",
@@ -159,13 +175,14 @@ function DayPill({
         )}
       </div>
       {holidayName ? (
-        <div className="mt-1 truncate text-[10px] font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300" title={holidayName}>
+        <div
+          className="mt-1 truncate text-[10px] font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300"
+          title={holidayName}
+        >
           {holidayName}
         </div>
       ) : isBridge ? (
-        <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-brand">
-          Brückentag
-        </div>
+        <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-brand">Brückentag</div>
       ) : (
         <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           {toneStyles.label}
@@ -210,17 +227,6 @@ function weatherIconFor(label: string) {
   if (lower.includes("schnee")) return Snowflake;
   if (lower.includes("sturm")) return Wind;
   return Cloud;
-}
-
-function formatWeekRangeLabel(weekStartIso: string): string {
-  const start = new Date(`${weekStartIso}T12:00:00Z`);
-  const end = new Date(start.getTime() + 6 * 86_400_000);
-  const fmt = new Intl.DateTimeFormat("de-DE", {
-    day: "2-digit",
-    month: "short",
-    timeZone: "Europe/Berlin",
-  });
-  return `${fmt.format(start)} – ${fmt.format(end)}`;
 }
 
 void (null as unknown as WeatherCondition);
