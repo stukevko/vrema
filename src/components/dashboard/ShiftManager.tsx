@@ -430,14 +430,14 @@ export function ShiftManager({
       .then((r) => r.json())
       .then((data: { week?: Array<DailyWeatherForecast | null>; mondayIso?: string; error?: string | null }) => {
         if (cancelled) return;
-        if (data.error === "no_api_key") {
-          setWeatherFetchErr("Wetter-Anzeige aus: API-Key nicht gesetzt (optional).");
+        if (data.error === "no_api_key" || data.error === "upstream") {
+          setWeatherFetchErr(null);
           setWeatherWeek([]);
           setWeatherMondayIso(null);
           return;
         }
         if (data.error === "no_location") {
-          setWeatherFetchErr(null);
+          setWeatherFetchErr("Für Wetter bitte PLZ oder Ort in den Einstellungen hinterlegen.");
           setWeatherWeek([]);
           setWeatherMondayIso(null);
           return;
@@ -446,7 +446,7 @@ export function ShiftManager({
         setWeatherMondayIso(typeof data.mondayIso === "string" ? data.mondayIso : null);
       })
       .catch(() => {
-        if (!cancelled) setWeatherFetchErr("Wetter: Abruf fehlgeschlagen.");
+        if (!cancelled) setWeatherFetchErr("Wetter gerade nicht verfügbar – bitte später erneut öffnen.");
       });
     return () => {
       cancelled = true;
@@ -1258,7 +1258,7 @@ export function ShiftManager({
   const onOptimizeWeekClick = () => {
     if (
       !window.confirm(
-        "„Woche optimieren“ startet den Planungs-Autopilot (Native AI / Heuristik): Entwurfs-Schichten für diese Planwoche werden neu erzeugt. Bereits vorhandene Entwürfe derselben Woche werden ersetzt. Fortfahren?"
+        "„Woche optimieren“ erstellt Entwurfs-Schichten für diese Planwoche neu. Bereits vorhandene Entwürfe derselben Woche werden ersetzt. Fortfahren?"
       )
     )
       return;
@@ -1461,7 +1461,7 @@ export function ShiftManager({
               <span className="block">Keine Schicht für {MOBILE_DAY_NAMES[mobileSelectedDay]}.</span>
               <span className="mt-3 inline-flex items-center justify-center gap-2 rounded-full border border-brand/30 bg-brand-soft px-3 py-1.5 text-xs font-semibold text-brand">
                 <Brain className="h-4 w-4 shrink-0" aria-hidden />
-                Native AI: passende Kolleg:innen vorschlagen
+                Vorschläge: passende Kolleg:innen
               </span>
             </button>
           ) : (
@@ -1555,10 +1555,10 @@ export function ShiftManager({
               className="fixed left-3 right-3 z-[52] max-h-[min(52vh,420px)] overflow-y-auto rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-pop)]"
               style={{ bottom: "max(5.75rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem))" }}
               role="dialog"
-              aria-label="Native AI Schnellvorschlag"
+              aria-label="Schichtvorschläge"
             >
               <div className="mb-3 flex items-center justify-between gap-2">
-                <p className="text-sm font-bold text-fg">AI-Quick-Suggest</p>
+                <p className="text-sm font-bold text-fg">Schichtvorschläge</p>
                 <button
                   type="button"
                   className="rounded-lg border border-line px-2 py-1 text-xs font-semibold text-fg-muted"
@@ -2585,10 +2585,10 @@ export function ShiftManager({
                             <div
                               className="absolute top-1.5 bottom-1.5 z-[9] flex items-center gap-1 rounded-lg border border-brand/35 bg-brand-soft px-2 text-[10px] font-semibold text-brand"
                               style={{ left: "0%", width: `${(shiftEnd / TIMELINE_TOTAL_MINUTES) * 100}%` }}
-                              title={`Next Day ${minutesToHHMM(0)}-${minutesToHHMM(shiftEnd)}`}
+                              title={`Nächster Tag ${minutesToHHMM(0)}–${minutesToHHMM(shiftEnd)}`}
                             >
                               <CornerDownRight className="h-3 w-3" />
-                              <span>Next Day</span>
+                              <span>Nächster Tag</span>
                             </div>
                           ) : null}
                           <div

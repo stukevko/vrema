@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/Card";
 
 export const metadata = {
   title: "Insights",
-  description: "VREMA Native AI – Muster und Empfehlungen aus Ihren Planungsdaten.",
+  description: "Muster und Empfehlungen aus Ihren Planungs- und Zeitdaten.",
 };
 
 export default async function InsightsPage() {
@@ -29,7 +29,7 @@ export default async function InsightsPage() {
             <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Insights</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {isManager
-                ? "Native AI: erkannte Muster aus Schichten, Zeiten und Abwesenheiten – ohne externe KI."
+                ? "Erkannte Muster aus Schichten, Zeiten und Abwesenheiten – berechnet aus Ihren eigenen Daten."
                 : "Kompakte Übersicht für dich – detaillierte Betriebs-Insights sieht deine Führungskraft im Team-Dashboard."}
             </p>
           </div>

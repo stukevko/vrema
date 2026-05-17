@@ -26,7 +26,7 @@ const INDUSTRY_OPTIONS: Array<{ value: IndustryValue; label: string; hint: strin
   { value: "CANTEEN", label: "Kantine / Gemeinschaftsverpflegung", hint: "Werktags Mittag, Wochenende ruhiger" },
   { value: "CLUB", label: "Veranstaltung / Club", hint: "Schwerpunkt Wochenende, längere Schichtfenster" },
   { value: "CATERING", label: "Catering / Events", hint: "Event-getrieben, unregelmäßige Spitzen" },
-  { value: "OTHER", label: "Sonstiges", hint: "Keine branchenspezifische Heuristik" },
+  { value: "OTHER", label: "Sonstiges", hint: "Allgemeines Betriebsprofil" },
 ];
 
 interface Props {
@@ -91,10 +91,10 @@ export function CompanySettingsForm({ company }: Props) {
         <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 flex gap-3">
           <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div className="text-sm text-foreground leading-snug">
-            <p className="font-semibold">Privacy by Design</p>
+            <p className="font-semibold">Datenschutz beim Stempeln</p>
             <p className="text-muted-foreground text-xs mt-1">
-              VREMA erfasst keine Standortdaten. Zeiterfassung erfolgt ohne GPS – 100 % DSGVO-konform ohne
-              Standort-Tracking.
+              VREMA erfasst keine GPS-Standorte. Die Zeiterfassung läuft ohne Ortungs-App – optional nur
+              über das Firmen-WLAN (siehe Standortprüfung unten).
             </p>
           </div>
         </div>
@@ -150,7 +150,7 @@ export function CompanySettingsForm({ company }: Props) {
           </div>
         </div>
         <p className="text-[10px] text-muted-foreground -mt-2 font-sans">
-          Für Wetter im Planer: OpenWeatherMap-API-Key in OPENWEATHER_API_KEY (Server). PLZ hat Vorrang vor Ort.
+          Für die Wetterzeile im Planer und die Personal-Empfehlung. PLZ hat Vorrang vor Ort.
         </p>
 
         {/* Betrieb & Standort – steuert Predictive- und AI-Heuristiken */}

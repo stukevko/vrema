@@ -30,7 +30,7 @@ export default async function AuthErrorPage({
             <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-danger/30 bg-danger-soft text-danger-foreground">
               <AlertTriangle className="h-5 w-5" aria-hidden />
             </span>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-danger-foreground">Auth-Fehler</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-danger-foreground">Anmeldung</p>
           </div>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">Anmeldung nicht möglich</h1>
           <p className="mt-2 text-sm text-fg-muted">{message}</p>

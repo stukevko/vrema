@@ -961,7 +961,7 @@ export function ReportsClient({
           note: (log.note ? `${log.note} | ` : "") + "[MANUELLE-KORREKTUR]",
           editReason: reason.trim(),
         });
-        show("ABSENT-Eintrag korrigiert.", "success");
+        show("Fehlender Tag wurde korrigiert.", "success");
       } catch (err: unknown) {
         show(err instanceof Error ? err.message : "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen.", "error");
       }
@@ -1073,9 +1073,9 @@ export function ReportsClient({
         logs,
       });
       setAIAnalysis(analysis);
-      show("Datenbasierte System-Analyse erfolgreich erstellt.", "success");
+      show("Auswertung wurde erstellt.", "success");
     } catch (err: unknown) {
-      show(err instanceof Error ? err.message : "Die System-Analyse konnte nicht erstellt werden. Bitte erneut versuchen.", "error");
+      show("Die Auswertung konnte nicht erstellt werden. Bitte erneut versuchen.", "error");
     } finally {
       setIsAIAnalyzing(false);
     }
@@ -1166,7 +1166,7 @@ export function ReportsClient({
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              {isAIAnalyzing ? "System analysiert..." : "System-Analyse"}
+              {isAIAnalyzing ? "Auswertung läuft …" : "Auswertung starten"}
             </button>
             <button
               type="button"
@@ -1302,8 +1302,8 @@ export function ReportsClient({
                 <Sparkles className="h-4 w-4" />
               </span>
               <div>
-                <p className="text-xs uppercase tracking-widest text-fg-muted">VREMA AI</p>
-                <h3 className="text-sm font-semibold text-fg">Datenbasierte System-Analyse</h3>
+                <p className="text-xs uppercase tracking-widest text-fg-muted">Hinweise</p>
+                <h3 className="text-sm font-semibold text-fg">Tipps aus deinen Betriebsdaten</h3>
               </div>
             </div>
 

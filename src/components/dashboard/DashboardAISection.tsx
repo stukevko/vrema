@@ -33,13 +33,8 @@ export function DashboardAISection({ children }: { children: React.ReactNode }) 
             <Sparkles className="h-4 w-4" aria-hidden />
           </span>
           <div className="min-w-0 text-left">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">VREMA AI</p>
-              <span className="rounded-full border border-warning/30 bg-warning-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-warning-foreground dark:border-white/10 dark:bg-warning/22">
-                Beta
-              </span>
-            </div>
-            <p className="text-sm font-semibold text-foreground">Datenbasierte System-Analyse</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Hinweise</p>
+            <p className="text-sm font-semibold text-foreground">Tipps aus deinen Betriebsdaten</p>
           </div>
         </div>
         <ChevronDown

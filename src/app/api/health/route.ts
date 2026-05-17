@@ -20,7 +20,7 @@ export async function GET() {
   const result: ComponentStatus[] = [];
 
   // API selbst → wir sind hier, also operational.
-  result.push({ id: "api", label: "API", state: "operational", latencyMs: 0 });
+  result.push({ id: "api", label: "Plattform", state: "operational", latencyMs: 0 });
 
   // Datenbank → SELECT 1
   try {
@@ -36,7 +36,7 @@ export async function GET() {
     id: "auth",
     label: "Anmeldung",
     state: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET ? "operational" : "degraded",
-    hint: !(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET) ? "Secret nicht gesetzt" : undefined,
+    hint: !(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET) ? "Anmeldung nicht vollständig eingerichtet" : undefined,
   });
 
   // Mail-Provider (Resend) konfiguriert?
@@ -44,7 +44,7 @@ export async function GET() {
     id: "mail",
     label: "E-Mail",
     state: process.env.RESEND_API_KEY ? "operational" : "degraded",
-    hint: process.env.RESEND_API_KEY ? undefined : "Resend nicht konfiguriert – Mails werden nicht versandt",
+    hint: process.env.RESEND_API_KEY ? undefined : "E-Mail-Versand ist derzeit nicht eingerichtet",
   });
 
   // VREMA Native AI – Teil des Codes, kein externer Dienst, also IMMER aktiv.
@@ -54,16 +54,16 @@ export async function GET() {
     await db.aiWeights.count();
     result.push({
       id: "native_ai",
-      label: "VREMA Native AI (Active)",
+      label: "Personal-Empfehlungen",
       state: "operational",
       latencyMs: Date.now() - t0,
     });
   } catch {
     result.push({
       id: "native_ai",
-      label: "VREMA Native AI (Active)",
+      label: "Personal-Empfehlungen",
       state: "degraded",
-      hint: "Lerntabelle nicht erreichbar – Empfehlungen laufen nur auf Live-Daten.",
+      hint: "Empfehlungen vorübergehend nur mit Standardwerten",
     });
   }
 

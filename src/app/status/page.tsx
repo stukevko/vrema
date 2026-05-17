@@ -14,7 +14,7 @@ const base = getSiteUrl();
 export const metadata: Metadata = {
   title: "System-Status · VREMA",
   description:
-    "Live-Status der VREMA-Plattform: API, Datenbank, Anmeldung, E-Mail-Versand und VREMA Native AI (On-Premise).",
+    "Live-Status der VREMA-Plattform: Anmeldung, Datenbank, E-Mail und Personal-Empfehlungen.",
   alternates: { canonical: `${base}/status` },
 };
 
@@ -94,7 +94,7 @@ export default async function StatusPage() {
                 Geprüft {new Date(health.checkedAt).toLocaleString("de-DE", { timeZone: "Europe/Berlin" })} · Antwortzeit {health.latencyMs} ms
               </p>
             ) : (
-              <p className="mt-1 text-xs text-muted-foreground">Health-Check konnte nicht ausgeführt werden.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Status konnte gerade nicht abgerufen werden.</p>
             )}
           </div>
         </div>
@@ -104,7 +104,7 @@ export default async function StatusPage() {
         {(health?.components ?? []).map((c) => {
           const styles =
             c.state === "operational"
-              ? { dot: "bg-emerald-500", text: "Operational" }
+              ? { dot: "bg-emerald-500", text: "In Betrieb" }
               : c.state === "degraded"
                 ? { dot: "bg-amber-500", text: "Eingeschränkt" }
                 : { dot: "bg-rose-500", text: "Ausfall" };

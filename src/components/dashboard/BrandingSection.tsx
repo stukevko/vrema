@@ -40,7 +40,7 @@ export function BrandingSection({ initial }: Props) {
     startTransition(async () => {
       try {
         await updateBranding({ brandColor: light, brandColorDark: dark });
-        show("Branding gespeichert — beim nächsten Reload sieht das Team den neuen Look.", "success");
+        show("Branding gespeichert — das Team sieht den neuen Look nach dem nächsten Seitenaufruf.", "success");
       } catch (err) {
         show(err instanceof Error ? err.message : "Speichern fehlgeschlagen.", "error");
       }

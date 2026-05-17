@@ -45,7 +45,7 @@ export function NoShowCard() {
       <header className="flex items-center gap-2">
         <AlertOctagon className="h-4 w-4 text-rose-700 dark:text-rose-300" aria-hidden />
         <h2 className="text-sm font-bold uppercase tracking-widest text-rose-800 dark:text-rose-200">
-          No-Show · {rows.length} offen
+          Nicht erschienen · {rows.length} offen
         </h2>
       </header>
       <ul className="mt-4 space-y-2">

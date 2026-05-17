@@ -27,8 +27,8 @@ function AIInsightsFailure() {
       <div className="flex items-start gap-3 rounded-2xl border border-amber-200/70 bg-amber-50/70 px-3 py-2.5">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
         <p className="text-xs leading-relaxed text-amber-900">
-          KI-Hinweise sind gerade nicht verfügbar. Dein Dashboard funktioniert normal weiter –
-          beim nächsten Reload versuchen wir es automatisch erneut.
+          Hinweise sind momentan nicht verfügbar. Dein Dashboard funktioniert normal weiter –
+          lade die Seite neu oder versuche es später erneut.
         </p>
       </div>
     </div>

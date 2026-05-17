@@ -41,6 +41,7 @@ export async function PredictiveStaffingCard() {
 
   const nativeDays = rows.filter((r) => r.source === "native").length;
   const usesNative = nativeDays > 0;
+  const weekLabel = formatWeekRangeLabel(weekStart);
 
   return (
     <section
@@ -51,7 +52,7 @@ export async function PredictiveStaffingCard() {
         <div className="flex items-center gap-2">
           <Brain className="h-4 w-4 text-brand" aria-hidden />
           <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
-            Personal-Vorhersage · KW {rows[0]?.date}
+            Personal-Vorhersage · {weekLabel}
           </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -63,12 +64,12 @@ export async function PredictiveStaffingCard() {
             }`}
             title={
               usesNative
-                ? `${nativeDays} von ${rows.length} Tagen nutzen die gelernten Faktoren der Native AI.`
-                : "Noch zu wenige Lernzyklen – Empfehlung läuft auf Heuristik."
+                ? `${nativeDays} von ${rows.length} Tagen basieren auf deinen bisherigen Plänen.`
+                : "Noch wenig Planungsverlauf – Standard-Schätzung aus Branche und Wetter."
             }
           >
             <Cpu className="h-3 w-3" aria-hidden />
-            {usesNative ? "Native AI · gelernt" : "Heuristik"}
+            {usesNative ? "Aus Erfahrung" : "Standard-Schätzung"}
           </span>
           <Link
             href="/dashboard/planning"
@@ -88,8 +89,8 @@ export async function PredictiveStaffingCard() {
 
       <p className="mt-4 text-[11px] text-muted-foreground">
         {usesNative
-          ? "Die Vorhersage nutzt die in den Settings einsehbaren AiWeights (Wochentag · Wetter · Event · Team-Mix). Tage ohne grünes Badge laufen auf der reinen Heuristik."
-          : "Empfehlung basiert auf Branchen-Profil, Feiertagen, Wetter und Historie. Sobald genug Wochen finalisiert sind (mind. 4 Lernzyklen je Faktor), übernimmt die Native AI automatisch."}
+          ? "Die Empfehlung berücksichtigt Wochentag, Wetter, Feiertage und dein Team. Tage ohne grünes Badge nutzen noch die Standard-Schätzung."
+          : "Empfehlung aus Branche, Feiertagen, Wetter und bisherigen Plänen. Nach einigen abgeschlossenen Wochenplänen wird sie genauer."}
       </p>
     </section>
   );
@@ -145,7 +146,7 @@ function DayPill({
   return (
     <li
       className={`rounded-xl border ${toneStyles.ring} ${toneStyles.bg} p-3`}
-      title={recommendation.drivers.map((d) => `${d.label}: ${d.impact.toFixed(2)}`).join(" · ")}
+      title={recommendation.drivers.map((d) => d.label).join(" · ")}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-bold text-foreground">{formatted}</span>
@@ -190,10 +191,10 @@ function DayPill({
         {source === "native" && (
           <span
             className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1 py-0.5 text-[9px] font-bold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200"
-            title="Vorhersage stammt aus gelernten Faktoren (AiWeights)."
+            title="Basiert auf deinen bisherigen Wochenplänen."
           >
             <Cpu className="h-2 w-2" aria-hidden />
-            AI
+            Erfahrung
           </span>
         )}
       </div>
@@ -209,6 +210,17 @@ function weatherIconFor(label: string) {
   if (lower.includes("schnee")) return Snowflake;
   if (lower.includes("sturm")) return Wind;
   return Cloud;
+}
+
+function formatWeekRangeLabel(weekStartIso: string): string {
+  const start = new Date(`${weekStartIso}T12:00:00Z`);
+  const end = new Date(start.getTime() + 6 * 86_400_000);
+  const fmt = new Intl.DateTimeFormat("de-DE", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "Europe/Berlin",
+  });
+  return `${fmt.format(start)} – ${fmt.format(end)}`;
 }
 
 void (null as unknown as WeatherCondition);

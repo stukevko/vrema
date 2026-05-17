@@ -7,6 +7,7 @@ import { Prisma, type BillingInterval, type Plan } from "@prisma/client";
 import { generateUniqueAffiliateCode, publicRegisterRefUrl } from "@/lib/affiliate-code";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
+import { sendWelcomeEmail } from "@/lib/email/transactional";
 
 function assertSuperAdmin(session: { user?: { role?: string | null; id?: string | null } } | null) {
   const allowed =
@@ -204,6 +205,19 @@ export async function createCompanyBySuperAdmin(params: {
     select: { id: true, name: true, slug: true },
   });
 
+  let welcomeEmailSent = false;
+  try {
+    await sendWelcomeEmail({
+      recipientName: ownerName,
+      recipientEmail: ownerEmail,
+      companyName: company.name,
+      tempPassword,
+    });
+    welcomeEmailSent = true;
+  } catch {
+    welcomeEmailSent = false;
+  }
+
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/partners");
 
@@ -211,6 +225,7 @@ export async function createCompanyBySuperAdmin(params: {
     company,
     ownerEmail,
     tempPassword,
+    welcomeEmailSent,
   };
 }
 

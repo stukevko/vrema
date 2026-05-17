@@ -237,7 +237,7 @@ function mergeNativeIntoHeuristic(
     confidence: n.confidence,
     drivers: [
       {
-        label: `Native AI · Lernhistorie ${impactPct >= 0 ? "+" : ""}${impactPct.toFixed(1)} %`,
+        label: `Aus Erfahrung ${impactPct >= 0 ? "+" : ""}${impactPct.toFixed(0)} %`,
         impact: combined - 1,
       },
       ...h.drivers,

@@ -85,9 +85,9 @@ function managerPrimaryFocus(stats: TeamStatsSnapshot) {
   if (stats.pendingCorrections > 0) {
     return {
       title: `${stats.pendingCorrections} offene Zeitkorrektur${stats.pendingCorrections === 1 ? "" : "en"}`,
-      description: "Vorher/Nachher direkt im Bericht prüfen – Freigabe sichert Lohn & Audit.",
+      description: "Änderungen im Bericht mit Vorher/Nachher prüfen und freigeben.",
       href: "/dashboard/reports#zeitkorrekturen",
-      cta: "Diff prüfen",
+      cta: "Korrekturen prüfen",
     };
   }
   if (stats.pendingTradeApprovals > 0) {
@@ -412,8 +412,8 @@ export default async function DashboardPage() {
             Hallo {session.user.name?.split(" ")[0] ?? ""} 👋
           </h1>
           <p className="mt-1 text-sm text-amber-900">
-            Dein persönliches Cockpit lädt gerade nicht – kein Problem, du kannst weiter unten am Terminal stempeln. Der
-            Status synchronisiert sich beim nächsten Reload automatisch.
+            Deine Übersicht konnte gerade nicht geladen werden – du kannst trotzdem unten am Terminal stempeln.
+            Beim nächsten Öffnen der Seite wird alles aktualisiert.
           </p>
         </div>
       )}
@@ -499,7 +499,7 @@ export default async function DashboardPage() {
               <p className="mt-1 text-base font-bold text-brand dark:text-brand-foreground">
                 {teamStats.pendingCorrections} {teamStats.pendingCorrections === 1 ? "Antrag" : "Anträge"} mit Vorher/Nachher prüfen
               </p>
-              <p className="mt-1 text-xs text-fg-muted">Direkt zum Diff-Block in den Berichten – kein Suchen.</p>
+              <p className="mt-1 text-xs text-fg-muted">Direkt zu den Zeitkorrekturen in den Berichten.</p>
             </Link>
           )}
 
@@ -561,7 +561,7 @@ export default async function DashboardPage() {
                   >
                     <span className="text-muted-foreground">Unbestätigte Zeiten</span>
                     <p className="mt-1 font-semibold text-warning">
-                      {teamStats.pendingCorrections} offen · Diff prüfen →
+                      {teamStats.pendingCorrections} offen · Korrekturen prüfen →
                     </p>
                   </Link>
                 ) : (
@@ -580,7 +580,7 @@ export default async function DashboardPage() {
                     { label: "Urlaubsanträge", value: teamStats.pendingVacations, icon: CalendarDays, iconClass: "text-warning", valueClass: "text-warning", href: "/dashboard/vacation#team-vacation-requests", actionable: teamStats.pendingVacations > 0 ? "Mit Resturlaub & Konflikten prüfen" : undefined },
                     { label: "Fehlend heute", value: teamStats.absentToday, icon: TriangleAlert, iconClass: "text-danger", valueClass: "text-danger", href: "/dashboard/reports" },
                     { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, iconClass: "text-warning", valueClass: "text-warning", href: "/dashboard/planning" },
-                    { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, iconClass: "text-brand", valueClass: "text-brand", href: "/dashboard/reports#zeitkorrekturen", actionable: teamStats.pendingCorrections > 0 ? "Diff prüfen" : undefined },
+                    { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, iconClass: "text-brand", valueClass: "text-brand", href: "/dashboard/reports#zeitkorrekturen", actionable: teamStats.pendingCorrections > 0 ? "Korrekturen prüfen" : undefined },
                   ] as Array<{
                     label: string;
                     value: number;

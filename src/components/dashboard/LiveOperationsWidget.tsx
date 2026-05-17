@@ -9,8 +9,8 @@ export function LiveOperationsWidget({ rows }: { rows: ShiftTaskWallRow[] }) {
           <Activity className="h-4 w-4" aria-hidden />
         </span>
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Operations</p>
-          <h3 className="text-base font-bold tracking-tight text-foreground">Live-Operations</h3>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Live im Betrieb</p>
+          <h3 className="text-base font-bold tracking-tight text-foreground">Schicht-Aufgaben</h3>
         </div>
       </div>
 

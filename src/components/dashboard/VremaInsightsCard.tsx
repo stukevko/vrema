@@ -57,18 +57,18 @@ export async function VremaInsightsCard() {
               VREMA Insights
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Native Core AI · 100 % aus deinen eigenen Daten errechnet.
+              Auswertungen aus deinen Stempel- und Planungsdaten.
             </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200">
             <ShieldCheck className="h-3 w-3" aria-hidden />
-            DSGVO-nativ
+            Datenschutz
           </span>
           <span className="inline-flex items-center gap-1 rounded-full bg-foreground/[0.04] px-2 py-0.5 text-[10px] font-medium text-muted-foreground dark:bg-white/[0.04]">
             <Lock className="h-3 w-3" aria-hidden />
-            Kein LLM
+            Nur deine Daten
           </span>
         </div>
       </header>
@@ -92,14 +92,12 @@ export async function VremaInsightsCard() {
       )}
 
       <footer className="relative mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3 text-[10px] text-muted-foreground dark:border-white/[0.04]">
-        <span>
-          Die Core-AI lernt automatisch aus jedem finalisierten Plan – Faktoren ∈ [0,3 .. 3,0].
-        </span>
+        <span>Wird mit jedem abgeschlossenen Wochenplan etwas genauer.</span>
         <Link
           href="/dashboard/settings#ai-insights"
           className="inline-flex items-center gap-1 font-semibold text-brand hover:underline"
         >
-          KI-Audit öffnen
+          Anpassungen ansehen
           <ChevronRight className="h-3 w-3" />
         </Link>
       </footer>
@@ -131,14 +129,14 @@ function InsightItem({ insight }: { insight: Insight }) {
             <span className="font-mono text-xs font-bold tabular-nums text-foreground">{insight.metric}</span>
           </div>
           <p className="mt-1 text-xs leading-relaxed text-foreground/85">
-            <span className="font-medium text-foreground/95">Beleg:</span> {insight.evidence}
+            <span className="font-medium text-foreground/95">Hintergrund:</span> {insight.evidence}
           </p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            <span className="font-medium text-foreground/80">Empfehlung:</span> {insight.recommendation}
+            <span className="font-medium text-foreground/80">Tipp:</span> {insight.recommendation}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1 rounded-full bg-foreground/[0.04] px-2 py-0.5 text-[10px] font-medium text-muted-foreground dark:bg-white/[0.04]">
-              n = {insight.sampleSize}
+              Basis: {insight.sampleSize} {insight.sampleSize === 1 ? "Datenpunkt" : "Datenpunkte"}
             </span>
             {insight.href && (
               <Link

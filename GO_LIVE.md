@@ -2,6 +2,25 @@
 
 Dieses Runbook ist für den Moment gedacht, in dem du auf der VM den Schalter umlegst.
 
+## 0) Pre-Launch Checkliste (alles REQUIRED außer „Optional“)
+
+| Variable / Schritt | Zweck |
+|--------------------|--------|
+| `DATABASE_URL` | Postgres |
+| `AUTH_SECRET`, `AUTH_URL`, `AUTH_TRUST_HOST` | Login |
+| `NEXT_PUBLIC_APP_URL` | Links, SEO, E-Mails |
+| `STRIPE_*` (Live) | Abos |
+| `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | Verify, Reset, Welcome |
+| `SUPER_ADMIN_USER_ID` | Backoffice |
+| `AUTH_WEBAUTHN_*` | Passkeys (Domain muss passen) |
+| `OPENWEATHER_API_KEY` | Wetter im Planer + Personal-Empfehlung |
+| `DATA_RETENTION_CRON_SECRET` | Nightly Cleanup |
+| `npm run build` grün | Kein kaputter Deploy |
+| `npm run prod:cleanup` einmalig | Keine Test-Altlasten |
+| Smoke-Tests unten | Register → Dashboard → Passkey → Terminal |
+
+Ohne `OPENWEATHER_API_KEY` läuft VREMA – aber **ohne Wetterzeile im Planer** und mit abgeschwächter Personal-Vorhersage.
+
 ## 1) Vorbereitung auf der VM
 
 1. **Repository aktualisieren**
@@ -20,6 +39,7 @@ Dieses Runbook ist für den Moment gedacht, in dem du auf der VM den Schalter um
      - Stripe Live Keys
      - Resend Keys
      - Passkey/WebAuthn Variablen
+     - `OPENWEATHER_API_KEY` (OpenWeatherMap)
 
 4. **Dateirechte setzen**
    - `chmod +x scripts/backup-db.sh`

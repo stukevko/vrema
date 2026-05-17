@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, BellRing, Check, Loader2, Inbox } from "lucide-react";
 import { toast } from "sonner";
+import { AnchoredPopover } from "@/components/ui/AnchoredPopover";
 import {
   countMyUnreadNotifications,
   listMyNotifications,
@@ -207,13 +208,16 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
         ) : null}
       </button>
 
-      {open ? (
-        <div
-          ref={popoverRef}
-          role="dialog"
-          aria-label="Benachrichtigungen"
-          className="absolute right-0 top-[calc(100%+0.4rem)] z-[100] w-[min(20rem,calc(100vw-1.5rem))] rounded-2xl border border-border bg-popover p-1.5 shadow-2xl ring-1 ring-black/5 dark:ring-white/[0.04]"
-        >
+      <AnchoredPopover
+        open={open}
+        anchorRef={triggerRef}
+        align="end"
+        onClose={() => setOpen(false)}
+        role="dialog"
+        aria-label="Benachrichtigungen"
+        className="w-[min(20rem,calc(100vw-1.5rem))] rounded-2xl border border-border bg-popover p-1.5 shadow-2xl ring-1 ring-black/5 dark:ring-white/[0.04]"
+      >
+        <div ref={popoverRef}>
           <div className="flex items-center justify-between gap-2 px-3 pb-2 pt-2">
             <div>
               <p className="text-sm font-semibold text-foreground">Benachrichtigungen</p>
@@ -295,7 +299,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
             </Link>
           </div>
         </div>
-      ) : null}
+      </AnchoredPopover>
     </div>
   );
 }

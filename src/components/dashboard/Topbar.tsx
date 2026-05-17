@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getPersonalAccountHref } from "@/lib/dashboard/account-href";
 import clsx from "clsx";
 import { VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
+import { AnchoredPopover } from "@/components/ui/AnchoredPopover";
 
 interface TopbarProps {
   className?: string;
@@ -32,14 +33,16 @@ export function DashboardTopbar({
   unreadSupportReplies = 0,
 }: TopbarProps) {
   const [open, setOpen] = useState(false);
+  const profileTriggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const accountHref = getPersonalAccountHref(user.role);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
-      if (!dropdownRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
+      const target = event.target as Node;
+      if (profileTriggerRef.current?.contains(target)) return;
+      if (dropdownRef.current?.contains(target)) return;
+      setOpen(false);
     };
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
@@ -57,7 +60,7 @@ export function DashboardTopbar({
   return (
     <header
       className={clsx(
-        "fixed inset-x-0 top-0 z-[60] w-full max-w-full overflow-x-hidden border-b border-white/40 bg-background/85 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md dark:border-white/8 dark:bg-background/75 md:relative md:inset-auto md:z-30 md:overflow-visible md:border-b-0 md:bg-transparent md:pt-0 md:backdrop-blur-0",
+        "fixed inset-x-0 top-0 z-[80] w-full max-w-full overflow-visible border-b border-white/40 bg-background/85 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md dark:border-white/8 dark:bg-background/75 md:relative md:inset-auto md:z-30 md:overflow-visible md:border-b-0 md:bg-transparent md:pt-0 md:backdrop-blur-0",
         className,
       )}
     >
@@ -106,6 +109,7 @@ export function DashboardTopbar({
           <NotificationBell initialUnread={unreadNotifications} />
           <div className="relative" ref={dropdownRef}>
             <button
+              ref={profileTriggerRef}
               type="button"
               aria-expanded={open}
               aria-haspopup="menu"
@@ -124,11 +128,17 @@ export function DashboardTopbar({
               <ChevronDown className="hidden h-4 w-4 text-fg-muted sm:block" />
             </button>
 
-            {open && (
+            <AnchoredPopover
+              open={open}
+              anchorRef={profileTriggerRef}
+              align="end"
+              onClose={() => setOpen(false)}
+            >
               <div
                 id="dashboard-user-menu"
+                ref={dropdownRef}
                 role="menu"
-                className="absolute right-0 top-[calc(100%+0.25rem)] z-[100] w-56 rounded-2xl glass-panel p-1 shadow-lg"
+                className="w-56 rounded-2xl glass-panel p-1 shadow-lg"
               >
                 <div className="mb-1 border-b border-line px-3 py-2">
                   <p className="truncate text-sm font-semibold text-fg">{user.name ?? "Profil"}</p>
@@ -160,7 +170,7 @@ export function DashboardTopbar({
                   Abmelden
                 </button>
               </div>
-            )}
+            </AnchoredPopover>
           </div>
         </div>
       </div>

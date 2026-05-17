@@ -222,7 +222,7 @@ export default async function SettingsPage() {
           <div className="mb-4 flex items-center gap-2">
             <Brain className="h-4 w-4 text-muted-foreground" />
             <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
-              KI-Audit · Gelernte Faktoren
+              Planungs-Hilfe · Gespeicherte Anpassungen
             </h2>
           </div>
           <AiInsightsAuditSection />

@@ -98,18 +98,19 @@ export function SuperAdminInlinePanel({
       </div>
 
       <div className="mb-4 rounded-2xl border border-line bg-surface-muted/80 px-3 py-2 text-[11px] text-fg dark:border-white/10 dark:bg-surface-muted/45">
-        Monitoring: neue User (7d) <span className="font-semibold">{monitoring.newUsersLast7d}</span> · offene Tokens{" "}
-        <span className="font-semibold">{monitoring.verificationTokensOpen}</span> · abgelaufene Tokens{" "}
+        Übersicht: neue Nutzer (7 Tage) <span className="font-semibold">{monitoring.newUsersLast7d}</span> · offene
+        Bestätigungslinks <span className="font-semibold">{monitoring.verificationTokensOpen}</span> · abgelaufene
+        Links{" "}
         <span className={monitoring.staleVerificationTokens > 0 ? "font-semibold text-warning" : "font-semibold text-brand"}>
           {monitoring.staleVerificationTokens}
         </span>{" "}
-        · abgelaufene Sessions{" "}
+        · abgelaufene Sitzungen{" "}
         <span className={monitoring.expiredSessions > 0 ? "font-semibold text-warning" : "font-semibold text-brand"}>
           {monitoring.expiredSessions}
         </span>{" "}
-        · Retention-Cron{" "}
+        · Datenbereinigung (Cron){" "}
         <span className={monitoring.retentionCronConfigured ? "font-semibold text-brand" : "font-semibold text-danger"}>
-          {monitoring.retentionCronConfigured ? "konfiguriert" : "nicht gesetzt"}
+          {monitoring.retentionCronConfigured ? "eingerichtet" : "fehlt"}
         </span>
       </div>
 
@@ -132,7 +133,9 @@ export function SuperAdminInlinePanel({
                 ownerEmail,
               });
               setResultMsg(
-                `Firma erstellt: ${result.company.name} (${result.company.slug}) | Owner: ${result.ownerEmail} | Temp-Passwort: ${result.tempPassword}`
+                result.welcomeEmailSent
+                  ? `Firma „${result.company.name}“ erstellt. Willkommens-E-Mail mit Zugangsdaten wurde an ${result.ownerEmail} gesendet.`
+                  : `Firma „${result.company.name}“ erstellt. E-Mail konnte nicht versendet werden – Startpasswort sicher an ${result.ownerEmail} übermitteln: ${result.tempPassword}`,
               );
               form.reset();
             } catch (err: unknown) {
@@ -142,7 +145,7 @@ export function SuperAdminInlinePanel({
         }}
       >
         <input name="companyName" placeholder="Firma (z. B. Muster GmbH)" className={inputClass} required />
-        <input name="ownerName" placeholder="Owner Name" className={inputClass} required />
+        <input name="ownerName" placeholder="Name des Inhabers" className={inputClass} required />
         <input name="ownerEmail" type="email" placeholder="owner@firma.de" className={inputClass} required />
         <Button type="submit" variant="brand" size="md" className="w-full lg:col-span-1" disabled={isPending} loading={isPending}>
           Firma hinzufügen
@@ -261,7 +264,9 @@ export function SuperAdminInlinePanel({
                       variant="danger"
                       size="sm"
                       onClick={() => {
-                        const confirmation = window.prompt(`Zum Löschen bitte den Slug eingeben: ${c.slug}`);
+                        const confirmation = window.prompt(
+                          `Zum Löschen bitte die Firmen-Kennung eingeben: ${c.slug}`,
+                        );
                         if (confirmation !== c.slug) return;
                         startTransition(async () => {
                           await deleteCompanyBySuperAdmin(c.id);

@@ -76,7 +76,7 @@ export function DashboardLayoutClient({
         }}
         supportOverlayOpen={supportOverlayOpen}
       />
-      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-background">
+      <div className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col bg-background">
         <DashboardTopbar
           className="no-print"
           user={user}
@@ -90,7 +90,7 @@ export function DashboardLayoutClient({
         <main
           ref={mainScrollRef}
           className={clsx(
-            "dashboard-touch-scroll native-app-tap relative w-full max-w-full flex-1 min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-y-contain overscroll-x-none overscroll-behavior-y-contain touch-pan-y pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-0",
+            "dashboard-touch-scroll native-app-tap relative z-0 w-full max-w-full flex-1 min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-y-contain overscroll-x-none overscroll-behavior-y-contain touch-pan-y pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-0",
             "px-4 max-md:pl-[max(1rem,env(safe-area-inset-left,0px))] max-md:pr-[max(1rem,env(safe-area-inset-right,0px))] sm:px-2 md:px-8",
             "pb-[max(5.75rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] md:pb-6",
           )}

@@ -66,10 +66,9 @@ export async function AiInsightsAuditSection() {
       <div className="flex items-start gap-3 rounded-xl border border-border bg-card/50 p-4 dark:border-white/[0.04] dark:bg-surface/40">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-300" aria-hidden />
         <p className="text-xs leading-relaxed text-muted-foreground">
-          Die VREMA Native Core AI lernt ausschließlich aus deinen eigenen Daten und speichert{" "}
-          <span className="font-semibold text-foreground">keine Texte, sondern Zahlen</span> – einen
-          Korrekturfaktor pro Wochentag, Wetter, Event und Team-Mix. Du kannst jeden Faktor sehen und
-          auf 1,0 zurücksetzen (= keine Korrektur). Reset wirkt sofort.
+          VREMA passt die Personal-Empfehlung an deinen Betrieb an – nur mit Zahlen aus deinen Plänen,
+          ohne externe KI. Hier siehst du, welche Anpassungen gespeichert sind. „Zurücksetzen“ stellt den
+          Neutralwert wieder her und wirkt sofort.
         </p>
       </div>
 
@@ -77,20 +76,19 @@ export async function AiInsightsAuditSection() {
         <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground dark:border-white/[0.04] dark:bg-surface/60">
           <div className="flex items-center gap-2 font-semibold text-foreground">
             <Brain className="h-4 w-4 text-brand" aria-hidden />
-            Noch keine gelernten Faktoren.
+            Noch keine gespeicherten Anpassungen.
           </div>
           <p className="mt-1 text-xs">
-            Sobald du den ersten Schichtplan finalisierst, lernt die Core-AI im Hintergrund.
-            Pro finalisierter Woche werden vier Faktoren (Wochentag, Wetter, Event, Team-Mix)
-            angepasst.
+            Sobald du einen Wochenplan abschließt, merkt sich VREMA typische Muster für Wochentag,
+            Wetter, Feiertage und Team-Zusammensetzung.
           </p>
         </div>
       ) : (
         <div className="space-y-3">
           {Array.from(byDim.entries()).map(([dim, list]) => {
             const meta = DIMENSION_LABEL_DE[dim] ?? {
-              label: dim,
-              hint: "Unbekannte Dimension – wird ignoriert.",
+              label: "Sonstiges",
+              hint: "Weitere Einflussfaktoren aus deinen Planungsdaten.",
             };
             return (
               <div
@@ -108,9 +106,9 @@ export async function AiInsightsAuditSection() {
                   <table className="w-full min-w-[420px] text-xs">
                     <thead>
                       <tr className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        <th className="px-2 py-1 text-left font-semibold">Bucket</th>
-                        <th className="px-2 py-1 text-right font-semibold">Faktor</th>
-                        <th className="px-2 py-1 text-right font-semibold">Lernzyklen</th>
+                        <th className="px-2 py-1 text-left font-semibold">Kategorie</th>
+                        <th className="px-2 py-1 text-right font-semibold">Anpassung</th>
+                        <th className="px-2 py-1 text-right font-semibold">Datenbasis</th>
                         <th className="px-2 py-1 text-right font-semibold">Aktualisiert</th>
                         <th className="px-2 py-1 text-right font-semibold">Aktion</th>
                       </tr>

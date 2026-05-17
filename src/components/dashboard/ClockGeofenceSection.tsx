@@ -41,8 +41,8 @@ export function ClockGeofenceSection({ initial }: Props) {
         await updateClockGeofence({ enabled, allowlist });
         show(
           enabled
-            ? "IP-Geofencing aktualisiert — Stempeln nur noch von freigegebenen IPs."
-            : "IP-Geofencing deaktiviert.",
+            ? "Standortprüfung aktualisiert — Stempeln nur noch aus dem Firmen-Netz."
+            : "Standortprüfung deaktiviert.",
           "success",
         );
       } catch (err) {
@@ -59,8 +59,8 @@ export function ClockGeofenceSection({ initial }: Props) {
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-foreground">Stempeln nur am Standort</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Wenn aktiv, sind Clock-Ins nur aus dem Firmen-Netz möglich. Privacy-first: kein GPS,
-              keine Geolocation – wir prüfen ausschließlich die ausgehende IP-Adresse deines Routers.
+              Wenn aktiv, ist Stempeln nur aus dem Firmen-Netz möglich. Kein GPS und keine Standort-App –
+              wir prüfen nur die Internet-Adresse (IP) deines Betriebs-WLANs.
             </p>
             <label className="mt-3 inline-flex cursor-pointer items-center gap-2">
               <input
@@ -69,7 +69,7 @@ export function ClockGeofenceSection({ initial }: Props) {
                 onChange={(e) => setEnabled(e.target.checked)}
                 className="h-4 w-4 rounded border-line"
               />
-              <span className="text-sm font-medium text-foreground">Geofencing via IP aktivieren</span>
+              <span className="text-sm font-medium text-foreground">Stempeln nur im Firmen-Netz</span>
             </label>
           </div>
         </div>
@@ -77,7 +77,7 @@ export function ClockGeofenceSection({ initial }: Props) {
 
       <div>
         <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          IP-Allowlist (Plain oder CIDR)
+          Erlaubte IP-Adressen
         </label>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
           <input
