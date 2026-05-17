@@ -57,7 +57,7 @@ export async function VremaInsightsCard() {
               VREMA Insights
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Auswertungen aus deinen Stempel- und Planungsdaten.
+              Vorausschau für kommende Wochen und Muster aus Stempel- und Planungsdaten.
             </p>
           </div>
         </div>
@@ -200,6 +200,8 @@ function sourceIcon(src: InsightSource) {
       return Stethoscope;
     case "fluctuation":
       return TrendingUp;
+    case "planning":
+      return Brain;
     default:
       return Brain;
   }

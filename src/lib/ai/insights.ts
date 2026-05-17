@@ -15,6 +15,7 @@
  *  Wenn die Datenbasis zu klein ist, wird die jeweilige Insight schlicht weggelassen.
  */
 
+import { detectForwardPlanningInsights } from "@/lib/ai/forward-insights";
 import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import { getBerlinDateKey, berlinDateKeyToDayOfWeek } from "@/lib/time/timezone";
@@ -28,7 +29,8 @@ export type InsightSource =
   | "understaffing"
   | "sick_cluster"
   | "fluctuation"
-  | "trend";
+  | "trend"
+  | "planning";
 
 export type Insight = {
   id: string;
@@ -50,16 +52,17 @@ const MIN_SAMPLE_FOR_INSIGHT = 6;
  *  Caller verifiziert vorher Tenant & Rolle.
  */
 export async function detectInsights(companyId: string): Promise<Insight[]> {
-  const [lateness, overstaffing, sickClusters, fluctuation] = await Promise.all([
-    detectLatenessByWeekday(companyId),
+  const [forward, overstaffing, sickClusters, lateness, fluctuation] = await Promise.all([
+    detectForwardPlanningInsights(companyId),
     detectOverstaffingTrend(companyId),
     detectSickClusters(companyId),
+    detectLatenessByWeekday(companyId),
     detectFluctuation(companyId),
   ]);
 
-  return [...overstaffing, ...sickClusters, ...lateness, ...fluctuation]
+  return [...forward, ...overstaffing, ...sickClusters, ...lateness, ...fluctuation]
     .sort((a, b) => severityOrder(b.severity) - severityOrder(a.severity))
-    .slice(0, 6);
+    .slice(0, 8);
 }
 
 // ──────────────────────────────────────────────────────────────────────────

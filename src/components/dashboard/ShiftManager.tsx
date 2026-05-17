@@ -12,6 +12,8 @@ import {
   toggleShiftTradeOffer,
 } from "@/lib/actions/team";
 import { getPlannerQuickSuggest, type PlannerQuickSuggestRow } from "@/lib/actions/planner-quick-suggest";
+import { getPlannerStaffingHints, type PlannerStaffingHint } from "@/lib/actions/predictive";
+import { StaffingHintBadge } from "@/components/planning/StaffingHintBadge";
 import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
 import { useRouter } from "next/navigation";
@@ -339,6 +341,7 @@ export function ShiftManager({
   const [weatherWeek, setWeatherWeek] = useState<Array<DailyWeatherForecast | null>>([]);
   const [weatherMondayIso, setWeatherMondayIso] = useState<string | null>(null);
   const [weatherFetchErr, setWeatherFetchErr] = useState<string | null>(null);
+  const [staffingHints, setStaffingHints] = useState<PlannerStaffingHint[]>([]);
   const [costPeakFocusDay, setCostPeakFocusDay] = useState<number | null>(null);
   const [gapSuggestions, setGapSuggestions] = useState<
     Array<{ userId: string; name: string; role: string; reason: string; startTime: string; endTime: string }>
@@ -453,6 +456,26 @@ export function ShiftManager({
       cancelled = true;
     };
   }, [viewMode, timelineDate, selectedWeekIndex, mobileSelectedDay]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getPlannerStaffingHints(selectedWeekIndex)
+      .then((rows) => {
+        if (!cancelled) setStaffingHints(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setStaffingHints([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedWeekIndex]);
+
+  const staffingHintByDay = useMemo(() => {
+    const m = new Map<number, PlannerStaffingHint>();
+    for (const h of staffingHints) m.set(h.dayOfWeek, h);
+    return m;
+  }, [staffingHints]);
 
   const userShifts = useMemo(
     () =>
@@ -1398,6 +1421,7 @@ export function ShiftManager({
               const shiftCount = mobileDayShifts.length > 0 && idx === mobileSelectedDay
                 ? mobileDayShifts.length
                 : shifts.filter((s) => s.weekIndex === selectedWeekIndex && s.dayOfWeek === idx).length;
+              const staffHint = staffingHintByDay.get(idx);
               const dateLabel = dateForCycleDay(selectedWeekIndex, idx).toLocaleDateString("de-DE", {
                 day: "2-digit",
                 month: "2-digit",
@@ -1422,6 +1446,14 @@ export function ShiftManager({
                     )}
                   </span>
                   <span className="block text-[10px] text-muted-foreground">{shiftCount} Sch.</span>
+                  {staffHint ? (
+                    <StaffingHintBadge
+                      tone={staffHint.tone}
+                      label={staffHint.label}
+                      tooltip={staffHint.tooltip}
+                      className="mt-1 max-w-full"
+                    />
+                  ) : null}
                 </button>
               );
             })}
@@ -2129,6 +2161,7 @@ export function ShiftManager({
             vacationDays: selectedUserVacationDays,
             sickDays: selectedUserSickDays,
           });
+          const staffHint = staffingHintByDay.get(idx);
           return (
             <button
               key={`desktop-day-${label}`}
@@ -2143,6 +2176,14 @@ export function ShiftManager({
                   {dayMeta.label}
                 </StatusBadge>
               </div>
+              {staffHint ? (
+                <StaffingHintBadge
+                  tone={staffHint.tone}
+                  label={staffHint.label}
+                  tooltip={staffHint.tooltip}
+                  className="mt-1"
+                />
+              ) : null}
               <span className="mt-0.5 block text-[10px] font-sans opacity-85">
                 {userPrimaryShiftByDay.get(idx)
                   ? `${userPrimaryShiftByDay.get(idx)?.startTime}-${userPrimaryShiftByDay.get(idx)?.endTime}`
