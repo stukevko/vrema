@@ -9,8 +9,14 @@ export type PlannerQuickSuggestRow = {
   displayName: string;
   startTime: string;
   endTime: string;
-  score: number;
+  hint: string;
 };
+
+function quickSuggestHint(historyCount: number): string {
+  if (historyCount >= 3) return "Öfter geplant";
+  if (historyCount >= 1) return "Schon mal da";
+  return "Standard-Zeiten";
+}
 
 function modeTimePair(rows: { startTime: string; endTime: string }[]): { startTime: string; endTime: string } {
   if (rows.length === 0) return { startTime: "09:00", endTime: "17:00" };
@@ -99,5 +105,6 @@ export async function getPlannerQuickSuggest(input: {
       };
     })
     .sort((a, b) => b.score - a.score || a.displayName.localeCompare(b.displayName, "de"))
-    .slice(0, 2);
+    .slice(0, 2)
+    .map(({ score, ...row }) => ({ ...row, hint: quickSuggestHint(score) }));
 }

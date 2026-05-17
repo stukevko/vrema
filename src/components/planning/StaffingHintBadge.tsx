@@ -22,10 +22,10 @@ export function StaffingHintBadge({
   tooltip: string;
   className?: string;
 }) {
-  if (tone === "calm" && label === "OK") return null;
+  if (!label.trim()) return null;
   return (
     <span
-      title={tooltip ? `VREMA Personal-Tipp: ${tooltip}` : "VREMA Personal-Tipp"}
+      title={tooltip ? `Tipp: ${tooltip}` : "Personal-Tipp für diesen Tag"}
       className={`inline-flex max-w-full truncate rounded-md border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${TONE_CLASS[tone]} ${className}`}
     >
       {label}

@@ -4,16 +4,14 @@
 import { type Insight } from "@/lib/ai/insights";
 import { buildForecastHorizon, formatWeekRangeLabel } from "@/lib/planning/forecast-horizon";
 import { computeStaffingRecommendationsForWeek } from "@/lib/predictive/compute-staffing-week";
+import {
+  plannerBadgeLabel,
+  staffingActionLine,
+  staffingWhyHint,
+} from "@/lib/predictive/staffing-copy";
 import { db } from "@/lib/db";
 
 const WEEKDAY_LABEL_DE = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"] as const;
-
-const TONE_LABEL: Record<string, string> = {
-  urgent: "Aufstocken",
-  watch: "Aufmerksam",
-  calm: "Entspannt",
-  closed: "Geschlossen",
-};
 
 export async function detectForwardPlanningInsights(companyId: string): Promise<Insight[]> {
   const company = await db.company.findUnique({
@@ -47,11 +45,11 @@ export async function detectForwardPlanningInsights(companyId: string): Promise<
         id: `forecast:holiday:${day.date}`,
         severity: "watch",
         source: "planning",
-        title: `${dayLabel}: ${day.holidayName} — Planung prüfen`,
+        title: `${dayLabel}: ${day.holidayName} — Plan anpassen`,
         metric: "Feiertag",
-        evidence: `Kommende Woche (${weekLabel}), ${dateFmt}. Feiertage beeinflussen Auslastung und Öffnungszeiten.`,
-        recommendation: "Prüfe im Planer, ob Schichten reduziert oder geschlossen werden sollen.",
-        sampleSize: Math.round(day.recommendation.confidence * 100),
+        evidence: `Kommende Woche (${weekLabel}), ${dateFmt}.`,
+        recommendation: "Im Planer prüfen: heute eher weniger Schichten oder geschlossen?",
+        sampleSize: day.source === "native" ? 12 : 4,
         href: `/dashboard/planning`,
       });
       continue;
@@ -62,11 +60,11 @@ export async function detectForwardPlanningInsights(companyId: string): Promise<
         id: `forecast:bridge:${day.date}`,
         severity: day.tone === "urgent" ? "urgent" : "watch",
         source: "planning",
-        title: `${dayLabel} ist Brückentag — höhere Nachfrage möglich`,
-        metric: day.recommendation.delta > 0 ? `+${day.recommendation.delta} Pers.` : TONE_LABEL[day.tone] ?? "Brückentag",
-        evidence: `${dateFmt} in ${weekLabel}. Brückentage wirken im Gastgewerbe oft wie ein verlängertes Wochenende.`,
-        recommendation: "Plane Abend- oder Wochenend-Personal frühzeitig ein.",
-        sampleSize: Math.round(day.recommendation.confidence * 100),
+        title: `${dayLabel}: Brückentag — eher viel los`,
+        metric: staffingActionLine(day.recommendation.delta, day.tone),
+        evidence: `${dateFmt} · ${weekLabel}. ${staffingWhyHint(day.recommendation.drivers)}`,
+        recommendation: "Lieber früh eine Schicht mehr einplanen als später unterbesetzt sein.",
+        sampleSize: day.source === "native" ? 12 : 4,
         href: `/dashboard/planning`,
       });
       continue;
@@ -77,17 +75,11 @@ export async function detectForwardPlanningInsights(companyId: string): Promise<
         id: `forecast:staff:${day.date}`,
         severity: day.tone === "urgent" ? "urgent" : "watch",
         source: "planning",
-        title: `${dayLabel}: mehr Personal empfohlen`,
-        metric:
-          day.recommendation.delta > 0
-            ? `+${day.recommendation.delta} Person${Math.abs(day.recommendation.delta) === 1 ? "" : "en"}`
-            : TONE_LABEL[day.tone] ?? "Aufstocken",
-        evidence: `${dateFmt} · ${weekLabel}. ${day.recommendation.drivers
-          .slice(0, 2)
-          .map((d) => d.label)
-          .join(" · ")}`,
-        recommendation: "Im Schichtplaner Kapazität für diesen Tag erhöhen, bevor die Woche startet.",
-        sampleSize: Math.round(day.recommendation.confidence * 100),
+        title: `${dayLabel}: ${staffingActionLine(day.recommendation.delta, day.tone)}`,
+        metric: day.tone === "urgent" ? "Viel los" : "Achtung",
+        evidence: `${dateFmt} · ${weekLabel}. ${staffingWhyHint(day.recommendation.drivers)}`,
+        recommendation: "Im Schichtplaner für diesen Tag eine Schicht mehr eintragen.",
+        sampleSize: day.source === "native" ? 12 : 4,
         href: `/dashboard/planning`,
       });
     } else if (day.recommendation.delta <= -1 && day.tone === "calm") {
@@ -95,11 +87,11 @@ export async function detectForwardPlanningInsights(companyId: string): Promise<
         id: `forecast:calm:${day.date}`,
         severity: "info",
         source: "planning",
-        title: `${dayLabel}: eher entspannt geplant`,
-        metric: `${day.recommendation.delta} Personen`,
-        evidence: `${dateFmt} in ${weekLabel} — nach Wetter, Branche und bisherigen Plänen.`,
-        recommendation: "Optional Schichten straffen, wenn der Umsatz es hergibt.",
-        sampleSize: Math.round(day.recommendation.confidence * 100),
+        title: `${dayLabel}: ${staffingActionLine(day.recommendation.delta, day.tone)}`,
+        metric: "Ruhig",
+        evidence: `${dateFmt} · ${weekLabel}. ${staffingWhyHint(day.recommendation.drivers)}`,
+        recommendation: "Plan kann so bleiben — nur anpassen, wenn du mehr Umsatz erwartest.",
+        sampleSize: day.source === "native" ? 12 : 4,
         href: `/dashboard/planning`,
       });
     }
@@ -136,27 +128,17 @@ export async function staffingByDayForPlannerWeek(
     { tone: "closed" | "calm" | "watch" | "urgent"; label: string; delta: number; tooltip: string }
   >();
   for (const d of days) {
-    const label =
-      d.holidayName != null
-        ? "Feiertag"
-        : d.isBridge
-          ? "Brückentag"
-          : d.tone === "urgent"
-            ? d.recommendation.delta > 0
-              ? `+${d.recommendation.delta}`
-              : "Aufstocken"
-            : d.tone === "watch"
-              ? "Achtung"
-              : d.tone === "closed"
-                ? "Zu"
-                : d.recommendation.delta < 0
-                  ? `${d.recommendation.delta}`
-                  : "OK";
+    const label = plannerBadgeLabel(
+      d.tone,
+      d.recommendation.delta,
+      d.holidayName,
+      d.isBridge,
+    );
     out.set(d.dayOfWeek, {
       tone: d.tone,
       label,
       delta: d.recommendation.delta,
-      tooltip: d.recommendation.drivers.map((x) => x.label).join(" · "),
+      tooltip: staffingWhyHint(d.recommendation.drivers),
     });
   }
   return out;

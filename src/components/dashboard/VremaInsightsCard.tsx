@@ -1,13 +1,12 @@
 import Link from "next/link";
 import {
-  Brain,
   ShieldCheck,
   Lock,
   AlertOctagon,
   AlertTriangle,
   Info,
   ChevronRight,
-  Activity,
+  History,
   Clock,
   Users,
   Stethoscope,
@@ -18,12 +17,8 @@ import type { Insight, InsightSeverity, InsightSource } from "@/lib/ai/insights"
 import { SafeLucideIcon } from "@/lib/icons/safe-lucide";
 
 /**
- *  VREMA Insights – Dashboard-Widget der Native Core AI.
- *
- *  Zeigt konkrete, zahlenbasierte Erkenntnisse aus den eigenen Tenant-Daten.
- *  Kein LLM, keine generischen Texte. Wenn die Datenbasis zu klein ist oder
- *  alles im grünen Bereich liegt, blenden wir die Karte ruhig aus –
- *  besser ein leerer Bildschirm als ein leeres Versprechen.
+ * Rückblick-Hinweise — Klartext, keine Score-Zahlen in der UI.
+ * Kommende Woche → Personal-Tipp-Widget.
  */
 export async function VremaInsightsCard() {
   let insights: Insight[] = [];
@@ -33,120 +28,95 @@ export async function VremaInsightsCard() {
     return null;
   }
 
-  // Wenn es nichts auffälliges gibt → Empty-State zeigen.
-  // Vorgabe: keine Dead-Ends, immer kurze positive Story.
   const hasInsights = insights.length > 0;
 
   return (
     <section
       id="vrema-insights"
-      className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm dark:border-white/[0.06] dark:bg-surface/70"
-      aria-label="VREMA Insights"
+      className="rounded-2xl border border-border bg-card p-5 shadow-sm dark:border-white/[0.06] dark:bg-surface/70"
+      aria-label="Hinweise aus den letzten Wochen"
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-12 left-0 h-44 w-44 rounded-full bg-brand/15 blur-3xl max-md:opacity-60 md:-left-12"
-      />
-      <header className="relative flex flex-wrap items-start justify-between gap-3">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-brand shadow-sm dark:bg-brand/15">
-            <Activity className="h-5 w-5" aria-hidden />
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand dark:bg-brand/15">
+            <History className="h-5 w-5" aria-hidden />
           </span>
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
-              VREMA Insights
-            </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Vorausschau für kommende Wochen und Muster aus Stempel- und Planungsdaten.
+            <h3 className="text-sm font-bold text-foreground">Was zuletzt auffiel</h3>
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+              Muster aus Stempeluhr, Plan und Abwesenheiten — nicht für die kommende Woche (dafür: Personal-Tipp oben).
             </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200">
             <ShieldCheck className="h-3 w-3" aria-hidden />
-            Datenschutz
+            Nur deine Firma
           </span>
           <span className="inline-flex items-center gap-1 rounded-full bg-foreground/[0.04] px-2 py-0.5 text-[10px] font-medium text-muted-foreground dark:bg-white/[0.04]">
             <Lock className="h-3 w-3" aria-hidden />
-            Nur deine Daten
+            Kein Chat-KI
           </span>
         </div>
       </header>
 
       {hasInsights ? (
-        <ul className="relative mt-5 space-y-2">
+        <ul className="mt-4 space-y-2">
           {insights.map((i) => (
             <InsightItem key={i.id} insight={i} />
           ))}
         </ul>
       ) : (
-        <div className="relative mt-5 rounded-xl border border-emerald-300/40 bg-emerald-50/60 px-4 py-5 text-sm dark:border-emerald-500/15 dark:bg-emerald-500/[0.06]">
-          <p className="font-semibold text-emerald-800 dark:text-emerald-200">
-            Aktuell keine Auffälligkeiten – sauber gearbeitet.
-          </p>
+        <div className="mt-4 rounded-xl border border-emerald-300/40 bg-emerald-50/60 px-4 py-4 text-sm dark:border-emerald-500/15 dark:bg-emerald-500/[0.06]">
+          <p className="font-semibold text-emerald-800 dark:text-emerald-200">Alles ruhig in den letzten Wochen.</p>
           <p className="mt-1 text-xs text-emerald-800/80 dark:text-emerald-200/80">
-            VREMA überwacht Verspätungen, Über-/Unterbesetzung, Krankenstand und Plan-Realität-Abweichungen
-            laufend. Wenn ein Muster auftaucht, erscheint es hier.
+            Sobald Verspätungen, Krankheit oder Plan-Abweichungen auffallen, steht hier ein konkreter Hinweis mit Tipp.
           </p>
         </div>
       )}
 
-      <footer className="relative mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3 text-[10px] text-muted-foreground dark:border-white/[0.04]">
-        <span>Wird mit jedem abgeschlossenen Wochenplan etwas genauer.</span>
-        <Link
-          href="/dashboard/settings#ai-insights"
-          className="inline-flex items-center gap-1 font-semibold text-brand hover:underline"
-        >
-          Anpassungen ansehen
-          <ChevronRight className="h-3 w-3" />
+      <footer className="mt-4 border-t border-border/60 pt-3 text-[11px] text-muted-foreground dark:border-white/[0.04]">
+        Wird genauer, je öfter du Wochenpläne abschließt.{" "}
+        <Link href="/dashboard/settings#ai-insights" className="font-semibold text-brand hover:underline">
+          Lernfaktoren ansehen
         </Link>
       </footer>
     </section>
   );
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-//  Item-Komponente: konkrete Insight-Karte
-// ──────────────────────────────────────────────────────────────────────────
-
 function InsightItem({ insight }: { insight: Insight }) {
   const tone = severityTone(insight.severity);
-  const sourceIconComponent = sourceIcon(insight.source);
-  const severityIconComponent = severityIcon(insight.severity);
+  const SourceIcon = sourceIcon(insight.source);
+  const SeverityIcon = severityIcon(insight.severity);
+  const badge = sourceBadge(insight.source);
 
   return (
-    <li className={`rounded-xl border ${tone.ring} ${tone.bg} px-4 py-3`}>
+    <li className={`rounded-xl border px-4 py-3 ${tone.ring} ${tone.bg}`}>
       <div className="flex items-start gap-3">
         <span className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${tone.iconBg}`}>
-          <SafeLucideIcon icon={sourceIconComponent} className={`h-3.5 w-3.5 ${tone.iconText}`} />
+          <SafeLucideIcon icon={SourceIcon} className={`h-3.5 w-3.5 ${tone.iconText}`} />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-              <SafeLucideIcon icon={severityIconComponent} className={`h-3.5 w-3.5 ${tone.iconText}`} />
-              {insight.title}
-            </p>
-            <span className="font-mono text-xs font-bold tabular-nums text-foreground">{insight.metric}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <SafeLucideIcon icon={SeverityIcon} className={`h-3.5 w-3.5 ${tone.iconText}`} aria-hidden />
+            <p className="text-sm font-semibold leading-snug text-foreground">{plainTitle(insight)}</p>
           </div>
-          <p className="mt-1 text-xs leading-relaxed text-foreground/85">
-            <span className="font-medium text-foreground/95">Hintergrund:</span> {insight.evidence}
-          </p>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            <span className="font-medium text-foreground/80">Tipp:</span> {insight.recommendation}
-          </p>
+          <p className="mt-1.5 text-xs leading-relaxed text-foreground/90">{insight.evidence}</p>
+          <p className="mt-1 text-xs font-medium text-foreground">{insight.recommendation}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-foreground/[0.04] px-2 py-0.5 text-[10px] font-medium text-muted-foreground dark:bg-white/[0.04]">
-              Basis: {insight.sampleSize} {insight.sampleSize === 1 ? "Datenpunkt" : "Datenpunkte"}
+            <span className="rounded-full bg-foreground/[0.04] px-2 py-0.5 text-[10px] font-medium text-muted-foreground dark:bg-white/[0.04]">
+              {badge}
             </span>
-            {insight.href && (
+            {insight.href ? (
               <Link
                 href={insight.href}
-                className="inline-flex h-7 items-center gap-1 rounded-lg bg-foreground/[0.04] px-2 text-[11px] font-bold text-foreground transition-colors hover:bg-foreground/[0.08] dark:bg-white/[0.04]"
+                className="inline-flex h-7 items-center gap-1 rounded-lg border border-border/60 bg-card/80 px-2 text-[11px] font-semibold text-foreground hover:bg-muted/40 dark:bg-surface/60"
               >
-                Im Detail prüfen
-                <ChevronRight className="h-3 w-3" />
+                Ansehen
+                <ChevronRight className="h-3 w-3" aria-hidden />
               </Link>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -154,9 +124,33 @@ function InsightItem({ insight }: { insight: Insight }) {
   );
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-//  Style-Maps
-// ──────────────────────────────────────────────────────────────────────────
+/** Titel ohne technische Metrik-Spalte — Zahl steckt im Satz, wenn nötig. */
+function plainTitle(insight: Insight): string {
+  const m = insight.metric?.trim();
+  if (!m || /^[+-]?\d+([.,]\d+)?\s*%/.test(m)) {
+    return insight.title;
+  }
+  if (insight.title.includes(m)) return insight.title;
+  return `${insight.title} (${m})`;
+}
+
+function sourceBadge(src: InsightSource): string {
+  switch (src) {
+    case "lateness":
+      return "Verspätungen";
+    case "overstaffing":
+    case "understaffing":
+      return "Personalstunden";
+    case "sick_cluster":
+      return "Krankmeldungen";
+    case "fluctuation":
+      return "Plan vs. Stempel";
+    case "planning":
+      return "Planung";
+    default:
+      return "Betrieb";
+  }
+}
 
 function severityTone(s: InsightSeverity) {
   if (s === "urgent") {
@@ -200,9 +194,7 @@ function sourceIcon(src: InsightSource) {
       return Stethoscope;
     case "fluctuation":
       return TrendingUp;
-    case "planning":
-      return Brain;
     default:
-      return Brain;
+      return History;
   }
 }

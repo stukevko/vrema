@@ -76,11 +76,15 @@ export async function ComplianceCard() {
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-bold text-foreground">{tone.title}</h3>
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${tone.badge}`}>
-              Score {report.score}/100
+              {status === "perfect"
+                ? "Passt"
+                : status === "watch"
+                  ? `${report.warnings} Hinweis${report.warnings === 1 ? "" : "e"}`
+                  : `${report.violations} Verstoß${report.violations === 1 ? "" : "e"}`}
             </span>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Auswertung KW {report.weekStart} – {report.weekEnd}: Tages-/Wochenstunden, Ruhezeit und Pausen nach ArbZG §3 – §5.
+            Prüft diese Woche ({report.weekStart} – {report.weekEnd}) auf zu lange Tage, fehlende Pausen und zu kurze Ruhezeit — Orientierung, keine Rechtsberatung.
           </p>
 
           {hasIssues && (

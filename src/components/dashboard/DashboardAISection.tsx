@@ -33,8 +33,8 @@ export function DashboardAISection({ children }: { children: React.ReactNode }) 
             <Sparkles className="h-4 w-4" aria-hidden />
           </span>
           <div className="min-w-0 text-left">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Hinweise</p>
-            <p className="text-sm font-semibold text-foreground">Tipps aus deinen Betriebsdaten</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Zusatz</p>
+            <p className="text-sm font-semibold text-foreground">Stunden, Kosten & Pausen</p>
           </div>
         </div>
         <ChevronDown

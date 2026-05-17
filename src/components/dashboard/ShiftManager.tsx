@@ -1605,7 +1605,7 @@ export function ShiftManager({
                 </button>
               </div>
               <p className="mb-3 text-xs text-fg-muted">
-                Basierend auf Historie (gleicher Wochentag) und freier Kapazität – ein Tipp legt die Schicht an.
+                Freie Kolleg:innen mit passender Historie — tippen = Schicht anlegen.
               </p>
               {aiQuickLoading ? (
                 <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
@@ -1652,7 +1652,7 @@ export function ShiftManager({
                       >
                         <span className="text-base font-semibold text-foreground">{row.displayName}</span>
                         <span className="text-xs tabular-nums text-muted-foreground">
-                          {row.startTime.slice(0, 5)} – {row.endTime.slice(0, 5)} · Score {row.score}
+                          {row.startTime.slice(0, 5)} – {row.endTime.slice(0, 5)} · {row.hint}
                         </span>
                       </button>
                     </li>

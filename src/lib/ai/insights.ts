@@ -15,7 +15,6 @@
  *  Wenn die Datenbasis zu klein ist, wird die jeweilige Insight schlicht weggelassen.
  */
 
-import { detectForwardPlanningInsights } from "@/lib/ai/forward-insights";
 import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import { getBerlinDateKey, berlinDateKeyToDayOfWeek } from "@/lib/time/timezone";
@@ -51,18 +50,18 @@ const MIN_SAMPLE_FOR_INSIGHT = 6;
  *  Public Entry-Point: liefert eine sortierte Liste konkreter Insights.
  *  Caller verifiziert vorher Tenant & Rolle.
  */
+/** Rückblick aus Stempel- und Planungsdaten — Vorwärts-Tipps leben im Personal-Tipp-Widget. */
 export async function detectInsights(companyId: string): Promise<Insight[]> {
-  const [forward, overstaffing, sickClusters, lateness, fluctuation] = await Promise.all([
-    detectForwardPlanningInsights(companyId),
+  const [overstaffing, sickClusters, lateness, fluctuation] = await Promise.all([
     detectOverstaffingTrend(companyId),
     detectSickClusters(companyId),
     detectLatenessByWeekday(companyId),
     detectFluctuation(companyId),
   ]);
 
-  return [...forward, ...overstaffing, ...sickClusters, ...lateness, ...fluctuation]
+  return [...overstaffing, ...sickClusters, ...lateness, ...fluctuation]
     .sort((a, b) => severityOrder(b.severity) - severityOrder(a.severity))
-    .slice(0, 8);
+    .slice(0, 6);
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -121,8 +120,8 @@ async function detectLatenessByWeekday(companyId: string): Promise<Insight[]> {
       id: `lateness:${worstDow}`,
       severity: devPct > 12 ? "urgent" : "watch",
       source: "lateness",
-      title: `${WEEKDAY_LABEL_DE[worstDow]}s ist die Verspätungsquote auffällig hoch`,
-      metric: `+${devPct.toFixed(1)} %-Punkte`,
+      title: `${WEEKDAY_LABEL_DE[worstDow]}s häufiger zu spät`,
+      metric: `+${devPct.toFixed(0)} Prozentpunkte`,
       evidence: `${WEEKDAY_LABEL_DE[worstDow]}: ${b.late} von ${b.total} Stempelungen verspätet (${(
         rate * 100
       ).toFixed(1)} %). Restwoche-Schnitt: ${(baseRate * 100).toFixed(1)} %.`,
@@ -183,9 +182,9 @@ async function detectOverstaffingTrend(companyId: string): Promise<Insight[]> {
       severity: Math.abs(change) > 0.2 ? "urgent" : "watch",
       source: isOver ? "overstaffing" : "understaffing",
       title: isOver
-        ? `${WEEKDAY_LABEL_DE[d]}s mehr Personalstunden als im Vormonat`
-        : `${WEEKDAY_LABEL_DE[d]}s weniger Personalstunden als im Vormonat`,
-      metric: `${change >= 0 ? "+" : ""}${(change * 100).toFixed(1)} %`,
+        ? `${WEEKDAY_LABEL_DE[d]}s: deutlich mehr Stunden als im Vormonat`
+        : `${WEEKDAY_LABEL_DE[d]}s: weniger Stunden als im Vormonat`,
+      metric: `${change >= 0 ? "+" : ""}${(change * 100).toFixed(0)} %`,
       evidence: `Letzte 30 Tage: ${curByDow[d]} Stempelungen am ${WEEKDAY_LABEL_DE[d]}. Vormonat: ${prevByDow[d]}.`,
       recommendation: isOver
         ? "Prüfe, ob 1 Schicht reduziert werden kann – ohne Umsatzrisiko."
@@ -233,8 +232,8 @@ async function detectSickClusters(companyId: string): Promise<Insight[]> {
       id: `sick:${dow}`,
       severity: ratio > 2 ? "urgent" : "watch",
       source: "sick_cluster",
-      title: `${WEEKDAY_LABEL_DE[dow]}s mehr Krankmeldungen als an anderen Tagen`,
-      metric: `${ratio.toFixed(1)}× Schnitt`,
+      title: `${WEEKDAY_LABEL_DE[dow]}s: auffällig viele Krankmeldungen`,
+      metric: `${ratio.toFixed(1)}× öfter als Schnitt`,
       evidence: `Letzte 90 Tage: ${max} Krankmeldungen am ${WEEKDAY_LABEL_DE[dow]}, Schnitt aller Tage: ${avg.toFixed(
         1,
       )}.`,
@@ -295,9 +294,9 @@ async function detectFluctuation(companyId: string): Promise<Insight[]> {
       severity: Math.abs(diff) > 0.15 ? "urgent" : "watch",
       source: "fluctuation",
       title: isOver
-        ? "Tatsächliche Arbeitszeit übersteigt den Plan"
-        : "Tatsächliche Arbeitszeit liegt unter dem Plan",
-      metric: `${diff >= 0 ? "+" : ""}${(diff * 100).toFixed(1)} %`,
+        ? "Gestempelt mehr als im Plan vorgesehen"
+        : "Gestempelt weniger als im Plan",
+      metric: `${diff >= 0 ? "+" : ""}${(diff * 100).toFixed(0)} % Abweichung`,
       evidence: `Letzte 4 Wochen: ${formatHours(totalActualMin)} gestempelt vs. ${formatHours(
         totalPlannedMin,
       )} geplant.`,

@@ -9,14 +9,18 @@ import {
   Wind,
   CalendarOff,
   Sparkles,
-  Cpu,
 } from "lucide-react";
 import { getStaffingForecastHorizon } from "@/lib/actions/predictive";
+import {
+  staffingActionLine,
+  staffingTrustLabel,
+  staffingWhyHint,
+} from "@/lib/predictive/staffing-copy";
 import type { WeatherCondition } from "@/lib/predictive/staffing";
 import { SafeLucideIcon } from "@/lib/icons/safe-lucide";
 
 /**
- * Dashboard: Personal-Vorhersage **vorwärts** (kommende Planungswochen, nicht Vergangenheit).
+ * Dashboard: Wochen-Vorschau in Klartext (keine Score-Prozente).
  */
 export async function PredictiveStaffingCard() {
   let horizon: Awaited<ReturnType<typeof getStaffingForecastHorizon>> | null = null;
@@ -36,42 +40,35 @@ export async function PredictiveStaffingCard() {
   return (
     <section
       className="rounded-2xl border border-border bg-card p-5 shadow-sm dark:border-white/[0.06] dark:bg-surface/70"
-      aria-label="Personal-Empfehlung"
+      aria-label="Personal-Tipp für die Planung"
     >
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Brain className="h-4 w-4 text-brand" aria-hidden />
           <div>
             <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
-              Personal-Vorhersage · Planung voraus
+              Personal-Tipp · kommende Woche
             </h2>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Fokus: {primary.label}
-              {horizon.cycleWeeks > 1 ? ` · ${horizon.weeks.length}-Wochen-Zyklus` : ""}
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Was du beim Planen beachten solltest · {primary.label}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
+            className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
               usesNative
                 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200"
                 : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200"
             }`}
-            title={
-              usesNative
-                ? `${nativeDays} Tage basieren auf deinen bisherigen Plänen.`
-                : "Noch wenig Planungsverlauf – Schätzung aus Branche, Feiertagen und Wetter."
-            }
           >
-            <Cpu className="h-3 w-3" aria-hidden />
-            {usesNative ? "Aus Erfahrung" : "Standard-Schätzung"}
+            {usesNative ? "Kennt deinen Betrieb" : "Erste Einschätzung"}
           </span>
           <Link
             href="/dashboard/planning"
             className="inline-flex items-center gap-1 text-xs font-semibold text-brand hover:underline"
           >
-            Im Planer öffnen
+            Im Planer planen
             <ChevronRight className="h-3 w-3" aria-hidden />
           </Link>
         </div>
@@ -86,7 +83,7 @@ export async function PredictiveStaffingCard() {
                   week.isPrimary ? "text-brand" : "text-muted-foreground"
                 }`}
               >
-                {week.isPrimary ? "Nächste Woche" : "Danach"} · {week.label}
+                {week.isPrimary ? "Diese Woche planen" : "Die Woche danach"} · {week.label}
               </h3>
               {horizon.cycleWeeks > 1 && (
                 <span className="rounded-full bg-foreground/[0.05] px-2 py-0.5 text-[10px] font-semibold text-muted-foreground dark:bg-white/[0.06]">
@@ -103,10 +100,9 @@ export async function PredictiveStaffingCard() {
         ))}
       </div>
 
-      <p className="mt-4 text-[11px] text-muted-foreground">
-        {usesNative
-          ? "Vorhersage für die Wochen, die du jetzt planst – mit Wetter, Feiertagen und deinen bisherigen Plänen. Ab Freitag springt der Fokus automatisch auf die nächste Kalenderwoche."
-          : "Empfehlung für kommende Planungswochen (Branche, Feiertage, Wetter). Nach einigen abgeschlossenen Wochenplänen wird sie genauer."}
+      <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+        Kein Bewertungs-Score: VREMA vergleicht deinen Plan mit typischen Tagen, Feiertagen und Wetter.
+        Je öfter du einen Wochenplan abschließt, desto treffender die Tipps.
       </p>
     </section>
   );
@@ -137,32 +133,35 @@ function DayPill({
       calm: {
         ring: "border-emerald-300/40 dark:border-emerald-500/15",
         bg: "bg-emerald-50/60 dark:bg-emerald-500/[0.06]",
-        label: "Entspannt",
+        label: "Ruhig",
       },
       watch: {
         ring: "border-amber-300/45 dark:border-amber-500/15",
         bg: "bg-amber-50/60 dark:bg-amber-500/[0.07]",
-        label: "Aufmerksam",
+        label: "Achtung",
       },
       urgent: {
         ring: "border-rose-300/45 dark:border-rose-500/15",
         bg: "bg-rose-50/60 dark:bg-rose-500/[0.07]",
-        label: "Aufstocken",
+        label: "Viel los",
       },
     }[tone] ?? {
       ring: "border-border dark:border-white/10",
       bg: "bg-card dark:bg-surface/70",
-      label: "Planung",
+      label: "Normal",
     };
 
   const weatherLabel =
     recommendation.drivers.find((d) => /Sonn|Bew|Regen|Sturm|Schnee/.test(d.label))?.label ?? "";
   const WeatherIcon = weatherIconFor(weatherLabel);
+  const action = staffingActionLine(recommendation.delta, tone);
+  const trust = staffingTrustLabel(recommendation.confidence, source);
+  const why = staffingWhyHint(recommendation.drivers);
 
   return (
     <li
       className={`rounded-xl border ${toneStyles.ring} ${toneStyles.bg} p-3`}
-      title={recommendation.drivers.map((d) => d.label).join(" · ")}
+      title={`${action}. ${why}. ${trust}`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-bold text-foreground">{formatted}</span>
@@ -175,46 +174,21 @@ function DayPill({
         )}
       </div>
       {holidayName ? (
-        <div
-          className="mt-1 truncate text-[10px] font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300"
+        <p
+          className="mt-1 truncate text-[10px] font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300"
           title={holidayName}
         >
           {holidayName}
-        </div>
+        </p>
       ) : isBridge ? (
-        <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-brand">Brückentag</div>
+        <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-brand">Brückentag</p>
       ) : (
-        <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
           {toneStyles.label}
-        </div>
+        </p>
       )}
-      <div className="mt-2 text-[11px] leading-tight">
-        {tone === "closed" ? (
-          <span className="text-muted-foreground">Keine Planung empfohlen</span>
-        ) : (
-          <>
-            <strong className="font-semibold text-foreground">
-              {recommendation.delta > 0 ? `+${recommendation.delta}` : recommendation.delta} Person
-              {Math.abs(recommendation.delta) === 1 ? "" : "en"}
-            </strong>{" "}
-            <span className="text-muted-foreground">empfohlen</span>
-          </>
-        )}
-      </div>
-      <div className="mt-1 flex items-center justify-between gap-1 text-[10px] tabular-nums text-muted-foreground">
-        <span>
-          {Math.round(recommendation.expectedUtilization * 100)} % · {Math.round(recommendation.confidence * 100)} %
-        </span>
-        {source === "native" && (
-          <span
-            className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1 py-0.5 text-[9px] font-bold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200"
-            title="Basiert auf deinen bisherigen Wochenplänen."
-          >
-            <Cpu className="h-2 w-2" aria-hidden />
-            Erfahrung
-          </span>
-        )}
-      </div>
+      <p className="mt-2 text-sm font-semibold leading-snug text-foreground">{action}</p>
+      <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-muted-foreground">{why}</p>
     </li>
   );
 }

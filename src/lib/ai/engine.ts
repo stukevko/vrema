@@ -120,7 +120,7 @@ export async function getDashboardAIInsights(companyId: string): Promise<AIInsig
     items.push({
       id: "fiscal-labor-share",
       level: "warning",
-      text: `Achtung: Lohnquote ca. ${pct} % der geschätzten Wochenumsätze (Ziel &lt; 35 %).${peak}${shiftsHint}`,
+      text: `Personalkosten wirken hoch: rund ${pct} % vom geschätzten Wochenumsatz (Ziel unter 35 %).${peak}${shiftsHint}`,
       actionLabel: "Plan optimieren",
       actionHref:
         fiscal.peakDayOfWeek != null
@@ -133,7 +133,7 @@ export async function getDashboardAIInsights(companyId: string): Promise<AIInsig
     items.push({
       id: "high-utilization",
       level: "warning",
-      text: `Hohe Auslastung erkannt (+${Math.round(trendDeltaPct)}%).`,
+      text: `Diese Woche deutlich mehr Stunden als letzte Woche (ca. +${Math.round(trendDeltaPct)} %). Prüfe, ob der Plan noch passt.`,
     });
   }
 
@@ -141,7 +141,7 @@ export async function getDashboardAIInsights(companyId: string): Promise<AIInsig
     items.push({
       id: "break-compliance",
       level: "info",
-      text: `Rechtssicherheit: ${facts.breakViolationEmployees} Pausenzeiten wurden diesen Monat manuell korrigiert oder fehlen.`,
+      text: `${facts.breakViolationEmployees} Mitarbeitende: Pause fehlt oder wurde nachträglich korrigiert (diesen Monat).`,
     });
   }
 
@@ -149,7 +149,7 @@ export async function getDashboardAIInsights(companyId: string): Promise<AIInsig
     items.push({
       id: "ten-hour-limit",
       level: "warning",
-      text: `Arbeitszeit-Check: ${facts.overTenHourBookings} Buchungen überschreiten die 10-Stunden-Grenze im aktuellen Monat.`,
+      text: `${facts.overTenHourBookings} Schichten länger als 10 Stunden im aktuellen Monat — ArbZG-Grenze prüfen.`,
     });
   }
 
@@ -157,14 +157,14 @@ export async function getDashboardAIInsights(companyId: string): Promise<AIInsig
     items.push({
       id: "stable-operations",
       level: "success",
-      text: "Betrieb läuft stabil. Alle Ruhezeiten wurden eingehalten.",
+      text: "Ruhezeiten und Pausen sehen diese Woche unauffällig aus.",
     });
   }
 
   items.push({
     id: "capacity-trend",
     level: "info",
-    text: `Kapazitäts-Trend: ${toHours(facts.currentWeekMinutes)}h diese Woche vs. ${toHours(facts.previousWeekMinutes)}h Vorwoche.`,
+    text: `Stunden-Vergleich: ${toHours(facts.currentWeekMinutes)} h diese Woche, ${toHours(facts.previousWeekMinutes)} h in der Vorwoche.`,
   });
 
   return {

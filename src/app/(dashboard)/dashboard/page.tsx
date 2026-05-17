@@ -43,6 +43,10 @@ import { Suspense } from "react";
 import { getSuperAdminMonitoring, getSuperAdminOverview } from "@/lib/actions/super-admin";
 import { SuperAdminInlinePanel } from "@/components/dashboard/SuperAdminInlinePanel";
 import { DashboardAISection } from "@/components/dashboard/DashboardAISection";
+import {
+  DashboardManagerGuidance,
+  DashboardGuidanceSection,
+} from "@/components/dashboard/DashboardManagerGuidance";
 import { AsyncAIInsights, AIInsightsSkeleton } from "@/components/dashboard/AsyncAIInsights";
 import { queryActiveShiftTasks } from "@/lib/shift-tasks/active-shift-tasks-data";
 import { getTodayShiftTaskWall } from "@/lib/shift-tasks/wall";
@@ -365,35 +369,36 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* VREMA Insights — Native Core AI, prominenter Trust-Anker.
-          Steht ganz oben (nach No-Show-Alarm), weil sie die zentrale
-          „aus deinen eigenen Daten gelernt"-Story trägt. */}
       {isManager && (
-        <Suspense fallback={null}>
-          <div className="order-1">
-            <VremaInsightsCard />
-          </div>
-        </Suspense>
+        <DashboardManagerGuidance>
+          <DashboardGuidanceSection
+            title="Diese Woche planen"
+            description="Konkrete Tipps für die kommenden Tage — was du im Schichtplaner einplanen solltest."
+          >
+            <Suspense fallback={null}>
+              <PredictiveStaffingCard />
+            </Suspense>
+          </DashboardGuidanceSection>
+
+          <DashboardGuidanceSection
+            title="Aus deinen Betriebsdaten"
+            description="Rückblick und Checks aus Stempeluhr, Plan und ArbZG — ohne Bewertungs-Scores."
+          >
+            <Suspense fallback={null}>
+              <ComplianceCard />
+            </Suspense>
+            <Suspense fallback={null}>
+              <VremaInsightsCard />
+            </Suspense>
+            <DashboardAISection>
+              <Suspense fallback={<AIInsightsSkeleton />}>
+                <AsyncAIInsights companyId={companyId} />
+              </Suspense>
+            </DashboardAISection>
+          </DashboardGuidanceSection>
+        </DashboardManagerGuidance>
       )}
 
-      {/* ArbZG-Compliance-Score (Manager) — Premium-Verkaufsargument. */}
-      {isManager && (
-        <Suspense fallback={null}>
-          <div className="order-1">
-            <ComplianceCard />
-          </div>
-        </Suspense>
-      )}
-
-      {/* Predictive Staffing (Manager) – Vorwärts gerichtet, nutzt jetzt AiWeights
-          mit Heuristik-Fallback bei wenig Trainingsdaten. */}
-      {isManager && (
-        <Suspense fallback={null}>
-          <div className="order-1">
-            <PredictiveStaffingCard />
-          </div>
-        </Suspense>
-      )}
 
       {/* Mitarbeiter: Personal Cockpit – Hero + Stempel + Quick-Stats.
           ID `terminal-widget` migriert hierhin, damit alle Deeplinks („Jetzt einstempeln")
@@ -667,13 +672,15 @@ export default async function DashboardPage() {
             hasWorkLogs={Boolean(hasAnyWorkLog)}
           />
         </div>
-        <div className="order-3 md:order-3">
-          <DashboardAISection>
-            <Suspense fallback={<AIInsightsSkeleton />}>
-              <AsyncAIInsights companyId={companyId} />
-            </Suspense>
-          </DashboardAISection>
-        </div>
+        {!isManager ? (
+          <div className="order-3 md:order-3">
+            <DashboardAISection>
+              <Suspense fallback={<AIInsightsSkeleton />}>
+                <AsyncAIInsights companyId={companyId} />
+              </Suspense>
+            </DashboardAISection>
+          </div>
+        ) : null}
       </div>
 
       {/* Today summary */}
