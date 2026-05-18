@@ -6,6 +6,9 @@ import { PasswordChangeForm } from "@/components/dashboard/PasswordChangeForm";
 import { PasskeySecurityForm } from "@/components/dashboard/PasskeySecurityForm";
 import { ProfileAvatarForm } from "@/components/dashboard/ProfileAvatarForm";
 import { TerminalPinForm } from "@/components/dashboard/TerminalPinForm";
+import { AvailabilityEditor } from "@/components/dashboard/AvailabilityEditor";
+import { getMyWorkSchedule } from "@/lib/actions/work-schedule";
+import { CalendarOff } from "lucide-react";
 
 export default async function EmployeeAccountPage() {
   const session = await auth();
@@ -15,6 +18,8 @@ export default async function EmployeeAccountPage() {
   if (role !== "EMPLOYEE") {
     redirect("/dashboard/settings");
   }
+
+  const workSchedule = await getMyWorkSchedule();
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 px-[max(0.25rem,env(safe-area-inset-left))] pb-6 sm:space-y-6 sm:px-0">
@@ -56,6 +61,14 @@ export default async function EmployeeAccountPage() {
           <h2 className="font-semibold text-sm uppercase tracking-widest text-foreground font-sans">Sicherheit</h2>
         </div>
         <PasskeySecurityForm />
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <CalendarOff className="w-4 h-4 text-muted-foreground" />
+          <h2 className="font-semibold text-sm uppercase tracking-widest text-foreground font-sans">Verfügbarkeit</h2>
+        </div>
+        <AvailabilityEditor initial={workSchedule} />
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">

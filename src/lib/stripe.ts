@@ -33,6 +33,7 @@ export const PLANS = {
       employees: 10,
       pdfExport: false,
       payrollEmail: false,
+      qrTerminal: false,
     },
     features: [
       "Bis zu 10 Mitarbeiter",
@@ -55,6 +56,7 @@ export const PLANS = {
       employees: 100,
       pdfExport: true,
       payrollEmail: true,
+      qrTerminal: true,
     },
     features: [
       "Bis zu 100 Mitarbeiter",
@@ -77,6 +79,7 @@ export const PLANS = {
       employees: Infinity,
       pdfExport: true,
       payrollEmail: true,
+      qrTerminal: true,
     },
     features: [
       "Unbegrenzte Mitarbeiter",

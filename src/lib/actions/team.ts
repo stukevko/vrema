@@ -9,11 +9,18 @@ import { getWeekCycleIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 import { randomBytes } from "crypto";
 import { ShiftTradeStatus, Prisma } from "@prisma/client";
 import { evaluateShiftTradeProposal } from "@/lib/planning/intelligence";
+import {
+  notifyManagersTradeRequest,
+  notifyOpenShiftPublished,
+  notifyTradeDecision,
+} from "@/lib/notifications/dispatch";
 import type { TradeApprovalIntel } from "@/lib/planning/intelligence";
 import {
   assignMissingEmployeeNumbersForCompany,
   nextNumericEmployeeNumber,
 } from "@/lib/team/allocate-employee-number";
+import { assertCanAddEmployees } from "@/lib/plan-limits";
+import { ensureOpenShiftPlaceholderUser, isOpenShiftPlaceholderEmail } from "@/lib/planning/open-shift-placeholder";
 
 const MINUTES_PER_DAY = 24 * 60;
 const DAYS_PER_WEEK = 7;
@@ -107,6 +114,12 @@ export async function inviteEmployeeForCompany(
   const existing = await db.user.findUnique({ where: { email: data.email.toLowerCase().trim() } });
   if (existing) throw new Error("Diese E-Mail ist bereits registriert.");
 
+  const companyMeta = await db.company.findUnique({
+    where: { id: companyId },
+    select: { plan: true },
+  });
+  await assertCanAddEmployees(companyId, companyMeta?.plan ?? "STARTER", 1);
+
   // Generate a temporary password the employee must change on first login
   const tempPassword = Math.random().toString(36).slice(2, 10) + "Aa1!";
   const hashedPassword = await bcrypt.hash(tempPassword, 12);
@@ -171,7 +184,9 @@ export async function getTeamMembers() {
   const { companyId } = await requireTenant();
 
   return db.user.findMany({
-    where: tenantWhere(companyId),
+    where: tenantWhere(companyId, {
+      email: { not: { endsWith: "@vrema.local" } },
+    }),
     select: {
       id: true,
       name: true,
@@ -608,9 +623,14 @@ export async function toggleShiftTradeOffer(shiftId: string, makeOpen: boolean) 
   if (!["EMPLOYEE", "MANAGER", "COMPANY_OWNER", "SUPER_ADMIN"].includes(role)) {
     throw new Error("Keine Berechtigung.");
   }
+  const isManager = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
   const shift = await db.shift.findFirst({
-    where: tenantWhere(companyId, { id: shiftId, userId, isDraft: false }),
-    select: { id: true, userId: true },
+    where: tenantWhere(companyId, {
+      id: shiftId,
+      isDraft: false,
+      ...(isManager ? {} : { userId }),
+    }),
+    include: { user: { select: { role: true } } },
   });
   if (!shift) throw new Error("Schicht nicht gefunden.");
   await db.shift.update({
@@ -619,8 +639,63 @@ export async function toggleShiftTradeOffer(shiftId: string, makeOpen: boolean) 
       ? { isOpenForTrade: true, tradeStatus: ShiftTradeStatus.OPEN, tradeRequestedBy: null }
       : { isOpenForTrade: false, tradeStatus: ShiftTradeStatus.NONE, tradeRequestedBy: null },
   });
+  if (makeOpen) {
+    await notifyOpenShiftPublished({
+      companyId,
+      excludeUserId: shift.userId,
+      sameRole: shift.user.role,
+      dayOfWeek: shift.dayOfWeek,
+      startTime: shift.startTime,
+      endTime: shift.endTime,
+    });
+  }
   revalidatePath("/dashboard/planning");
   revalidatePath("/dashboard");
+}
+
+/** Manager-Übersicht: alle offenen / angefragten Schichten. */
+export async function getOpenShiftsForCompany() {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) return [];
+
+  const rows = await db.shift.findMany({
+    where: tenantWhere(companyId, {
+      isDraft: false,
+      OR: [
+        { tradeStatus: ShiftTradeStatus.OPEN, isOpenForTrade: true },
+        { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL },
+      ],
+    }),
+    include: { user: { select: { name: true, email: true } } },
+    orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
+    take: 30,
+  });
+
+  const requesterIds = rows.map((r) => r.tradeRequestedBy).filter((id): id is string => Boolean(id));
+  const requesters =
+    requesterIds.length > 0
+      ? await db.user.findMany({
+          where: tenantWhere(companyId, { id: { in: requesterIds } }),
+          select: { id: true, name: true, email: true },
+        })
+      : [];
+  const requesterById = new Map(requesters.map((u) => [u.id, u]));
+
+  return rows.map((s) => {
+    const requester = s.tradeRequestedBy ? requesterById.get(s.tradeRequestedBy) : null;
+    const ownerName = isOpenShiftPlaceholderEmail(s.user.email)
+      ? "Offene Lücke"
+      : (s.user.name ?? s.user.email);
+    return {
+      id: s.id,
+      ownerName,
+      dayOfWeek: s.dayOfWeek,
+      startTime: s.startTime,
+      endTime: s.endTime,
+      tradeStatus: s.tradeStatus,
+      pendingRequesterName: requester ? requester.name ?? requester.email : null,
+    };
+  });
 }
 
 export async function getOpenShiftTradesForMyRole() {
@@ -647,7 +722,9 @@ export async function getOpenShiftTradesForMyRole() {
   return trades.map((s) => ({
     id: s.id,
     userId: s.userId,
-    ownerName: s.user.name ?? s.user.email,
+    ownerName: isOpenShiftPlaceholderEmail(s.user.email)
+      ? "Offene Schicht (Lücke)"
+      : (s.user.name ?? s.user.email),
     dayOfWeek: s.dayOfWeek,
     startTime: s.startTime,
     endTime: s.endTime,
@@ -666,7 +743,7 @@ export async function requestShiftTradeTakeover(shiftId: string) {
 
   const shift = await db.shift.findFirst({
     where: tenantWhere(companyId, { id: shiftId, isDraft: false }),
-    include: { user: { select: { role: true, isActive: true } } },
+    include: { user: { select: { role: true, isActive: true, name: true, email: true } } },
   });
   if (!shift) throw new Error("Schicht nicht gefunden.");
   if (shift.userId === userId) throw new Error("Eigene Schicht kann nicht übernommen werden.");
@@ -674,6 +751,11 @@ export async function requestShiftTradeTakeover(shiftId: string) {
   if (!shift.user.isActive || shift.user.role !== me.role) {
     throw new Error("Diese Schicht ist nur für Mitarbeitende derselben Rolle verfügbar.");
   }
+
+  const requester = await db.user.findFirst({
+    where: tenantWhere(companyId, { id: userId }),
+    select: { name: true, email: true },
+  });
 
   await db.shift.update({
     where: { id: shift.id },
@@ -683,6 +765,16 @@ export async function requestShiftTradeTakeover(shiftId: string) {
       isOpenForTrade: true,
     },
   });
+
+  await notifyManagersTradeRequest({
+    companyId,
+    requesterName: requester?.name ?? requester?.email ?? "Mitarbeiter",
+    ownerName: shift.user.name ?? shift.user.email,
+    dayOfWeek: shift.dayOfWeek,
+    startTime: shift.startTime,
+    endTime: shift.endTime,
+  });
+
   revalidatePath("/dashboard/planning");
   revalidatePath("/dashboard");
 }
@@ -759,6 +851,16 @@ export async function decideShiftTradeApproval(shiftId: string, approve: boolean
       where: { id: shift.id },
       data: { tradeStatus: ShiftTradeStatus.OPEN, tradeRequestedBy: null, isOpenForTrade: true },
     });
+    if (shift.tradeRequestedBy) {
+      await notifyTradeDecision({
+        companyId,
+        userId: shift.tradeRequestedBy,
+        approved: false,
+        dayOfWeek: shift.dayOfWeek,
+        startTime: shift.startTime,
+        endTime: shift.endTime,
+      });
+    }
   } else {
     const intel = await evaluateShiftTradeProposal(companyId, shift.id);
     if (!intel) {
@@ -769,14 +871,23 @@ export async function decideShiftTradeApproval(shiftId: string, approve: boolean
         "Tausch nicht freigegeben: Ruhezeit oder Überschneidung für den Übernehmer. Bitte ablehnen oder Plan anpassen."
       );
     }
+    const newOwnerId = shift.tradeRequestedBy;
     await db.shift.update({
       where: { id: shift.id },
       data: {
-        userId: shift.tradeRequestedBy,
+        userId: newOwnerId,
         isOpenForTrade: false,
         tradeStatus: ShiftTradeStatus.NONE,
         tradeRequestedBy: null,
       },
+    });
+    await notifyTradeDecision({
+      companyId,
+      userId: newOwnerId,
+      approved: true,
+      dayOfWeek: shift.dayOfWeek,
+      startTime: shift.startTime,
+      endTime: shift.endTime,
     });
   }
   revalidatePath("/dashboard/planning");
@@ -900,4 +1011,66 @@ export async function createTeamInviteLink(role: "USER" | "MANAGER" = "USER") {
     expiresAt,
     role,
   };
+}
+
+/** Lücken-Schicht: unbesetzter Slot, den das Team übernehmen kann. */
+export async function publishOpenShiftVacancy(input: {
+  weekIndex: number;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  breakDuration?: number;
+}) {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
+    throw new Error("Keine Berechtigung.");
+  }
+
+  const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex)));
+  const dayOfWeek = Math.min(6, Math.max(0, Math.floor(input.dayOfWeek)));
+  const placeholderId = await ensureOpenShiftPlaceholderUser(companyId);
+
+  await setShiftForDay({
+    userId: placeholderId,
+    weekIndex,
+    dayOfWeek,
+    startTime: input.startTime,
+    endTime: input.endTime,
+    breakDuration: input.breakDuration ?? 0,
+  });
+
+  const shift = await db.shift.findFirst({
+    where: tenantWhere(companyId, {
+      userId: placeholderId,
+      weekIndex,
+      dayOfWeek,
+      isDraft: false,
+    }),
+    orderBy: { updatedAt: "desc" },
+    include: { user: { select: { role: true } } },
+  });
+  if (!shift) throw new Error("Lücke konnte nicht angelegt werden.");
+
+  await db.shift.update({
+    where: { id: shift.id },
+    data: {
+      isOpenForTrade: true,
+      tradeStatus: ShiftTradeStatus.OPEN,
+      tradeRequestedBy: null,
+      staffingRole: "OFFEN",
+    },
+  });
+
+  await notifyOpenShiftPublished({
+    companyId,
+    excludeUserId: placeholderId,
+    sameRole: shift.user.role,
+    dayOfWeek: shift.dayOfWeek,
+    startTime: shift.startTime,
+    endTime: shift.endTime,
+  });
+
+  revalidatePath("/dashboard/planning");
+  revalidatePath("/dashboard");
+  return { shiftId: shift.id };
 }

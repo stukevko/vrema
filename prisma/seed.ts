@@ -39,7 +39,7 @@ async function main() {
       name: "VREMA Solutions",
       slug: companySlug,
       plan: "BUSINESS",
-      trialEndsAt: addHours(new Date(), 24 * 14),
+      trialEndsAt: addHours(new Date(), 24 * 7),
       isActive: true,
     },
   });

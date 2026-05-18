@@ -8,6 +8,7 @@ import {
   EMPLOYEE_NUMBER_AUTO_START,
   nextNumericEmployeeNumber,
 } from "@/lib/team/allocate-employee-number";
+import { computeTrialEndsAt } from "@/lib/trial/constants";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -87,6 +88,20 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      const orgPlan = await db.company.findUnique({
+        where: { id: invite.orgId },
+        select: { plan: true },
+      });
+      const { assertCanAddEmployees } = await import("@/lib/plan-limits");
+      try {
+        await assertCanAddEmployees(invite.orgId, orgPlan?.plan ?? "STARTER", 1);
+      } catch (e) {
+        return NextResponse.json(
+          { error: e instanceof Error ? e.message : "Plan-Limit erreicht." },
+          { status: 400 },
+        );
+      }
+
       await db.$transaction(async (tx) => {
         const employeeNumber = await nextNumericEmployeeNumber(invite.orgId, tx);
         await tx.user.create({
@@ -150,7 +165,7 @@ export async function POST(req: NextRequest) {
         plan: (["STARTER", "BUSINESS", "ENTERPRISE"] as const).includes(plan)
           ? plan
           : "STARTER",
-        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        trialEndsAt: computeTrialEndsAt(),
         affiliateId: resolvedAffiliateId,
         users: {
           create: {

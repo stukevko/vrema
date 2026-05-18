@@ -35,6 +35,8 @@ import {
 } from "lucide-react";
 import { ProfileAvatarForm } from "@/components/dashboard/ProfileAvatarForm";
 import { TerminalPinForm } from "@/components/dashboard/TerminalPinForm";
+import { TerminalAccessSection } from "@/components/dashboard/TerminalAccessSection";
+import { getSiteUrl } from "@/lib/seo/site";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -146,6 +148,12 @@ export default async function SettingsPage() {
           <h2 className="font-semibold text-sm text-foreground uppercase tracking-widest font-sans">Terminal-PIN</h2>
         </div>
         <TerminalPinForm />
+        {company?.slug ? (
+          <TerminalAccessSection
+            terminalUrl={`${getSiteUrl()}/terminal/${company.slug}`}
+            plan={session.user.plan ?? "STARTER"}
+          />
+        ) : null}
       </section>
 
       {/* Enterprise: Geofencing-Toggle ist auch in Business sinnvoll und sicher,

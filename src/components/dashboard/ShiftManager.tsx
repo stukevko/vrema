@@ -253,12 +253,15 @@ export function ShiftManager({
   shifts,
   shiftCycleWeeks = 1,
   vacationConflictDays,
+  unavailableDaysByUserId = {},
   enableTaskListActions = false,
 }: {
   members: Member[];
   shifts: ShiftRow[];
   shiftCycleWeeks?: 1 | 2 | 3;
   vacationConflictDays?: Array<{ userId: string; dayOfWeek: number; type?: "VACATION" | "SICK" }>;
+  /** userId → Wochentage (0–6), an denen die Person als nicht verfügbar markiert ist */
+  unavailableDaysByUserId?: Record<string, number[]>;
   /** Manager: Schicht-Checkliste für den sichtbaren Tag im Timeline erzeugen */
   enableTaskListActions?: boolean;
 }) {
@@ -487,6 +490,10 @@ export function ShiftManager({
   const selectedMember = useMemo(
     () => members.find((m) => m.id === selectedUserId) ?? null,
     [members, selectedUserId]
+  );
+  const unavailableForSelected = useMemo(
+    () => new Set(unavailableDaysByUserId[selectedUserId] ?? []),
+    [selectedUserId, unavailableDaysByUserId],
   );
   const usedDays = useMemo(() => new Set(userShifts.map((s) => s.dayOfWeek)), [userShifts]);
   const userPrimaryShiftByDay = useMemo(() => {
@@ -1192,6 +1199,12 @@ export function ShiftManager({
       );
       if (!proceed) return;
     }
+    if (unavailableForSelected.has(dayOfWeek)) {
+      const proceed = window.confirm(
+        `${selectedMember?.name ?? "Diese Person"} hat ${DAY_LABELS[dayOfWeek]} als nicht verfügbar markiert. Trotzdem einplanen?`
+      );
+      if (!proceed) return;
+    }
     const existing = userPrimaryShiftByDay.get(dayOfWeek);
     setMessage(null);
     startTransition(async () => {
@@ -1422,6 +1435,9 @@ export function ShiftManager({
                 ? mobileDayShifts.length
                 : shifts.filter((s) => s.weekIndex === selectedWeekIndex && s.dayOfWeek === idx).length;
               const staffHint = staffingHintByDay.get(idx);
+              const unavailableCount = members.filter((m) =>
+                (unavailableDaysByUserId[m.id] ?? []).includes(idx),
+              ).length;
               const dateLabel = dateForCycleDay(selectedWeekIndex, idx).toLocaleDateString("de-DE", {
                 day: "2-digit",
                 month: "2-digit",
@@ -1446,6 +1462,11 @@ export function ShiftManager({
                     )}
                   </span>
                   <span className="block text-[10px] text-muted-foreground">{shiftCount} Sch.</span>
+                  {unavailableCount > 0 ? (
+                    <span className="mt-0.5 block text-[10px] font-medium text-amber-800 dark:text-amber-200">
+                      {unavailableCount}× nicht verfügbar
+                    </span>
+                  ) : null}
                   {staffHint ? (
                     <StaffingHintBadge
                       tone={staffHint.tone}
@@ -2086,6 +2107,12 @@ export function ShiftManager({
       </div>
       {crossesMidnight ? (
         <p className="mt-2 text-xs font-medium text-brand">Hinweis: Schicht endet am Folgetag (+1 Tag).</p>
+      ) : null}
+      {unavailableForSelected.size > 0 ? (
+        <p className="mt-2 rounded-xl border border-amber-200/80 bg-amber-50/80 px-3 py-2 text-xs text-amber-950 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100">
+          Verfügbarkeit: {selectedMember?.name ?? "Person"} ist an{" "}
+          {[...unavailableForSelected].map((d) => DAY_LABELS[d]).join(", ")} als nicht verfügbar gemeldet.
+        </p>
       ) : null}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {desktopPlannerHelpOpen ? (

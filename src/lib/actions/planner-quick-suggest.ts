@@ -80,6 +80,12 @@ export async function getPlannerQuickSuggest(input: {
 
   const busy = new Set(occupied.map((s) => s.userId));
 
+  const unavailableRows = await db.workSchedule.findMany({
+    where: tenantWhere(companyId, { dayOfWeek, isWorkDay: false }),
+    select: { userId: true },
+  });
+  const unavailable = new Set(unavailableRows.map((r) => r.userId));
+
   const histByUser = new Map<string, { startTime: string; endTime: string }[]>();
   const histAll: { startTime: string; endTime: string }[] = [];
   for (const h of history) {
@@ -92,7 +98,7 @@ export async function getPlannerQuickSuggest(input: {
   const companyPair = modeTimePair(histAll);
 
   return users
-    .filter((u) => !busy.has(u.id))
+    .filter((u) => !busy.has(u.id) && !unavailable.has(u.id))
     .map((u) => {
       const personal = histByUser.get(u.id) ?? [];
       const pair = personal.length > 0 ? modeTimePair(personal) : companyPair;

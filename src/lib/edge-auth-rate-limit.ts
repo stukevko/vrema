@@ -9,7 +9,7 @@ export function applyAuthRelatedRateLimits(req: NextRequest): NextResponse | nul
   const method = req.method;
 
   if (path === "/api/auth/register" && method === "POST") {
-    if (!checkMemRateLimit(`auth:register:${ip}`, 8, 15 * 60 * 1000)) {
+    if (!checkMemRateLimit(`auth:register:${ip}`, 3, 24 * 60 * 60 * 1000)) {
       return NextResponse.json(
         { error: "Zu viele Registrierungsversuche. Bitte in einigen Minuten erneut versuchen." },
         { status: 429, headers: { "Retry-After": "900" } },

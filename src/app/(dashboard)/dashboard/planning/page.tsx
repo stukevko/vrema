@@ -17,6 +17,8 @@ import {
 } from "@/app/(dashboard)/dashboard/planning/planning-trade-actions";
 import { ShiftManager } from "@/components/dashboard/ShiftManager";
 import { TradePushHint } from "@/components/planning/TradePushHint";
+import { OpenShiftsBoard } from "@/components/planning/OpenShiftsBoard";
+import { getUnavailableDaysByUserIds } from "@/lib/actions/work-schedule";
 import { dateForPlannerCycleDay, dayOrderMonFirst } from "@/lib/planning/cycle-display-date";
 import { logServerError } from "@/lib/server-logger";
 import { Handshake, Inbox } from "lucide-react";
@@ -56,6 +58,10 @@ export default async function PlanningPage() {
         logServerError(`planning.page.data[${i}]`, r.reason, { step: i });
       }
     });
+    const unavailableMap = await getUnavailableDaysByUserIds(members.map((m) => m.id));
+    const unavailableDaysByUserId = Object.fromEntries(
+      [...unavailableMap.entries()].map(([userId, days]) => [userId, [...days]]),
+    );
     return (
       <div className="mx-auto max-w-6xl space-y-4 px-1 sm:space-y-6 sm:px-0">
         <div className="glass-card px-4 py-3 sm:px-5 sm:py-4">
@@ -92,8 +98,10 @@ export default async function PlanningPage() {
           }))}
           shiftCycleWeeks={shiftCycleWeeks}
           vacationConflictDays={vacationConflictDays}
+          unavailableDaysByUserId={unavailableDaysByUserId}
           enableTaskListActions={canManage}
         />
+        <OpenShiftsBoard />
         {pendingTrades.length > 0 && (
           <section id="shift-trade-approvals" className="glass-card p-5">
             <h2 className="text-base font-semibold tracking-tight">Schicht-Tausch: Offene Bestätigungen</h2>
@@ -236,7 +244,7 @@ export default async function PlanningPage() {
       </section>
 
       <section className="glass-card p-5">
-        <h2 className="text-base font-semibold tracking-tight">Offene Tausch-Schichten</h2>
+        <h2 className="text-base font-semibold tracking-tight">Offene Schichten</h2>
         {openTrades.length === 0 ? (
           <div className="mt-3 rounded-xl border border-dashed border-line bg-surface-muted/70 px-4 py-6 text-center dark:border-white/10 dark:bg-surface-muted/40">
             <Handshake className="mx-auto h-7 w-7 text-muted-foreground" aria-hidden />

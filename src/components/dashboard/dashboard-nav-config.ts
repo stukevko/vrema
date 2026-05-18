@@ -39,17 +39,17 @@ const ALL_PLANS = ["STARTER", "BUSINESS", "ENTERPRISE"] as const;
 export function getMobileBottomNavItems(role: string): MobileBottomNavItem[] {
   const profileHref = role === "EMPLOYEE" ? "/dashboard/account" : "/dashboard/settings";
   return [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard", label: "Übersicht", icon: LayoutDashboard },
     { href: "/dashboard/planning", label: "Planer", icon: CalendarDays },
     { href: "/dashboard/team", label: "Team", icon: Users },
-    { href: "/dashboard/insights", label: "Insights", icon: Brain },
+    { href: "/dashboard/insights", label: "Einblicke", icon: Brain },
     { href: profileHref, label: "Profil", icon: UserCircle2 },
   ];
 }
 
 const BASE_NAV: DashboardNavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, plans: ALL_PLANS },
-  { href: "/dashboard/insights", label: "Insights", icon: Brain, plans: ALL_PLANS },
+  { href: "/dashboard", label: "Übersicht", icon: LayoutDashboard, plans: ALL_PLANS },
+  { href: "/dashboard/insights", label: "Einblicke", icon: Brain, plans: ALL_PLANS },
   { href: "/dashboard/team", label: "Team", icon: Users, plans: ALL_PLANS },
   { href: "/dashboard/team/absences", label: "Abwesenheiten", icon: ClipboardCheck, plans: ALL_PLANS },
   { href: "/dashboard/planning", label: "Planung", icon: CalendarClock, plans: ALL_PLANS },

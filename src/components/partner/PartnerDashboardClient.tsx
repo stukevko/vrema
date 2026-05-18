@@ -171,7 +171,7 @@ export function PartnerDashboardClient({
           <p className="text-sm font-semibold text-brand">Verdienst-Struktur</p>
           <p className="mt-1 text-sm leading-relaxed text-foreground">
             5€ für jeden Starter-Abschluss, 15€ für jeden Business-Abschluss. Auszahlung erfolgt nach Bestätigung des
-            Kunden-Abos. Es zählt nur ein direkter Abschluss – eine 14-Tage-Testphase zählt nicht.
+            Kunden-Abos. Es zählt nur ein direkter Abschluss – die 7-Tage-Testphase zählt nicht.
           </p>
         </div>
 

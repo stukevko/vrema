@@ -7,6 +7,8 @@ import {
 import { ticketStatusDe, ticketTypeDe } from "@/lib/support/ticket-labels";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { Inbox } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
+import Link from "next/link";
 import { TicketStatus } from "@prisma/client";
 
 export default async function OrgAdminSupportPage() {
@@ -33,11 +35,16 @@ export default async function OrgAdminSupportPage() {
 
       <div className="space-y-3">
         {tickets.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
-            <Inbox className="mx-auto h-8 w-8 text-muted-foreground" />
-            <p className="mt-3 text-sm font-medium text-foreground">Keine Tickets</p>
-            <p className="mt-1 text-sm text-muted-foreground">Sobald Mitarbeitende schreiben, erscheinen die Anfragen hier.</p>
-          </div>
+          <EmptyState
+            icon={Inbox}
+            title="Keine Team-Tickets"
+            description="Sobald Mitarbeitende unter Hilfe & Support schreiben, landen die Anfragen hier."
+            action={
+              <Link href="/dashboard/support" className="btn-brand inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold">
+                Support-Übersicht
+              </Link>
+            }
+          />
         ) : (
           tickets.map((ticket) => (
             <form

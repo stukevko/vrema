@@ -4,6 +4,8 @@ import { decideAbsence } from "@/lib/actions/absence";
 import { db } from "@/lib/db";
 import { CalendarX2 } from "lucide-react";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
+import { EmptyState } from "@/components/ui/EmptyState";
+import Link from "next/link";
 
 export default async function TeamAbsencesPage() {
   const session = await auth();
@@ -33,11 +35,17 @@ export default async function TeamAbsencesPage() {
 
       <div className="space-y-3">
         {absences.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
-            <CalendarX2 className="mx-auto h-8 w-8 text-muted-foreground" />
-            <p className="mt-3 text-sm font-medium text-foreground">Keine Abwesenheiten vorhanden</p>
-            <p className="mt-1 text-sm text-muted-foreground">Aktuell ist alles ruhig im Team.</p>
-          </div>
+          <EmptyState
+            icon={CalendarX2}
+            title="Keine offenen Abwesenheiten"
+            description="Urlaub und Krankmeldungen erscheinen hier zur Freigabe."
+            action={
+              <Link href="/dashboard/vacation" className="btn-brand inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold">
+                Urlaubsübersicht
+              </Link>
+            }
+            tone="celebrate"
+          />
         ) : (
           absences.map((item) => (
             <form

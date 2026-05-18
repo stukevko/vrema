@@ -1,10 +1,16 @@
 import { auth } from "@/auth";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardLayoutClient } from "@/components/dashboard/DashboardLayoutClient";
 import { db } from "@/lib/db";
 import { getMyUnreadSupportRepliesCount, countOpenSupportTicketsForSuperAdmin } from "@/lib/actions/support";
 import { countMyUnreadNotifications } from "@/lib/actions/notifications";
 import { buildBrandStyleCss, getCompanyBranding, VREMA_DEFAULT_BRAND_HEX } from "@/lib/branding/load";
+import { countActiveEmployees } from "@/lib/plan-limits";
+import {
+  getCompanyTrialState,
+  isTrialExemptDashboardPath,
+} from "@/lib/trial";
 
 export default async function DashboardLayout({
   children,
@@ -32,6 +38,28 @@ export default async function DashboardLayout({
     if (!company?.paymentMethodVerifiedAt) {
       redirect("/setup?payment=required");
     }
+  }
+
+  const role = session.user.role ?? "EMPLOYEE";
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const trialState =
+    role !== "SUPER_ADMIN" && role !== "SUPPORT"
+      ? await getCompanyTrialState(session.user.companyId)
+      : null;
+
+  if (trialState?.isTrialExpired && !isTrialExemptDashboardPath(pathname)) {
+    const canManageBilling =
+      role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN";
+    if (canManageBilling) {
+      redirect("/dashboard/billing?trial_expired=1");
+    }
+    redirect("/dashboard/trial-ended");
+  }
+
+  let trialBanner: { daysRemaining: number; activeEmployees: number } | null = null;
+  if (trialState?.isInAppTrial && !isTrialExemptDashboardPath(pathname)) {
+    const activeEmployees = await countActiveEmployees(session.user.companyId);
+    trialBanner = { daysRemaining: trialState.daysRemaining, activeEmployees };
   }
 
   let supportUnreadCount = 0;
@@ -70,12 +98,13 @@ export default async function DashboardLayout({
         />
       ) : null}
       <DashboardLayoutClient
-        role={session.user.role ?? "EMPLOYEE"}
+        role={role}
         plan={session.user.plan ?? "STARTER"}
         user={session.user}
         supportUnreadCount={supportUnreadCount}
         initialSuperOpenTickets={superOpenTickets}
         initialUnreadNotifications={unreadNotifications}
+        trialBanner={trialBanner}
       >
         {children}
       </DashboardLayoutClient>

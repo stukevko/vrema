@@ -7,6 +7,8 @@ import { DashboardSidebar, DashboardMobileBottomNav } from "@/components/dashboa
 import { DashboardTopbar } from "@/components/dashboard/Topbar";
 import { SupportTicketOverlay } from "@/components/dashboard/SupportTicketOverlay";
 import { DashboardPullToRefresh } from "@/components/dashboard/DashboardPullToRefresh";
+import { PwaInstallHint } from "@/components/dashboard/PwaInstallHint";
+import { TrialStatusBanner } from "@/components/dashboard/TrialStatusBanner";
 import { getMyUnreadSupportRepliesCount } from "@/lib/actions/support";
 
 type SessionUser = {
@@ -24,6 +26,7 @@ export function DashboardLayoutClient({
   supportUnreadCount = 0,
   initialSuperOpenTickets = 0,
   initialUnreadNotifications = 0,
+  trialBanner = null,
 }: {
   children: React.ReactNode;
   role: string;
@@ -32,6 +35,7 @@ export function DashboardLayoutClient({
   supportUnreadCount?: number;
   initialSuperOpenTickets?: number;
   initialUnreadNotifications?: number;
+  trialBanner?: { daysRemaining: number; activeEmployees: number } | null;
 }) {
   const [supportOverlayOpen, setSupportOverlayOpen] = useState(false);
   const [supportInitialUnread, setSupportInitialUnread] = useState(false);
@@ -97,6 +101,13 @@ export function DashboardLayoutClient({
         >
           <DashboardPullToRefresh scrollRef={mainScrollRef} />
           <div className="dashboard-shell w-full min-w-0 max-w-full overflow-x-hidden">
+            <PwaInstallHint />
+          {trialBanner ? (
+            <TrialStatusBanner
+              daysRemaining={trialBanner.daysRemaining}
+              activeEmployees={trialBanner.activeEmployees}
+            />
+          ) : null}
           {unreadReplies > 0 ? (
             <div className="no-print mb-4 min-w-0 max-w-full rounded-2xl border border-brand/25 bg-brand-soft/80 px-4 py-3 text-sm text-foreground dark:border-white/10 dark:bg-brand/18 md:mb-5">
               <p className="font-medium">Du hast eine Antwort auf dein Support-Ticket erhalten.</p>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { pricingTiersHint, trialMarketingParagraph } from "@/lib/marketing/trial-copy";
 
 export function ArticleEndCta() {
   return (
@@ -7,8 +8,9 @@ export function ArticleEndCta() {
       <p className="text-xs font-semibold uppercase tracking-widest text-primary">VREMA</p>
       <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Bereit für die neue Zeiterfassung?</h2>
       <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600">
-        Starten Sie mit dem kostenlosen Konto — Terminal, Saldo und Team in wenigen Minuten eingerichtet.
+        {trialMarketingParagraph()} Terminal, Saldo und Team in wenigen Minuten eingerichtet.
       </p>
+      <p className="mt-1 max-w-xl text-xs text-slate-500">{pricingTiersHint()}</p>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <Link
           href="/auth/register"

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { trialDemoSignupLine } from "@/lib/marketing/trial-copy";
 import {
   ArrowRight,
   Bell,
@@ -381,7 +382,7 @@ function FinalCta() {
         VREMA mit deinem Team in 90 Sekunden einrichten
       </h2>
       <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
-        Du brauchst nur eine E-Mail-Adresse. Keine Kreditkarte, keine Demo-Termin-Kette – einfach loslegen.
+        {trialDemoSignupLine()}
       </p>
       <div className="mt-7 flex flex-wrap justify-center gap-3">
         <Link

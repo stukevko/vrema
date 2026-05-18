@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthBrandLogo } from "@/components/brand/AuthBrandLogo";
+import { trialRegisterSubtitle } from "@/lib/marketing/trial-copy";
 import { Loader2, Mail, Lock, Building2, User } from "lucide-react";
 
 const LS_REF = "vrema_affiliate_ref";
@@ -165,8 +166,8 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName, inv
           </h1>
           <p className="mt-1.5 text-sm text-fg-muted">
             {isInviteFlow
-              ? `Sie registrieren sich für ${inviteContext?.orgName}.`
-              : "14 Tage kostenlos testen. Kartenprüfung im Onboarding."}
+              ? `Du registrierst dich für ${inviteContext?.orgName}.`
+              : trialRegisterSubtitle()}
           </p>
           {!isInviteFlow && resolvedCode ? (
             <p className="mt-3 text-xs leading-relaxed text-fg-muted">

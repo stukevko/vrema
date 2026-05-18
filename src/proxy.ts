@@ -5,13 +5,20 @@ import { applyAuthRelatedRateLimits } from "@/lib/edge-auth-rate-limit";
 
 const { auth } = NextAuth(authConfig);
 
+function nextWithPathname(req: { headers: Headers; nextUrl: { pathname: string } }) {
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-pathname", req.nextUrl.pathname);
+  return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
 export default auth((req) => {
   const rateLimited = applyAuthRelatedRateLimits(req);
   if (rateLimited) return rateLimited;
 
   const role = req.auth?.user?.role;
+  const pathname = req.nextUrl.pathname;
+
   if (role === "EMPLOYEE") {
-    const pathname = req.nextUrl.pathname;
 
     if (pathname === "/dashboard/settings" || pathname.startsWith("/dashboard/settings/")) {
       const url = req.nextUrl.clone();
@@ -35,7 +42,7 @@ export default auth((req) => {
     }
   }
 
-  return NextResponse.next();
+  return nextWithPathname(req);
 });
 
 export const config = {

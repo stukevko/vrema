@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ArrowRight, Calculator, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { trialMarketingParagraph } from "@/lib/marketing/trial-copy";
 
 /**
  * Sales-Tool: live ROI-Calculator für die Marketing-Landing.
@@ -158,9 +159,10 @@ export function RoiCalculator() {
               </Link>
             </div>
 
-            <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">{trialMarketingParagraph()}</p>
+            <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Sparkles className="h-3 w-3 text-brand" aria-hidden />
-              Werte werden lokal berechnet – wir speichern nichts.
+              ROI-Werte werden lokal berechnet – wir speichern nichts.
             </p>
           </aside>
         </div>

@@ -3,6 +3,7 @@ import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
 import { updateCompanySettings } from "@/lib/actions/settings";
+import { RevenueCsvImport } from "@/components/dashboard/RevenueCsvImport";
 import { Loader2, Save, ShieldCheck } from "lucide-react";
 import { GERMAN_REGION_LABELS, type GermanRegion } from "@/lib/holidays/de";
 import { CategoryIcon } from "@/components/dashboard/CategoryIcon";
@@ -221,6 +222,9 @@ export function CompanySettingsForm({ company }: Props) {
           <p className="text-[10px] text-muted-foreground mt-1 font-sans">
             Wird mit geplanten Lohnkosten verglichen (&gt;35 % Lohnquote → Hinweis im Dashboard).
           </p>
+          <div className="mt-4">
+            <RevenueCsvImport />
+          </div>
         </div>
 
         <div>

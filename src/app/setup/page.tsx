@@ -94,7 +94,7 @@ export default async function SetupPage({
 
         {requireCard && company?.paymentMethodVerifiedAt && (
           <p className="mt-4 rounded-xl border border-brand/30 bg-brand-soft px-4 py-3 text-xs text-brand dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
-            Karte verifiziert. Sie können das Setup abschliessen.
+            Karte verifiziert. Du kannst das Setup abschließen.
           </p>
         )}
 

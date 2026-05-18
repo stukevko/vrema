@@ -3,6 +3,8 @@ import { getTodayShiftTaskWall } from "@/lib/shift-tasks/wall";
 import { redirect } from "next/navigation";
 import { ListTodo } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import Link from "next/link";
 
 export default async function ShiftTasksLiveWallPage() {
   const { companyId, role } = await requireTenant();
@@ -27,13 +29,16 @@ export default async function ShiftTasksLiveWallPage() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="glass-card border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">Noch keine aktiven Checklisten</p>
-          <p className="mt-2">
-            Sobald Mitarbeitende heute einstempeln (und eine Standard-Vorlage existiert), erscheinen sie hier. Im Planer
-            (Timeline) kannst du per Rechtsklick auf eine Schicht auch manuell eine Checkliste für den gewählten Tag anlegen.
-          </p>
-        </div>
+        <EmptyState
+          icon={ListTodo}
+          title="Noch keine aktiven Checklisten"
+          description="Sobald heute jemand einstempelt, erscheint der Fortschritt hier — oder du legst im Planer manuell eine Checkliste an."
+          action={
+            <Link href="/dashboard/planning" className="btn-brand inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold">
+              Zum Planer
+            </Link>
+          }
+        />
       ) : (
         <ul className="space-y-3">
           {rows.map((row) => {

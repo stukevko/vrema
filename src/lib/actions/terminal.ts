@@ -15,11 +15,27 @@ export async function validatePinAndClock(companySlug: string, pin: string) {
 
   const company = await db.company.findUnique({
     where: { slug: companySlug },
-    select: { id: true, isActive: true, clockIpRestrictionEnabled: true, clockIpAllowlist: true },
+    select: {
+      id: true,
+      isActive: true,
+      trialEndsAt: true,
+      stripeSubId: true,
+      subEndsAt: true,
+      clockIpRestrictionEnabled: true,
+      clockIpAllowlist: true,
+    },
   });
 
   if (!company || !company.isActive) {
     return { status: "error" as const, message: "Terminal ist nicht verfügbar." };
+  }
+
+  const { isTrialExpired } = await import("@/lib/trial");
+  if (isTrialExpired(company)) {
+    return {
+      status: "error" as const,
+      message: "Testphase beendet. Der Betrieb muss zuerst einen Tarif wählen.",
+    };
   }
 
   // Enterprise: IP-Geofencing greift, falls aktiv. Terminal-Pfad kennt keine

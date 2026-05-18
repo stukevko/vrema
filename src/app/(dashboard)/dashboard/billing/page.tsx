@@ -3,13 +3,14 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { PLANS } from "@/lib/stripe";
 import { createCheckoutSession, createBillingPortalSession } from "@/lib/actions/billing";
-import { Check, Zap, CreditCard } from "lucide-react";
+import { Check, Zap, CreditCard, Clock } from "lucide-react";
 import Link from "next/link";
+import { getCompanyTrialState, TRIAL_DAYS, TRIAL_MAX_EMPLOYEES } from "@/lib/trial";
 
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ success?: string; canceled?: string }>;
+  searchParams: Promise<{ success?: string; canceled?: string; trial_expired?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.companyId) redirect("/auth/login");
@@ -21,19 +22,55 @@ export default async function BillingPage({
 
   const company = await db.company.findUnique({
     where: { id: companyId },
-    select: { plan: true, billingInterval: true, stripeCustomerId: true, subEndsAt: true },
+    select: {
+      plan: true,
+      billingInterval: true,
+      stripeCustomerId: true,
+      stripeSubId: true,
+      subEndsAt: true,
+      trialEndsAt: true,
+    },
   });
 
   if (!company) redirect("/auth/login");
 
+  const trial = await getCompanyTrialState(companyId);
   const currentPlan = company.plan;
+  const showTrialExpired = params.trial_expired === "1" || trial?.isTrialExpired;
 
   return (
     <div className="premium-enter mx-auto max-w-5xl space-y-6 px-1 text-foreground sm:space-y-8 sm:px-0">
       <div className="rounded-2xl glass-panel p-5 sm:p-8">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Abonnement & Billing</h1>
-        <p className="text-muted-foreground text-sm mt-1">Verwalten Sie Ihr Abonnement und Ihre Zahlungsmethoden.</p>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Abonnement</h1>
+        <p className="text-muted-foreground text-sm mt-1">Tarif wählen und Zahlungsmethoden verwalten.</p>
       </div>
+
+      {showTrialExpired && !trial?.hasPaidSubscription && (
+        <div className="rounded-xl border border-amber-300/50 bg-amber-50 px-4 py-4 dark:border-amber-500/30 dark:bg-amber-950/40">
+          <div className="flex gap-3">
+            <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden />
+            <div>
+              <p className="text-sm font-semibold text-amber-950 dark:text-amber-100">Testphase beendet</p>
+              <p className="mt-1 text-sm text-amber-900/90 dark:text-amber-100/90">
+                Dein Team kann nicht weiter stempeln oder planen, bis du einen Tarif abschließt. Keine zweite Testphase
+                — einmal {TRIAL_DAYS} Tage mit bis zu {TRIAL_MAX_EMPLOYEES} Mitarbeitenden.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {trial?.isInAppTrial && (
+        <div className="rounded-xl border border-brand/25 bg-brand-soft/60 px-4 py-3 text-sm dark:border-white/10 dark:bg-brand/15">
+          <p className="font-medium text-foreground">
+            Testphase läuft — noch {trial.daysRemaining} {trial.daysRemaining === 1 ? "Tag" : "Tage"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Bis zu {TRIAL_MAX_EMPLOYEES} Mitarbeitende in der Testphase. Wähle rechtzeitig einen Tarif, damit nichts
+            unterbrochen wird.
+          </p>
+        </div>
+      )}
 
       {params.success && (
         <div className="rounded-xl bg-primary/10 border border-primary/30 p-4 flex items-center gap-3">

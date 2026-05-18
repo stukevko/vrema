@@ -124,7 +124,6 @@ export async function createCheckoutSession(plan: PlanKey, interval: Interval) {
     cancel_url: `${baseUrl}/dashboard/billing?canceled=1`,
     subscription_data: {
       metadata: { companyId, plan, interval },
-      trial_period_days: 14,          // 14-day trial for new subscriptions
     },
     allow_promotion_codes: true,
     billing_address_collection: "auto",

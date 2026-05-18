@@ -47,6 +47,9 @@ import {
   DashboardManagerGuidance,
   DashboardGuidanceSection,
 } from "@/components/dashboard/DashboardManagerGuidance";
+import { SundayWeekPlannerBanner } from "@/components/dashboard/SundayWeekPlannerBanner";
+import { PlanVsIstCard } from "@/components/dashboard/PlanVsIstCard";
+import { RevenueSignalCard } from "@/components/dashboard/RevenueSignalCard";
 import { AsyncAIInsights, AIInsightsSkeleton } from "@/components/dashboard/AsyncAIInsights";
 import { queryActiveShiftTasks } from "@/lib/shift-tasks/active-shift-tasks-data";
 import { getTodayShiftTaskWall } from "@/lib/shift-tasks/wall";
@@ -369,6 +372,8 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {isManager && <SundayWeekPlannerBanner companyId={companyId} />}
+
       {isManager && (
         <DashboardManagerGuidance>
           <DashboardGuidanceSection
@@ -384,6 +389,12 @@ export default async function DashboardPage() {
             title="Aus deinen Betriebsdaten"
             description="Rückblick und Checks aus Stempeluhr, Plan und ArbZG — ohne Bewertungs-Scores."
           >
+            <Suspense fallback={null}>
+              <RevenueSignalCard companyId={companyId} />
+            </Suspense>
+            <Suspense fallback={null}>
+              <PlanVsIstCard companyId={companyId} />
+            </Suspense>
             <Suspense fallback={null}>
               <ComplianceCard />
             </Suspense>
@@ -433,30 +444,6 @@ export default async function DashboardPage() {
       {isSuperAdmin && superAdminCompanies && superAdminMonitoring && (
         <div className="order-3">
           <SuperAdminInlinePanel companies={superAdminCompanies} monitoring={superAdminMonitoring} />
-        </div>
-      )}
-
-      {employeeCount === 0 && (
-        <div className="order-4 rounded-2xl glass-panel p-5 sm:p-8">
-          <div className="flex items-center gap-2 mb-2">
-            <ListChecks className="w-4 h-4 text-brand" />
-            <p className="font-semibold text-sm">Noch kein Team angelegt</p>
-          </div>
-          <p className="mb-3 text-sm text-muted-foreground">
-            Starten Sie mit einem klaren Setup und aktivieren Sie anschliessend das Terminal für den ersten Testlauf.
-          </p>
-          <ol className="list-decimal pl-5 text-sm text-foreground space-y-1">
-            <li>
-              <Link href="/dashboard/team" className="text-brand hover:underline">
-                Mitarbeiter anlegen
-              </Link>
-            </li>
-            <li>
-              <a href="#terminal-widget" className="text-brand hover:underline">
-                Terminal testen
-              </a>
-            </li>
-          </ol>
         </div>
       )}
 

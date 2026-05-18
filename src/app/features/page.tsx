@@ -12,6 +12,7 @@ import {
   Timer,
 } from "lucide-react";
 import { getSiteUrl, SEO_KEYWORDS } from "@/lib/seo/site";
+import { pricingTiersHint, trialMarketingParagraph } from "@/lib/marketing/trial-copy";
 
 const base = getSiteUrl();
 
@@ -72,20 +73,20 @@ const FEATURES: Feature[] = [
   {
     icon: MonitorSmartphone,
     tag: "Terminal",
-    title: "QR- & PIN-Terminal",
-    body: "Robustes Einstempeln am festen Gerät – passend für belebte Servicezeiten. PIN-Login, kein Smartphone in nasser Spülenecke nötig.",
+    title: "PIN-Terminal fürs Tablet",
+    body: "Fester Link am Küchen- oder Service-Tablet — nur PIN eingeben, kein GPS. Ideal, wenn das Handy in der Spüle bleiben soll.",
   },
   {
     icon: Sparkles,
     tag: "Planning",
     title: "Schicht-Autopilot",
-    body: "Wetter, Umsatzprognose und Verfügbarkeiten in einem Modell – schlägt Schichtbelegung vor, du entscheidest mit einem Klick.",
+    body: "Wetter, Feiertage und deine Historie — schlägt Schichtbelegung vor. Du bestätigst Entwürfe, nichts geht blind live.",
   },
 ];
 
 const TRUST_BULLETS = [
   { icon: Gauge, label: "Glasklare Kennzahlen", body: "Anwesend jetzt, Lohnquote heute, Auffälligkeiten – als Hero-Stats direkt nach dem Login." },
-  { icon: Fingerprint, label: "Sichere Anmeldung", body: "Passkeys & E-Mail-Verifikation. Optional 2FA für sensible Rollen." },
+  { icon: Fingerprint, label: "Sichere Anmeldung", body: "Passkeys und E-Mail-Verifikation — ohne Passwort-Chaos am Terminal." },
   { icon: ShieldCheck, label: "Daten in der EU", body: "Hosting in Deutschland, Backups verschlüsselt, klare AVV." },
 ];
 
@@ -108,6 +109,7 @@ export default function FeaturesPage() {
             <strong className="text-foreground">Schichtplanung</strong> und Reporting in einer ruhigen Oberfläche – speziell
             gedacht für Restaurants, Bars und Hotellerie.
           </p>
+          <p className="mt-3 max-w-2xl text-xs text-muted-foreground">{pricingTiersHint()}</p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
@@ -204,9 +206,7 @@ export default function FeaturesPage() {
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Bereit, eine ruhige Schicht zu führen?
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            14 Tage gratis testen. Keine Kreditkarte. Volle Funktionen.
-          </p>
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground">{trialMarketingParagraph()}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
               href="/auth/register"

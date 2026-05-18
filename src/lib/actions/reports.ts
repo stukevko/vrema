@@ -117,11 +117,13 @@ export async function generateDatevCsv(data: DatevExportRow[]) {
 }
 
 export async function exportDatevCsvAction(monthKey: string) {
-  const { companyId, role } = await requireTenant();
+  const { companyId, role, plan } = await requireTenant();
   const canExport = role === "COMPANY_OWNER" || role === "SUPER_ADMIN";
   if (!canExport) {
     throw new Error("Keine Berechtigung für DATEV-Export.");
   }
+  const { assertPlanFeature } = await import("@/lib/plan-limits");
+  assertPlanFeature(plan ?? "STARTER", "datevExport");
   const company = await db.company.findUnique({
     where: { id: companyId },
     select: { name: true },

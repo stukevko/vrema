@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import {
+  pricingTiersHint,
+  trialLandingCtaLine,
+  trialPricingIntroLine,
+} from "@/lib/marketing/trial-copy";
 import { VremaLockup, VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
 import { RoiCalculator } from "@/components/marketing/RoiCalculator";
 import { SocialProofStrip } from "@/components/marketing/SocialProofStrip";
@@ -282,12 +287,11 @@ export default function LandingPage() {
               </div>
 
               <h1 className="mb-6 max-w-full hyphens-auto break-words text-4xl font-bold leading-[1.1] tracking-tight text-foreground md:text-6xl">
-                VREMA: Die intelligente Infrastruktur für Ihre Personalzeitwirtschaft.
+                VREMA: Dein Zeitportal für Gastronomie — planen, stempeln, verstehen.
               </h1>
 
               <p className="mb-10 max-w-full hyphens-auto break-words text-lg leading-relaxed text-muted-foreground md:max-w-xl">
-                Digitale Zeiterfassung, Auswertung und Compliance in einer konsistenten Plattform für Unternehmen mit
-                professionellen Prozessen.
+                Sonntag die nächste Woche vorbereiten, unter der Woche sehen wer da ist — und am Monatsende Export fürs Lohnbüro. Ohne GPS, mit klaren Tipps statt Score-Zahlen.
               </p>
 
               <div className="flex max-w-full flex-wrap items-center gap-4">
@@ -516,13 +520,12 @@ export default function LandingPage() {
             <div className="max-w-full rounded-2xl border border-line bg-surface p-6 shadow-sm sm:p-8">
               <div className="flex min-w-0 max-w-full flex-col flex-wrap items-stretch justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="min-w-0 max-w-full">
-                  <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">02 / Core Intelligence</p>
+                  <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">02 / Planung & Tipps</p>
                   <h3 className="max-w-full hyphens-auto break-words text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-                    KI-gestützte Analyse für operative Entscheidungen.
+                    Tipps aus deinen echten Betriebsdaten — nicht aus einer Blackbox.
                   </h3>
                   <p className="mt-3 max-w-full hyphens-auto break-words text-sm text-muted-foreground md:max-w-3xl">
-                    VREMA AI erkennt Muster in Arbeitszeiten, weist auf Auffälligkeiten hin und unterstützt eine
-                    präzise Steuerung Ihrer Teams.
+                    Wetter, Feiertage und dein bisheriger Plan fließen in konkrete Personal-Hinweise — verständlich formuliert, mit einem Klick in den Planer.
                   </p>
                 </div>
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/30 bg-brand-soft/90 text-brand backdrop-blur dark:border-white/10 dark:bg-brand/22">
@@ -539,7 +542,7 @@ export default function LandingPage() {
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="grid min-w-0 max-w-full items-center gap-16 lg:grid-cols-2">
             <div className="min-w-0 max-w-full transition-all duration-300">
-            <p className="text-xs text-primary uppercase tracking-widest mb-4">02 / Philosophie</p>
+            <p className="text-xs text-primary uppercase tracking-widest mb-4">03 / Philosophie</p>
               <h2 className="mb-6 max-w-full hyphens-auto break-words text-4xl font-black leading-tight md:text-5xl">
                 Kein Großkonzern.
                 <br />
@@ -553,7 +556,7 @@ export default function LandingPage() {
               <div className="space-y-4">
                 {[
                   { num: "01", title: "Direkte Kommunikation", desc: "Kein Ticket-System, kein Account-Manager. Direkt zum Entwickler." },
-                  { num: "02", title: "Transparent & Fair", desc: "Feste Preise, klare Meilensteine, keine versteckten Kosten." },
+                  { num: "02", title: "Transparent & Fair", desc: "Feste Tarife nach Teamgröße — Starter, Business, Enterprise. Keine versteckten Kosten." },
                   { num: "03", title: "Lokale Verwurzelung", desc: "Speyer, Rhein-Neckar, Pfalz. Ein Handschlag zählt mehr als jedes SLA." },
                 ].map((item) => (
                   <div key={item.num} className="flex max-w-full min-w-0 gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm">
@@ -630,11 +633,11 @@ export default function LandingPage() {
       <section id="pricing" className="w-full max-w-full border-t border-line bg-surface-muted py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="mb-12 min-w-0 transition-all duration-300">
-            <p className="text-xs text-primary uppercase tracking-widest mb-4">03 / Preise</p>
+            <p className="text-xs text-primary uppercase tracking-widest mb-4">04 / Preise</p>
             <h2 className="mb-4 max-w-full hyphens-auto break-words text-4xl font-black md:text-5xl">Starten.</h2>
-            <p className="text-muted-foreground">Kostenlos testen. Keine Kosten. Keine Verpflichtungen.</p>
+            <p className="text-muted-foreground">{trialPricingIntroLine()}</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Egal ob 5 oder 50 Mitarbeiter - ein Preis. Keine versteckten Kosten pro Nutzer.
+              Feste Tarife nach Teamgröße — Starter bis 10, Business bis 100, Enterprise unbegrenzt.
             </p>
           </div>
 
@@ -644,7 +647,7 @@ export default function LandingPage() {
                 <ShieldCheck className="h-4 w-4" />
                 <p className="text-sm font-semibold">DATEV-Ready</p>
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">Exportformate für Ihr Lohnbüro optimiert.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Exportformate für dein Lohnbüro optimiert.</p>
             </div>
             <div className="rounded-2xl glass-panel p-4">
               <div className="flex items-center gap-2 text-brand">
@@ -718,7 +721,7 @@ export default function LandingPage() {
                         <span className="text-4xl font-black">
                           {yearly ? plan.yearlyPrice : plan.monthlyPrice}€
                         </span>
-                        <span className="text-muted-foreground text-sm mb-1.5">/mo</span>
+                        <span className="text-muted-foreground text-sm mb-1.5"> / Monat</span>
                       </div>
                       {yearly && (
                         <p className="text-muted-foreground text-xs mt-1">
@@ -786,14 +789,13 @@ export default function LandingPage() {
               />
               <div className="relative">
                 <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-brand">
-                  03 / Starten
+                  05 / Starten
                 </p>
                 <h2 className="mx-auto max-w-3xl hyphens-auto break-words text-3xl font-black tracking-tight text-foreground md:text-4xl">
                   Modernste Zeiterfassung — heute in 5 Minuten startklar.
                 </h2>
-                <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-                  Kostenlos testen. Keine Kreditkarte. Keine Verpflichtungen.
-                </p>
+                <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">{trialLandingCtaLine()}</p>
+                <p className="mx-auto mt-1 max-w-xl text-xs text-muted-foreground">{pricingTiersHint()}</p>
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                   <Link
                     href="/auth/register"
