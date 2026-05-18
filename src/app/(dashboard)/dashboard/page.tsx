@@ -48,6 +48,9 @@ import {
   DashboardGuidanceSection,
 } from "@/components/dashboard/DashboardManagerGuidance";
 import { SundayWeekPlannerBanner } from "@/components/dashboard/SundayWeekPlannerBanner";
+import { OwnerWelcomeStrip } from "@/components/dashboard/OwnerWelcomeStrip";
+import { getCompanyTrialState } from "@/lib/trial";
+import { buildForecastHorizon } from "@/lib/planning/forecast-horizon";
 import { PlanVsIstCard } from "@/components/dashboard/PlanVsIstCard";
 import { RevenueSignalCard } from "@/components/dashboard/RevenueSignalCard";
 import { AsyncAIInsights, AIInsightsSkeleton } from "@/components/dashboard/AsyncAIInsights";
@@ -84,7 +87,7 @@ function managerPrimaryFocus(stats: TeamStatsSnapshot) {
   if (stats.absentToday > 0) {
     return {
       title: `${stats.absentToday} fehlende Anwesenheit${stats.absentToday === 1 ? "" : "en"} heute`,
-      description: "Prüfen Sie Stempelungen und Abwesenheiten im Team, bevor Sie nachjustieren.",
+      description: "Prüfe Stempelungen und Abwesenheiten im Team, bevor du nachjustierst.",
       href: "/dashboard/reports",
       cta: "Zu den Berichten",
     };
@@ -100,7 +103,7 @@ function managerPrimaryFocus(stats: TeamStatsSnapshot) {
   if (stats.pendingTradeApprovals > 0) {
     return {
       title: `${stats.pendingTradeApprovals} Schicht-Tausch${stats.pendingTradeApprovals === 1 ? "" : "e"} warten auf Freigabe`,
-      description: "Prüfen Sie offene Übernahme-Anfragen, bevor die Schicht startet.",
+      description: "Prüfe offene Übernahme-Anfragen, bevor die Schicht startet.",
       href: "/dashboard/planning",
       cta: "Tausch prüfen",
     };
@@ -129,16 +132,34 @@ function managerPrimaryFocus(stats: TeamStatsSnapshot) {
   };
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ onboarded?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.companyId) redirect("/auth/login");
 
+  const params = await searchParams;
   const { companyId, id: userId } = session.user as { companyId: string; id: string };
   const plan = session.user.plan ?? "STARTER";
   const role = session.user.role;
   const isSuperAdmin = role === "SUPER_ADMIN" || session.user.id === process.env.SUPER_ADMIN_USER_ID;
   const isManager = role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN";
+  const isOwner = role === "COMPANY_OWNER" || role === "SUPER_ADMIN";
   const isEmployee = role === "EMPLOYEE";
+
+  let showOwnerWelcome = false;
+  let ownerWelcomeFocusWeek: number | undefined;
+  if (isOwner) {
+    const [trial, companyMeta] = await Promise.all([
+      getCompanyTrialState(companyId),
+      db.company.findUnique({ where: { id: companyId }, select: { shiftCycleWeeks: true } }),
+    ]);
+    const primaryWeek = buildForecastHorizon(companyMeta?.shiftCycleWeeks).find((s) => s.isPrimary);
+    ownerWelcomeFocusWeek = primaryWeek?.weekIndex;
+    showOwnerWelcome = params.onboarded === "1" || Boolean(trial?.isInAppTrial);
+  }
 
   const { start: todayStart, end: todayEnd } = getDayBoundsUtc("Europe/Berlin");
 
@@ -357,6 +378,10 @@ export default async function DashboardPage() {
           />
         </div>
       )}
+
+      {showOwnerWelcome && isOwner ? (
+        <OwnerWelcomeStrip focusWeek={ownerWelcomeFocusWeek} />
+      ) : null}
 
       {/* Empty-State Banner (Owner ohne Team) — niemals „toter" leerer Bildschirm. */}
       {isManager && teamStats && teamStats.totalEmployees <= 1 && (

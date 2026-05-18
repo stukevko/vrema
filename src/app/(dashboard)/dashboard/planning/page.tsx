@@ -20,6 +20,7 @@ import { TradePushHint } from "@/components/planning/TradePushHint";
 import { OpenShiftsBoard } from "@/components/planning/OpenShiftsBoard";
 import { getUnavailableDaysByUserIds } from "@/lib/actions/work-schedule";
 import { dateForPlannerCycleDay, dayOrderMonFirst } from "@/lib/planning/cycle-display-date";
+import { parsePlannerWeekIndex } from "@/lib/planning/focus-week";
 import { logServerError } from "@/lib/server-logger";
 import { Handshake, Inbox } from "lucide-react";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
@@ -27,10 +28,15 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 
 const DAY_LABELS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
-export default async function PlanningPage() {
+export default async function PlanningPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ focusWeek?: string; focus?: string; week?: string; day?: string }>;
+}) {
   const session = await auth();
   if (!session?.user) redirect("/auth/login");
 
+  const params = await searchParams;
   const role = session.user.role ?? "EMPLOYEE";
   const canManage = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
 
@@ -50,7 +56,9 @@ export default async function PlanningPage() {
     const members = settled[0].status === "fulfilled" ? settled[0].value : [];
     const shifts = settled[1].status === "fulfilled" ? settled[1].value : [];
     const vacationConflictDays = settled[2].status === "fulfilled" ? settled[2].value : [];
-    const shiftCycleWeeks = settled[3].status === "fulfilled" ? settled[3].value : 1;
+    const shiftCycleWeeksRaw = settled[3].status === "fulfilled" ? settled[3].value : 1;
+    const shiftCycleWeeks = (shiftCycleWeeksRaw === 2 ? 2 : shiftCycleWeeksRaw === 3 ? 3 : 1) as 1 | 2 | 3;
+    const initialFocusWeek = parsePlannerWeekIndex(params.focusWeek, shiftCycleWeeks);
     const pendingTrades =
       settled[4].status === "fulfilled" ? settled[4].value : ([] as Awaited<ReturnType<typeof getPendingTradeApprovals>>);
     settled.forEach((r, i) => {
@@ -97,6 +105,7 @@ export default async function PlanningPage() {
             tradeRequestedBy: s.tradeRequestedBy ?? null,
           }))}
           shiftCycleWeeks={shiftCycleWeeks}
+          initialFocusWeek={initialFocusWeek}
           vacationConflictDays={vacationConflictDays}
           unavailableDaysByUserId={unavailableDaysByUserId}
           enableTaskListActions={canManage}

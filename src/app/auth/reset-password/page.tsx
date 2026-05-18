@@ -34,7 +34,7 @@ function ResetPasswordForm() {
     startTransition(async () => {
       try {
         await resetPassword(token, newPassword);
-        show("Passwort erfolgreich aktualisiert. Sie können sich jetzt anmelden.", "success");
+        show("Passwort erfolgreich aktualisiert. Du kannst dich jetzt anmelden.", "success");
         setTimeout(() => router.push("/auth/login"), 1200);
       } catch (err: unknown) {
         const message = userErrorMessage(err, "Reset fehlgeschlagen.");

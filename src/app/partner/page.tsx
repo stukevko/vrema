@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Partner werden",
   description:
-    "Empfehlen Sie Vrema und verdienen Sie mit dem Partnerprogramm — bis zu 15 € pro geworbener Firma.",
+    "Empfehle VREMA und verdiene mit dem Partnerprogramm — bis zu 15 € pro geworbener Firma.",
 };
 
 const PARTNER_MAILTO = `mailto:kontakt@kevko.studio?subject=${encodeURIComponent("Interesse an VREMA Partnerschaft - All-in-One Zeiterfassung")}&body=${encodeURIComponent(
@@ -29,9 +29,9 @@ export default function PartnerPage() {
           <h1 className="text-2xl font-bold tracking-tight">Partner werden</h1>
 
           <div className="space-y-4 text-base leading-relaxed text-foreground">
-            <p>Empfehlen Sie VREMA.</p>
-            <p>Erhalten Sie 15 € pro Business-Kunden.</p>
-            <p>Werden Sie Teil der VREMA-Erfolgsgeschichte.</p>
+            <p>Empfiehl VREMA an Betriebe, die Zeiterfassung und Schichtplanung vereinfachen wollen.</p>
+            <p>Du erhältst 5 € pro Starter-Abschluss und 15 € pro Business-Abschluss — nach der ersten bezahlten Rechnung.</p>
+            <p>Die 7-Tage-Testphase zählt nicht; es zählt nur der echte Abschluss.</p>
           </div>
 
           <a
@@ -42,7 +42,7 @@ export default function PartnerPage() {
           </a>
 
           <p className="text-center text-xs text-muted-foreground font-sans">
-            Kein Login — Sie erhalten Ihren persönlichen Empfehlungslink per E-Mail.
+            Kein Login — du bekommst deinen persönlichen Empfehlungslink per E-Mail.
           </p>
         </div>
       </div>

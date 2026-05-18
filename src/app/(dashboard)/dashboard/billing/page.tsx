@@ -10,7 +10,7 @@ import { getCompanyTrialState, TRIAL_DAYS, TRIAL_MAX_EMPLOYEES } from "@/lib/tri
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ success?: string; canceled?: string; trial_expired?: string }>;
+  searchParams: Promise<{ success?: string; canceled?: string; trial_expired?: string; upgrade?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.companyId) redirect("/auth/login");
@@ -37,6 +37,7 @@ export default async function BillingPage({
   const trial = await getCompanyTrialState(companyId);
   const currentPlan = company.plan;
   const showTrialExpired = params.trial_expired === "1" || trial?.isTrialExpired;
+  const highlightBusiness = params.upgrade === "business";
 
   return (
     <div className="premium-enter mx-auto max-w-5xl space-y-6 px-1 text-foreground sm:space-y-8 sm:px-0">
@@ -60,6 +61,15 @@ export default async function BillingPage({
         </div>
       )}
 
+      {highlightBusiness && !trial?.hasPaidSubscription && (
+        <div className="rounded-xl border border-brand/30 bg-brand-soft/70 px-4 py-3 text-sm dark:border-white/10 dark:bg-brand/15">
+          <p className="font-semibold text-foreground">Business — für Lohnbüro & Exporte</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            PDF-Monatsberichte, Versand ans Lohnbüro und DATEV-CSV — der nächste Schritt nach der Testphase.
+          </p>
+        </div>
+      )}
+
       {trial?.isInAppTrial && (
         <div className="rounded-xl border border-brand/25 bg-brand-soft/60 px-4 py-3 text-sm dark:border-white/10 dark:bg-brand/15">
           <p className="font-medium text-foreground">
@@ -75,7 +85,7 @@ export default async function BillingPage({
       {params.success && (
         <div className="rounded-xl bg-primary/10 border border-primary/30 p-4 flex items-center gap-3">
           <Check className="w-5 h-5 text-[#22c55e]" />
-          <p className="text-sm text-[#22c55e] font-medium">Zahlung erfolgreich. Ihr Plan wurde aktualisiert.</p>
+          <p className="text-sm text-[#22c55e] font-medium">Zahlung erfolgreich. Dein Plan wurde aktualisiert.</p>
         </div>
       )}
 

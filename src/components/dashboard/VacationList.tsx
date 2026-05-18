@@ -102,7 +102,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
           description={
             canApprove
               ? "Sobald Teammitglieder Anträge stellen, erscheinen sie hier inkl. Resturlaub und Konflikt-Hinweis."
-              : "Nutzen Sie das Antragsformular auf dieser Seite — Zeitraum und Grund genügen."
+              : "Nutze das Antragsformular auf dieser Seite — Zeitraum und Grund genügen."
           }
         />
         <ToastContainer toasts={toasts} remove={remove} />

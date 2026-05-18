@@ -32,6 +32,11 @@ import {
 import { sendPayrollReportEmail } from "@/lib/actions/emails";
 import { exportDatevCsvAction } from "@/lib/actions/reports";
 import { confirmTimesheetMonth } from "@/lib/actions/timesheet";
+import {
+  BUSINESS_UPGRADE_PATH,
+  businessUpgradeToast,
+  type GatedBusinessFeature,
+} from "@/lib/plan-upgrade-messages";
 import { minutesToDecimalHours, workedMinutes } from "@/lib/time/payroll";
 import type { AIReportAnalysisPayload } from "@/lib/ai/types";
 import jsPDF from "jspdf";
@@ -400,7 +405,10 @@ export function ReportsClient({
   } | null>(null);
   const [correctionDecisionError, setCorrectionDecisionError] = useState<string | null>(null);
 
-  const lockedMsg = () => show("Upgrade erforderlich", "info");
+  const showBusinessUpgrade = (feature: GatedBusinessFeature) => {
+    show(businessUpgradeToast(feature), "info");
+    router.push(BUSINESS_UPGRADE_PATH);
+  };
 
   const [isDatevDownloading, setIsDatevDownloading] = useState(false);
   const [isAIAnalyzing, setIsAIAnalyzing] = useState(false);
@@ -1171,7 +1179,7 @@ export function ReportsClient({
             </button>
             <button
               type="button"
-              onClick={hasBusinessAccess ? exportPdf : lockedMsg}
+              onClick={hasBusinessAccess ? exportPdf : () => showBusinessUpgrade("pdf")}
               className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 md:min-h-0 md:w-auto ${
                 hasBusinessAccess
                   ? "bg-primary text-foreground ring-1 ring-inset ring-white/20 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
@@ -1183,7 +1191,7 @@ export function ReportsClient({
             </button>
             <button
               type="button"
-              onClick={hasBusinessAccess ? printReport : lockedMsg}
+              onClick={hasBusinessAccess ? printReport : () => showBusinessUpgrade("print")}
               className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 md:min-h-0 md:w-auto ${
                 hasBusinessAccess
                   ? "border-border bg-surface text-foreground md:hover:bg-muted/50"
@@ -1198,7 +1206,7 @@ export function ReportsClient({
               label="An Lohnbüro senden"
               plan={plan}
               requiredPlan="BUSINESS"
-              onLockedClick={lockedMsg}
+              onLockedClick={() => showBusinessUpgrade("payroll")}
               onClick={sendToPayroll}
             />
             <PlanGateButton
@@ -1206,7 +1214,7 @@ export function ReportsClient({
               label="CSV exportieren"
               plan={plan}
               requiredPlan="BUSINESS"
-              onLockedClick={lockedMsg}
+              onLockedClick={() => showBusinessUpgrade("csv")}
               onClick={exportCsv}
             />
             <button
@@ -1939,16 +1947,16 @@ export function ReportsClient({
         {plan === "STARTER" && (
           <div className="no-print rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-5 flex items-center justify-between gap-4">
             <div>
-              <p className="font-semibold text-sm">PDF-Export & Lohnbüro-Versand freischalten</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Upgrade auf Business für erweiterte Export- und Versandfunktionen.
+              <p className="text-sm font-semibold">PDF, Lohnbüro & DATEV — ab Business</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Am Monatsende direkt ans Lohnbüro senden oder DATEV-CSV ziehen (79 €/Monat).
               </p>
             </div>
             <a
-              href="/dashboard/billing"
-              className="shrink-0 px-4 py-2 rounded-2xl bg-primary text-foreground text-sm font-bold md:hover:bg-primary/90 transition-all active:scale-95"
+              href={BUSINESS_UPGRADE_PATH}
+              className="shrink-0 rounded-2xl bg-primary px-4 py-2 text-sm font-bold text-foreground transition-all active:scale-95 md:hover:bg-primary/90"
             >
-              Upgrade
+              Business ansehen
             </a>
           </div>
         )}

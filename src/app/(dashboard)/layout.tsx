@@ -62,6 +62,9 @@ export default async function DashboardLayout({
     trialBanner = { daysRemaining: trialState.daysRemaining, activeEmployees };
   }
 
+  const showPasskeyNudge =
+    role === "COMPANY_OWNER" && !isTrialExemptDashboardPath(pathname);
+
   let supportUnreadCount = 0;
   let superOpenTickets = 0;
   let unreadNotifications = 0;
@@ -105,6 +108,7 @@ export default async function DashboardLayout({
         initialSuperOpenTickets={superOpenTickets}
         initialUnreadNotifications={unreadNotifications}
         trialBanner={trialBanner}
+        showPasskeyNudge={showPasskeyNudge}
       >
         {children}
       </DashboardLayoutClient>

@@ -36,7 +36,7 @@ export function SaldoWidget({
       <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
         <h2 className="mb-3 text-lg font-semibold">Stunden-Saldo</h2>
         <p className="text-sm text-muted-foreground">
-          Noch keine erfassten Zeiten. Stempeln Sie einmal, damit hier Soll und Ist sichtbar werden.
+          Noch keine erfassten Zeiten. Stempel einmal, damit hier Soll und Ist sichtbar werden.
         </p>
         <Link
           href="#terminal-widget"

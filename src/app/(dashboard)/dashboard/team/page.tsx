@@ -5,6 +5,8 @@ import { TeamList } from "@/components/dashboard/TeamList";
 import { InviteForm } from "@/components/dashboard/InviteForm";
 import { TeamInviteLinkCard } from "@/components/dashboard/TeamInviteLinkCard";
 import { Users, UserCheck, UserMinus, ShieldCheck } from "lucide-react";
+import { getCompanyTrialState } from "@/lib/trial";
+import { countActiveEmployees } from "@/lib/plan-limits";
 
 export default async function TeamPage() {
   const session = await auth();
@@ -22,6 +24,15 @@ export default async function TeamPage() {
   }
 
   const members = await getTeamMembers();
+
+  const trial =
+    canManage && session.user.companyId
+      ? await getCompanyTrialState(session.user.companyId)
+      : null;
+  const activeEmployeeCount =
+    canManage && session.user.companyId
+      ? await countActiveEmployees(session.user.companyId)
+      : 0;
 
   const total = members.length;
   const active = members.filter((m) => m.isActive).length;
@@ -87,7 +98,7 @@ export default async function TeamPage() {
 
         {canManage && (
           <div className="space-y-4">
-            <InviteForm />
+            <InviteForm trialActive={trial?.isInAppTrial ?? false} activeEmployees={activeEmployeeCount} />
             <TeamInviteLinkCard />
           </div>
         )}

@@ -5,8 +5,18 @@ import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { inviteEmployee } from "@/lib/actions/team";
 import { UserPlus, Loader2, Copy, CheckCheck, Terminal } from "lucide-react";
+import { TrialInviteHint } from "@/components/dashboard/TrialInviteHint";
+import { TRIAL_MAX_EMPLOYEES } from "@/lib/trial/constants";
+import Link from "next/link";
 
-export function InviteForm() {
+export function InviteForm({
+  trialActive = false,
+  activeEmployees = 0,
+}: {
+  trialActive?: boolean;
+  activeEmployees?: number;
+}) {
+  const atTrialLimit = trialActive && activeEmployees >= TRIAL_MAX_EMPLOYEES;
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{
@@ -24,6 +34,13 @@ export function InviteForm() {
 
     const form = e.currentTarget;
     const fd = new FormData(form);
+
+    if (atTrialLimit) {
+      setError(
+        `Testphase: maximal ${TRIAL_MAX_EMPLOYEES} aktive Mitarbeitende. Tarif unter Abonnement wählen, um mehr Plätze zu nutzen.`,
+      );
+      return;
+    }
 
     startTransition(async () => {
       try {
@@ -60,7 +77,10 @@ export function InviteForm() {
         <h2 className="font-semibold text-sm">Mitarbeiter einladen</h2>
       </div>
 
-      <div className="p-4 sm:p-5">
+      <div className="p-4 sm:p-5 space-y-3">
+        {trialActive ? (
+          <TrialInviteHint activeEmployees={activeEmployees} atLimit={atTrialLimit} />
+        ) : null}
         <AnimatePresence mode="wait">
           {result ? (
             /* ── Success: show temp credentials ── */
@@ -161,14 +181,19 @@ export function InviteForm() {
               </div>
 
               {error && (
-                <p className="text-xs text-red-400 font-sans bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2">
-                  ✗ {error}
-                </p>
+                <div className="space-y-2 rounded-lg border border-red-500/10 bg-red-500/5 px-3 py-2 text-xs font-sans text-red-400">
+                  <p>✗ {error}</p>
+                  {error.includes("Testphase") ? (
+                    <Link href="/dashboard/billing" className="inline-flex font-semibold text-brand underline-offset-2 hover:underline">
+                      Tarif wählen
+                    </Link>
+                  ) : null}
+                </div>
               )}
 
               <button
                 type="submit"
-                disabled={isPending}
+                disabled={isPending || atTrialLimit}
                 className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-sans text-sm font-bold text-foreground transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] disabled:opacity-60 sm:py-3"
               >
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Terminal className="w-4 h-4" />}

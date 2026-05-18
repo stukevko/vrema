@@ -10,6 +10,7 @@ export function TrialStatusBanner({
   activeEmployees: number;
 }) {
   const urgent = daysRemaining <= 2;
+  const soonEnding = daysRemaining <= 3 && daysRemaining > 2;
 
   return (
     <div
@@ -28,11 +29,15 @@ export function TrialStatusBanner({
           )}
           <div className="min-w-0">
             <p className="font-semibold">
-              Testphase: noch {daysRemaining} {daysRemaining === 1 ? "Tag" : "Tage"}
+              {urgent
+                ? `Testphase endet in ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tagen"} — Tarif sichern`
+                : soonEnding
+                  ? `Noch ${daysRemaining} Tage Testphase — rechtzeitig Tarif wählen`
+                  : `Testphase: noch ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tage"}`}
             </p>
             <p className="mt-0.5 text-xs opacity-90">
-              Bis zu {TRIAL_MAX_EMPLOYEES} Mitarbeitende in der Testphase ({activeEmployees}/{TRIAL_MAX_EMPLOYEES}{" "}
-              aktiv). Danach Tarif wählen — keine Kreditkarte nötig zum Start.
+              Bis zu {TRIAL_MAX_EMPLOYEES} Mitarbeitende ({activeEmployees}/{TRIAL_MAX_EMPLOYEES} aktiv). PDF & Lohnbüro
+              ab Business — danach ohne Unterbrechung weiterplanen.
             </p>
           </div>
         </div>
@@ -40,7 +45,7 @@ export function TrialStatusBanner({
           href="/dashboard/billing"
           className="inline-flex min-h-9 shrink-0 items-center rounded-xl bg-brand px-3 text-xs font-semibold text-brand-foreground"
         >
-          Tarif wählen
+          {urgent ? "Jetzt Tarif wählen" : "Tarif wählen"}
         </Link>
       </div>
     </div>

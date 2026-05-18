@@ -18,6 +18,7 @@ import {
   Users,
 } from "lucide-react";
 import { getSiteUrl } from "@/lib/seo/site";
+import { trialPricingIntroLine } from "@/lib/marketing/trial-copy";
 
 const base = getSiteUrl();
 
@@ -95,7 +96,7 @@ function DemoTopBanner() {
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-2.5">
         <p className="flex items-center gap-2 text-xs font-semibold text-amber-900 dark:text-amber-100">
           <Sparkles className="h-3.5 w-3.5" aria-hidden />
-          Live-Demo · Daten sind beispielhaft. Diese Ansicht zeigt das Manager-Dashboard.
+          Live-Demo · Daten sind beispielhaft. {trialPricingIntroLine()}
         </p>
         <Link
           href="/auth/register"

@@ -114,8 +114,8 @@ export function TeamList({
         title="Noch keine Mitarbeiter im Team"
         description={
           canManage
-            ? "Laden Sie Kolleginnen und Kollegen per E-Mail ein — das Formular finden Sie rechts auf dieser Seite."
-            : "Ihre Firma hat noch keine Mitarbeitenden angelegt. Bitte wenden Sie sich an eine Administratorin."
+            ? "Lade Kolleginnen und Kollegen per E-Mail ein — das Formular findest du rechts auf dieser Seite."
+            : "Deine Firma hat noch keine Mitarbeitenden angelegt. Bitte wende dich an eine Administratorin."
         }
         action={
           canManage ? (
@@ -186,7 +186,7 @@ export function TeamList({
           <Search className="mx-auto mb-2 h-6 w-6 text-muted-foreground" aria-hidden />
           <p className="text-sm font-medium text-foreground">Keine Treffer</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {isFiltering ? "Probieren Sie einen anderen Suchbegriff oder Filter." : "Es ist niemand sichtbar."}
+            {isFiltering ? "Probiere einen anderen Suchbegriff oder Filter." : "Es ist niemand sichtbar."}
           </p>
           {isFiltering && (
             <button

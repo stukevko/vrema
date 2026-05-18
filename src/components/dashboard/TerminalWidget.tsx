@@ -94,7 +94,7 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
 
   const handleClockIn = () => {
     if (!onLine) {
-      setError("Keine Netzwerkverbindung. Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut.");
+      setError("Keine Netzwerkverbindung. Bitte prüfe deine Verbindung und versuche es erneut.");
       return;
     }
     setError(null);
@@ -116,7 +116,7 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
 
   const handleClockOut = () => {
     if (!onLine) {
-      setError("Keine Netzwerkverbindung. Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut.");
+      setError("Keine Netzwerkverbindung. Bitte prüfe deine Verbindung und versuche es erneut.");
       return;
     }
     setError(null);
@@ -134,7 +134,7 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
   const handleBreakToggle = () => {
     if (!displayLog) return;
     if (!onLine) {
-      setError("Keine Netzwerkverbindung. Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut.");
+      setError("Keine Netzwerkverbindung. Bitte prüfe deine Verbindung und versuche es erneut.");
       return;
     }
     setError(null);

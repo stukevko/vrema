@@ -100,7 +100,7 @@ export default async function SetupPage({
 
         <form action={finishSetup} className="mt-8 space-y-4">
           <div>
-            <label className="mb-1.5 block text-xs text-muted-foreground">Wie lautet der Name Ihrer Firma?</label>
+            <label className="mb-1.5 block text-xs text-muted-foreground">Wie lautet der Name deiner Firma?</label>
             <input
               name="companyName"
               type="text"
@@ -112,7 +112,7 @@ export default async function SetupPage({
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs text-muted-foreground">Wie viele Mitarbeitende planen Sie?</label>
+            <label className="mb-1.5 block text-xs text-muted-foreground">Wie viele Mitarbeitende planst du?</label>
             <input
               name="employeeCount"
               type="number"
@@ -121,7 +121,7 @@ export default async function SetupPage({
               placeholder="z. B. 8"
               className="w-full rounded-xl px-4 py-3 text-sm"
             />
-            <p className="mt-1 text-[11px] text-muted-foreground">Diese Angabe hilft bei der Einordnung Ihres Setups.</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Diese Angabe hilft bei der Einordnung deines Setups.</p>
           </div>
 
           <button

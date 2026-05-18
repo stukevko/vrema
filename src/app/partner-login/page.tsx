@@ -41,7 +41,7 @@ export default function PartnerLoginPage() {
 
         <div className="auth-card p-8 sm:p-10">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Partner Login</h1>
-          <p className="mt-1.5 text-sm text-fg-muted">Melden Sie sich mit Ihrem Partnerzugang an.</p>
+          <p className="mt-1.5 text-sm text-fg-muted">Melde dich mit deinem Partnerzugang an.</p>
 
           <form onSubmit={handleSubmit} className="mt-7 space-y-4">
             <div>

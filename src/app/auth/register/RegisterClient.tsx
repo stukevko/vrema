@@ -221,7 +221,7 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName, inv
             ) : (
               <>
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-fg-muted">Ihr Name</label>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-fg-muted">Dein Name</label>
                   <div className="relative">
                     <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" aria-hidden />
                     <input

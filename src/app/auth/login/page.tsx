@@ -45,7 +45,7 @@ function LoginForm() {
           result.error.includes("unverified_email") ||
           result.error.includes("Bitte verifizieren Sie zuerst Ihre E-Mail-Adresse")
         ) {
-          setError("Bitte verifizieren Sie zuerst Ihre E-Mail-Adresse.");
+          setError("Bitte verifiziere zuerst deine E-Mail-Adresse.");
           setShowResend(true);
         } else {
           setError("E-Mail oder Passwort ist falsch.");
@@ -64,7 +64,7 @@ function LoginForm() {
 
   const handleResendVerification = () => {
     if (!email.trim()) {
-      show("Bitte geben Sie zuerst Ihre E-Mail-Adresse ein.", "info");
+      show("Bitte gib zuerst deine E-Mail-Adresse ein.", "info");
       return;
     }
 
@@ -85,7 +85,7 @@ function LoginForm() {
           redirectTo: callbackUrl,
         });
       } catch {
-        setError("Passkey-Anmeldung fehlgeschlagen. Bitte melden Sie sich alternativ mit Passwort an.");
+        setError("Passkey-Anmeldung fehlgeschlagen. Bitte melde dich alternativ mit Passwort an.");
       }
     });
   };
@@ -99,23 +99,23 @@ function LoginForm() {
 
         <div className="auth-card p-8 sm:p-10">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Willkommen zurück</h1>
-          <p className="mt-1.5 text-sm text-fg-muted">Melden Sie sich mit Ihren Zugangsdaten an.</p>
+          <p className="mt-1.5 text-sm text-fg-muted">Melde dich mit deinen Zugangsdaten an.</p>
 
           {registered && (
             <p className="mt-6 rounded-xl border border-brand/25 bg-brand-soft/80 px-3.5 py-2.5 text-xs font-medium text-brand">
-              Bitte prüfen Sie Ihr E-Mail-Postfach. Wir haben Ihnen einen Bestätigungslink gesendet.
+              Bitte prüf dein E-Mail-Postfach. Wir haben dir einen Bestätigungslink geschickt.
             </p>
           )}
 
           {verified && (
             <p className="mt-6 rounded-xl border border-brand/25 bg-brand-soft/80 px-3.5 py-2.5 text-xs font-medium text-brand">
-              E-Mail erfolgreich bestätigt. Sie können sich jetzt anmelden.
+              E-Mail bestätigt. Du kannst dich jetzt anmelden.
             </p>
           )}
 
           {(verifyError === "invalid_verification" || verifyError === "expired_verification") && (
             <p className="mt-6 rounded-xl border border-danger/30 bg-danger-soft/80 px-3.5 py-2.5 text-xs font-medium text-danger-foreground">
-              Verifizierungslink ungültig oder abgelaufen. Bitte registrieren Sie sich erneut oder fordern Sie einen neuen Link an.
+              Verifizierungslink ungültig oder abgelaufen. Bitte registriere dich erneut oder fordere einen neuen Link an.
             </p>
           )}
 

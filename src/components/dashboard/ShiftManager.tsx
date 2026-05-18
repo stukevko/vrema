@@ -255,6 +255,7 @@ export function ShiftManager({
   vacationConflictDays,
   unavailableDaysByUserId = {},
   enableTaskListActions = false,
+  initialFocusWeek = null,
 }: {
   members: Member[];
   shifts: ShiftRow[];
@@ -264,6 +265,8 @@ export function ShiftManager({
   unavailableDaysByUserId?: Record<string, number[]>;
   /** Manager: Schicht-Checkliste für den sichtbaren Tag im Timeline erzeugen */
   enableTaskListActions?: boolean;
+  /** Aus URL `?focusWeek=` (Schichtzyklus 1–3), z. B. vom Sonntags-Wizard. */
+  initialFocusWeek?: 1 | 2 | 3 | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -275,7 +278,9 @@ export function ShiftManager({
   const [message, setMessage] = useState<string | null>(null);
   /** Mobil: nur Einfach-Planer. Desktop: Einfach-Planer oder Timeline. */
   const [viewMode, setViewMode] = useState<"simple" | "timeline">("simple");
-  const [selectedWeekIndex, setSelectedWeekIndex] = useState<1 | 2 | 3>(1);
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState<1 | 2 | 3>(
+    initialFocusWeek && initialFocusWeek <= shiftCycleWeeks ? initialFocusWeek : 1,
+  );
   const [timelineDate, setTimelineDate] = useState(() =>
     new Intl.DateTimeFormat("en-CA", {
       timeZone: "Europe/Berlin",
@@ -403,6 +408,18 @@ export function ShiftManager({
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+
+    const focusWeekParam = Number(params.get("focusWeek"));
+    if (
+      Number.isInteger(focusWeekParam) &&
+      focusWeekParam >= 1 &&
+      focusWeekParam <= shiftCycleWeeks
+    ) {
+      const w = focusWeekParam as 1 | 2 | 3;
+      setSelectedWeekIndex(w);
+      setMessage(`Planungsfokus: Schichtzyklus Woche ${w}.`);
+    }
+
     if (params.get("focus") !== "cost-peak") return;
     const weekParam = Number(params.get("week"));
     const targetWeek: 1 | 2 | 3 =
@@ -416,7 +433,7 @@ export function ShiftManager({
     }
     setViewMode("timeline");
     setMessage("Kosten-Peak-Fokus aktiv: betroffene Schichten werden hervorgehoben.");
-  }, []);
+  }, [shiftCycleWeeks]);
 
   useEffect(() => {
     if (!mobileStartPickerOpen) setMobileStartPickerCustom(false);
