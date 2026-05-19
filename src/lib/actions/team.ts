@@ -21,6 +21,7 @@ import {
 } from "@/lib/team/allocate-employee-number";
 import { assertCanAddEmployees } from "@/lib/plan-limits";
 import { ensureOpenShiftPlaceholderUser, isOpenShiftPlaceholderEmail } from "@/lib/planning/open-shift-placeholder";
+import { normalizeShiftTimesForSave } from "@/lib/planning/shift-display";
 
 const MINUTES_PER_DAY = 24 * 60;
 const DAYS_PER_WEEK = 7;
@@ -522,8 +523,7 @@ export async function setShiftForDay(input: {
   }
 
   const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
-  const startTime = input.startTime.trim();
-  const endTime = input.endTime.trim();
+  const { startTime, endTime } = normalizeShiftTimesForSave(input.startTime, input.endTime);
   const breakDuration = Math.max(0, Math.min(180, Math.floor(input.breakDuration ?? 0)));
   if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
     throw new Error("Ungültiges Zeitformat. Erwartet HH:MM.");

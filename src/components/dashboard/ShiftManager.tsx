@@ -17,7 +17,7 @@ import { StaffingHintBadge } from "@/components/planning/StaffingHintBadge";
 import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
 import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPanel";
-import { PlannerWeekBoard } from "@/components/planning/PlannerWeekBoard";
+import { ShiftCentricBoard } from "@/components/planning/ShiftCentricBoard";
 import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildComplianceFlagsByShiftId, type ShiftPlanRow } from "@/lib/planning/compliance";
@@ -295,8 +295,7 @@ export function ShiftManager({
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("16:00");
   const [message, setMessage] = useState<string | null>(null);
-  /** Mobil: nur Einfach-Planer. Desktop: Einfach-Planer oder Timeline. */
-  const [viewMode, setViewMode] = useState<"week" | "simple" | "timeline">("week");
+  const [shiftPreset, setShiftPreset] = useState<"morning" | "standard" | "evening">("standard");
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<1 | 2 | 3>(
     initialFocusWeek && initialFocusWeek <= shiftCycleWeeks ? initialFocusWeek : 1,
   );
@@ -492,19 +491,13 @@ export function ShiftManager({
    */
   const [renderDesktopTree, setRenderDesktopTree] = useState(false);
 
-  useEffect(() => {
-    if (viewMode !== "simple") setSimpleAddSheetOpen(false);
-  }, [viewMode]);
 
   useLayoutEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
     const sync = () => {
       const desktop = mq.matches;
       setRenderDesktopTree(desktop);
-      if (!desktop) {
-        setViewMode("simple");
-        setShiftEdit(null);
-      }
+      if (!desktop) setShiftEdit(null);
     };
     sync();
     mq.addEventListener("change", sync);
@@ -536,8 +529,7 @@ export function ShiftManager({
       const d = dateForCycleDay(targetWeek, dayParam);
       setTimelineDate(isoFromDate(d));
     }
-    setViewMode("timeline");
-    setMessage("Kosten-Peak-Fokus aktiv: betroffene Schichten werden hervorgehoben.");
+    setMessage("Kosten-Peak-Fokus: teure Schichten im Plan markiert (Wochenansicht).");
   }, [shiftCycleWeeks]);
 
   useEffect(() => {
@@ -549,8 +541,7 @@ export function ShiftManager({
   }, [mobileEndPickerOpen]);
 
   useEffect(() => {
-    const anchor =
-      viewMode === "timeline" ? timelineDate.slice(0, 10) : planWeekMondayIso;
+    const anchor = planWeekMondayIso;
     let cancelled = false;
     setWeatherFetchErr(null);
     fetch(`/api/planning/weather?anchorDate=${encodeURIComponent(anchor)}`)
@@ -578,7 +569,7 @@ export function ShiftManager({
     return () => {
       cancelled = true;
     };
-  }, [viewMode, timelineDate, planWeekMondayIso]);
+  }, [planWeekMondayIso]);
 
   useEffect(() => {
     let cancelled = false;
@@ -980,7 +971,7 @@ export function ShiftManager({
   }, [contextMenu, contextMenuIndex, selectedWeekIndex, enableTaskListActions]);
 
   useEffect(() => {
-    if (!(renderDesktopTree && viewMode === "timeline")) return;
+    if (!renderDesktopTree) return;
     const onKey = (e: KeyboardEvent) => {
       const accel = e.metaKey || e.ctrlKey;
       if (!accel) {
@@ -1058,7 +1049,6 @@ export function ShiftManager({
     return () => window.removeEventListener("keydown", onKey);
   }, [
     renderDesktopTree,
-    viewMode,
     shifts,
     selectedShiftIds,
     copiedShift,
@@ -1083,9 +1073,13 @@ export function ShiftManager({
     );
     const breakDuration = existingShift?.breakDuration ?? 0;
     const clampedStart = Math.max(TIMELINE_START_HOUR * 60, Math.min(endMinute - TIMELINE_SNAP_MINUTES, startMinute));
-    const clampedEnd = Math.min(TIMELINE_END_HOUR * 60, Math.max(startMinute + TIMELINE_SNAP_MINUTES, endMinute));
+    const maxEndMinute = TIMELINE_END_HOUR * 60 - TIMELINE_SNAP_MINUTES;
+    const clampedEnd = Math.min(maxEndMinute, Math.max(startMinute + TIMELINE_SNAP_MINUTES, endMinute));
     const snappedStart = snapMinutes(clampedStart);
-    const snappedEnd = Math.max(snappedStart + TIMELINE_SNAP_MINUTES, snapMinutes(clampedEnd));
+    const snappedEnd = Math.min(
+      maxEndMinute,
+      Math.max(snappedStart + TIMELINE_SNAP_MINUTES, snapMinutes(clampedEnd)),
+    );
     const startTimeValue = minutesToHHMM(snappedStart);
     const endTimeValue = minutesToHHMM(snappedEnd);
     setMessage(null);
@@ -1387,7 +1381,7 @@ export function ShiftManager({
     startTransition(async () => {
       try {
         const anchor =
-          viewMode === "timeline" ? new Date(`${timelineDate.slice(0, 10)}T12:00:00`) : new Date();
+          new Date();
         const planableCount = members.filter(
           (m) => m.role === "EMPLOYEE" || m.role === "MANAGER",
         ).length;
@@ -2092,1242 +2086,121 @@ export function ShiftManager({
     </>
   );
 
+  const applyShiftPreset = (preset: "morning" | "standard" | "evening") => {
+    setShiftPreset(preset);
+    if (preset === "morning") {
+      setStartTime("08:00");
+      setEndTime("16:00");
+    } else if (preset === "evening") {
+      setStartTime("14:00");
+      setEndTime("22:00");
+    } else {
+      setStartTime("09:00");
+      setEndTime("17:00");
+    }
+  };
+
   const DesktopView = (
     <>
-        <div className="mt-3 grid w-full max-w-full grid-cols-3 gap-2 rounded-xl border border-border bg-background p-2 text-xs sm:text-[13px]">
-          <button
-            type="button"
-            onClick={() => setViewMode("week")}
-            className={`min-h-12 touch-manipulation rounded-lg px-2 py-2 font-medium sm:min-h-11 ${viewMode === "week" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground active:bg-muted/50"}`}
-          >
-            Wochenplan
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("simple")}
-            className={`min-h-12 touch-manipulation rounded-lg px-2 py-2 font-medium sm:min-h-11 ${viewMode === "simple" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground active:bg-muted/50"}`}
-          >
-            Eine Person
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("timeline")}
-            className={`min-h-12 touch-manipulation rounded-lg px-2 py-2 font-medium sm:min-h-11 ${viewMode === "timeline" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground active:bg-muted/50"}`}
-          >
-            Feinplan
-          </button>
-        </div>
-        <div className="mt-2 flex items-start gap-2">
-          <button
-            type="button"
-            onClick={() => setDesktopPlannerHelpOpen((v) => !v)}
-            className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-            aria-expanded={desktopPlannerHelpOpen}
-            aria-controls="vrema-desktop-planner-help"
-            title={desktopPlannerHelpOpen ? "Hilfe ausblenden" : "So funktioniert der Planer"}
-          >
-            <Info className="h-4 w-4" aria-hidden />
-            <span className="sr-only">Planer-Hilfe {desktopPlannerHelpOpen ? "ausblenden" : "anzeigen"}</span>
-          </button>
-          <div className="min-w-0 flex-1 space-y-2">
-            {!desktopPlannerHelpOpen ? (
-              <p className="text-[11px] leading-snug text-muted-foreground/90">
-                <span className="text-foreground/90">Autopilot</span> oben ·{" "}
-                <span className="text-foreground/90">Wochenplan</span> = Übersicht wie im Schichtplan ·{" "}
-                <span className="text-foreground/90">Feinplan</span> = ein Tag, Uhrzeiten ziehen.
-              </p>
-            ) : null}
-            {desktopPlannerHelpOpen ? (
-              <div
-                id="vrema-desktop-planner-help"
-                className="rounded-xl border border-border bg-surface-muted/40 px-3 py-2.5 text-[11px] leading-relaxed text-muted-foreground"
-              >
-                <p>
-                  <strong className="text-foreground">Wochenplan:</strong> alle Mitarbeitenden und Tage auf einen Blick —
-                  Schichtkarte antippen zum Bearbeiten, „Hinzufügen“ legt die Zeit von Früh/Standard/Spät unten an.
-                </p>
-                <p className="mt-2">
-                  <strong className="text-foreground">Eine Person:</strong> schnell eine Person Mo–So befüllen.
-                </p>
-                <p className="mt-2">
-                  <strong className="text-foreground">Feinplan:</strong> ein Kalendertag, Balken im 15-Minuten-Raster
-                  ziehen — für Überlappungen und Mindestbesetzung pro Stunde.
-                </p>
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        {viewMode === "week" && (
-          <>
-            <div className="mt-4 flex flex-wrap items-end gap-3">
-              <div className="w-full sm:w-28">
-                <label
-                  htmlFor="vrema-week-needed-staff"
-                  className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
-                >
-                  Mindestbesetzung / Tag
-                </label>
-                <input
-                  id="vrema-week-needed-staff"
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={neededStaff}
-                  onChange={(e) => setNeededStaff(Math.max(1, Number(e.target.value) || 1))}
-                  className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-surface px-3 py-2 text-sm tabular-nums"
-                />
-              </div>
-              <div className="flex flex-wrap gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStartTime("08:00");
-                    setEndTime("16:00");
-                  }}
-                  className="min-h-10 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-fg md:hover:bg-surface-muted"
-                >
-                  Früh 08–16
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStartTime("09:00");
-                    setEndTime("17:00");
-                  }}
-                  className="min-h-10 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-fg md:hover:bg-surface-muted"
-                >
-                  Standard 09–17
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStartTime("14:00");
-                    setEndTime("22:00");
-                  }}
-                  className="min-h-10 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-fg md:hover:bg-surface-muted"
-                >
-                  Spät 14–22
-                </button>
-              </div>
-            </div>
-            <PlannerWeekBoard
-              members={members}
-              shiftByUserAndDay={shiftByUserAndDay}
-              selectedWeekIndex={selectedWeekIndex}
-              neededStaff={neededStaff}
-              planWeekRangeLabel={planWeekRangeLabel}
-              weatherWeek={weatherWeek}
-              weekDayDates={weekDayDates}
-              conflictTypeByCell={conflictTypeByCell}
-              staffingHintByDay={staffingHintByDay}
-              isPending={isPending}
-              onEditShift={(userId, dayOfWeek, shift, label) => {
-                setShiftEdit({
-                  userId,
-                  dayOfWeek,
-                  label,
-                  startTime: shift.startTime,
-                  endTime: shift.endTime,
-                });
-              }}
-              onAddShift={(userId, dayOfWeek) => {
-                if (hasInvalidRange) {
-                  setMessage("Bitte zuerst gültige Start- und Endzeit wählen (Früh/Standard/Spät).");
-                  return;
-                }
-                const conflict = conflictTypeByCell.get(`${userId}-${dayOfWeek}`);
-                if (conflict) {
-                  setMessage(conflict === "SICK" ? "Tag ist als krank markiert." : "Tag liegt im Urlaub.");
-                  return;
-                }
-                setMessage(null);
-                startTransition(async () => {
-                  try {
-                    await setShiftForDay({
-                      userId,
-                      weekIndex: selectedWeekIndex,
-                      dayOfWeek,
-                      startTime,
-                      endTime,
-                    });
-                    setMessage(`Schicht gesetzt (${startTime}–${endTime}).`);
-                  } catch (e: unknown) {
-                    setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
-                  }
-                });
-              }}
-              onOpenTimelineDay={(dayOfWeek) => {
-                setViewMode("timeline");
-                setTimelineDate(isoFromPlannerDate(dateForPlannerCycleDay(selectedWeekIndex, dayOfWeek)));
-                window.requestAnimationFrame(() => {
-                  document.getElementById("planner-timeline-region")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                });
-              }}
-            />
-            {weatherFetchErr ? (
-              <p className="mt-2 text-[10px] text-muted-foreground">{weatherFetchErr}</p>
-            ) : null}
-          </>
-        )}
-
-        {viewMode === "simple" && (
-        <>
-      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-5 md:items-end">
-        <select
-          value={selectedUserId}
-          onChange={(e) => setSelectedUserId(e.target.value)}
-          className="min-h-11 w-full touch-manipulation rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-fg sm:min-h-0 sm:py-2"
-          disabled={isPending}
-        >
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name ?? m.email}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="time"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-          className="min-h-11 w-full touch-manipulation rounded-lg border border-line bg-surface px-3 py-2.5 text-sm tabular-nums text-fg shadow-sm transition-shadow focus:border-brand sm:min-h-0 sm:py-2"
-          disabled={isPending}
-        />
-        <input
-          type="time"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
-          className="min-h-11 w-full touch-manipulation rounded-lg border border-line bg-surface px-3 py-2.5 text-sm tabular-nums text-fg shadow-sm transition-shadow focus:border-brand sm:min-h-0 sm:py-2"
-          disabled={isPending}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="md"
-          className="w-full sm:w-auto"
-          onClick={submitStandardWeek}
-          disabled={isPending || !selectedUserId}
-        >
-          Standardwoche (Mo-Fr)
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="md"
-          className="w-full sm:w-auto"
-          onClick={submitCopyToAll}
-          disabled={isPending || !selectedUserId}
-        >
-          Auf alle übertragen
-        </Button>
-      </div>
-      {crossesMidnight ? (
-        <p className="mt-2 text-xs font-medium text-brand">Hinweis: Schicht endet am Folgetag (+1 Tag).</p>
-      ) : null}
-      {unavailableForSelected.size > 0 ? (
-        <p className="mt-2 rounded-xl border border-amber-200/80 bg-amber-50/80 px-3 py-2 text-xs text-amber-950 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100">
-          Verfügbarkeit: {selectedMember?.name ?? "Person"} ist an{" "}
-          {[...unavailableForSelected].map((d) => DAY_LABELS[d]).join(", ")} als nicht verfügbar gemeldet.
-        </p>
-      ) : null}
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        {desktopPlannerHelpOpen ? (
-          <p className="text-[11px] text-muted-foreground">
-            Tipp: Zeit oben einstellen und Tage direkt antippen. Erneuter Klick mit gleicher Zeit löscht den Tag.
-          </p>
-        ) : null}
-        {selectedUserVacationDays.size > 0 && (
-          <p className="text-[11px] text-warning-foreground">
-            Abwesenheit: {Array.from(selectedUserVacationDays).map((d) => DAY_LABELS[d]).join(", ")}
-            {selectedUserSickDays.size > 0 ? " (krank = Rot)." : "."}
-          </p>
-        )}
-      </div>
-      {desktopPlannerHelpOpen ? (
-        <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
-          <div className="rounded-xl border border-border bg-background px-3 py-2">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 1</p>
-            <p className="text-sm text-foreground">Zeit oben wählen (oder Früh/Standard/Spät klicken).</p>
-          </div>
-          <div className="rounded-xl border border-border bg-background px-3 py-2">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Schritt 2</p>
-            <p className="text-sm text-foreground">Tage antippen. Jeder Klick speichert sofort.</p>
-          </div>
-        </div>
-      ) : null}
-      {hasInvalidRange && (
-        <p className="mt-2 text-xs text-warning-foreground">Bitte gültige Zeit wählen: Start und Ende dürfen nicht gleich sein.</p>
-      )}
-
-      <div className="mt-3 flex flex-wrap items-stretch gap-2 text-xs">
-        <button
-          type="button"
-          onClick={() => {
-            setStartTime("08:00");
-            setEndTime("16:00");
-          }}
-          className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-lg border border-line bg-surface px-2 py-2.5 text-fg shadow-sm transition-colors sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-surface-muted"
-          disabled={isPending}
-        >
-          Früh: 08:00-16:00
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setStartTime("09:00");
-            setEndTime("17:00");
-          }}
-          className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-lg border border-line bg-surface px-2 py-2.5 text-fg shadow-sm transition-colors sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-surface-muted"
-          disabled={isPending}
-        >
-          Standard: 09:00-17:00
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setStartTime("14:00");
-            setEndTime("22:00");
-          }}
-          className="min-h-11 min-w-0 flex-[1_1_100%] touch-manipulation rounded-lg border border-line bg-surface px-2 py-2.5 text-fg shadow-sm transition-colors sm:flex-none sm:px-2.5 sm:py-1 md:hover:bg-surface-muted"
-          disabled={isPending}
-        >
-          Spät: 14:00-22:00
-        </button>
-      </div>
-
-      <div className="mt-4 min-w-0 overflow-x-auto pb-1 scrollbar-hide">
-        <div className="grid min-w-max grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-0 lg:w-full lg:grid-cols-7">
-        {DAY_LABELS.map((label, idx) => {
-          const dayMeta = simplePlannerDayState({
-            dayIdx: idx,
-            usedDays,
-            vacationDays: selectedUserVacationDays,
-            sickDays: selectedUserSickDays,
+      <ShiftCentricBoard
+        members={members}
+        shifts={shifts}
+        selectedWeekIndex={selectedWeekIndex}
+        neededStaff={neededStaff}
+        planWeekRangeLabel={planWeekRangeLabel}
+        weatherWeek={weatherWeek}
+        weekDayDates={weekDayDates}
+        staffingHintByDay={staffingHintByDay}
+        activePreset={shiftPreset}
+        selectedMemberId={selectedUserId || null}
+        isPending={isPending}
+        onPresetChange={applyShiftPreset}
+        onNeededStaffChange={setNeededStaff}
+        onSelectMember={setSelectedUserId}
+        onCreateSlot={(dayOfWeek) => {
+          if (!selectedUserId) {
+            setMessage("Zuerst links eine Person wählen.");
+            return;
+          }
+          if (hasInvalidRange) {
+            setMessage("Bitte Früh, Standard oder Spät wählen.");
+            return;
+          }
+          const conflict = conflictTypeByCell.get(`${selectedUserId}-${dayOfWeek}`);
+          if (conflict) {
+            setMessage(conflict === "SICK" ? "Krank — keine Schicht möglich." : "Urlaub — keine Schicht möglich.");
+            return;
+          }
+          setMessage(null);
+          startTransition(async () => {
+            try {
+              await setShiftForDay({
+                userId: selectedUserId,
+                weekIndex: selectedWeekIndex,
+                dayOfWeek,
+                startTime,
+                endTime,
+              });
+              setMessage(`Schicht angelegt (${startTime}–${endTime}).`);
+            } catch (e: unknown) {
+              setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
+            }
           });
-          const staffHint = staffingHintByDay.get(idx);
-          return (
-            <button
-              key={`desktop-day-${label}`}
-              type="button"
-              onClick={() => applyDayFromInputs(idx)}
-              disabled={isPending || !selectedUserId}
-              className={`touch-manipulation rounded-xl border px-3 py-3 text-left text-sm transition-colors disabled:opacity-60 sm:rounded-lg sm:text-xs min-h-[4.5rem] sm:min-h-0 sm:py-2 ${dayMeta.cellClass} ${recentDayAction?.dayOfWeek === idx ? "ring-2 ring-brand/45" : ""}`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="block text-xs font-semibold">{label}</span>
-                <StatusBadge tone={dayMeta.tone} size="sm" glass withDot={false} className="max-w-[min(100%,5.5rem)]">
-                  {dayMeta.label}
-                </StatusBadge>
-              </div>
-              {staffHint ? (
-                <StaffingHintBadge
-                  tone={staffHint.tone}
-                  label={staffHint.label}
-                  tooltip={staffHint.tooltip}
-                  className="mt-1"
-                />
-              ) : null}
-              <span className="mt-0.5 block text-[10px] font-sans opacity-85">
-                {userPrimaryShiftByDay.get(idx)
-                  ? `${userPrimaryShiftByDay.get(idx)?.startTime}-${userPrimaryShiftByDay.get(idx)?.endTime}`
-                  : "—"}
-              </span>
-              {(() => {
-                const pl = userPrimaryShiftByDay.get(idx);
-                if (!pl) return null;
-                const cf = complianceByShiftId.get(pl.id);
-                if (!cf || (!cf.pauseRisk && !cf.restRisk)) return null;
-                return (
-                  <span className="mt-1 flex items-center gap-1">
-                    {cf.pauseRisk ? (
-                      <span title="Über 6h: Pause prüfen">
-                        <Coffee className="h-3 w-3 text-danger" aria-hidden />
-                      </span>
-                    ) : null}
-                    {cf.restRisk ? (
-                      <span title="Ruhezeit unter 11 Stunden">
-                        <AlarmClock className="h-3 w-3 text-warning" aria-hidden />
-                      </span>
-                    ) : null}
-                  </span>
-                );
-              })()}
-              {recentDayAction?.dayOfWeek === idx && (
-                <span
-                  className={`mt-1 block text-[10px] ${recentDayAction.action === "saved" ? "text-brand" : "text-danger"}`}
-                >
-                  {recentDayAction.action === "saved" ? "Gespeichert" : "Gelöscht"}
-                </span>
-              )}
-            </button>
-          );
-        })}
-        </div>
-      </div>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <p className="text-[11px] text-muted-foreground/80">Legende:</p>
-        <StatusBadge tone="neutral" size="sm" glass withDot={false}>
-          Frei
-        </StatusBadge>
-        <StatusBadge tone="brand" size="sm" glass withDot={false}>
-          Schicht
-        </StatusBadge>
-        <StatusBadge tone="warning" size="sm" glass withDot={false}>
-          Urlaub
-        </StatusBadge>
-        <StatusBadge tone="danger" size="sm" glass withDot={false}>
-          Krank
-        </StatusBadge>
-        {desktopPlannerHelpOpen ? (
-          <span className="text-[11px] text-muted-foreground">· Klick übernimmt die oben gewählte Zeit für den Tag.</span>
-        ) : null}
-      </div>
-
-      <div className="mt-4">
-        <button
-          type="button"
-          onClick={() => setShowDetails((v) => !v)}
-          className="min-h-11 touch-manipulation rounded-md border border-border bg-background px-4 py-2 text-xs text-foreground sm:min-h-0 sm:px-3 sm:py-1.5 md:hover:bg-card/80"
-        >
-          {showDetails ? "Details ausblenden" : "Details anzeigen"}
-        </button>
-      </div>
-      {showDetails && (
-        <div className="mt-3 rounded-xl border border-border bg-background">
-          <div className="grid grid-cols-3 border-b border-border px-3 py-2 text-[11px] uppercase tracking-widest text-muted-foreground">
-            <span>Tag</span>
-            <span>Start</span>
-            <span>Ende</span>
-          </div>
-          {userShifts.length === 0 ? (
-            <p className="px-3 py-3 text-xs text-muted-foreground">Noch keine Schichten für den ausgewählten Mitarbeiter.</p>
-          ) : (
-            userShifts.map((s, idx) => (
-              <div key={s.id} className={`grid grid-cols-3 items-center px-3 py-2 text-sm ${idx % 2 === 0 ? "bg-surface-muted/35" : ""}`}>
-                <span>{DAY_LABELS[s.dayOfWeek] ?? s.dayOfWeek}</span>
-                <span className="font-sans text-foreground">{s.startTime}</span>
-                <span className="font-sans text-foreground">{s.endTime}</span>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-        </>
-        )}
-
-      {viewMode === "timeline" && (
-        <div
-          id="planner-timeline-region"
-          className="mt-4 min-w-0 max-w-full overflow-x-auto rounded-xl border border-border bg-background p-3 scrollbar-hide sm:p-4"
-        >
-          <div className="mb-3 hidden items-start gap-2 rounded-lg border border-border/50 bg-muted/15 px-2.5 py-2 text-[10px] leading-snug text-muted-foreground md:flex lg:hidden">
-            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
-            <span>
-              Die Timeline ist absichtlich breit (24 h). Bitte horizontal wischen; bei Bedarf im Browser mit zwei Fingern
-              leicht zoomen.
-            </span>
-          </div>
-          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs text-muted-foreground">Fokusmodus: Planung zuerst, Kennzahlen optional.</p>
-            <button
-              type="button"
-              onClick={() => setShowPlannerInfo((v) => !v)}
-              className="min-h-11 shrink-0 touch-manipulation rounded-md border border-border bg-background px-3 py-2 text-[11px] text-foreground sm:min-h-0 sm:px-2.5 sm:py-1 md:hover:bg-card/80"
-            >
-              {showPlannerInfo ? "Info ausblenden" : "Info einblenden"}
-            </button>
-          </div>
-          {showPlannerInfo && (
-            <div className="mb-3 rounded-xl border border-border bg-surface px-3 py-2">
-              <p className="text-[11px] text-foreground">
-                Wochenstatus: <span className="text-foreground/85">{plannedDaysCount}/7</span> · Sollstunden:{" "}
-                <span className="text-brand">{formatHours(weeklyMinutes)}</span> · Lücken Mo-Fr:{" "}
-                <span className="text-warning">{missingWeekdays.length === 0 ? "Keine" : missingWeekdays.join(", ")}</span>
-              </p>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-            <div className="min-w-0 flex-1 sm:max-w-xs">
-              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Datum
-              </span>
-              <div className="flex gap-2">
-                <input
-                  type="date"
-                  value={timelineDate}
-                  min={plannerCycleMinIso}
-                  max={plannerCycleMaxIso}
-                  onChange={(e) => onTimelineDateInput(e.target.value)}
-                  className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-lg border border-border bg-surface px-3 py-2 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={goTimelineToday}
-                  className="min-h-11 shrink-0 touch-manipulation rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground hover:bg-muted/50"
-                >
-                  Heute
-                </button>
-              </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                {DAY_LABELS[timelineDay]}
-                {timelinePlanWeekIndex ? ` · Planwoche ${timelinePlanWeekIndex}/${shiftCycleWeeks}` : ""}
-              </p>
-              {selectedShiftIds.length > 1 ? (
-                <span className="mt-1 inline-flex items-center rounded-full border border-brand/30 bg-brand-soft px-2 py-0.5 text-[10px] font-semibold text-brand">
-                  {selectedShiftIds.length} Schichten ausgewählt
-                </span>
-              ) : null}
-            </div>
-            <div className="w-full sm:w-28">
-              <label
-                htmlFor="vrema-needed-staff"
-                className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
-              >
-                Mindestbesetzung
-              </label>
-              <input
-                id="vrema-needed-staff"
-                type="number"
-                min={1}
-                max={20}
-                value={neededStaff}
-                onChange={(e) => setNeededStaff(Math.max(1, Number(e.target.value) || 1))}
-                className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-surface px-3 py-2 text-sm tabular-nums"
-                title="Benötigte Mitarbeiter pro Stunde im Raster"
-              />
-            </div>
-          </div>
-          <p className="text-[11px] leading-snug text-muted-foreground">
-            Raster 06–24 Uhr · 15-Minuten-Snap · Balken antippen zum Bearbeiten
-          </p>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/60 bg-surface/40 px-2 py-2 sm:px-3">
-            <button
-              type="button"
-              disabled={!canTimelinePrevWeek}
-              onClick={() => shiftTimelineWeek(-1)}
-              className="inline-flex min-h-11 min-w-[2.75rem] items-center justify-center gap-1 rounded-lg border border-border bg-background px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-10 sm:px-3"
-              aria-label="Vorherige Woche"
-            >
-              <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="hidden sm:inline">Vorherige Woche</span>
-            </button>
-            <div className="min-w-0 flex-1 px-1 text-center">
-              <p className="truncate text-xs font-semibold text-foreground sm:text-sm">{timelineWeekRangeLabel}</p>
-              <p className="text-[10px] text-muted-foreground">
-                {timelinePlanWeekIndex
-                  ? `Planwoche ${timelinePlanWeekIndex} von ${shiftCycleWeeks} im Zyklus`
-                  : "Datum liegt außerhalb des Plan-Zyklus"}
-              </p>
-              {!canTimelineNextWeek && timelinePlanWeekIndex === shiftCycleWeeks ? (
-                <p className="mt-0.5 text-[10px] text-muted-foreground/90">
-                  Letzte Planwoche — Zyklus in Einstellungen oder Onboarding verlängern.
-                </p>
-              ) : null}
-            </div>
-            <button
-              type="button"
-              disabled={!canTimelineNextWeek}
-              title={
-                !canTimelineNextWeek
-                  ? `Nur ${shiftCycleWeeks} Planwochen im Zyklus — keine weitere Kalenderwoche`
-                  : "Nächste Kalenderwoche"
-              }
-              onClick={() => shiftTimelineWeek(1)}
-              className="inline-flex min-h-11 min-w-[2.75rem] items-center justify-center gap-1 rounded-lg border border-border bg-background px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-10 sm:px-3"
-              aria-label="Nächste Woche"
-            >
-              <span className="hidden sm:inline">Nächste Woche</span>
-              <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
-            </button>
-          </div>
-          <div className="mt-2 flex justify-end">
-            {firstGapWindow && timelineHasShifts ? (
-              <button
-                type="button"
-                onClick={suggestAutofillForFirstGap}
-                className="inline-flex items-center rounded-full border border-danger/30 bg-danger-soft px-3 py-2 text-xs font-medium text-danger-foreground underline-offset-2 hover:underline sm:text-[11px]"
-              >
-                Erste Unterdeckung {firstGapWindow.label}
-              </button>
-            ) : null}
-          </div>
-          {gapSuggestions.length > 0 ? (
-            <div className="mt-2 rounded-xl border border-border bg-background px-3 py-2">
-              <p className="text-[11px] font-semibold text-foreground">Autofill-Vorschläge (Top 3)</p>
-              <div className="mt-2 space-y-1.5">
-                {gapSuggestions.map((s) => (
-                  <div key={s.userId} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-2.5 py-2 text-xs">
-                    <div>
-                      <p className="font-medium text-foreground">{s.name}</p>
-                      <p className="text-muted-foreground">{s.startTime}-{s.endTime} · {s.reason}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        startTransition(async () => {
-                          await setShiftForDay({
-                            userId: s.userId,
-                            weekIndex: selectedWeekIndex,
-                            dayOfWeek: timelineDay,
-                            startTime: s.startTime,
-                            endTime: s.endTime,
-                            breakDuration: 0,
-                          });
-                        });
-                        setFlashAssignedKey(`${s.userId}-${timelineDay}`);
-                        window.setTimeout(() => setFlashAssignedKey(null), 1200);
-                      }}
-                      className="rounded-md border border-brand/30 bg-brand-soft px-2 py-1 font-medium text-brand"
-                    >
-                      Einplanen
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-[200px_1fr] md:items-center">
-            <p className="hidden text-[10px] font-medium text-muted-foreground md:block">Wochentag</p>
-            <div className="flex flex-wrap gap-1.5">
-              {WEEK_SHORT_MON.map((label, i) => {
-                const d = addDaysToDate(new Date(`${timelineWeekMondayIso}T12:00:00`), i);
-                const iso = isoFromDate(d);
-                const w = weatherWeek[i] ?? null;
-                const active = iso === timelineDate.slice(0, 10);
-                return (
-                  <button
-                    key={`wx-${iso}`}
-                    type="button"
-                    onClick={() => {
-                      setTimelineDate(iso);
-                      const week = weekIndexForPlannerDate(d, shiftCycleWeeks);
-                      if (week) setSelectedWeekIndex(week);
-                    }}
-                    className={`flex min-w-[2.75rem] flex-col items-center rounded-xl border px-1.5 py-1.5 text-[10px] transition-colors ${
-                      active ? "border-brand/45 bg-brand-soft text-brand" : "border-line bg-surface/80 text-fg"
-                    }`}
-                  >
-                    <span className="font-semibold">{label}</span>
-                    {w ? (
-                      <>
-                        <span className="mt-0.5" title={weatherOpenWeatherAlt(w)}>
-                          {weatherIconForDay(w, "h-5 w-5 text-foreground/85")}
-                        </span>
-                        <span className="tabular-nums text-[10px] font-medium">{Math.round(w.maxTempC)}°</span>
-                      </>
-                    ) : (
-                      <span className="mt-1 text-[9px] text-muted-foreground" title="Keine Prognose für diesen Tag">
-                        ·
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            {weatherFetchErr ? (
-              <p className="text-[10px] text-muted-foreground md:col-span-2">{weatherFetchErr}</p>
-            ) : weatherWeekHasData ? (
-              <p className="text-[10px] text-muted-foreground md:col-span-2">
-                Tages-Temperatur (Prognose bis ca. 16 Tage) — auch Planwoche 2 im Zyklus sichtbar.
-              </p>
-            ) : (
-              <p className="text-[10px] text-muted-foreground md:col-span-2">
-                Keine Wetterdaten für diese Woche — Datum im Plan-Zyklus oder PLZ prüfen.
-              </p>
-            )}
-          </div>
-          {costPeakFocusDay != null && timelineDay === costPeakFocusDay ? (
-            <div className="mt-2 flex items-center justify-between rounded-xl border border-warning/25 bg-warning-soft px-3 py-2 text-[11px] text-warning-foreground">
-              <span>Kosten-Peak-Fokus aktiv: Betroffene Schichten sind hervorgehoben.</span>
-              <button
-                type="button"
-                onClick={() => setCostPeakFocusDay(null)}
-                className="rounded-md border border-warning/35 bg-surface px-2 py-0.5 font-semibold text-warning-foreground"
-              >
-                Filter aus
-              </button>
-            </div>
-          ) : null}
-
-          <div className="mt-3 max-h-[75vh] min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-auto overscroll-contain scrollbar-hide">
-            <div className="w-full min-w-[640px] space-y-3 py-1 sm:min-w-[780px] md:min-w-[900px] lg:min-w-[1100px]">
-              <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground md:grid-cols-[200px_1fr] md:items-center">
-                <div className="hidden font-medium text-foreground md:block">Mitarbeiter</div>
-                <div className="grid font-sans tabular-nums" style={TIMELINE_GRID_STYLE}>
-                  {Array.from({ length: TIMELINE_SLOT_COUNT }).map((_, idx) => {
-                    const hour = TIMELINE_START_HOUR + idx;
-                    return (
-                      <span
-                        key={hour}
-                        className={`text-center text-[9px] leading-none sm:text-[10px] ${
-                          hour % 6 === 0 ? "font-semibold text-foreground/90" : "text-muted-foreground"
-                        }`}
-                      >
-                        {String(hour).padStart(2, "0")}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {timelineRows.map((row) => {
-                const weatherConflict =
-                  Boolean(timelineWxDay && isRainLikeCondition(timelineWxDay.condition)) &&
-                  (row.member.planningWorkArea === "OUTDOOR" || row.member.planningWorkArea === "TERRACE");
-                const costPeakFocusActive = costPeakFocusDay != null && timelineDay === costPeakFocusDay;
-                const expensiveSet = expensiveShiftIdsByDay.get(timelineDay) ?? new Set<string>();
-                const costPeakAffected = Boolean(row.shift && expensiveSet.has(row.shift.id));
-
-                const shiftStart = row.shift ? toMinutes(row.shift.startTime) : null;
-                const shiftEnd = row.shift ? toMinutes(row.shift.endTime) : null;
-                const overnightCurrent = shiftStart !== null && shiftEnd !== null && shiftEnd < shiftStart;
-                const previousStart = row.previousShift ? toMinutes(row.previousShift.startTime) : null;
-                const previousEnd = row.previousShift ? toMinutes(row.previousShift.endTime) : null;
-                const overnightCarry =
-                  previousStart !== null && previousEnd !== null && previousEnd < previousStart ? previousEnd : null;
-                const draftForRow = dragDraft?.userId === row.member.id ? dragDraft : null;
-                const visualStart =
-                  draftForRow?.startMinute ??
-                  (shiftStart ?? (overnightCarry !== null ? 0 : null));
-                const visualEnd =
-                  draftForRow?.endMinute ??
-                  (shiftStart !== null && shiftEnd !== null
-                    ? overnightCurrent
-                      ? TIMELINE_END_HOUR * 60
-                      : shiftEnd
-                    : overnightCarry);
-                const leftPct =
-                  visualStart === null ? 0 : timelineMinuteToPercent(visualStart);
-                const widthPct =
-                  visualStart === null || visualEnd === null
-                    ? 0
-                    : timelineMinuteToPercent(Math.min(visualEnd, TIMELINE_END_HOUR * 60)) -
-                      timelineMinuteToPercent(Math.max(visualStart, TIMELINE_START_HOUR * 60));
-                const initials = (row.member.name ?? row.member.email).slice(0, 2).toUpperCase();
-                const barLabel =
-                  visualStart !== null && visualEnd !== null
-                    ? `${minutesToHHMM(visualStart)}-${minutesToHHMM(visualEnd)}${
-                        draftForRow ? "" : overnightCurrent ? " (+1 Tag)" : row.shift ? "" : " (vom Vortag)"
-                      }`
-                    : "Frei";
-                const tradeOpen = Boolean(row.shift?.isOpenForTrade && row.shift?.tradeStatus !== "NONE");
-                const rowCompliance = row.shift ? complianceByShiftId.get(row.shift.id) : null;
-                const liveDuration =
-                  draftForRow && draftForRow.endMinute > draftForRow.startMinute
-                    ? draftForRow.endMinute - draftForRow.startMinute
-                    : null;
-                const livePauseRisk = liveDuration !== null ? liveDuration > 6 * 60 : Boolean(rowCompliance?.pauseRisk);
-                const roleTone = getRoleTimelineSegmentTone(row.member.role);
-                return (
-                  <div
-                    key={row.member.id}
-                    className="grid grid-cols-1 items-stretch gap-2 md:grid-cols-[200px_1fr] md:items-stretch md:gap-2"
-                  >
-                    <div className="flex min-h-11 items-center rounded-xl border border-border bg-surface px-3 py-2 md:min-h-[3.25rem] md:py-2.5">
-                      <span className="inline-flex min-w-0 items-center gap-2 text-sm text-foreground">
-                        <Avatar
-                          src={row.member.image}
-                          fallback={initials}
-                          alt={row.member.name ?? row.member.email}
-                          className="h-9 w-9 md:h-7 md:w-7"
-                          fallbackClassName="text-[10px] md:text-[9px]"
-                        />
-                        <span className="truncate text-[15px] font-medium">{row.member.name ?? row.member.email}</span>
-                      </span>
-                    </div>
-                    <div
-                      data-timeline-lane
-                      className={`group/lane relative h-[4.25rem] touch-manipulation rounded-2xl border bg-card/60 transition-[background-color,border-color,box-shadow] duration-150 md:h-16 ${
-                        row.conflict
-                          ? row.conflict === "SICK"
-                            ? "border-rose-200/60 bg-rose-50/30 dark:border-rose-300/15 dark:bg-rose-500/[0.05]"
-                            : "border-amber-200/60 bg-amber-50/30 dark:border-amber-300/15 dark:bg-amber-500/[0.05]"
-                          : "border-slate-200/40 hover:border-slate-300/60 dark:border-white/[0.06] dark:hover:border-white/[0.12]"
-                      } ${activeDrag?.userId === row.member.id ? "border-brand/40 bg-brand-soft/40 dark:bg-brand/10" : ""}`}
-                      style={{ touchAction: "pan-y" }}
-                      onPointerDown={(e) => {
-                        if (e.pointerType === "mouse" && e.button !== 0) return;
-                        if (row.conflict) return;
-                        beginTimelineDrag(
-                          e.clientX,
-                          e.currentTarget as HTMLElement,
-                          row.member.id,
-                          "create",
-                          undefined,
-                          undefined,
-                          e.pointerId
-                        );
-                      }}
-                      onDragOver={(e) => {
-                        if (!row.conflict) e.preventDefault();
-                      }}
-                    >
-                      <div className="absolute inset-0">
-                        <div
-                          className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-30"
-                          style={{
-                            backgroundImage: `repeating-linear-gradient(
-                              90deg,
-                              transparent 0,
-                              transparent calc(100% / ${TIMELINE_QUARTER_STRIPES} - 0.5px),
-                              rgb(148 163 184 / 0.22) calc(100% / ${TIMELINE_QUARTER_STRIPES} - 0.5px),
-                              rgb(148 163 184 / 0.22) calc(100% / ${TIMELINE_QUARTER_STRIPES})
-                            )`,
-                          }}
-                          aria-hidden
-                        />
-                        {timelineHasShifts
-                          ? timelineCoverage.map((slot, idx) =>
-                          slot.isGap ? (
-                            <div
-                              key={`gap-${idx}`}
-                              className="absolute top-0 bottom-0 bg-rose-200/15 dark:bg-rose-400/[0.06]"
-                              style={{
-                                left: `${timelineMinuteToPercent(TIMELINE_START_HOUR * 60 + idx * coverageSlotMinutes)}%`,
-                                width: `${(coverageSlotMinutes / TIMELINE_TOTAL_MINUTES) * 100}%`,
-                              }}
-                            />
-                          ) : null,
-                            )
-                          : null}
-                        {hourLinePercents.map((leftLine, idx) => (
-                          <div
-                            key={`hour-line-${idx}`}
-                            className={`pointer-events-none absolute top-0 bottom-0 w-px ${
-                              idx % 6 === 0
-                                ? "bg-slate-400/55 dark:bg-white/[0.14]"
-                                : "bg-slate-300/40 dark:bg-white/[0.09]"
-                            }`}
-                            style={{ left: `${leftLine.toFixed(4)}%` }}
-                          />
-                        ))}
-                      </div>
-                      {/* Hover-Ghost: nur sichtbar, wenn Lane leer (kein Konflikt, keine Schicht). */}
-                      {!row.conflict && widthPct === 0 ? (
-                        <div className="pointer-events-none absolute inset-2 hidden items-center justify-center rounded-xl border border-dashed border-brand/30 bg-brand/[0.04] text-[11px] font-medium text-brand/80 opacity-0 transition-opacity duration-150 group-hover/lane:opacity-100 md:flex">
-                          <Plus className="mr-1 h-3.5 w-3.5" aria-hidden />
-                          Klicken &amp; ziehen, um zu planen
-                        </div>
-                      ) : null}
-                      {row.conflict ? (
-                        <div className="pointer-events-none absolute inset-x-3 inset-y-2 flex items-center justify-center">
-                          <span
-                            className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                              row.conflict === "SICK"
-                                ? "border-rose-300/40 bg-white/70 text-rose-700 dark:bg-rose-950/30 dark:text-rose-200"
-                                : "border-amber-300/40 bg-white/70 text-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
-                            }`}
-                          >
-                            {row.conflict === "SICK" ? "Krank · gesperrt" : "Urlaub · gesperrt"}
-                          </span>
-                        </div>
-                      ) : widthPct > 0 ? (
-                        <>
-                          {!draftForRow && overnightCurrent && shiftEnd !== null ? (
-                            <div
-                              className="absolute top-1.5 bottom-1.5 z-[9] flex items-center gap-1 rounded-lg border border-brand/35 bg-brand-soft px-2 text-[10px] font-semibold text-brand"
-                              style={{
-                                left: "0%",
-                                width: `${timelineMinuteToPercent(shiftEnd)}%`,
-                              }}
-                              title={`Nächster Tag ${minutesToHHMM(0)}–${minutesToHHMM(shiftEnd)}`}
-                            >
-                              <CornerDownRight className="h-3 w-3" />
-                              <span>Nächster Tag</span>
-                            </div>
-                          ) : null}
-                          <div
-                            className={`group absolute top-1.5 bottom-1.5 z-10 flex cursor-grab touch-manipulation items-center rounded-lg border px-2 text-xs font-medium shadow-sm active:cursor-grabbing ${
-                              row.shift?.isDraft
-                                ? "border-dashed border-brand/60 bg-[repeating-linear-gradient(-45deg,rgba(22,101,52,0.28)_0px,rgba(22,101,52,0.28)_6px,transparent_6px,transparent_12px)] text-brand"
-                                : tradeOpen
-                                  ? "border-warning/40 bg-warning-soft text-warning-foreground"
-                                  : roleTone
-                            } ${
-                              activeDrag?.userId === row.member.id
-                                ? "shadow-lg shadow-black/40 transition-none"
-                                : "transition-[left,width,box-shadow,border-color] duration-150 ease-out md:hover:shadow-[0_2px_10px_-2px_rgba(10,58,82,0.18)]"
-                            } ${flashAssignedKey === `${row.member.id}-${timelineDay}` ? "ring-2 ring-brand/55 animate-pulse" : ""} ${
-                              row.shift && selectedShiftIds.includes(row.shift.id) ? "ring-2 ring-brand/75" : ""
-                            } ${weatherConflict ? "border-rose-300/40 ring-1 ring-rose-300/30" : ""} ${
-                              costPeakFocusActive && !costPeakAffected ? "opacity-30 [filter:grayscale(35%)]" : ""
-                            } ${costPeakFocusActive && costPeakAffected ? "border-rose-300/45 ring-1 ring-rose-300/35" : ""}`}
-                            style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-                            title={(() => {
-                              const pauseInfo =
-                                row.shift?.breakDuration && row.shift.breakDuration > 0
-                                  ? ` · Pause ${row.shift.breakDuration} min`
-                                  : "";
-                              const compliance =
-                                rowCompliance?.pauseRisk || livePauseRisk
-                                  ? " · Pause prüfen (>6h)"
-                                  : rowCompliance?.restRisk
-                                    ? " · Ruhezeit < 11h"
-                                    : "";
-                              const baseLabel = `${barLabel}${pauseInfo}${compliance}`;
-                              if (row.shift?.isDraft) return `${baseLabel} — Autopilot-Entwurf (noch nicht veröffentlicht)`;
-                              if (weatherConflict) return `${baseLabel} — Wetter-Konflikt: Hohe Regenwahrscheinlichkeit für Außenbereich.`;
-                              if (costPeakFocusActive && costPeakAffected)
-                                return `${baseLabel} — Kosten-Peak: überdurchschnittliche Lohnkosten.`;
-                              return baseLabel;
-                            })()}
-                            onPointerDown={(e) => {
-                              if (e.pointerType === "mouse" && e.button !== 0) return;
-                              if (!row.shift || row.conflict) return;
-                              if (row.shift.isDraft) return;
-                              setTimelineFocusedUserId(row.member.id);
-                              const shiftStartAbs = row.shift.dayOfWeek * 24 * 60 + (toMinutes(row.shift.startTime) ?? 0);
-                              if (e.shiftKey) {
-                                if (bulkAnchor && bulkAnchor.userId === row.member.id) {
-                                  const [minAbs, maxAbs] = [Math.min(bulkAnchor.absoluteStart, shiftStartAbs), Math.max(bulkAnchor.absoluteStart, shiftStartAbs)];
-                                  const rangeIds = shifts
-                                    .filter((s) => s.userId === row.member.id && s.weekIndex === selectedWeekIndex)
-                                    .filter((s) => {
-                                      const abs = s.dayOfWeek * 24 * 60 + (toMinutes(s.startTime) ?? 0);
-                                      return abs >= minAbs && abs <= maxAbs;
-                                    })
-                                    .map((s) => s.id);
-                                  setSelectedShiftIds(rangeIds);
-                                } else {
-                                  const rowIds = shifts
-                                    .filter((s) => s.userId === row.member.id && s.weekIndex === selectedWeekIndex)
-                                    .map((s) => s.id);
-                                  setSelectedShiftIds(rowIds);
-                                }
-                                setBulkAnchor({ userId: row.member.id, absoluteStart: shiftStartAbs });
-                                e.stopPropagation();
-                                return;
-                              }
-                              if (e.metaKey || e.ctrlKey) {
-                                e.stopPropagation();
-                                setSelectedShiftIds((prev) =>
-                                  prev.includes(row.shift!.id) ? prev.filter((id) => id !== row.shift!.id) : [...prev, row.shift!.id]
-                                );
-                                setBulkAnchor({ userId: row.member.id, absoluteStart: shiftStartAbs });
-                                return;
-                              }
-                              setSelectedShiftIds([row.shift.id]);
-                              setBulkAnchor({ userId: row.member.id, absoluteStart: shiftStartAbs });
-                              const lane = (e.currentTarget as HTMLElement).closest("[data-timeline-lane]");
-                              if (!(lane instanceof HTMLElement)) return;
-                              const sm = toMinutes(row.shift.startTime);
-                              const em = toMinutes(row.shift.endTime);
-                              if (sm === null || em === null) return;
-                              const target = e.target as HTMLElement;
-                              const isResizeStart = Boolean(target.closest("[data-resize-handle='start']"));
-                              const isResizeEnd = Boolean(target.closest("[data-resize-handle='end']"));
-                              const mode = isResizeStart ? "resize-start" : isResizeEnd ? "resize-end" : "move";
-                              e.stopPropagation();
-                              beginTimelineDrag(e.clientX, lane, row.member.id, mode, sm, em, e.pointerId);
-                            }}
-                            onContextMenu={(e) => {
-                              if (!row.shift) return;
-                              e.preventDefault();
-                              setContextMenu({
-                                x: e.clientX,
-                                y: e.clientY,
-                                shiftId: row.shift.id,
-                                userId: row.member.id,
-                                dayOfWeek: timelineDay,
-                                startTime: row.shift.startTime,
-                                endTime: row.shift.endTime,
-                                breakDuration: row.shift.breakDuration ?? 0,
-                                occurrenceDateIso: timelineDate,
-                              });
-                              setContextMenuIndex(0);
-                            }}
-                          >
-                            <span
-                              data-resize-handle="start"
-                              className="absolute left-0 top-0 bottom-0 hidden w-3 cursor-ew-resize items-center justify-center md:flex"
-                            >
-                              <span className="pointer-events-none grid-cols-1 gap-0.5 md:grid opacity-0 transition-opacity group-hover:opacity-90">
-                                <span className="h-1 w-0.5 rounded bg-current/80" />
-                                <span className="h-1 w-0.5 rounded bg-current/80" />
-                                <span className="h-1 w-0.5 rounded bg-current/80" />
-                              </span>
-                            </span>
-                            <span
-                              data-resize-handle="end"
-                              className="absolute right-0 top-0 bottom-0 hidden w-3 cursor-ew-resize items-center justify-center md:flex"
-                            >
-                              <span className="pointer-events-none grid-cols-1 gap-0.5 md:grid opacity-0 transition-opacity group-hover:opacity-90">
-                                <span className="h-1 w-0.5 rounded bg-current/80" />
-                                <span className="h-1 w-0.5 rounded bg-current/80" />
-                                <span className="h-1 w-0.5 rounded bg-current/80" />
-                              </span>
-                            </span>
-                            {tradeOpen ? <span className="mr-1 text-[10px]">🔄</span> : null}
-                            {livePauseRisk ? (
-                              <span className="mr-0.5 inline-flex shrink-0" title="Über 6h Soll: Pause prüfen">
-                                <Coffee className="h-3.5 w-3.5 text-danger" aria-hidden />
-                              </span>
-                            ) : null}
-                            {rowCompliance?.restRisk ? (
-                              <span className="mr-0.5 inline-flex shrink-0" title="Ruhezeit unter 11 Stunden">
-                                <AlarmClock className="h-3.5 w-3.5 text-warning" aria-hidden />
-                              </span>
-                            ) : null}
-                            {!activeDrag && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setMessage(null);
-                                  startTransition(async () => {
-                                    try {
-                                      await clearShiftForDay({
-                                        userId: row.member.id,
-                                        weekIndex: selectedWeekIndex,
-                                        dayOfWeek: timelineDay,
-                                      });
-                                    } catch (err: unknown) {
-                                      setMessage(
-                                        userErrorMessage(
-                                          err,
-                                          "Schicht konnte nicht gelöscht werden. Bitte erneut versuchen.",
-                                        ),
-                                      );
-                                    }
-                                  });
-                                }}
-                                aria-label="Schicht löschen"
-                                className="absolute -right-1 -top-1 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-danger/40 bg-danger px-2 text-sm text-brand-foreground opacity-100 md:h-7 md:w-7 md:text-xs md:opacity-0 md:transition-opacity md:group-hover:opacity-100"
-                                title="Schicht löschen"
-                              >
-                                ×
-                              </button>
-                            )}
-                            <span className="font-semibold drop-shadow-[0_1px_1px_rgba(255,255,255,0.25)]">{barLabel}</span>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="absolute inset-1 flex items-center justify-center rounded-lg border border-dashed border-muted-foreground/35 text-[11px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-                          Frei
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          {contextMenu ? (
-            <div
-              className="fixed z-[160] min-w-[170px] rounded-lg border border-border bg-surface p-1 shadow-[0_16px_40px_rgba(0,0,0,0.2)]"
-              style={{ left: contextMenu.x, top: contextMenu.y }}
-            >
-              <button
-                type="button"
-                className={`block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted ${contextMenuIndex === 0 ? "bg-muted" : ""}`}
-                onClick={() => {
-                  const nextDay = (contextMenu.dayOfWeek + 1) % 7;
-                  startTransition(async () => {
-                    await setShiftForDay({
-                      userId: contextMenu.userId,
-                      weekIndex: selectedWeekIndex,
-                      dayOfWeek: nextDay,
-                      startTime: contextMenu.startTime,
-                      endTime: contextMenu.endTime,
-                      breakDuration: contextMenu.breakDuration,
-                    });
-                  });
-                  setContextMenu(null);
-                }}
-              >
-                Duplizieren
-              </button>
-              <button
-                type="button"
-                className={`block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted ${contextMenuIndex === 1 ? "bg-muted" : ""}`}
-                onClick={() => {
-                  startTransition(async () => {
-                    await toggleShiftTradeOffer(contextMenu.shiftId, true);
-                  });
-                  setContextMenu(null);
-                }}
-              >
-                Tausch anfragen
-              </button>
-              <button
-                type="button"
-                className={`block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted ${contextMenuIndex === 2 ? "bg-muted" : ""}`}
-                onClick={() => {
-                  startTransition(async () => {
-                    await setShiftBreakDuration(contextMenu.shiftId, 30);
-                  });
-                  setContextMenu(null);
-                }}
-              >
-                30 Min Pause
-              </button>
-              <button
-                type="button"
-                className={`block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted ${contextMenuIndex === 3 ? "bg-muted" : ""}`}
-                onClick={() => {
-                  startTransition(async () => {
-                    await setShiftBreakDuration(contextMenu.shiftId, 45);
-                  });
-                  setContextMenu(null);
-                }}
-              >
-                45 Min Pause
-              </button>
-              {enableTaskListActions ? (
-                <button
-                  type="button"
-                  className={`block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted ${contextMenuIndex === 4 ? "bg-muted" : ""}`}
-                  onClick={() => {
-                    startTransition(async () => {
-                      await generateTaskListForShift(contextMenu.shiftId, contextMenu.occurrenceDateIso);
-                    });
-                    setContextMenu(null);
-                  }}
-                >
-                  Checkliste für diesen Tag
-                </button>
-              ) : null}
-            </div>
-          ) : null}
-          {selectedShiftIds.length > 0 && (bulkMenuOpen || selectedShiftIds.length > 1) ? (
-            <div className="fixed bottom-24 right-6 z-[160] min-w-[220px] rounded-xl border border-border bg-surface/95 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur">
-              <p className="px-2 py-1 text-[11px] font-semibold text-foreground">{selectedShiftIds.length} Schichten gewählt</p>
-              <button
-                type="button"
-                className="block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted"
-                onClick={() => {
-                  const targets = shifts.filter((s) => selectedShiftIds.includes(s.id));
-                  const undoItems = targets.map((s) => ({
-                    userId: s.userId,
-                    weekIndex: s.weekIndex,
-                    dayOfWeek: s.dayOfWeek,
-                    startTime: s.startTime,
-                    endTime: s.endTime,
-                    breakDuration: s.breakDuration ?? 0,
-                  }));
-                  startTransition(async () => {
-                    const results = await Promise.allSettled(
-                      targets.map((s) =>
-                        clearShiftForDay({ userId: s.userId, weekIndex: s.weekIndex, dayOfWeek: s.dayOfWeek })
-                      )
-                    );
-                    const failed = results.filter((r) => r.status === "rejected").length;
-                    if (failed > 0) {
-                      setMessage(
-                        failed === targets.length
-                          ? "Schichten konnten nicht gelöscht werden. Bitte erneut versuchen."
-                          : `${failed} von ${targets.length} Schichten konnten nicht gelöscht werden.`
-                      );
-                    }
-                  });
-                  setBulkUndo({ label: "Schichten gelöscht", items: undoItems });
-                  setBulkUndoDeadlineMs(Date.now() + 5000);
-                  setSelectedShiftIds([]);
-                  setBulkMenuOpen(false);
-                }}
-              >
-                Alle löschen
-              </button>
-              <button
-                type="button"
-                className="block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted"
-                onClick={() => {
-                  const targets = shifts.filter((s) => selectedShiftIds.includes(s.id));
-                  const undoItems = targets.map((s) => ({
-                    userId: s.userId,
-                    weekIndex: s.weekIndex,
-                    dayOfWeek: s.dayOfWeek,
-                    startTime: s.startTime,
-                    endTime: s.endTime,
-                    breakDuration: s.breakDuration ?? 0,
-                  }));
-                  startTransition(async () => {
-                    await Promise.all(
-                      targets.map((s) =>
-                        setShiftForDay({
-                          userId: s.userId,
-                          weekIndex: s.weekIndex,
-                          dayOfWeek: s.dayOfWeek,
-                          startTime: addMinutesToHHMM(s.startTime, 60),
-                          endTime: addMinutesToHHMM(s.endTime, 60),
-                          breakDuration: s.breakDuration ?? 0,
-                        })
-                      )
-                    );
-                  });
-                  setBulkUndo({ label: "Schichten verschoben", items: undoItems });
-                  setBulkUndoDeadlineMs(Date.now() + 5000);
-                  setSelectedShiftIds([]);
-                  setBulkMenuOpen(false);
-                }}
-              >
-                Alle um 1 Std verschieben
-              </button>
-              <button
-                type="button"
-                className="block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-muted"
-                onClick={() => {
-                  const targets = shifts.filter((s) => selectedShiftIds.includes(s.id));
-                  startTransition(async () => {
-                    await Promise.all(targets.map((s) => setShiftBreakDuration(s.id, 30)));
-                  });
-                  setSelectedShiftIds([]);
-                  setBulkMenuOpen(false);
-                }}
-              >
-                Allen 30 Min Pause hinzufügen
-              </button>
-            </div>
-          ) : null}
-          {bulkUndo ? (
-            <div className="fixed bottom-7 right-6 z-[170] rounded-xl border border-border bg-surface/95 px-3 py-2 text-xs shadow-[0_14px_36px_rgba(0,0,0,0.2)] backdrop-blur">
-              <span className="mr-3 text-foreground">{bulkUndo.label}</span>
-              <button
-                type="button"
-                className="font-semibold text-brand underline underline-offset-2"
-                onClick={() => {
-                  const restore = bulkUndo.items;
-                  startTransition(async () => {
-                    await Promise.all(
-                      restore.map((s) =>
-                        setShiftForDay({
-                          userId: s.userId,
-                          weekIndex: s.weekIndex,
-                          dayOfWeek: s.dayOfWeek,
-                          startTime: s.startTime,
-                          endTime: s.endTime,
-                          breakDuration: s.breakDuration,
-                        })
-                      )
-                    );
-                  });
-                  setBulkUndo(null);
-                  setBulkUndoDeadlineMs(null);
-                }}
-              >
-                Aktion rückgängig machen
-              </button>
-              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-brand transition-[width] duration-100"
-                  style={{
-                    width: `${
-                      bulkUndoDeadlineMs
-                        ? Math.max(0, Math.min(100, ((bulkUndoDeadlineMs - undoNowMs) / 5000) * 100))
-                        : 0
-                    }%`,
-                  }}
-                />
-              </div>
-            </div>
-          ) : null}
-        </div>
-      )}
+        }}
+        onAssignToSlot={(slot) => {
+          if (!selectedUserId) {
+            setMessage("Zuerst links eine Person wählen.");
+            return;
+          }
+          const conflict = conflictTypeByCell.get(`${selectedUserId}-${slot.dayOfWeek}`);
+          if (conflict) {
+            setMessage(conflict === "SICK" ? "Krank — keine Schicht möglich." : "Urlaub — keine Schicht möglich.");
+            return;
+          }
+          setMessage(null);
+          startTransition(async () => {
+            try {
+              await setShiftForDay({
+                userId: selectedUserId,
+                weekIndex: selectedWeekIndex,
+                dayOfWeek: slot.dayOfWeek,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+              });
+              setMessage("Zugewiesen.");
+            } catch (e: unknown) {
+              setMessage(userErrorMessage(e, "Zuweisen fehlgeschlagen."));
+            }
+          });
+        }}
+        onEditAssignment={(slot, userId, _shiftId) => {
+          const assignment = slot.assignments.find((a) => a.userId === userId);
+          const member = members.find((m) => m.id === userId);
+          if (!assignment) return;
+          setShiftEdit({
+            userId,
+            dayOfWeek: slot.dayOfWeek,
+            label: member?.name ?? member?.email ?? "Mitarbeiter",
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+          });
+        }}
+        onRemoveAssignment={(userId, dayOfWeek, _shiftId) => {
+          setMessage(null);
+          startTransition(async () => {
+            try {
+              await clearShiftForDay({ userId, weekIndex: selectedWeekIndex, dayOfWeek });
+              setMessage("Zuweisung entfernt.");
+            } catch (e: unknown) {
+              setMessage(userErrorMessage(e, "Entfernen fehlgeschlagen."));
+            }
+          });
+        }}
+      />
+      {weatherFetchErr ? <p className="mt-2 text-[10px] text-muted-foreground">{weatherFetchErr}</p> : null}
     </>
   );
+
 
   const weekPicker =
     shiftCycleWeeks > 1 ? (
@@ -3340,9 +2213,6 @@ export function ShiftManager({
               type="button"
               onClick={() => {
                 setSelectedWeekIndex(week);
-                if (viewMode === "timeline") {
-                  setTimelineDate(isoFromPlannerDate(dateForCycleDay(week, timelineDay)));
-                }
               }}
               className={`min-h-11 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${
                 selectedWeekIndex === week ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
@@ -3480,26 +2350,12 @@ export function ShiftManager({
                 <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
                 Zum Autopilot
               </button>
-              {renderDesktopTree && viewMode !== "timeline" ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setViewMode("timeline");
-                    window.requestAnimationFrame(() => {
-                      document.getElementById("planner-timeline-region")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    });
-                  }}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
-                >
-                  Feinplan (Uhrzeiten) öffnen
-                </button>
-              ) : null}
-              {renderDesktopTree && viewMode === "timeline" ? (
+              {renderDesktopTree ? (
                 <a
                   href="#planner-compliance-radar"
                   className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-background px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
                 >
-                  Zu Ruhezeit und Budget
+                  Zu Compliance & Budget
                 </a>
               ) : null}
             </div>
@@ -3521,12 +2377,11 @@ export function ShiftManager({
 
       {renderDesktopTree ? (
         <div className="block">
-          <h2 className="text-lg font-semibold tracking-tight">Arbeitsplan (Soll-Zeiten)</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Schichtplan</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Starter+: Leitung plant Mitarbeiter, System macht Soll/Ist beim Stempeln.
+            Person links wählen · Schicht anlegen oder zu bestehender Karte zuweisen.
           </p>
           {weekPicker}
-          {selectedMemberChip}
           {DesktopView}
         </div>
       ) : null}
@@ -3678,7 +2533,7 @@ export function ShiftManager({
       {renderDesktopTree ? (
         <div
           id="planner-compliance-radar"
-          className="mt-4 space-y-2 rounded-xl border border-border bg-background px-3 py-3 text-[11px] text-muted-foreground"
+          className="sticky bottom-0 z-20 mt-4 space-y-2 rounded-xl border border-border bg-background/95 px-3 py-3 text-[11px] text-muted-foreground shadow-[0_-8px_30px_rgba(0,0,0,0.06)] backdrop-blur-sm"
         >
         <p className="font-semibold text-foreground">Compliance-Radar · Budget</p>
         <div className="flex flex-wrap gap-3">
