@@ -86,9 +86,12 @@ const DAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 const WEEK_SHORT_MON = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] as const;
 /** Mobile: volle Wochentagsnamen für bessere Lesbarkeit. */
 const MOBILE_DAY_NAMES = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"] as const;
-const TIMELINE_START_HOUR = 0;
+/** Gastro-Planung: 06–24 Uhr statt Mitternacht–Mitternacht (weniger Leerraum, sinnvollere Lücken). */
+const TIMELINE_START_HOUR = 6;
 const TIMELINE_END_HOUR = 24;
-const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
+const TIMELINE_SLOT_COUNT = TIMELINE_END_HOUR - TIMELINE_START_HOUR;
+const TIMELINE_TOTAL_MINUTES = TIMELINE_SLOT_COUNT * 60;
+const TIMELINE_GRID_STYLE = { gridTemplateColumns: `repeat(${TIMELINE_SLOT_COUNT}, minmax(0, 1fr))` } as const;
 const TIMELINE_SNAP_MINUTES = 15;
 /** Vertikale Hilfslinien im Raster (24 h × 4 Viertel). */
 const TIMELINE_QUARTER_STRIPES = 24 * (60 / TIMELINE_SNAP_MINUTES);
@@ -319,6 +322,10 @@ export function ShiftManager({
     () => formatPlannerWeekRange(timelineWeekMonday),
     [timelineWeekMonday],
   );
+  const timelineWeekMondayIso = useMemo(
+    () => isoFromPlannerDate(timelineWeekMonday),
+    [timelineWeekMonday],
+  );
   const canTimelinePrevWeek = useMemo(() => {
     const parsed = new Date(`${timelineDate}T12:00:00`);
     if (Number.isNaN(parsed.getTime())) return false;
@@ -426,6 +433,7 @@ export function ShiftManager({
   const [bulkUndoDeadlineMs, setBulkUndoDeadlineMs] = useState<number | null>(null);
   const [undoNowMs, setUndoNowMs] = useState(() => Date.now());
   const [weatherWeek, setWeatherWeek] = useState<Array<DailyWeatherForecast | null>>([]);
+  const weatherWeekHasData = useMemo(() => weatherWeek.some((d) => d != null), [weatherWeek]);
   const [weatherMondayIso, setWeatherMondayIso] = useState<string | null>(null);
   const [weatherFetchErr, setWeatherFetchErr] = useState<string | null>(null);
   const [staffingHints, setStaffingHints] = useState<PlannerStaffingHint[]>([]);
@@ -2397,8 +2405,8 @@ export function ShiftManager({
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="min-w-0 flex-1 sm:max-w-xs">
               <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Datum
               </span>
@@ -2409,24 +2417,19 @@ export function ShiftManager({
                   min={plannerCycleMinIso}
                   max={plannerCycleMaxIso}
                   onChange={(e) => onTimelineDateInput(e.target.value)}
-                  className="min-h-12 min-w-0 flex-1 touch-manipulation rounded-lg border border-border bg-surface px-3 py-2.5 text-base sm:min-h-11 sm:text-sm"
+                  className="min-h-11 min-w-0 flex-1 touch-manipulation rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                 />
                 <button
                   type="button"
                   onClick={goTimelineToday}
-                  className="min-h-12 shrink-0 touch-manipulation rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground sm:min-h-11 hover:bg-muted/50"
+                  className="min-h-11 shrink-0 touch-manipulation rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground hover:bg-muted/50"
                 >
                   Heute
                 </button>
               </div>
               <p className="mt-1 text-[11px] text-muted-foreground">
-                Wochentag: {DAY_LABELS[timelineDay]}
-                {timelinePlanWeekIndex ? (
-                  <>
-                    {" "}
-                    · Planwoche {timelinePlanWeekIndex}/{shiftCycleWeeks}
-                  </>
-                ) : null}
+                {DAY_LABELS[timelineDay]}
+                {timelinePlanWeekIndex ? ` · Planwoche ${timelinePlanWeekIndex}/${shiftCycleWeeks}` : ""}
               </p>
               {selectedShiftIds.length > 1 ? (
                 <span className="mt-1 inline-flex items-center rounded-full border border-brand/30 bg-brand-soft px-2 py-0.5 text-[10px] font-semibold text-brand">
@@ -2434,12 +2437,12 @@ export function ShiftManager({
                 </span>
               ) : null}
             </div>
-            <div>
+            <div className="w-full sm:w-28">
               <label
                 htmlFor="vrema-needed-staff"
                 className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
               >
-                Mindestbesetzung (pro Zeitfenster)
+                Mindestbesetzung
               </label>
               <input
                 id="vrema-needed-staff"
@@ -2448,14 +2451,14 @@ export function ShiftManager({
                 max={20}
                 value={neededStaff}
                 onChange={(e) => setNeededStaff(Math.max(1, Number(e.target.value) || 1))}
-                className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-surface px-3 py-2.5 text-base tabular-nums sm:min-h-11 sm:text-sm"
-                title="Benötigte Mitarbeiter pro Zeitfenster"
+                className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-surface px-3 py-2 text-sm tabular-nums"
+                title="Benötigte Mitarbeiter pro Stunde im Raster"
               />
             </div>
-            <p className="hidden items-center text-[11px] text-muted-foreground leading-snug md:flex">
-              Stundenlinien und feines Viertelstunden-Raster · 15-Minuten-Snap beim Ziehen · Balken klicken zum Bearbeiten
-            </p>
           </div>
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            Raster 06–24 Uhr · 15-Minuten-Snap · Balken antippen zum Bearbeiten
+          </p>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/60 bg-surface/40 px-2 py-2 sm:px-3">
             <button
               type="button"
@@ -2474,10 +2477,20 @@ export function ShiftManager({
                   ? `Planwoche ${timelinePlanWeekIndex} von ${shiftCycleWeeks} im Zyklus`
                   : "Datum liegt außerhalb des Plan-Zyklus"}
               </p>
+              {!canTimelineNextWeek && timelinePlanWeekIndex === shiftCycleWeeks ? (
+                <p className="mt-0.5 text-[10px] text-muted-foreground/90">
+                  Letzte Planwoche — Zyklus in Einstellungen oder Onboarding verlängern.
+                </p>
+              ) : null}
             </div>
             <button
               type="button"
               disabled={!canTimelineNextWeek}
+              title={
+                !canTimelineNextWeek
+                  ? `Nur ${shiftCycleWeeks} Planwochen im Zyklus — keine weitere Kalenderwoche`
+                  : "Nächste Kalenderwoche"
+              }
               onClick={() => shiftTimelineWeek(1)}
               className="inline-flex min-h-11 min-w-[2.75rem] items-center justify-center gap-1 rounded-lg border border-border bg-background px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-10 sm:px-3"
               aria-label="Nächste Woche"
@@ -2533,56 +2546,54 @@ export function ShiftManager({
             </div>
           ) : null}
 
-          {weatherMondayIso ? (
-            <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-[220px_1fr] md:items-end">
-              <div className="hidden md:block" />
-              <div className="flex flex-wrap justify-end gap-1.5">
-                {WEEK_SHORT_MON.map((label, i) => {
-                  const d = addDaysToDate(new Date(`${weatherMondayIso}T12:00:00`), i);
-                  const iso = isoFromDate(d);
-                  const w = weatherWeek[i] ?? null;
-                  const active = iso === timelineDate.slice(0, 10);
-                  return (
-                    <button
-                      key={`wx-${iso}`}
-                      type="button"
-                      onClick={() => {
-                        setTimelineDate(iso);
-                        const week = weekIndexForPlannerDate(d, shiftCycleWeeks);
-                        if (week) setSelectedWeekIndex(week);
-                      }}
-                      className={`flex min-w-[3.25rem] flex-col items-center rounded-xl border px-1.5 py-1 text-[10px] transition-colors ${
-                        active ? "border-brand/45 bg-brand-soft text-brand" : "border-line bg-surface/80 text-fg"
-                      }`}
-                    >
-                      <span className="font-semibold">{label}</span>
-                      {w ? (
-                        <>
-                          <Image
-                            src={`https://openweathermap.org/img/wn/${w.iconCode}@2x.png`}
-                            alt={weatherOpenWeatherAlt(w)}
-                            width={56}
-                            height={56}
-                            className="h-7 w-7"
-                            unoptimized
-                          />
-                          <span className="tabular-nums font-medium">{w.maxTempC}°</span>
-                        </>
-                      ) : (
-                        <>
-                          <HelpCircle className="mt-0.5 h-6 w-6 text-muted-foreground/50" aria-hidden />
-                          <span className="font-medium text-muted-foreground">N/A</span>
-                        </>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+          <div className="mt-3 space-y-1">
+            <div className="flex flex-wrap gap-1.5 md:pl-[calc(220px+0.75rem)]">
+              {WEEK_SHORT_MON.map((label, i) => {
+                const d = addDaysToDate(new Date(`${timelineWeekMondayIso}T12:00:00`), i);
+                const iso = isoFromDate(d);
+                const w = weatherWeek[i] ?? null;
+                const active = iso === timelineDate.slice(0, 10);
+                return (
+                  <button
+                    key={`wx-${iso}`}
+                    type="button"
+                    onClick={() => {
+                      setTimelineDate(iso);
+                      const week = weekIndexForPlannerDate(d, shiftCycleWeeks);
+                      if (week) setSelectedWeekIndex(week);
+                    }}
+                    className={`flex min-w-[2.75rem] flex-col items-center rounded-xl border px-1.5 py-1.5 text-[10px] transition-colors ${
+                      active ? "border-brand/45 bg-brand-soft text-brand" : "border-line bg-surface/80 text-fg"
+                    }`}
+                  >
+                    <span className="font-semibold">{label}</span>
+                    {w ? (
+                      <>
+                        <Image
+                          src={`https://openweathermap.org/img/wn/${w.iconCode}@2x.png`}
+                          alt={weatherOpenWeatherAlt(w)}
+                          width={40}
+                          height={40}
+                          className="h-6 w-6"
+                          unoptimized
+                        />
+                        <span className="tabular-nums text-[10px] font-medium">{w.maxTempC}°</span>
+                      </>
+                    ) : (
+                      <span className="mt-1 text-[9px] text-muted-foreground">·</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-          ) : null}
-          {weatherFetchErr ? (
-            <p className="mt-1 text-right text-[10px] text-muted-foreground">{weatherFetchErr}</p>
-          ) : null}
+            {weatherFetchErr ? (
+              <p className="text-[10px] text-muted-foreground md:pl-[calc(220px+0.75rem)]">{weatherFetchErr}</p>
+            ) : !weatherWeekHasData ? (
+              <p className="text-[10px] text-muted-foreground md:pl-[calc(220px+0.75rem)]">
+                Wetter-Prognose nur für die nächsten Tage — PLZ/Ort in den Einstellungen prüfen.
+              </p>
+            ) : null}
+          </div>
           {costPeakFocusDay != null && timelineDay === costPeakFocusDay ? (
             <div className="mt-2 flex items-center justify-between rounded-xl border border-warning/25 bg-warning-soft px-3 py-2 text-[11px] text-warning-foreground">
               <span>Kosten-Peak-Fokus aktiv: Betroffene Schichten sind hervorgehoben.</span>
@@ -2597,11 +2608,11 @@ export function ShiftManager({
           ) : null}
 
           <div className="mt-3 max-h-[75vh] min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-auto overscroll-contain scrollbar-hide">
-            <div className="w-full min-w-[720px] space-y-4 py-1 sm:min-w-[900px] md:min-w-[1040px] lg:min-w-[1400px]">
+            <div className="w-full min-w-[640px] space-y-3 py-1 sm:min-w-[780px] md:min-w-[900px] lg:min-w-[1100px]">
               <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground md:grid-cols-[220px_1fr] md:items-center">
                 <div className="hidden font-medium text-foreground md:block">Mitarbeiter</div>
-                <div className="grid grid-cols-24 font-sans tabular-nums">
-                  {Array.from({ length: 24 }).map((_, idx) => {
+                <div className="grid font-sans tabular-nums" style={TIMELINE_GRID_STYLE}>
+                  {Array.from({ length: TIMELINE_SLOT_COUNT }).map((_, idx) => {
                     const hour = TIMELINE_START_HOUR + idx;
                     return (
                       <span
@@ -2669,7 +2680,7 @@ export function ShiftManager({
                 return (
                   <div
                     key={row.member.id}
-                    className="grid grid-cols-1 items-stretch gap-2 md:grid-cols-[220px_1fr] md:items-center md:gap-3"
+                    className="grid grid-cols-1 items-stretch gap-2 md:grid-cols-[200px_1fr] md:items-center md:gap-2"
                   >
                     <div className="flex min-h-12 items-center rounded-2xl border border-border bg-surface px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] md:min-h-0 md:px-4 md:py-4">
                       <span className="inline-flex min-w-0 items-center gap-2 text-sm text-foreground">

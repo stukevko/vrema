@@ -10,7 +10,6 @@ import {
 } from "@/lib/marketing/trial-copy";
 import { VremaLockup, VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
 import { RoiCalculator } from "@/components/marketing/RoiCalculator";
-import { SocialProofStrip } from "@/components/marketing/SocialProofStrip";
 import {
   Clock,
   FileText,
@@ -622,9 +621,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* ── SOCIAL-PROOF ──────────────────────────────────────────────────── */}
-      <SocialProofStrip />
 
       {/* ── ROI-CALCULATOR ────────────────────────────────────────────────── */}
       <RoiCalculator />
