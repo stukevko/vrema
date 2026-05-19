@@ -42,6 +42,15 @@ export default async function DashboardLayout({
 
   const role = session.user.role ?? "EMPLOYEE";
   const pathname = (await headers()).get("x-pathname") ?? "";
+
+  if (
+    role === "ADVISOR" &&
+    !pathname.startsWith("/dashboard/peaks") &&
+    !pathname.startsWith("/dashboard/account") &&
+    !isTrialExemptDashboardPath(pathname)
+  ) {
+    redirect("/dashboard/peaks");
+  }
   const trialState =
     role !== "SUPER_ADMIN" && role !== "SUPPORT"
       ? await getCompanyTrialState(session.user.companyId)

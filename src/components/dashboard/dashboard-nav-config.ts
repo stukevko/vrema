@@ -12,6 +12,7 @@ import {
   LifeBuoy,
   Brain,
   UserCircle2,
+  TrendingUp,
 } from "lucide-react";
 
 export type MobileBottomNavItem = {
@@ -34,6 +35,12 @@ const ALL_PLANS = ["STARTER", "BUSINESS", "ENTERPRISE"] as const;
  * Support ist oben links (Glocke/Lifebuoy) erreichbar – nicht in der Leiste.
  */
 export function getMobileBottomNavItems(role: string): MobileBottomNavItem[] {
+  if (role === "ADVISOR") {
+    return [
+      { href: "/dashboard/peaks", label: "Stoß & Umsatz", icon: TrendingUp },
+      { href: "/dashboard/account", label: "Profil", icon: UserCircle2 },
+    ];
+  }
   const profileHref = role === "EMPLOYEE" ? "/dashboard/account" : "/dashboard/settings";
   const fourthTab: MobileBottomNavItem =
     role === "EMPLOYEE"
@@ -52,6 +59,7 @@ export function getMobileBottomNavItems(role: string): MobileBottomNavItem[] {
 const BASE_NAV: DashboardNavItem[] = [
   { href: "/dashboard", label: "Übersicht", icon: LayoutDashboard, plans: ALL_PLANS },
   { href: "/dashboard/insights", label: "Einblicke", icon: Brain, plans: ALL_PLANS },
+  { href: "/dashboard/peaks", label: "Stoß & Umsatz", icon: TrendingUp, plans: ALL_PLANS },
   { href: "/dashboard/team", label: "Team", icon: Users, plans: ALL_PLANS },
   { href: "/dashboard/planning", label: "Planung", icon: CalendarClock, plans: ALL_PLANS },
   { href: "/dashboard/vacation", label: "Abwesenheit", icon: CalendarDays, plans: ALL_PLANS },
@@ -61,12 +69,22 @@ const BASE_NAV: DashboardNavItem[] = [
   { href: "/dashboard/settings", label: "Einstellungen", icon: Settings, plans: ALL_PLANS },
 ];
 
+const ADVISOR_NAV: DashboardNavItem[] = [
+  { href: "/dashboard/peaks", label: "Stoß & Umsatz", icon: TrendingUp, plans: ALL_PLANS },
+  { href: "/dashboard/account", label: "Mein Konto", icon: UserCircle2, plans: ALL_PLANS },
+];
+
 export function getDashboardNavItems(role: string, plan: string): DashboardNavItem[] {
+  if (role === "ADVISOR") {
+    return ADVISOR_NAV.filter((item) => item.plans.includes(plan));
+  }
+
   const visible = BASE_NAV.filter((item) => {
     if (!item.plans.includes(plan)) return false;
     if (item.href === "/dashboard/billing" && role === "EMPLOYEE") return false;
     if (item.href === "/dashboard/reports" && role === "EMPLOYEE") return false;
     if (item.href === "/dashboard/insights" && role === "EMPLOYEE") return false;
+    if (item.href === "/dashboard/peaks" && role === "EMPLOYEE") return false;
     return true;
   }).map((item) =>
     role === "EMPLOYEE" && item.href === "/dashboard/settings"

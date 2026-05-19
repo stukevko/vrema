@@ -36,7 +36,8 @@ export type UnfilledSlot = {
 export type AutopilotPlanResult = {
   shifts: Prisma.ShiftCreateManyInput[];
   unfilled: UnfilledSlot[];
-  infoLines: string[];
+  /** Aktive Mitarbeiter/Manager im Planungspool (ohne Inhaber). */
+  teamPoolSize: number;
 };
 
 const DAY_DE = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -211,7 +212,7 @@ export async function generateOptimalSchedule(
           { startTime: "09:00", endTime: "17:00", breakDuration: 30 },
           { startTime: "14:00", endTime: "22:00", breakDuration: 30 },
         ];
-  const coveragePerDay = Math.max(1, Math.min(6, options.coveragePerDay ?? 2));
+  const requestedCoverage = Math.max(1, Math.min(6, options.coveragePerDay ?? 2));
 
   for (const t of templates) {
     if (!/^\d{2}:\d{2}$/.test(t.startTime) || !/^\d{2}:\d{2}$/.test(t.endTime)) {
@@ -261,6 +262,16 @@ export async function generateOptimalSchedule(
 
   const weekendCount = new Map<string, number>(weekendAgg.map((g) => [g.userId, g._count._all]));
 
+  const poolSize = users.length;
+  if (poolSize === 0) {
+    return { shifts: [], unfilled: [], teamPoolSize: 0 };
+  }
+
+  /** Kleine Teams: eine Vorlage, ein Slot/Tag — sonst 14 Anfragen für 1 Person. */
+  const templatesUsed = poolSize <= 2 ? templates.slice(0, 1) : templates;
+  const coveragePerDay =
+    poolSize <= 2 ? 1 : Math.min(requestedCoverage, 2, poolSize);
+
   const publishedPlanRows: ShiftPlanRow[] = existingShifts
     .filter((s) => !s.isDraft)
     .map((s) => ({
@@ -275,7 +286,6 @@ export async function generateOptimalSchedule(
   const workingPlan: ShiftPlanRow[] = [...publishedPlanRows];
   const newDrafts: Prisma.ShiftCreateManyInput[] = [];
   const unfilled: UnfilledSlot[] = [];
-  const infoLines: string[] = [];
 
   type Demand = {
     dayOfWeek: number;
@@ -286,7 +296,7 @@ export async function generateOptimalSchedule(
   const demands: Demand[] = [];
   for (let day = 0; day < 7; day += 1) {
     for (let layer = 0; layer < coveragePerDay; layer += 1) {
-      const template = templates[layer % templates.length]!;
+      const template = templatesUsed[layer % templatesUsed.length]!;
       const already = existingShifts.filter(
         (s) =>
           !s.isDraft &&
@@ -376,7 +386,7 @@ export async function generateOptimalSchedule(
         startTime: d.template.startTime,
         endTime: d.template.endTime,
         staffingRole: slotRole,
-        reason: `Kein verfügbarer Mitarbeitender (${roleHint}, Abwesenheit, Ruhezeit oder Überschneidung).`,
+        reason: `Kein passender Mitarbeitender (${roleHint}, Abwesenheit, Ruhezeit oder Überschneidung).`,
       });
       continue;
     }
@@ -407,21 +417,5 @@ export async function generateOptimalSchedule(
     });
   }
 
-  if (newDrafts.length > 0) {
-    infoLines.push(`${newDrafts.length} Entwurfs-Schicht(en) erzeugt (Woche ${wk}). Bitte im Planer prüfen und bestätigen.`);
-  }
-  if (unfilled.length > 0) {
-    const byDay = new Map<string, number>();
-    for (const u of unfilled) {
-      const k = u.dayLabel;
-      byDay.set(k, (byDay.get(k) ?? 0) + 1);
-    }
-    for (const [dayLabel, n] of byDay) {
-      const sample = unfilled.find((x) => x.dayLabel === dayLabel);
-      const rolePart = sample?.staffingRole ? ` – Personalmangel Rolle „${sample.staffingRole}“` : "";
-      infoLines.push(`Konnte ${n} Schicht(en) am ${dayLabel} nicht besetzen${rolePart}.`);
-    }
-  }
-
-  return { shifts: newDrafts, unfilled, infoLines };
+  return { shifts: newDrafts, unfilled, teamPoolSize: poolSize };
 }

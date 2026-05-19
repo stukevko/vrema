@@ -109,7 +109,12 @@ export async function POST(req: NextRequest) {
             name: normalizedName,
             email: normalizedEmail,
             password: hashedPassword,
-            role: invite.role === "MANAGER" ? "MANAGER" : "EMPLOYEE",
+            role:
+              invite.role === "MANAGER"
+                ? "MANAGER"
+                : invite.role === "ADVISOR"
+                  ? "ADVISOR"
+                  : "EMPLOYEE",
             companyId: invite.orgId,
             emailVerified: new Date(),
             employeeNumber,

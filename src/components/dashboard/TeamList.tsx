@@ -42,6 +42,7 @@ const ROLE_META: Record<string, { label: string; Icon: React.ElementType; color:
   COMPANY_OWNER: { label: "Inhaber", Icon: Crown, color: "text-brand" },
   MANAGER: { label: "Manager", Icon: ShieldCheck, color: "text-fg-muted" },
   EMPLOYEE: { label: "Mitarbeiter", Icon: User, color: "text-muted-foreground" },
+  ADVISOR: { label: "Berater", Icon: User, color: "text-brand" },
 };
 
 type FilterKey = "all" | "manager" | "employee" | "inactive";

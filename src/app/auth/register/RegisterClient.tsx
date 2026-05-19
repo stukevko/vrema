@@ -35,7 +35,7 @@ type Props = {
   inviteContext: {
     code: string;
     orgId: string;
-    role: "USER" | "MANAGER";
+    role: "USER" | "MANAGER" | "ADVISOR";
     orgName: string;
   } | null;
 };
@@ -162,7 +162,15 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName, inv
 
         <div className="auth-card p-8 sm:p-10">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            {isInviteFlow ? `Registrierung als ${inviteContext?.role === "MANAGER" ? "Manager" : "Mitarbeiter"}` : "Konto erstellen"}
+            {isInviteFlow
+              ? `Registrierung als ${
+                  inviteContext?.role === "MANAGER"
+                    ? "Manager"
+                    : inviteContext?.role === "ADVISOR"
+                      ? "Berater"
+                      : "Mitarbeiter"
+                }`
+              : "Konto erstellen"}
           </h1>
           <p className="mt-1.5 text-sm text-fg-muted">
             {isInviteFlow

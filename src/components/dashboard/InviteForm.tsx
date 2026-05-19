@@ -47,7 +47,7 @@ export function InviteForm({
         const { user, tempPassword, terminalPin } = await inviteEmployee({
           name: fd.get("name") as string,
           email: fd.get("email") as string,
-          role: fd.get("role") as "EMPLOYEE" | "MANAGER",
+          role: fd.get("role") as "EMPLOYEE" | "MANAGER" | "ADVISOR",
           weeklyHours: Number(fd.get("weeklyHours")),
         });
         setResult({ name: user.name ?? "", email: user.email, tempPassword, terminalPin });
@@ -165,6 +165,7 @@ export function InviteForm({
                   >
                     <option value="EMPLOYEE">Mitarbeiter</option>
                     <option value="MANAGER">Manager</option>
+                    <option value="ADVISOR">Berater (nur Stoß & Umsatz)</option>
                   </select>
                 </div>
                 <div className="min-w-0">

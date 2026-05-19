@@ -59,6 +59,7 @@ export function isTrialExemptDashboardPath(pathname: string): boolean {
   return (
     pathname.startsWith("/dashboard/billing") ||
     pathname.startsWith("/dashboard/trial-ended") ||
-    pathname.startsWith("/dashboard/account")
+    pathname.startsWith("/dashboard/account") ||
+    pathname.startsWith("/dashboard/peaks")
   );
 }

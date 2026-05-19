@@ -12,6 +12,7 @@ import { createNotificationsForUsers } from "@/lib/notifications/create";
 import { revalidatePath } from "next/cache";
 import { learnFromFinalizedWeek } from "@/lib/ai/learn-on-finalize";
 import { logServerError } from "@/lib/server-logger";
+import { formatAutopilotUserReport } from "@/lib/planning/autopilot-report";
 
 const CAN_RUN = new Set(["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"]);
 
@@ -32,11 +33,17 @@ export async function runAutopilotDraft(weekIndex: number, options?: AutopilotOp
   });
 
   revalidatePath("/dashboard/planning");
+  const report = formatAutopilotUserReport({
+    shiftsCreated: plan.shifts.length,
+    unfilled: plan.unfilled,
+    teamPoolSize: plan.teamPoolSize,
+  });
   return {
     ok: true as const,
     shiftsCreated: plan.shifts.length,
     unfilled: plan.unfilled,
-    infoLines: plan.infoLines,
+    teamPoolSize: plan.teamPoolSize,
+    report,
   };
 }
 

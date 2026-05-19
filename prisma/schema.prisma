@@ -24,6 +24,8 @@ enum UserRole {
   COMPANY_OWNER
   MANAGER
   EMPLOYEE
+  /// Externer Berater: nur Umsatz & Stoß-Profil (kein Personal, keine Löhne).
+  ADVISOR
 }
 
 enum VacationStatus {
@@ -87,6 +89,7 @@ enum BlogPostCategory {
 enum InviteRole {
   USER
   MANAGER
+  ADVISOR
 }
 
 enum ShiftTaskItemStatus {
@@ -255,6 +258,8 @@ model Company {
   region            String?
   /// Geschätzter Wochenumsatz (EUR) für Lohnquoten-Kennzahlen – optional
   estimatedWeeklyRevenue Float?
+  /// Stoß-Profil Mo–So: LOW | NORMAL | HIGH (Index 0 = Montag)
+  peakDayLevels       String[] @default(["NORMAL", "NORMAL", "NORMAL", "NORMAL", "NORMAL", "NORMAL", "NORMAL"])
   affiliateId       String?
   // ── Enterprise: Custom Branding ──────────────────────────────────────────
   /// Hex-Farbe (#RRGGBB), die als Brand-Akzent im Light-Mode genutzt wird.

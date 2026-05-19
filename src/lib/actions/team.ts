@@ -107,7 +107,7 @@ export async function inviteEmployeeForCompany(
   data: {
     name: string;
     email: string;
-    role?: "EMPLOYEE" | "MANAGER";
+    role?: "EMPLOYEE" | "MANAGER" | "ADVISOR";
     weeklyHours?: number;
   }
 ) {
@@ -123,12 +123,15 @@ export async function inviteEmployeeForCompany(
   // Generate a temporary password the employee must change on first login
   const tempPassword = Math.random().toString(36).slice(2, 10) + "Aa1!";
   const hashedPassword = await bcrypt.hash(tempPassword, 12);
-  const terminalPin = Math.floor(1000 + Math.random() * 9000).toString();
-  const terminalPinHash = await bcrypt.hash(terminalPin, 12);
+  const isAdvisor = data.role === "ADVISOR";
+  const terminalPin = isAdvisor ? null : Math.floor(1000 + Math.random() * 9000).toString();
+  const terminalPinHash = terminalPin ? await bcrypt.hash(terminalPin, 12) : null;
 
   const user = await db.$transaction(
     async (tx) => {
-      const employeeNumber = await nextNumericEmployeeNumber(companyId, tx);
+      const employeeNumber = isAdvisor
+        ? null
+        : await nextNumericEmployeeNumber(companyId, tx);
       return tx.user.create({
         data: {
           companyId,
@@ -139,7 +142,7 @@ export async function inviteEmployeeForCompany(
           terminalPin,
           terminalPinHash,
           role: data.role ?? "EMPLOYEE",
-          weeklyHours: data.weeklyHours ?? 40,
+          weeklyHours: isAdvisor ? 0 : (data.weeklyHours ?? 40),
           employeeNumber,
         },
         select: { id: true, name: true, email: true },
@@ -165,7 +168,7 @@ export async function inviteEmployeeForCompany(
     tempPassword,
   });
 
-  return { user, tempPassword, terminalPin };
+  return { user, tempPassword, terminalPin: terminalPin ?? "" };
 }
 
 /** Vergibt fehlende Personalnummern (nur Leitung). Idempotent; revalidiert nur bei Änderungen. */
@@ -229,7 +232,7 @@ export async function updateEmployeePlanningWorkArea(userId: string, raw: string
 export async function inviteEmployee(data: {
   name: string;
   email: string;
-  role?: "EMPLOYEE" | "MANAGER";
+  role?: "EMPLOYEE" | "MANAGER" | "ADVISOR";
   weeklyHours?: number;
 }) {
   const { companyId, role } = await requireTenant();
@@ -976,7 +979,7 @@ export async function getShiftCycleWeeks() {
   return normalizeCycleWeeks(company?.shiftCycleWeeks);
 }
 
-export async function createTeamInviteLink(role: "USER" | "MANAGER" = "USER") {
+export async function createTeamInviteLink(role: "USER" | "MANAGER" | "ADVISOR" = "USER") {
   const { companyId, role: actorRole } = await requireTenant();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(actorRole)) {
     throw new Error("Keine Berechtigung.");

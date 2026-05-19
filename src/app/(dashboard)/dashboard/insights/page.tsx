@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { Brain } from "lucide-react";
+import { Brain, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { VremaInsightsCard } from "@/components/dashboard/VremaInsightsCard";
@@ -49,6 +49,17 @@ export default async function InsightsPage() {
           </div>
         </div>
       </header>
+
+      <Link
+        href="/dashboard/peaks"
+        className="flex items-center justify-between gap-3 rounded-2xl border border-brand/25 bg-brand/5 px-4 py-3 text-sm transition-colors hover:bg-brand/10"
+      >
+        <span className="flex items-center gap-2 font-medium text-foreground">
+          <TrendingUp className="h-4 w-4 text-brand" aria-hidden />
+          Stoßzeiten & Umsatz pflegen
+        </span>
+        <span className="text-xs text-muted-foreground">Ruhig · Normal · Stoß pro Tag</span>
+      </Link>
 
       <DashboardManagerGuidance>
         <DashboardGuidanceSection

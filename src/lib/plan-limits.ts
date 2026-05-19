@@ -1,3 +1,4 @@
+import { UserRole } from "@prisma/client";
 import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import { PLANS } from "@/lib/stripe";
@@ -50,6 +51,7 @@ export async function countActiveEmployees(companyId: string): Promise<number> {
   return db.user.count({
     where: tenantWhere(companyId, {
       isActive: true,
+      role: { not: UserRole.ADVISOR },
       email: { not: { endsWith: "@vrema.local" } },
     }),
   });

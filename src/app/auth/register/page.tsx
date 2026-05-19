@@ -31,16 +31,20 @@ export default async function RegisterPage({ searchParams }: PageProps) {
   let inviteContext: {
     code: string;
     orgId: string;
-    role: "USER" | "MANAGER";
+    role: "USER" | "MANAGER" | "ADVISOR";
     orgName: string;
   } | null = null;
 
-  if (inviteCode && inviteOrgId && (inviteRole === "USER" || inviteRole === "MANAGER")) {
+  if (
+    inviteCode &&
+    inviteOrgId &&
+    (inviteRole === "USER" || inviteRole === "MANAGER" || inviteRole === "ADVISOR")
+  ) {
     const invite = await db.inviteLink.findFirst({
       where: {
         code: inviteCode,
         orgId: inviteOrgId,
-        role: inviteRole as "USER" | "MANAGER",
+        role: inviteRole as "USER" | "MANAGER" | "ADVISOR",
         expiresAt: { gt: new Date() },
       },
       include: {

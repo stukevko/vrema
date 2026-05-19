@@ -2,12 +2,13 @@
 
 import { Sparkles, CheckCircle2, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
 
 type Props = {
   weekIndex: 1 | 2 | 3;
   draftCount: number;
   busy: boolean;
-  reportLines: string[] | null;
+  report: AutopilotUserReport | null;
   onSuggest: () => void;
   onPublish: () => void;
   onDiscard: () => void;
@@ -22,7 +23,7 @@ export function PlannerAutopilotPanel({
   weekIndex,
   draftCount,
   busy,
-  reportLines,
+  report,
   onSuggest,
   onPublish,
   onDiscard,
@@ -126,12 +127,26 @@ export function PlannerAutopilotPanel({
         <p className="mt-3 text-center text-xs font-medium text-brand">Autopilot belegt freie Schichten…</p>
       ) : null}
 
-      {reportLines && reportLines.length > 0 ? (
-        <ul className="mt-3 max-h-36 list-inside list-disc space-y-1 overflow-y-auto rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-[11px] text-foreground">
-          {reportLines.map((line, i) => (
-            <li key={`${i}-${line.slice(0, 20)}`}>{line}</li>
-          ))}
-        </ul>
+      {report && !busy ? (
+        <div
+          className="mt-3 rounded-xl border border-border/60 bg-muted/30 px-3 py-2.5 text-sm"
+          role="status"
+        >
+          <p className="font-medium text-foreground">{report.headline}</p>
+          {report.hint ? <p className="mt-1 text-xs text-muted-foreground">{report.hint}</p> : null}
+          {report.openSlots && report.openSlots.length > 0 ? (
+            <details className="mt-2 text-xs text-foreground">
+              <summary className="cursor-pointer font-medium text-brand hover:underline">
+                {report.openSlots.length} offene Zeiten anzeigen
+              </summary>
+              <ul className="mt-1.5 list-inside list-disc space-y-0.5 text-muted-foreground">
+                {report.openSlots.map((slot) => (
+                  <li key={slot}>{slot}</li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
+        </div>
       ) : null}
     </section>
   );

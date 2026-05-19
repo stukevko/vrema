@@ -24,6 +24,7 @@ import {
   type EventKey,
   type ExperienceKey,
 } from "@/lib/ai/core-engine";
+import { normalizePeakDayLevels, peakLevelForJsDayOfWeek } from "@/lib/planning/peak-demand";
 
 export type StaffingDayRecommendation = {
   date: string;
@@ -33,6 +34,7 @@ export type StaffingDayRecommendation = {
   holidayName?: string | null;
   isBridge?: boolean;
   source: "native" | "heuristic";
+  peakLevel: "LOW" | "NORMAL" | "HIGH";
 };
 
 type WeatherForecastDay = {
@@ -155,8 +157,9 @@ export async function computeStaffingRecommendationsForWeek(
 
   const companyProfile = await db.company.findUnique({
     where: { id: companyId },
-    select: { industry: true, region: true },
+    select: { industry: true, region: true, peakDayLevels: true },
   });
+  const peakLevels = normalizePeakDayLevels(companyProfile?.peakDayLevels);
   const industry: IndustryProfile | undefined =
     (companyProfile?.industry as IndustryProfile | null) ?? undefined;
   const region = (companyProfile?.region as GermanRegion | null) ?? null;
@@ -229,6 +232,7 @@ export async function computeStaffingRecommendationsForWeek(
       const isBridge = bridgeByDate.get(date) ?? false;
       const plannedShifts = plannedByDow.get(dow) ?? 0;
 
+      const peakLevel = peakLevelForJsDayOfWeek(dow, peakLevels);
       const ctx: DayContext = {
         date,
         plannedShifts,
@@ -240,6 +244,7 @@ export async function computeStaffingRecommendationsForWeek(
         holidayName: holidayName ?? undefined,
         isBridgeDay: isBridge,
         isDayBeforeHoliday: dayBeforeHolidaySet.has(date),
+        peakLevel,
       };
       const heuristic = recommend(ctx);
 
@@ -263,6 +268,7 @@ export async function computeStaffingRecommendationsForWeek(
         holidayName,
         isBridge,
         source: useNative ? ("native" as const) : ("heuristic" as const),
+        peakLevel,
       };
     }),
   );

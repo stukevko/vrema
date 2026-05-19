@@ -17,6 +17,7 @@ import { StaffingHintBadge } from "@/components/planning/StaffingHintBadge";
 import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
 import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPanel";
+import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { buildComplianceFlagsByShiftId, type ShiftPlanRow } from "@/lib/planning/compliance";
@@ -36,7 +37,17 @@ import {
   HelpCircle,
   Sparkles,
   Users,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import {
+  dateForPlannerCycleDay,
+  formatPlannerWeekRange,
+  isoFromPlannerDate,
+  mondayOfWeekContaining,
+  plannerCycleDateBounds,
+  weekIndexForPlannerDate,
+} from "@/lib/planning/cycle-display-date";
 import type { DailyWeatherForecast } from "@/lib/weather/shared";
 import { isRainLikeCondition } from "@/lib/weather/shared";
 import { Avatar } from "@/components/ui/avatar";
@@ -177,14 +188,7 @@ function weatherIconForDay(day: DailyWeatherForecast | null, className: string) 
 }
 
 function dateForCycleDay(weekIndex: number, dayOfWeek: number) {
-  const now = new Date();
-  const monday = new Date(now);
-  const mondayOffset = dayOrderMonFirst(now.getDay());
-  monday.setDate(now.getDate() - mondayOffset);
-  monday.setHours(12, 0, 0, 0);
-  const d = new Date(monday);
-  d.setDate(monday.getDate() + (weekIndex - 1) * 7 + dayOrderMonFirst(dayOfWeek));
-  return d;
+  return dateForPlannerCycleDay(weekIndex as 1 | 2 | 3, dayOfWeek);
 }
 
 function getRoleTimelineSegmentTone(role?: string | null) {
@@ -276,7 +280,7 @@ export function ShiftManager({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [autopilotBusy, setAutopilotBusy] = useState(false);
-  const [autopilotReport, setAutopilotReport] = useState<string[] | null>(null);
+  const [autopilotReport, setAutopilotReport] = useState<AutopilotUserReport | null>(null);
   const [selectedUserId, setSelectedUserId] = useState(members[0]?.id ?? "");
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("16:00");
@@ -299,6 +303,76 @@ export function ShiftManager({
     const parsed = new Date(`${timelineDate}T12:00:00`);
     return Number.isNaN(parsed.getTime()) ? 1 : parsed.getDay();
   }, [timelineDate]);
+  const plannerCycleBounds = useMemo(() => plannerCycleDateBounds(shiftCycleWeeks), [shiftCycleWeeks]);
+  const plannerCycleMinIso = isoFromPlannerDate(plannerCycleBounds.startMonday);
+  const plannerCycleMaxIso = isoFromPlannerDate(plannerCycleBounds.endSunday);
+  const timelinePlanWeekIndex = useMemo(() => {
+    const parsed = new Date(`${timelineDate}T12:00:00`);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return weekIndexForPlannerDate(parsed, shiftCycleWeeks);
+  }, [timelineDate, shiftCycleWeeks]);
+  const timelineWeekMonday = useMemo(() => {
+    const parsed = new Date(`${timelineDate}T12:00:00`);
+    return mondayOfWeekContaining(Number.isNaN(parsed.getTime()) ? new Date() : parsed);
+  }, [timelineDate]);
+  const timelineWeekRangeLabel = useMemo(
+    () => formatPlannerWeekRange(timelineWeekMonday),
+    [timelineWeekMonday],
+  );
+  const canTimelinePrevWeek = useMemo(() => {
+    const parsed = new Date(`${timelineDate}T12:00:00`);
+    if (Number.isNaN(parsed.getTime())) return false;
+    parsed.setDate(parsed.getDate() - 7);
+    return weekIndexForPlannerDate(parsed, shiftCycleWeeks) !== null;
+  }, [timelineDate, shiftCycleWeeks]);
+  const canTimelineNextWeek = useMemo(() => {
+    const parsed = new Date(`${timelineDate}T12:00:00`);
+    if (Number.isNaN(parsed.getTime())) return false;
+    parsed.setDate(parsed.getDate() + 7);
+    return weekIndexForPlannerDate(parsed, shiftCycleWeeks) !== null;
+  }, [timelineDate, shiftCycleWeeks]);
+  const shiftTimelineWeek = (delta: -1 | 1) => {
+    const parsed = new Date(`${timelineDate}T12:00:00`);
+    if (Number.isNaN(parsed.getTime())) return;
+    parsed.setDate(parsed.getDate() + delta * 7);
+    const week = weekIndexForPlannerDate(parsed, shiftCycleWeeks);
+    if (!week) {
+      setMessage(
+        delta < 0
+          ? "Das ist bereits die erste Planwoche in deinem Zyklus."
+          : "Das ist bereits die letzte Planwoche in deinem Zyklus.",
+      );
+      return;
+    }
+    setTimelineDate(isoFromPlannerDate(parsed));
+    setSelectedWeekIndex(week);
+    setMessage(null);
+  };
+  const onTimelineDateInput = (iso: string) => {
+    setTimelineDate(iso);
+    const parsed = new Date(`${iso}T12:00:00`);
+    if (Number.isNaN(parsed.getTime())) return;
+    const week = weekIndexForPlannerDate(parsed, shiftCycleWeeks);
+    if (week) {
+      setSelectedWeekIndex(week);
+      setMessage(null);
+    } else {
+      setMessage(
+        `Datum außerhalb des ${shiftCycleWeeks}-Wochen-Zyklus — bitte zwischen ${plannerCycleMinIso} und ${plannerCycleMaxIso} wählen.`,
+      );
+    }
+  };
+  const goTimelineToday = () => {
+    const today = new Date();
+    const week = weekIndexForPlannerDate(today, shiftCycleWeeks);
+    if (!week) {
+      setMessage("Heute liegt außerhalb des aktuellen Plan-Zyklus.");
+      return;
+    }
+    setTimelineDate(isoFromPlannerDate(today));
+    setSelectedWeekIndex(week);
+    setMessage(null);
+  };
   const [coverageSlotMinutes] = useState<60>(60);
   const [dragDraft, setDragDraft] = useState<{
     userId: string;
@@ -1285,24 +1359,24 @@ export function ShiftManager({
       try {
         const anchor =
           viewMode === "timeline" ? new Date(`${timelineDate.slice(0, 10)}T12:00:00`) : new Date();
+        const planableCount = members.filter(
+          (m) => m.role === "EMPLOYEE" || m.role === "MANAGER",
+        ).length;
+        const slotTemplates =
+          planableCount <= 2
+            ? [{ startTime, endTime, breakDuration: 30 }]
+            : [
+                { startTime, endTime, breakDuration: 30 },
+                { startTime: "14:00", endTime: "22:00", breakDuration: 30 },
+              ];
         const result = await runAutopilotDraft(selectedWeekIndex, {
-          slotTemplates: [
-            { startTime, endTime, breakDuration: 30 },
-            { startTime: "14:00", endTime: "22:00", breakDuration: 30 },
-          ],
-          coveragePerDay: Math.min(6, Math.max(1, neededStaff)),
+          slotTemplates,
+          coveragePerDay: planableCount <= 2 ? 1 : Math.min(2, Math.max(1, neededStaff)),
           anchorDate: anchor,
         });
-        const lines = [
-          ...result.infoLines,
-          ...result.unfilled.map(
-            (u) =>
-              `Offen: ${u.dayLabel} ${u.startTime}–${u.endTime}${u.staffingRole ? ` – Rolle „${u.staffingRole}“` : ""}: ${u.reason}`
-          ),
-        ];
-        setAutopilotReport(lines);
+        setAutopilotReport(result.report);
         if (result.shiftsCreated === 0 && result.unfilled.length === 0) {
-          setMessage("Autopilot: Alle vorgesehenen Schichten sind bereits besetzt.");
+          setMessage(result.report.headline);
         }
         router.refresh();
       } catch (e: unknown) {
@@ -2328,13 +2402,32 @@ export function ShiftManager({
               <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Datum
               </span>
-              <input
-                type="date"
-                value={timelineDate}
-                onChange={(e) => setTimelineDate(e.target.value)}
-                className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-surface px-3 py-2.5 text-base sm:min-h-11 sm:text-sm"
-              />
-              <p className="mt-1 text-[11px] text-muted-foreground">Wochentag: {DAY_LABELS[timelineDay]}</p>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={timelineDate}
+                  min={plannerCycleMinIso}
+                  max={plannerCycleMaxIso}
+                  onChange={(e) => onTimelineDateInput(e.target.value)}
+                  className="min-h-12 min-w-0 flex-1 touch-manipulation rounded-lg border border-border bg-surface px-3 py-2.5 text-base sm:min-h-11 sm:text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={goTimelineToday}
+                  className="min-h-12 shrink-0 touch-manipulation rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground sm:min-h-11 hover:bg-muted/50"
+                >
+                  Heute
+                </button>
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Wochentag: {DAY_LABELS[timelineDay]}
+                {timelinePlanWeekIndex ? (
+                  <>
+                    {" "}
+                    · Planwoche {timelinePlanWeekIndex}/{shiftCycleWeeks}
+                  </>
+                ) : null}
+              </p>
               {selectedShiftIds.length > 1 ? (
                 <span className="mt-1 inline-flex items-center rounded-full border border-brand/30 bg-brand-soft px-2 py-0.5 text-[10px] font-semibold text-brand">
                   {selectedShiftIds.length} Schichten ausgewählt
@@ -2362,6 +2455,36 @@ export function ShiftManager({
             <p className="hidden items-center text-[11px] text-muted-foreground leading-snug md:flex">
               Stundenlinien und feines Viertelstunden-Raster · 15-Minuten-Snap beim Ziehen · Balken klicken zum Bearbeiten
             </p>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/60 bg-surface/40 px-2 py-2 sm:px-3">
+            <button
+              type="button"
+              disabled={!canTimelinePrevWeek}
+              onClick={() => shiftTimelineWeek(-1)}
+              className="inline-flex min-h-11 min-w-[2.75rem] items-center justify-center gap-1 rounded-lg border border-border bg-background px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-10 sm:px-3"
+              aria-label="Vorherige Woche"
+            >
+              <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
+              <span className="hidden sm:inline">Vorherige Woche</span>
+            </button>
+            <div className="min-w-0 flex-1 px-1 text-center">
+              <p className="truncate text-xs font-semibold text-foreground sm:text-sm">{timelineWeekRangeLabel}</p>
+              <p className="text-[10px] text-muted-foreground">
+                {timelinePlanWeekIndex
+                  ? `Planwoche ${timelinePlanWeekIndex} von ${shiftCycleWeeks} im Zyklus`
+                  : "Datum liegt außerhalb des Plan-Zyklus"}
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={!canTimelineNextWeek}
+              onClick={() => shiftTimelineWeek(1)}
+              className="inline-flex min-h-11 min-w-[2.75rem] items-center justify-center gap-1 rounded-lg border border-border bg-background px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-10 sm:px-3"
+              aria-label="Nächste Woche"
+            >
+              <span className="hidden sm:inline">Nächste Woche</span>
+              <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
+            </button>
           </div>
           <div className="mt-2 flex justify-end">
             {firstGapWindow ? (
@@ -2423,7 +2546,11 @@ export function ShiftManager({
                     <button
                       key={`wx-${iso}`}
                       type="button"
-                      onClick={() => setTimelineDate(iso)}
+                      onClick={() => {
+                        setTimelineDate(iso);
+                        const week = weekIndexForPlannerDate(d, shiftCycleWeeks);
+                        if (week) setSelectedWeekIndex(week);
+                      }}
                       className={`flex min-w-[3.25rem] flex-col items-center rounded-xl border px-1.5 py-1 text-[10px] transition-colors ${
                         active ? "border-brand/45 bg-brand-soft text-brand" : "border-line bg-surface/80 text-fg"
                       }`}
@@ -3051,7 +3178,12 @@ export function ShiftManager({
             <button
               key={week}
               type="button"
-              onClick={() => setSelectedWeekIndex(week)}
+              onClick={() => {
+                setSelectedWeekIndex(week);
+                if (viewMode === "timeline") {
+                  setTimelineDate(isoFromPlannerDate(dateForCycleDay(week, timelineDay)));
+                }
+              }}
               className={`min-h-11 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${
                 selectedWeekIndex === week ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
@@ -3079,7 +3211,7 @@ export function ShiftManager({
             weekIndex={selectedWeekIndex}
             draftCount={draftShiftsInWeek.length}
             busy={autopilotBusy}
-            reportLines={autopilotReport}
+            report={autopilotReport}
             disabled={isPending}
             onSuggest={startAutopilot}
             onPublish={confirmAutopilot}

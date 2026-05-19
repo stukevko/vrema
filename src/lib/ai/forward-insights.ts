@@ -133,6 +133,7 @@ export async function staffingByDayForPlannerWeek(
       d.recommendation.delta,
       d.holidayName,
       d.isBridge,
+      d.peakLevel,
     );
     out.set(d.dayOfWeek, {
       tone: d.tone,

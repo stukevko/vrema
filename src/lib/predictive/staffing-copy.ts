@@ -38,10 +38,13 @@ export function plannerBadgeLabel(
   delta: number,
   holidayName?: string | null,
   isBridge?: boolean,
+  peakLevel?: "LOW" | "NORMAL" | "HIGH",
 ): string {
   if (holidayName) return "Feiertag";
   if (isBridge) return "Brückentag";
   if (tone === "closed") return "Zu";
+  if (peakLevel === "HIGH" && delta >= 1) return "Stoß · +1 prüfen";
+  if (peakLevel === "HIGH") return "Stoß erwartet";
   if (delta >= 2) return "Mehr Personal";
   if (delta === 1) return "+1 Schicht";
   if (delta <= -1) return "Ruhig";

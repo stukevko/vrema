@@ -48,6 +48,8 @@ export type DayContext = {
   isBridgeDay?: boolean;
   /** Tag direkt VOR einem Feiertag (häufig höhere Auslastung im Gastgewerbe und ähnlichen Betrieben). */
   isDayBeforeHoliday?: boolean;
+  /** Betriebs-Stoß-Profil (Berater/Inhaber): ruhig / normal / Stoß. */
+  peakLevel?: "LOW" | "NORMAL" | "HIGH";
 };
 
 export type StaffingRecommendation = {
@@ -278,10 +280,23 @@ export function recommend(ctx: DayContext): StaffingRecommendation {
     }
   }
 
+  let peakUtil = 0;
+  let peakDeltaBoost = 0;
+  let peakLabel = "";
+  if (ctx.peakLevel === "HIGH") {
+    peakUtil = 0.18;
+    peakDeltaBoost = 1;
+    peakLabel = "Stoß erwartet (Peak-Profil)";
+  } else if (ctx.peakLevel === "LOW") {
+    peakUtil = -0.1;
+    peakDeltaBoost = -1;
+    peakLabel = "Ruhiger Tag (Peak-Profil)";
+  }
+
   const adjustedBase = baseUtilization * wdMultiplier;
   const expectedUtilization = Math.max(
     0,
-    Math.min(1, adjustedBase + wIdx + holidayImpact + bridgeImpact + dayBeforeImpact),
+    Math.min(1, adjustedBase + wIdx + holidayImpact + bridgeImpact + dayBeforeImpact + peakUtil),
   );
 
   // Sonderfall „Geschäft praktisch geschlossen": empfehle 0 Schichten, klare Aussage.
@@ -299,9 +314,10 @@ export function recommend(ctx: DayContext): StaffingRecommendation {
 
   // Delta: erwartete vs. geplante Schichten.
   const rawDelta =
-    expectedShifts * wdMultiplier * (1 + wIdx + holidayImpact + bridgeImpact + dayBeforeImpact) -
+    expectedShifts * wdMultiplier * (1 + wIdx + holidayImpact + bridgeImpact + dayBeforeImpact + peakUtil) -
     ctx.plannedShifts;
-  const delta = Math.round(rawDelta);
+  let delta = Math.round(rawDelta) + peakDeltaBoost;
+  if (ctx.peakLevel === "HIGH" && delta < 1 && ctx.plannedShifts >= 0) delta = 1;
 
   // Confidence: viel Historie + bekanntes Wetter = höher. Feiertags-Kontext erhöht ebenfalls.
   const histSample = Math.min(1, ctx.historicalSameDay.length / 4);
@@ -316,6 +332,7 @@ export function recommend(ctx: DayContext): StaffingRecommendation {
   if (holidayLabel) drivers.push({ label: holidayLabel, impact: holidayImpact });
   if (bridgeLabel) drivers.push({ label: bridgeLabel, impact: bridgeImpact });
   if (dayBeforeLabel) drivers.push({ label: dayBeforeLabel, impact: dayBeforeImpact });
+  if (peakLabel) drivers.push({ label: peakLabel, impact: peakUtil });
   drivers.push({ label: profile.label, impact: wdMultiplier - 1 });
   drivers.push({ label: `Historie (Median: ${histMedian.toFixed(1)} Schichten)`, impact: baseUtilization });
   drivers.push({ label: weatherLabel, impact: wIdx });

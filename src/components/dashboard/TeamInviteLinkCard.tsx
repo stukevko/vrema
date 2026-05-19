@@ -5,7 +5,7 @@ import { createTeamInviteLink } from "@/lib/actions/team";
 import { Copy, Loader2, Share2 } from "lucide-react";
 
 export function TeamInviteLinkCard() {
-  const [role, setRole] = useState<"USER" | "MANAGER">("USER");
+  const [role, setRole] = useState<"USER" | "MANAGER" | "ADVISOR">("USER");
   const [inviteUrl, setInviteUrl] = useState("");
   const [feedback, setFeedback] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -52,11 +52,12 @@ export function TeamInviteLinkCard() {
         <label className="block text-xs text-slate-600">Rolle</label>
         <select
           value={role}
-          onChange={(e) => setRole(e.target.value as "USER" | "MANAGER")}
+          onChange={(e) => setRole(e.target.value as "USER" | "MANAGER" | "ADVISOR")}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
         >
           <option value="USER">Mitarbeiter</option>
           <option value="MANAGER">Manager</option>
+          <option value="ADVISOR">Berater (Stoß & Umsatz)</option>
         </select>
 
         <button

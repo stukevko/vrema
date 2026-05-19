@@ -18,6 +18,19 @@ export default auth((req) => {
   const role = req.auth?.user?.role;
   const pathname = req.nextUrl.pathname;
 
+  if (role === "ADVISOR") {
+    const allowed =
+      pathname.startsWith("/dashboard/peaks") ||
+      pathname.startsWith("/dashboard/account") ||
+      pathname.startsWith("/dashboard/trial-ended");
+    if (!allowed && pathname.startsWith("/dashboard")) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/dashboard/peaks";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+  }
+
   if (role === "EMPLOYEE") {
 
     if (pathname === "/dashboard/settings" || pathname.startsWith("/dashboard/settings/")) {
