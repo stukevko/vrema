@@ -19,7 +19,6 @@ import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } fro
 import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPanel";
 import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { buildComplianceFlagsByShiftId, type ShiftPlanRow } from "@/lib/planning/compliance";
 import { countWeekCoverageGapSlots } from "@/lib/planning/planner-coverage-metrics";
 import {
@@ -93,8 +92,15 @@ const TIMELINE_SLOT_COUNT = TIMELINE_END_HOUR - TIMELINE_START_HOUR;
 const TIMELINE_TOTAL_MINUTES = TIMELINE_SLOT_COUNT * 60;
 const TIMELINE_GRID_STYLE = { gridTemplateColumns: `repeat(${TIMELINE_SLOT_COUNT}, minmax(0, 1fr))` } as const;
 const TIMELINE_SNAP_MINUTES = 15;
-/** Vertikale Hilfslinien im Raster (24 h × 4 Viertel). */
-const TIMELINE_QUARTER_STRIPES = 24 * (60 / TIMELINE_SNAP_MINUTES);
+/** Vertikale Hilfslinien im sichtbaren Raster (06–24 Uhr). */
+const TIMELINE_QUARTER_STRIPES = TIMELINE_SLOT_COUNT * (60 / TIMELINE_SNAP_MINUTES);
+
+/** Prozent-Position einer Minute im sichtbaren 06–24-Raster. */
+function timelineMinuteToPercent(minute: number): number {
+  const start = TIMELINE_START_HOUR * 60;
+  const clamped = Math.max(start, Math.min(TIMELINE_END_HOUR * 60, minute));
+  return ((clamped - start) / TIMELINE_TOTAL_MINUTES) * 100;
+}
 
 function toMinutes(value: string) {
   const [h, m] = value.split(":").map(Number);
@@ -541,20 +547,20 @@ export function ShiftManager({
       .then((r) => r.json())
       .then((data: { week?: Array<DailyWeatherForecast | null>; mondayIso?: string; error?: string | null }) => {
         if (cancelled) return;
-        if (data.error === "no_api_key" || data.error === "upstream") {
-          setWeatherFetchErr(null);
-          setWeatherWeek([]);
-          setWeatherMondayIso(null);
-          return;
-        }
         if (data.error === "no_location") {
           setWeatherFetchErr("Für Wetter bitte PLZ oder Ort in den Einstellungen hinterlegen.");
           setWeatherWeek([]);
           setWeatherMondayIso(null);
           return;
         }
-        setWeatherWeek(Array.isArray(data.week) ? data.week : []);
+        const week = Array.isArray(data.week) ? data.week : [];
+        setWeatherWeek(week);
         setWeatherMondayIso(typeof data.mondayIso === "string" ? data.mondayIso : null);
+        if (data.error === "upstream" && week.every((d) => d == null)) {
+          setWeatherFetchErr("Wetter gerade nicht verfügbar — bitte später erneut öffnen.");
+        } else if (week.some((d) => d != null)) {
+          setWeatherFetchErr(null);
+        }
       })
       .catch(() => {
         if (!cancelled) setWeatherFetchErr("Wetter gerade nicht verfügbar – bitte später erneut öffnen.");
@@ -859,16 +865,16 @@ export function ShiftManager({
   const firstGapWindow = useMemo(() => {
     const idx = timelineCoverage.findIndex((slot) => slot.isGap);
     if (idx < 0) return null;
-    const slotStart = idx * coverageSlotMinutes;
+    const slotStart = TIMELINE_START_HOUR * 60 + idx * coverageSlotMinutes;
     const slotEnd = Math.min(TIMELINE_END_HOUR * 60, slotStart + coverageSlotMinutes);
     return {
       startMinutes: slotStart,
       label: `${minutesToHHMM(slotStart)}–${minutesToHHMM(slotEnd)}`,
     };
   }, [timelineCoverage, coverageSlotMinutes]);
-  /** Stunden-Grenzen 0:00 … 24:00 als Prozent (0 % … 100 %). */
+  /** Stunden-Grenzen 06:00 … 24:00 — aligned mit TIMELINE_GRID_STYLE. */
   const hourLinePercents = useMemo(
-    () => Array.from({ length: 25 }, (_, i) => (i / 24) * 100),
+    () => Array.from({ length: TIMELINE_SLOT_COUNT + 1 }, (_, i) => (i / TIMELINE_SLOT_COUNT) * 100),
     [],
   );
   const selectedShifts = useMemo(
@@ -2546,8 +2552,9 @@ export function ShiftManager({
             </div>
           ) : null}
 
-          <div className="mt-3 space-y-1">
-            <div className="flex flex-wrap gap-1.5 md:pl-[calc(220px+0.75rem)]">
+          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-[200px_1fr] md:items-center">
+            <p className="hidden text-[10px] font-medium text-muted-foreground md:block">Wochentag</p>
+            <div className="flex flex-wrap gap-1.5">
               {WEEK_SHORT_MON.map((label, i) => {
                 const d = addDaysToDate(new Date(`${timelineWeekMondayIso}T12:00:00`), i);
                 const iso = isoFromDate(d);
@@ -2569,30 +2576,31 @@ export function ShiftManager({
                     <span className="font-semibold">{label}</span>
                     {w ? (
                       <>
-                        <Image
-                          src={`https://openweathermap.org/img/wn/${w.iconCode}@2x.png`}
-                          alt={weatherOpenWeatherAlt(w)}
-                          width={40}
-                          height={40}
-                          className="h-6 w-6"
-                          unoptimized
-                        />
-                        <span className="tabular-nums text-[10px] font-medium">{w.maxTempC}°</span>
+                        <span className="mt-0.5" title={weatherOpenWeatherAlt(w)}>
+                          {weatherIconForDay(w, "h-5 w-5 text-foreground/85")}
+                        </span>
+                        <span className="tabular-nums text-[10px] font-medium">{Math.round(w.maxTempC)}°</span>
                       </>
                     ) : (
-                      <span className="mt-1 text-[9px] text-muted-foreground">·</span>
+                      <span className="mt-1 text-[9px] text-muted-foreground" title="Keine Prognose für diesen Tag">
+                        ·
+                      </span>
                     )}
                   </button>
                 );
               })}
             </div>
             {weatherFetchErr ? (
-              <p className="text-[10px] text-muted-foreground md:pl-[calc(220px+0.75rem)]">{weatherFetchErr}</p>
-            ) : !weatherWeekHasData ? (
-              <p className="text-[10px] text-muted-foreground md:pl-[calc(220px+0.75rem)]">
-                Wetter-Prognose nur für die nächsten Tage — PLZ/Ort in den Einstellungen prüfen.
+              <p className="text-[10px] text-muted-foreground md:col-span-2">{weatherFetchErr}</p>
+            ) : weatherWeekHasData ? (
+              <p className="text-[10px] text-muted-foreground md:col-span-2">
+                Tages-Temperatur (Prognose bis ca. 16 Tage) — auch Planwoche 2 im Zyklus sichtbar.
               </p>
-            ) : null}
+            ) : (
+              <p className="text-[10px] text-muted-foreground md:col-span-2">
+                Keine Wetterdaten für diese Woche — Datum im Plan-Zyklus oder PLZ prüfen.
+              </p>
+            )}
           </div>
           {costPeakFocusDay != null && timelineDay === costPeakFocusDay ? (
             <div className="mt-2 flex items-center justify-between rounded-xl border border-warning/25 bg-warning-soft px-3 py-2 text-[11px] text-warning-foreground">
@@ -2609,7 +2617,7 @@ export function ShiftManager({
 
           <div className="mt-3 max-h-[75vh] min-w-0 max-w-full touch-pan-x overflow-x-auto overflow-y-auto overscroll-contain scrollbar-hide">
             <div className="w-full min-w-[640px] space-y-3 py-1 sm:min-w-[780px] md:min-w-[900px] lg:min-w-[1100px]">
-              <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground md:grid-cols-[220px_1fr] md:items-center">
+              <div className="sticky top-0 z-30 grid grid-cols-1 gap-2 border-b border-border bg-background py-2 text-[11px] text-muted-foreground md:grid-cols-[200px_1fr] md:items-center">
                 <div className="hidden font-medium text-foreground md:block">Mitarbeiter</div>
                 <div className="grid font-sans tabular-nums" style={TIMELINE_GRID_STYLE}>
                   {Array.from({ length: TIMELINE_SLOT_COUNT }).map((_, idx) => {
@@ -2655,13 +2663,12 @@ export function ShiftManager({
                       : shiftEnd
                     : overnightCarry);
                 const leftPct =
-                  visualStart === null
-                    ? 0
-                    : ((Math.max(visualStart, TIMELINE_START_HOUR * 60) - TIMELINE_START_HOUR * 60) / TIMELINE_TOTAL_MINUTES) * 100;
+                  visualStart === null ? 0 : timelineMinuteToPercent(visualStart);
                 const widthPct =
                   visualStart === null || visualEnd === null
                     ? 0
-                    : (Math.max(0, Math.min(visualEnd, TIMELINE_END_HOUR * 60) - Math.max(visualStart, TIMELINE_START_HOUR * 60)) / TIMELINE_TOTAL_MINUTES) * 100;
+                    : timelineMinuteToPercent(Math.min(visualEnd, TIMELINE_END_HOUR * 60)) -
+                      timelineMinuteToPercent(Math.max(visualStart, TIMELINE_START_HOUR * 60));
                 const initials = (row.member.name ?? row.member.email).slice(0, 2).toUpperCase();
                 const barLabel =
                   visualStart !== null && visualEnd !== null
@@ -2680,9 +2687,9 @@ export function ShiftManager({
                 return (
                   <div
                     key={row.member.id}
-                    className="grid grid-cols-1 items-stretch gap-2 md:grid-cols-[200px_1fr] md:items-center md:gap-2"
+                    className="grid grid-cols-1 items-stretch gap-2 md:grid-cols-[200px_1fr] md:items-stretch md:gap-2"
                   >
-                    <div className="flex min-h-12 items-center rounded-2xl border border-border bg-surface px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.04)] md:min-h-0 md:px-4 md:py-4">
+                    <div className="flex min-h-11 items-center rounded-xl border border-border bg-surface px-3 py-2 md:min-h-[3.25rem] md:py-2.5">
                       <span className="inline-flex min-w-0 items-center gap-2 text-sm text-foreground">
                         <Avatar
                           src={row.member.image}
@@ -2741,7 +2748,7 @@ export function ShiftManager({
                               key={`gap-${idx}`}
                               className="absolute top-0 bottom-0 bg-rose-200/15 dark:bg-rose-400/[0.06]"
                               style={{
-                                left: `${(idx * coverageSlotMinutes / TIMELINE_TOTAL_MINUTES) * 100}%`,
+                                left: `${timelineMinuteToPercent(TIMELINE_START_HOUR * 60 + idx * coverageSlotMinutes)}%`,
                                 width: `${(coverageSlotMinutes / TIMELINE_TOTAL_MINUTES) * 100}%`,
                               }}
                             />
@@ -2783,7 +2790,10 @@ export function ShiftManager({
                           {!draftForRow && overnightCurrent && shiftEnd !== null ? (
                             <div
                               className="absolute top-1.5 bottom-1.5 z-[9] flex items-center gap-1 rounded-lg border border-brand/35 bg-brand-soft px-2 text-[10px] font-semibold text-brand"
-                              style={{ left: "0%", width: `${(shiftEnd / TIMELINE_TOTAL_MINUTES) * 100}%` }}
+                              style={{
+                                left: "0%",
+                                width: `${timelineMinuteToPercent(shiftEnd)}%`,
+                              }}
                               title={`Nächster Tag ${minutesToHHMM(0)}–${minutesToHHMM(shiftEnd)}`}
                             >
                               <CornerDownRight className="h-3 w-3" />

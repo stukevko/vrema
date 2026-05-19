@@ -1,6 +1,11 @@
 import { db } from "@/lib/db";
 import type { DailyWeatherForecast, WeatherConditionKind } from "@/lib/weather/shared";
 import { getBerlinDateKey } from "@/lib/time/timezone";
+import {
+  fetchOpenMeteoDaily,
+  geocodeForOpenMeteo,
+  mergeDailyForecasts,
+} from "@/lib/external/open-meteo-weather";
 
 const CACHE_MS = 3 * 60 * 60 * 1000;
 
@@ -18,7 +23,7 @@ type WeeklyWeatherResult = {
   daily: DailyWeatherForecast[];
   queryKey: string | null;
   stale: boolean;
-  error?: "no_location" | "no_api_key" | "upstream";
+  error?: "no_location" | "upstream";
 };
 const weatherInFlightByCompany = new Map<string, Promise<WeeklyWeatherResult>>();
 
@@ -151,10 +156,6 @@ export async function getWeeklyWeatherForCompany(companyId: string): Promise<Wee
     return { daily: [], queryKey: null, stale: false, error: "no_location" };
   }
 
-  if (!process.env.OPENWEATHER_API_KEY) {
-    return { daily: [], queryKey, stale: false, error: "no_api_key" };
-  }
-
   const cached = await db.weatherCache.findUnique({
     where: { companyId },
   });
@@ -166,17 +167,29 @@ export async function getWeeklyWeatherForCompany(companyId: string): Promise<Wee
     }
   }
 
-  const geo = await geocode(queryKey);
+  let geo = await geocode(queryKey);
+  if (!geo) {
+    geo = await geocodeForOpenMeteo(company.locationZip, company.locationCity);
+  }
   if (!geo) {
     return { daily: [], queryKey, stale: false, error: "upstream" };
   }
 
-  const list = await fetchForecast(geo.lat, geo.lon);
-  if (list.length === 0) {
-    return { daily: [], queryKey, stale: false, error: "upstream" };
+  /** Open-Meteo: 16 Tage — für 2–3 Planwochen im Zyklus. */
+  const openMeteoDaily = await fetchOpenMeteoDaily(geo.lat, geo.lon, 16);
+
+  let daily = openMeteoDaily;
+  if (process.env.OPENWEATHER_API_KEY) {
+    const list = await fetchForecast(geo.lat, geo.lon);
+    if (list.length > 0) {
+      const owmDaily = aggregateForecast(list);
+      daily = mergeDailyForecasts(openMeteoDaily, owmDaily);
+    }
   }
 
-  const daily = aggregateForecast(list);
+  if (daily.length === 0) {
+    return { daily: [], queryKey, stale: false, error: "upstream" };
+  }
 
   await db.weatherCache.upsert({
     where: { companyId },
