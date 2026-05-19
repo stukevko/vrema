@@ -15,6 +15,8 @@ Dieses Runbook ist für den Moment gedacht, in dem du auf der VM den Schalter um
 | `AUTH_WEBAUTHN_*` | Passkeys (Domain muss passen) |
 | `OPENWEATHER_API_KEY` | Wetter im Planer + Personal-Empfehlung |
 | `DATA_RETENTION_CRON_SECRET` | Nightly Cleanup |
+| `REQUIRE_CARD_ON_SIGNUP=false` | Trial ohne Karte (Standard) |
+| `NEXT_PUBLIC_REQUIRE_CARD_ON_SIGNUP=false` | Marketing-Copy ohne Karten-Zwang — **nach Änderung neu bauen** |
 | `npm run build` grün | Kein kaputter Deploy |
 | `npm run prod:cleanup` einmalig | Keine Test-Altlasten |
 | Smoke-Tests unten | Register → Dashboard → Passkey → Terminal |
@@ -74,24 +76,37 @@ npm run prod:cleanup
 
 ## 4) Verifizierung (Smoke-Tests)
 
-Diese 5 Klicks muessen nach Deploy gruen sein:
+### A) Kern (jeder Deploy)
 
-1. **Register + Verify**
-   - `/auth/register` -> Account erstellen -> Verify-Link aus Mail oeffnen
+| # | Test | Erwartung |
+|---|------|-----------|
+| 1 | `/auth/register` → Mail verifizieren | Login möglich |
+| 2 | Onboarding (4 Schritte) oder Skip | Dashboard lädt |
+| 3 | `/dashboard/settings` → Terminal-PIN + Link | Terminal-URL kopierbar |
+| 4 | Terminal: PIN → ein-/ausstempeln | Eintrag in Berichten |
+| 5 | Passkey (optional) | Registrieren + Login nach Logout |
+| 6 | `npm run build` auf VM | Kein Fehler |
 
-2. **Setup abschliessen**
-   - Firmenname/Setup speichern -> Redirect auf Dashboard
+### B) Trial (7 Tage / max. 3 MA)
 
-3. **Passkey registrieren**
-   - `/dashboard/settings` -> Sicherheit -> Passkey registrieren
+| # | Test | Erwartung |
+|---|------|-----------|
+| 1 | Banner „Testphase“ sichtbar | Tage + MA-Anzahl |
+| 2 | 3. Mitarbeiter einladen | Hinweis bei Limit |
+| 3 | Trial abgelaufen simulieren (`trialEndsAt` in DB) | Owner → Billing, MA → trial-ended |
+| 4 | `REQUIRE_CARD_ON_SIGNUP=false` | Register ohne Karte |
 
-4. **Passkey Login testen**
-   - ausloggen -> `/auth/login` -> "Mit Passkey anmelden"
+### C) Pilot-Betrieb (1 echter Gastronom)
 
-5. **Terminal + Geofencing**
-   - `/terminal/<company-slug>` -> PIN eingeben -> Reports auf Out-of-Range Markierung pruefen
+| # | Test | Erwartung |
+|---|------|-----------|
+| 1 | Owner: Team 2 MA + Terminal | MA kann stempeln |
+| 2 | MA-Handy: Bottom-Nav (kein Einblicke-Tab) | Urlaub + Planer erreichbar |
+| 3 | Planer: Autopilot → Entwurf → veröffentlichen | MA sieht Schicht |
+| 4 | Business: Berichte → DATEV-Export | CSV lädt (wenn Plan Business) |
+| 5 | Support: Ticket an VREMA | Antwort im Postfach |
 
-Wenn der Passkey-Login nach Ausloggen funktioniert, hast du gewonnen.
+Wenn A + B grün sind, ist der technische Deploy ok. C validiert die echte Gastro-Journey.
 
 ---
 

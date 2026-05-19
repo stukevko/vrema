@@ -38,6 +38,7 @@ export async function createSupportTicket(input: { subject: string; message: str
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/support");
   revalidatePath("/dashboard/admin/support");
+  revalidatePath("/dashboard/support");
   revalidatePath("/dashboard/super-admin/tickets");
 }
 
@@ -179,6 +180,7 @@ export async function replyToSupportTicket(input: { ticketId: string; response: 
   revalidatePath("/dashboard/super-admin/tickets");
   revalidatePath("/dashboard/support");
   revalidatePath("/dashboard/admin/support");
+  revalidatePath("/dashboard/support");
 }
 
 export async function replyToOrgSupportTicketFormAction(formData: FormData) {
@@ -218,6 +220,7 @@ export async function replyToOrgSupportTicketFormAction(formData: FormData) {
   });
 
   revalidatePath("/dashboard/admin/support");
+  revalidatePath("/dashboard/support");
   revalidatePath("/dashboard/support");
 }
 

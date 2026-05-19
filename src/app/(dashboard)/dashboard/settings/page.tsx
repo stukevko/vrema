@@ -58,7 +58,7 @@ export default async function SettingsPage() {
 
   const mobileMoreLinks: { href: string; label: string; icon: LucideIcon }[] = [
     { href: "/dashboard/team", label: "Team", icon: Users },
-    { href: "/dashboard/vacation", label: "Urlaub", icon: CalendarDays },
+    { href: "/dashboard/vacation", label: "Abwesenheit", icon: CalendarDays },
     { href: "/dashboard#terminal-widget", label: "Terminal", icon: Timer },
   ];
   if (showBilling) {
@@ -76,8 +76,38 @@ export default async function SettingsPage() {
           <Settings className="w-6 h-6 text-muted-foreground" />
           Einstellungen
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">Firma & persönliches Konto verwalten.</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          Zuerst Terminal & Team — erweiterte Optionen findest du unten unter „Erweitert“.
+        </p>
       </div>
+
+      <section className="rounded-2xl border border-brand/25 bg-brand-soft/30 p-4 shadow-sm dark:border-white/10 dark:bg-brand/10 sm:p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Timer className="h-4 w-4 text-brand" />
+          <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
+            Täglicher Betrieb
+          </h2>
+        </div>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Tablet-Link und PIN — das brauchst du für die Stempeluhr im Betrieb.
+        </p>
+        <TerminalPinForm />
+        {company?.slug ? (
+          <div className="mt-4">
+            <TerminalAccessSection
+              terminalUrl={`${getSiteUrl()}/terminal/${company.slug}`}
+              plan={session.user.plan ?? "STARTER"}
+            />
+          </div>
+        ) : null}
+        <Link
+          href="/dashboard/team#invite"
+          className="mt-4 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-brand underline-offset-4 hover:underline"
+        >
+          <Users className="h-4 w-4" aria-hidden />
+          Team einladen
+        </Link>
+      </section>
 
       <nav
         className="md:hidden rounded-2xl border border-border bg-card p-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
@@ -142,26 +172,20 @@ export default async function SettingsPage() {
         <PasskeySecurityForm />
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Lock className="w-4 h-4 text-muted-foreground" />
-          <h2 className="font-semibold text-sm text-foreground uppercase tracking-widest font-sans">Terminal-PIN</h2>
-        </div>
-        <TerminalPinForm />
-        {company?.slug ? (
-          <TerminalAccessSection
-            terminalUrl={`${getSiteUrl()}/terminal/${company.slug}`}
-            plan={session.user.plan ?? "STARTER"}
-          />
-        ) : null}
-      </section>
 
-      {/* Enterprise: Geofencing-Toggle ist auch in Business sinnvoll und sicher,
-          deshalb für alle Owner sichtbar. */}
+      <details className="group rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 marker:content-none sm:px-5 [&::-webkit-details-marker]:hidden">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Optional</p>
+            <p className="text-sm font-semibold text-foreground">Erweitert · API, Branding, Geofence</p>
+          </div>
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" />
+        </summary>
+        <div className="space-y-5 border-t border-border px-4 pb-5 pt-4 sm:px-5">
       {isOwner && geofence && (
         <section
           id="ipgeofence"
-          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
+          className="space-y-4"
         >
           <div className="mb-4 flex items-center gap-2">
             <Wifi className="h-4 w-4 text-muted-foreground" />
@@ -173,11 +197,10 @@ export default async function SettingsPage() {
         </section>
       )}
 
-      {/* Enterprise: Custom Branding (Plan-Gate in Action selbst). */}
       {isOwner && branding && (
         <section
           id="branding"
-          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
+          className="space-y-4"
         >
           <div className="mb-4 flex items-center gap-2">
             <Palette className="h-4 w-4 text-muted-foreground" />
@@ -189,11 +212,10 @@ export default async function SettingsPage() {
         </section>
       )}
 
-      {/* Team-Import via CSV */}
       {isOwner && (
         <section
           id="team-import"
-          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
+          className="space-y-4"
         >
           <div className="mb-4 flex items-center gap-2">
             <UploadCloud className="h-4 w-4 text-muted-foreground" />
@@ -205,11 +227,10 @@ export default async function SettingsPage() {
         </section>
       )}
 
-      {/* Enterprise: External API */}
       {isOwner && (
         <section
           id="api"
-          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
+          className="space-y-4"
         >
           <div className="mb-4 flex items-center gap-2">
             <KeyRound className="h-4 w-4 text-muted-foreground" />
@@ -221,21 +242,22 @@ export default async function SettingsPage() {
         </section>
       )}
 
-      {/* VREMA Native Core AI – Audit & Reset gelernter Faktoren */}
       {(isOwner || role === "MANAGER") && (
         <section
           id="ai-insights"
-          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
+          className="space-y-4"
         >
           <div className="mb-4 flex items-center gap-2">
             <Brain className="h-4 w-4 text-muted-foreground" />
             <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
-              Planungs-Hilfe · Gespeicherte Anpassungen
+              Planungs-Hinweise · Zurücksetzen
             </h2>
           </div>
           <AiInsightsAuditSection />
         </section>
       )}
+        </div>
+      </details>
     </div>
   );
 }

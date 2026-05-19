@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
 import { useMemo, useRef, useState, useTransition } from "react";
@@ -1480,12 +1481,11 @@ export function ReportsClient({
 
           <div className="space-y-2">
             {correctionRequests.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border bg-card/50 px-4 py-6 text-center">
-                <p className="text-sm text-muted-foreground">Noch keine Korrekturanträge in diesem Bereich.</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Korrekturen können Sie oben im Formular einreichen, sobald eine Buchung angepasst werden muss.
-                </p>
-              </div>
+              <EmptyState
+                icon={Clock}
+                title="Keine Korrekturanträge"
+                description="Stell oben einen Antrag, sobald eine Buchung angepasst werden muss."
+              />
             ) : (
               correctionRequests.map((req) => {
                 const correctionStatusDisplay =
@@ -1719,16 +1719,20 @@ export function ReportsClient({
           <h2 className="print-only print-section-title">Work-Logs – {month}</h2>
 
           {logs.length === 0 ? (
-            <div className="py-16 text-center">
-              <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">Für den gewählten Zeitraum wurden noch keine Arbeitszeiten erfasst.</p>
-              <a
-                href="/dashboard#terminal-widget"
-                className="mt-4 inline-flex min-h-[44px] items-center rounded-2xl border border-border px-4 py-2 text-sm text-foreground transition-all active:scale-95 md:hover:bg-card/70"
-              >
-                Erste Zeit erfassen
-              </a>
-            </div>
+            <EmptyState
+              className="mx-3 mb-4 md:mx-5"
+              icon={Clock}
+              title="Noch keine Zeiten in diesem Monat"
+              description="Sobald im Betrieb gestempelt wird, erscheinen die Einträge hier."
+              action={
+                <a
+                  href="/dashboard#terminal-widget"
+                  className="btn-brand inline-flex min-h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold"
+                >
+                  Zum Stempeln
+                </a>
+              }
+            />
           ) : (
             <>
               <div className="no-print space-y-3 p-3 sm:hidden">

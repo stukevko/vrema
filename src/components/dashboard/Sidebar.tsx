@@ -104,34 +104,52 @@ export function DashboardSidebar({
           const isActive =
             pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
           if (item.href === "/dashboard/support") {
+            const supportActive = supportOverlayOpen || isActive;
+            const supportRowClass = clsx(
+              "flex min-h-11 w-full items-stretch gap-0.5 rounded-2xl px-1 py-0.5 transition-all active:scale-[0.99]",
+              supportActive
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground md:hover:bg-card/70 md:hover:text-foreground",
+            );
+            const unreadBadge =
+              unreadReplies > 0 ? (
+                <span className="ml-auto inline-flex min-h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-foreground">
+                  {unreadReplies > 9 ? "9+" : unreadReplies}
+                </span>
+              ) : null;
+
             return (
-              <div
-                key={item.href}
-                className={clsx(
-                  "flex min-h-11 w-full items-stretch gap-0.5 rounded-2xl px-1 py-0.5 transition-all active:scale-[0.99]",
-                  supportOverlayOpen || isActive
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground md:hover:bg-card/70 md:hover:text-foreground"
-                )}
-              >
-                <button
-                  type="button"
-                  onClick={() => onOpenSupport?.("default")}
-                  className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium"
+              <div key={item.href}>
+                <Link
+                  href="/dashboard/support"
+                  className={clsx(supportRowClass, "hidden md:flex md:items-center")}
                 >
-                  <SafeLucideIcon icon={item.icon} className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                </button>
-                {unreadReplies > 0 ? (
+                  <span className="flex min-h-11 flex-1 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium">
+                    <SafeLucideIcon icon={item.icon} className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                    {unreadBadge}
+                  </span>
+                </Link>
+                <div className={clsx(supportRowClass, "md:hidden")}>
                   <button
                     type="button"
-                    onClick={() => onOpenSupport?.("unread")}
-                    className="inline-flex min-h-11 min-w-[2.75rem] shrink-0 items-center justify-center self-center rounded-xl bg-primary px-2 text-xs font-bold text-foreground shadow-sm md:hover:bg-primary/90"
-                    aria-label={`${unreadReplies} ungelesene Support-Antworten anzeigen`}
+                    onClick={() => onOpenSupport?.("default")}
+                    className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium"
                   >
-                    {unreadReplies > 9 ? "9+" : unreadReplies}
+                    <SafeLucideIcon icon={item.icon} className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{item.label}</span>
                   </button>
-                ) : null}
+                  {unreadReplies > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => onOpenSupport?.("unread")}
+                      className="inline-flex min-h-11 min-w-[2.75rem] shrink-0 items-center justify-center self-center rounded-xl bg-primary px-2 text-xs font-bold text-foreground shadow-sm"
+                      aria-label={`${unreadReplies} ungelesene Support-Antworten anzeigen`}
+                    >
+                      {unreadReplies > 9 ? "9+" : unreadReplies}
+                    </button>
+                  ) : null}
+                </div>
               </div>
             );
           }

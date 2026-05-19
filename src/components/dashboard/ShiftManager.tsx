@@ -16,7 +16,8 @@ import { getPlannerStaffingHints, type PlannerStaffingHint } from "@/lib/actions
 import { StaffingHintBadge } from "@/components/planning/StaffingHintBadge";
 import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
-import { useRouter } from "next/navigation";
+import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPanel";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { buildComplianceFlagsByShiftId, type ShiftPlanRow } from "@/lib/planning/compliance";
 import { countWeekCoverageGapSlots } from "@/lib/planning/planner-coverage-metrics";
@@ -256,6 +257,7 @@ export function ShiftManager({
   unavailableDaysByUserId = {},
   enableTaskListActions = false,
   initialFocusWeek = null,
+  initialAutopilotAction = null,
 }: {
   members: Member[];
   shifts: ShiftRow[];
@@ -267,8 +269,11 @@ export function ShiftManager({
   enableTaskListActions?: boolean;
   /** Aus URL `?focusWeek=` (Schichtzyklus 1–3), z. B. vom Sonntags-Wizard. */
   initialFocusWeek?: 1 | 2 | 3 | null;
+  /** `?autopilot=1` scrollt zum Panel; `?autopilot=suggest` schlägt einmalig vor (Sonntags-Flow). */
+  initialAutopilotAction?: "focus" | "suggest" | null;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [autopilotBusy, setAutopilotBusy] = useState(false);
   const [autopilotReport, setAutopilotReport] = useState<string[] | null>(null);
@@ -1309,25 +1314,20 @@ export function ShiftManager({
     });
   };
 
-  const onOptimizeWeekClick = () => {
+  const confirmAutopilot = () => {
     if (
       !window.confirm(
-        "„Woche optimieren“ erstellt Entwurfs-Schichten für diese Planwoche neu. Bereits vorhandene Entwürfe derselben Woche werden ersetzt. Fortfahren?"
+        `${draftShiftsInWeek.length} Entwurf${draftShiftsInWeek.length === 1 ? "" : "e"} veröffentlichen? Danach sieht dein Team den Plan.`,
       )
     )
       return;
-    startAutopilot();
-  };
-
-  const confirmAutopilot = () => {
-    if (!window.confirm("Alle Entwurfs-Schichten dieser Planwoche veröffentlichen?")) return;
     setMessage(null);
     startTransition(async () => {
       try {
         await confirmAutopilotDrafts(selectedWeekIndex);
         setAutopilotReport(null);
         router.refresh();
-        setMessage("Autopilot-Entwürfe übernommen.");
+        setMessage("Plan veröffentlicht — Team wurde benachrichtigt.");
       } catch (e: unknown) {
         setMessage(userErrorMessage(e, "Freigabe fehlgeschlagen."));
       }
@@ -1347,6 +1347,35 @@ export function ShiftManager({
         setMessage(userErrorMessage(e, "Verwerfen fehlgeschlagen."));
       }
     });
+  };
+
+  const autopilotAction =
+    initialAutopilotAction ??
+    (searchParams.get("autopilot") === "suggest"
+      ? "suggest"
+      : searchParams.get("autopilot") === "1"
+        ? "focus"
+        : null);
+  const autopilotSuggestOnceRef = useRef(false);
+
+  useEffect(() => {
+    if (autopilotAction !== "focus") return;
+    requestAnimationFrame(() => {
+      document.getElementById("planner-autopilot")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [autopilotAction]);
+
+  useEffect(() => {
+    if (!enableTaskListActions || autopilotAction !== "suggest") return;
+    if (autopilotSuggestOnceRef.current || autopilotBusy) return;
+    if (draftShiftsInWeek.length > 0 || members.length === 0) return;
+    autopilotSuggestOnceRef.current = true;
+    startAutopilot();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- einmaliger Sonntags-Deep-Link
+  }, [autopilotAction, enableTaskListActions, draftShiftsInWeek.length, members.length]);
+
+  const scrollToAutopilot = () => {
+    document.getElementById("planner-autopilot")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const clearMobileDayLongPressTimer = () => {
@@ -1993,8 +2022,9 @@ export function ShiftManager({
           <div className="min-w-0 flex-1 space-y-2">
             {!desktopPlannerHelpOpen ? (
               <p className="text-[11px] leading-snug text-muted-foreground/90">
-                Kurz: <span className="text-foreground/90">Einfach-Planer</span> = eine Person, Tage tippen.{" "}
-                <span className="text-foreground/90">Timeline</span> = ein Tag, alle als Balken.
+                <span className="text-foreground/90">Autopilot</span> oben für Wochenvorschläge ·{" "}
+                <span className="text-foreground/90">Einfach</span> = eine Person, Tage tippen ·{" "}
+                <span className="text-foreground/90">Timeline</span> = ein Tag, alle Balken.
               </p>
             ) : null}
             {desktopPlannerHelpOpen ? (
@@ -2015,61 +2045,6 @@ export function ShiftManager({
             ) : null}
           </div>
         </div>
-
-        {enableTaskListActions ? (
-          <div className="glass-card mt-4 px-4 py-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="brand"
-                size="md"
-                hero
-                disabled={isPending || autopilotBusy}
-                onClick={startAutopilot}
-                leadingIcon={<Sparkles className="h-4 w-4 shrink-0" aria-hidden />}
-              >
-                Autopilot starten
-              </Button>
-              {draftShiftsInWeek.length > 0 ? (
-                <>
-                  <Button type="button" variant="subtle" size="md" disabled={isPending} onClick={confirmAutopilot}>
-                    Alle bestätigen ({draftShiftsInWeek.length})
-                  </Button>
-                  <Button type="button" variant="outline" size="md" disabled={isPending} onClick={discardAutopilot}>
-                    Entwurf verwerfen
-                  </Button>
-                </>
-              ) : null}
-            </div>
-            {!desktopPlannerHelpOpen ? (
-              <p className="mt-1.5 text-[10px] text-muted-foreground/80">
-                Kurzinfo zu Autopilot und Schritten: Planer-Hilfe über das (i) oben.
-              </p>
-            ) : null}
-            {desktopPlannerHelpOpen ? (
-              <p className="mt-2 text-[11px] text-fg-muted">
-                <strong className="text-foreground">Autopilot:</strong> füllt freie Schicht-Slots (Woche{" "}
-                {selectedWeekIndex}) mit KI-Logik: Ruhezeit, Abwesenheit, Soll-Stunden, Wochenend-Fairness. Entwürfe:
-                gestrichelte Petrol-Balken – erst nach Bestätigung fest.
-              </p>
-            ) : null}
-            {autopilotBusy ? (
-              <div className="mt-3 space-y-2">
-                <div className="h-2 overflow-hidden rounded-full bg-brand-soft">
-                  <div className="h-full w-[55%] animate-pulse rounded-full bg-brand/70" />
-                </div>
-                <p className="text-center text-xs font-semibold text-brand">KI optimiert Besetzung…</p>
-              </div>
-            ) : null}
-            {autopilotReport && autopilotReport.length > 0 ? (
-              <ul className="mt-3 max-h-40 list-inside list-disc space-y-1 overflow-y-auto text-[11px] text-foreground">
-                {autopilotReport.map((line, i) => (
-                  <li key={`${i}-${line.slice(0, 24)}`}>{line}</li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        ) : null}
 
         {viewMode === "simple" && (
         <>
@@ -3099,6 +3074,20 @@ export function ShiftManager({
   return (
     <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
       {enableTaskListActions ? (
+        <div className="mb-4">
+          <PlannerAutopilotPanel
+            weekIndex={selectedWeekIndex}
+            draftCount={draftShiftsInWeek.length}
+            busy={autopilotBusy}
+            reportLines={autopilotReport}
+            disabled={isPending}
+            onSuggest={startAutopilot}
+            onPublish={confirmAutopilot}
+            onDiscard={discardAutopilot}
+          />
+        </div>
+      ) : null}
+      {enableTaskListActions ? (
         <div className="mb-4 rounded-2xl border border-brand/20 bg-gradient-to-br from-brand/[0.07] to-card px-4 py-3 shadow-sm sm:px-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 space-y-2">
@@ -3193,11 +3182,11 @@ export function ShiftManager({
               <button
                 type="button"
                 disabled={isPending || autopilotBusy}
-                onClick={onOptimizeWeekClick}
+                onClick={scrollToAutopilot}
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand/35 bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm ring-1 ring-inset ring-white/15 transition-colors hover:bg-brand/90 disabled:opacity-50"
               >
                 <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
-                {autopilotBusy ? "Optimiere…" : "Woche optimieren"}
+                Zum Autopilot
               </button>
               {renderDesktopTree && viewMode !== "timeline" ? (
                 <button

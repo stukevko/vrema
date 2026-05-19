@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarClock, ChevronRight, X } from "lucide-react";
+import { CalendarClock, ChevronRight, Sparkles, X } from "lucide-react";
 
 const DISMISS_KEY = "vrema-sunday-wizard-dismissed";
 
@@ -39,6 +39,8 @@ export function SundayPlanWizard({ weekLabel, weekIndex }: Props) {
   if (!visible) return null;
 
   const planningHref = `/dashboard/planning?focusWeek=${weekIndex}`;
+  const autopilotSuggestHref = `/dashboard/planning?focusWeek=${weekIndex}&autopilot=suggest`;
+  const autopilotFocusHref = `/dashboard/planning?focusWeek=${weekIndex}&autopilot=1`;
 
   return (
     <section className="order-1 rounded-2xl border border-brand/30 bg-gradient-to-br from-brand/12 via-card to-card p-5 shadow-sm dark:from-brand/18">
@@ -50,47 +52,80 @@ export function SundayPlanWizard({ weekLabel, weekIndex }: Props) {
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-brand">Woche planen</p>
             <h2 className="mt-0.5 text-base font-bold text-foreground sm:text-lg">Nächste Woche: {weekLabel}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Schritt {step} von 3</p>
+            <p className="mt-1 text-sm text-muted-foreground">Schritt {step} von 3 · mit Autopilot</p>
           </div>
         </div>
-        <button type="button" onClick={dismissForWeek} className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-muted/50" aria-label="Ausblenden">
+        <button
+          type="button"
+          onClick={dismissForWeek}
+          className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-muted/50"
+          aria-label="Ausblenden"
+        >
           <X className="h-4 w-4" />
         </button>
       </div>
 
       {step === 1 ? (
         <div className="mt-4 space-y-3">
-          <p className="text-sm text-muted-foreground">Lies den Personal-Tipp unten — dann geht es in den Planer.</p>
-          <button type="button" onClick={() => setStep(2)} className="btn-primary-solid inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold">
-            Weiter
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </button>
+          <p className="text-sm text-muted-foreground">
+            Kurz den Personal-Tipp unter Einblicke lesen — oder direkt mit dem Autopilot starten.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/dashboard/insights"
+              className="btn-outline inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold"
+            >
+              Personal-Tipp
+            </Link>
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="btn-primary-solid inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold"
+            >
+              Weiter
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </button>
+          </div>
         </div>
       ) : null}
 
       {step === 2 ? (
         <div className="mt-4 space-y-3">
-          <p className="text-sm text-muted-foreground">Schichten anlegen oder Lücken ausschreiben, wenn noch jemand fehlt.</p>
-          <Link href={planningHref} className="btn-primary-solid inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold">
-            Zum Planer
-            <ChevronRight className="ml-1 h-4 w-4" />
+          <p className="text-sm text-muted-foreground">
+            Autopilot schlägt Schichten als Entwurf vor — du prüfst und veröffentlichst erst, wenn es passt.
+          </p>
+          <Link
+            href={autopilotSuggestHref}
+            className="btn-primary-solid inline-flex min-h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden />
+            Woche vorschlagen lassen
           </Link>
         </div>
       ) : null}
 
       {step === 3 ? (
         <div className="mt-4 space-y-3">
-          <p className="text-sm text-muted-foreground">Autopilot-Entwürfe prüfen und veröffentlichen — dann sieht das Team die Woche.</p>
-          <Link href={planningHref} className="btn-primary-solid inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold">
-            Plan veröffentlichen
+          <p className="text-sm text-muted-foreground">Entwürfe im Planer prüfen und live schalten — dann sieht das Team die Woche.</p>
+          <Link href={autopilotFocusHref} className="btn-primary-solid inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold">
+            Entwürfe prüfen & veröffentlichen
+          </Link>
+          <Link href={planningHref} className="block text-center text-xs font-semibold text-brand underline-offset-4 hover:underline">
+            Nur Planer öffnen
           </Link>
         </div>
       ) : null}
 
       <ol className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
-        <li className={`rounded-xl border px-3 py-2 ${step >= 1 ? "border-brand/30 bg-brand/5" : "border-border/60"}`}>1. Tipp</li>
-        <li className={`rounded-xl border px-3 py-2 ${step >= 2 ? "border-brand/30 bg-brand/5" : "border-border/60"}`}>2. Planer</li>
-        <li className={`rounded-xl border px-3 py-2 ${step >= 3 ? "border-brand/30 bg-brand/5" : "border-border/60"}`}>3. Live</li>
+        <li className={`rounded-xl border px-3 py-2 ${step >= 1 ? "border-brand/30 bg-brand/5" : "border-border/60"}`}>
+          1. Tipp
+        </li>
+        <li className={`rounded-xl border px-3 py-2 ${step >= 2 ? "border-brand/30 bg-brand/5" : "border-border/60"}`}>
+          2. Vorschlagen
+        </li>
+        <li className={`rounded-xl border px-3 py-2 ${step >= 3 ? "border-brand/30 bg-brand/5" : "border-border/60"}`}>
+          3. Live
+        </li>
       </ol>
     </section>
   );

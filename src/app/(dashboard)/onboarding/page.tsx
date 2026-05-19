@@ -35,6 +35,7 @@ export default async function OnboardingPage() {
           locationCity: company?.locationCity ?? "",
           estimatedWeeklyRevenue: company?.estimatedWeeklyRevenue ?? null,
           shiftCycleWeeks: company?.shiftCycleWeeks ?? 1,
+          industry: company?.industry ?? null,
         }}
       />
     </div>

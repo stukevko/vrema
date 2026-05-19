@@ -23,8 +23,8 @@ export function OwnerWelcomeStrip({ focusWeek }: { focusWeek?: number }) {
 
   const planningHref =
     focusWeek && focusWeek >= 1 && focusWeek <= 3
-      ? `/dashboard/planning?focusWeek=${focusWeek}`
-      : "/dashboard/planning?focusWeek=1";
+      ? `/dashboard/planning?focusWeek=${focusWeek}&autopilot=suggest`
+      : "/dashboard/planning?focusWeek=1&autopilot=suggest";
 
   return (
     <section className="order-1 rounded-2xl border border-brand/30 bg-gradient-to-br from-brand/12 via-card to-card p-5 shadow-sm dark:from-brand/18">

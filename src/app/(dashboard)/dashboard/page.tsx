@@ -7,9 +7,6 @@ import { LiveOperationsWidget } from "@/components/dashboard/LiveOperationsWidge
 import { EmployeeCockpit } from "@/components/dashboard/EmployeeCockpit";
 import { ActiveShiftTasksCard } from "@/components/dashboard/ActiveShiftTasksCard";
 import { HeroStats } from "@/components/dashboard/HeroStats";
-import { ComplianceCard } from "@/components/dashboard/ComplianceCard";
-import { PredictiveStaffingCard } from "@/components/dashboard/PredictiveStaffingCard";
-import { VremaInsightsCard } from "@/components/dashboard/VremaInsightsCard";
 import { EmptyTeamBanner } from "@/components/dashboard/EmptyTeamBanner";
 import { NoShowCard } from "@/components/dashboard/NoShowCard";
 import { getEmployeeCockpitData } from "@/lib/dashboard/employee-cockpit-data";
@@ -27,6 +24,8 @@ import {
   CalendarPlus,
   FileText,
   PartyPopper,
+  Brain,
+  ChevronRight,
 } from "lucide-react";
 import { IconMenu } from "@/components/ui/IconMenu";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -42,18 +41,9 @@ import {
 import { Suspense } from "react";
 import { getSuperAdminMonitoring, getSuperAdminOverview } from "@/lib/actions/super-admin";
 import { SuperAdminInlinePanel } from "@/components/dashboard/SuperAdminInlinePanel";
-import { DashboardAISection } from "@/components/dashboard/DashboardAISection";
-import {
-  DashboardManagerGuidance,
-  DashboardGuidanceSection,
-} from "@/components/dashboard/DashboardManagerGuidance";
 import { SundayWeekPlannerBanner } from "@/components/dashboard/SundayWeekPlannerBanner";
 import { OwnerWelcomeStrip } from "@/components/dashboard/OwnerWelcomeStrip";
-import { getCompanyTrialState } from "@/lib/trial";
 import { buildForecastHorizon } from "@/lib/planning/forecast-horizon";
-import { PlanVsIstCard } from "@/components/dashboard/PlanVsIstCard";
-import { RevenueSignalCard } from "@/components/dashboard/RevenueSignalCard";
-import { AsyncAIInsights, AIInsightsSkeleton } from "@/components/dashboard/AsyncAIInsights";
 import { queryActiveShiftTasks } from "@/lib/shift-tasks/active-shift-tasks-data";
 import { getTodayShiftTaskWall } from "@/lib/shift-tasks/wall";
 import { formatBerlinDate, formatBerlinTime, getBerlinNowHour, getDayBoundsUtc } from "@/lib/time/timezone";
@@ -152,13 +142,14 @@ export default async function DashboardPage({
   let showOwnerWelcome = false;
   let ownerWelcomeFocusWeek: number | undefined;
   if (isOwner) {
-    const [trial, companyMeta] = await Promise.all([
-      getCompanyTrialState(companyId),
-      db.company.findUnique({ where: { id: companyId }, select: { shiftCycleWeeks: true } }),
-    ]);
+    const companyMeta = await db.company.findUnique({
+      where: { id: companyId },
+      select: { shiftCycleWeeks: true },
+    });
     const primaryWeek = buildForecastHorizon(companyMeta?.shiftCycleWeeks).find((s) => s.isPrimary);
     ownerWelcomeFocusWeek = primaryWeek?.weekIndex;
-    showOwnerWelcome = params.onboarded === "1" || Boolean(trial?.isInAppTrial);
+    // Nur direkt nach Onboarding — während der Testphase reicht der Trial-Banner (weniger Lärm).
+    showOwnerWelcome = params.onboarded === "1";
   }
 
   const { start: todayStart, end: todayEnd } = getDayBoundsUtc("Europe/Berlin");
@@ -399,42 +390,25 @@ export default async function DashboardPage({
 
       {isManager && <SundayWeekPlannerBanner companyId={companyId} />}
 
-      {isManager && (
-        <DashboardManagerGuidance>
-          <DashboardGuidanceSection
-            title="Diese Woche planen"
-            description="Konkrete Tipps für die kommenden Tage — was du im Schichtplaner einplanen solltest."
-          >
-            <Suspense fallback={null}>
-              <PredictiveStaffingCard />
-            </Suspense>
-          </DashboardGuidanceSection>
-
-          <DashboardGuidanceSection
-            title="Aus deinen Betriebsdaten"
-            description="Rückblick und Checks aus Stempeluhr, Plan und ArbZG — ohne Bewertungs-Scores."
-          >
-            <Suspense fallback={null}>
-              <RevenueSignalCard companyId={companyId} />
-            </Suspense>
-            <Suspense fallback={null}>
-              <PlanVsIstCard companyId={companyId} />
-            </Suspense>
-            <Suspense fallback={null}>
-              <ComplianceCard />
-            </Suspense>
-            <Suspense fallback={null}>
-              <VremaInsightsCard />
-            </Suspense>
-            <DashboardAISection>
-              <Suspense fallback={<AIInsightsSkeleton />}>
-                <AsyncAIInsights companyId={companyId} />
-              </Suspense>
-            </DashboardAISection>
-          </DashboardGuidanceSection>
-        </DashboardManagerGuidance>
-      )}
-
+      {isManager ? (
+        <Link
+          href="/dashboard/insights"
+          className="order-1 flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:border-brand/35 hover:bg-card/90 active:scale-[0.99] sm:px-5"
+        >
+          <span className="flex items-center gap-3">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-soft text-brand dark:bg-brand/20">
+              <Brain className="h-4 w-4" aria-hidden />
+            </span>
+            <span>
+              <span className="font-semibold text-foreground">Planungs- & Betriebshinweise</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                Personal-Tipps, ArbZG, Umsatz — alles unter Einblicke
+              </span>
+            </span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+        </Link>
+      ) : null}
 
       {/* Mitarbeiter: Personal Cockpit – Hero + Stempel + Quick-Stats.
           ID `terminal-widget` migriert hierhin, damit alle Deeplinks („Jetzt einstempeln")
@@ -496,7 +470,7 @@ export default async function DashboardPage({
 
           <LiveOperationsWidget rows={liveOpsRows} />
 
-          {teamStats.pendingTradeApprovals > 0 && (
+          {teamStats.pendingTradeApprovals > 0 && !focus.href.startsWith("/dashboard/planning") && (
             <Link
               href="/dashboard/planning#shift-trade-approvals"
               className="block rounded-2xl border border-warning/30 bg-warning-soft px-5 py-4 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-warning/45 hover:shadow-[var(--shadow-card-hover)] active:brightness-95 dark:border-white/10 dark:bg-warning/18"
@@ -507,7 +481,7 @@ export default async function DashboardPage({
               </p>
             </Link>
           )}
-          {teamStats.pendingCorrections > 0 && (
+          {teamStats.pendingCorrections > 0 && !focus.href.includes("zeitkorrekturen") && (
             <Link
               href="/dashboard/reports#zeitkorrekturen"
               className="block rounded-2xl border border-brand/28 bg-brand-soft px-5 py-4 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-brand/40 hover:shadow-[var(--shadow-card-hover)] active:brightness-95 dark:border-white/10 dark:bg-brand/22"
@@ -684,15 +658,6 @@ export default async function DashboardPage({
             hasWorkLogs={Boolean(hasAnyWorkLog)}
           />
         </div>
-        {!isManager ? (
-          <div className="order-3 md:order-3">
-            <DashboardAISection>
-              <Suspense fallback={<AIInsightsSkeleton />}>
-                <AsyncAIInsights companyId={companyId} />
-              </Suspense>
-            </DashboardAISection>
-          </div>
-        ) : null}
       </div>
 
       {/* Today summary */}
@@ -725,7 +690,13 @@ export default async function DashboardPage({
             tone="celebrate"
             icon={PartyPopper}
             title="Noch kein Zeiteintrag für heute"
-            description="Drück den großen Stempel-Button im Terminal-Widget oben, um den Tag zu starten."
+            description={
+              isEmployee
+                ? cockpitData
+                  ? "Tippe auf den großen Stempel-Button oben, um deine Schicht zu starten."
+                  : "Nutze den Stempel-Bereich weiter oben, um deine Schicht zu starten."
+                : "Stemple dich ein oder prüfe die Team-Zeiten in den Berichten."
+            }
             action={
               <Link
                 href="#terminal-widget"

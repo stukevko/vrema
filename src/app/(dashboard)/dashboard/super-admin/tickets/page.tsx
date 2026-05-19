@@ -6,6 +6,7 @@ import {
 } from "@/lib/actions/support";
 import { ticketStatusDe, ticketTypeDe } from "@/lib/support/ticket-labels";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Inbox } from "lucide-react";
 import { TicketStatus } from "@prisma/client";
 
@@ -28,11 +29,12 @@ export default async function SuperAdminTicketsPage() {
 
       <div className="space-y-3">
         {tickets.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
-            <Inbox className="mx-auto h-8 w-8 text-muted-foreground" />
-            <p className="mt-3 text-sm font-medium text-foreground">Keine Tickets</p>
-            <p className="mt-1 text-sm text-muted-foreground">Dein Postfach ist leer – gute Arbeit!</p>
-          </div>
+          <EmptyState
+            icon={Inbox}
+            title="Keine offenen Tickets"
+            description="Sobald Mandanten Hilfe anfragen, erscheinen die Tickets hier."
+            tone="celebrate"
+          />
         ) : (
           tickets.map((ticket) => (
             <form
@@ -52,7 +54,7 @@ export default async function SuperAdminTicketsPage() {
                 Von {ticket.user.name ?? ticket.user.email} · {new Date(ticket.createdAt).toLocaleString("de-DE")}
               </p>
               {ticket.response ? (
-                <div className="mt-3 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm whitespace-pre-wrap">
+                <div className="mt-3 whitespace-pre-wrap rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm">
                   <span className="text-[11px] font-medium text-muted-foreground">Aktuelle Antwort: </span>
                   {ticket.response}
                   {ticket.respondedAt ? (
@@ -65,11 +67,7 @@ export default async function SuperAdminTicketsPage() {
               <div className="mt-3 grid gap-2 md:grid-cols-[180px_1fr_auto] md:items-end">
                 <div>
                   <label className="text-[11px] text-muted-foreground">Status (ohne neue Antwort)</label>
-                  <select
-                    name="status"
-                    defaultValue={ticket.status}
-                    className="mt-1 w-full rounded-xl px-3 py-2 text-sm"
-                  >
+                  <select name="status" defaultValue={ticket.status} className="mt-1 w-full rounded-xl px-3 py-2 text-sm">
                     <option value={TicketStatus.OPEN}>Offen</option>
                     <option value={TicketStatus.PENDING}>In Bearbeitung</option>
                     <option value={TicketStatus.RESOLVED}>Beantwortet</option>
@@ -77,7 +75,9 @@ export default async function SuperAdminTicketsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] text-muted-foreground">Antwort an Mitarbeiter (neu geändert → Status „Beantwortet“)</label>
+                  <label className="text-[11px] text-muted-foreground">
+                    Antwort an Mitarbeiter (neu geändert → Status „Beantwortet“)
+                  </label>
                   <textarea
                     name="response"
                     rows={3}

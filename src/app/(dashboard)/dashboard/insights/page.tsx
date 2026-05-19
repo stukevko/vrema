@@ -1,15 +1,23 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { Brain, Sparkles } from "lucide-react";
+import { Brain } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { VremaInsightsCard } from "@/components/dashboard/VremaInsightsCard";
 import { PredictiveStaffingCard } from "@/components/dashboard/PredictiveStaffingCard";
-import { Card } from "@/components/ui/Card";
+import { ComplianceCard } from "@/components/dashboard/ComplianceCard";
+import { PlanVsIstCard } from "@/components/dashboard/PlanVsIstCard";
+import { RevenueSignalCard } from "@/components/dashboard/RevenueSignalCard";
+import { DashboardAISection } from "@/components/dashboard/DashboardAISection";
+import { AsyncAIInsights, AIInsightsSkeleton } from "@/components/dashboard/AsyncAIInsights";
+import {
+  DashboardManagerGuidance,
+  DashboardGuidanceSection,
+} from "@/components/dashboard/DashboardManagerGuidance";
 
 export const metadata = {
   title: "Einblicke",
-  description: "Muster und Tipps aus deinen Planungs- und Zeitdaten.",
+  description: "Planungs- und Betriebshinweise aus deinen Schicht- und Zeitdaten.",
 };
 
 export default async function InsightsPage() {
@@ -18,6 +26,13 @@ export default async function InsightsPage() {
 
   const role = session.user.role ?? "EMPLOYEE";
   const isManager = role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN";
+  const companyId = session.user.companyId;
+
+  if (!isManager) {
+    redirect("/dashboard");
+  }
+
+  if (!companyId) redirect("/auth/login");
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-1 sm:px-0">
@@ -29,57 +44,55 @@ export default async function InsightsPage() {
           <div>
             <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Einblicke</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {isManager
-                ? "Voraus planen und zurückschauen — alles in Klartext aus deinen Schichten und Stempelzeiten."
-                : "Deine persönlichen Kennzahlen findest du auf der Übersicht."}
+              Voraus planen und zurückschauen — Klartext aus Schichten und Stempelzeiten, ohne Score-Dashboards.
             </p>
           </div>
         </div>
       </header>
 
-      {isManager ? (
-        <div className="space-y-6">
+      <DashboardManagerGuidance>
+        <DashboardGuidanceSection
+          title="Diese Woche planen"
+          description="Konkrete Tipps für die kommenden Tage — was du im Schichtplaner einplanen solltest."
+        >
           <Suspense fallback={null}>
             <PredictiveStaffingCard />
+          </Suspense>
+        </DashboardGuidanceSection>
+
+        <DashboardGuidanceSection
+          title="Aus deinen Betriebsdaten"
+          description="Rückblick und Checks aus Stempeluhr, Plan und ArbZG."
+        >
+          <Suspense fallback={null}>
+            <RevenueSignalCard companyId={companyId} />
+          </Suspense>
+          <Suspense fallback={null}>
+            <PlanVsIstCard companyId={companyId} />
+          </Suspense>
+          <Suspense fallback={null}>
+            <ComplianceCard />
           </Suspense>
           <Suspense fallback={null}>
             <VremaInsightsCard />
           </Suspense>
-          <p className="text-center text-xs text-muted-foreground">
-            <Link href="/dashboard" className="font-semibold text-brand hover:underline">
-              Zur Übersicht
-            </Link>
-            {" · "}
-            <Link href="/dashboard/planning" className="font-semibold text-brand hover:underline">
-              Zum Planer
-            </Link>
-          </p>
-        </div>
-      ) : (
-        <Card padded={false} className="p-6">
-          <div className="flex items-start gap-3">
-            <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-brand" aria-hidden />
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <p>
-                Persönliche Kennzahlen und deine nächsten Schichten findest du auf der{" "}
-                <Link href="/dashboard" className="font-semibold text-brand underline-offset-4 hover:underline">
-                  Übersicht
-                </Link>
-                .
-              </p>
-              <p>
-                <Link href="/dashboard/planning" className="font-semibold text-brand underline-offset-4 hover:underline">
-                  Zum Planer
-                </Link>
-                {" · "}
-                <Link href="/dashboard/vacation" className="font-semibold text-brand underline-offset-4 hover:underline">
-                  Urlaub
-                </Link>
-              </p>
-            </div>
-          </div>
-        </Card>
-      )}
+          <DashboardAISection>
+            <Suspense fallback={<AIInsightsSkeleton />}>
+              <AsyncAIInsights companyId={companyId} />
+            </Suspense>
+          </DashboardAISection>
+        </DashboardGuidanceSection>
+      </DashboardManagerGuidance>
+
+      <p className="text-center text-xs text-muted-foreground">
+        <Link href="/dashboard" className="font-semibold text-brand hover:underline">
+          Zur Übersicht
+        </Link>
+        {" · "}
+        <Link href="/dashboard/planning" className="font-semibold text-brand hover:underline">
+          Zum Planer
+        </Link>
+      </p>
     </div>
   );
 }

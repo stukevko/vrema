@@ -5,6 +5,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import { updateCompanySettings } from "@/lib/actions/settings";
+import {
+  dbIndustryToOnboarding,
+  onboardingIndustryToDb,
+  type OnboardingIndustryId,
+} from "@/lib/onboarding/industry";
 import { useToast } from "@/components/ui/Toast";
 
 /**
@@ -36,6 +41,7 @@ type Props = {
     locationCity: string;
     estimatedWeeklyRevenue: number | null;
     shiftCycleWeeks: number;
+    industry: string | null;
   };
 };
 
@@ -45,7 +51,9 @@ export function OnboardingWizard({ companyName, initial }: Props) {
   const [pending, startTransition] = useTransition();
 
   const [step, setStep] = useState(1);
-  const [industry, setIndustry] = useState<string>("restaurant");
+  const [industry, setIndustry] = useState<OnboardingIndustryId>(
+    dbIndustryToOnboarding(initial.industry),
+  );
   const [zip, setZip] = useState(initial.locationZip);
   const [city, setCity] = useState(initial.locationCity);
   const [revenue, setRevenue] = useState<string>(
@@ -69,6 +77,9 @@ export function OnboardingWizard({ companyName, initial }: Props) {
       try {
         // Wir speichern bei Schritt 2 (Ort) und Schritt 3 (Umsatz) – pro Schritt
         // nur die relevanten Felder, damit Vor-/Zurück-Sprünge nichts überschreiben.
+        if (step === 1) {
+          await updateCompanySettings({ industry: onboardingIndustryToDb(industry) });
+        }
         if (step === 2) {
           await updateCompanySettings({
             locationZip: zip || null,
@@ -134,7 +145,7 @@ export function OnboardingWizard({ companyName, initial }: Props) {
                 <button
                   key={i.id}
                   type="button"
-                  onClick={() => setIndustry(i.id)}
+                  onClick={() => setIndustry(i.id as OnboardingIndustryId)}
                   className={`flex items-center justify-center rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${
                     industry === i.id
                       ? "border-brand bg-brand-soft text-brand dark:bg-brand/15"

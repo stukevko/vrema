@@ -4,13 +4,15 @@ import { getMyVacationRequests, getTeamVacationRequestsWithContext } from "@/lib
 import { VacationList } from "@/components/dashboard/VacationList";
 import { VacationRequestForm } from "@/components/dashboard/VacationRequestForm";
 import { TeamVacationSection } from "@/components/dashboard/TeamVacationSection";
+import { TeamAbsencesSection } from "@/components/dashboard/TeamAbsencesSection";
 
 export default async function VacationPage() {
   const session = await auth();
-  if (!session?.user) redirect("/auth/login");
+  if (!session?.user?.companyId) redirect("/auth/login");
 
   const role = session.user.role ?? "EMPLOYEE";
   const isManager = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
+  const companyId = session.user.companyId;
 
   const [myRequests, teamRequests] = await Promise.all([
     getMyVacationRequests(),
@@ -41,7 +43,7 @@ export default async function VacationPage() {
         </div>
       </div>
 
-      {isManager && teamRequests.length > 0 && (
+      {isManager && teamRequests.length > 0 ? (
         <TeamVacationSection
           rows={teamRequests.map((r) => ({
             id: r.id,
@@ -57,7 +59,9 @@ export default async function VacationPage() {
             approvedBy: r.approvedBy ?? null,
           }))}
         />
-      )}
+      ) : null}
+
+      {isManager ? <TeamAbsencesSection companyId={companyId} /> : null}
     </div>
   );
 }

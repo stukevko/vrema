@@ -111,7 +111,7 @@ export function DashboardLayoutClient({
               activeEmployees={trialBanner.activeEmployees}
             />
           ) : null}
-          {showPasskeyNudge ? <PasskeySecurityNudge /> : null}
+          {showPasskeyNudge && !trialBanner ? <PasskeySecurityNudge /> : null}
           {unreadReplies > 0 ? (
             <div className="no-print mb-4 min-w-0 max-w-full rounded-2xl border border-brand/25 bg-brand-soft/80 px-4 py-3 text-sm text-foreground dark:border-white/10 dark:bg-brand/18 md:mb-5">
               <p className="font-medium">Du hast eine Antwort auf dein Support-Ticket erhalten.</p>

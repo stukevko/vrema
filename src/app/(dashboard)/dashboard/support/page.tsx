@@ -1,11 +1,17 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { LifeBuoy } from "lucide-react";
+import { SupportHub } from "@/components/dashboard/SupportHub";
+import { OrgTeamSupportInbox } from "@/components/dashboard/OrgTeamSupportInbox";
 import { SupportInboxBridge } from "./SupportInboxBridge";
 
 export default async function SupportPage() {
   const session = await auth();
   if (!session?.user) redirect("/auth/login");
+
+  const role = session.user.role ?? "EMPLOYEE";
+  const canManageTeam = ["COMPANY_OWNER", "MANAGER"].includes(role);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-1 sm:px-0">
@@ -17,13 +23,21 @@ export default async function SupportPage() {
           <div>
             <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Hilfe & Support</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Tickets durchsuchen, Antworten lesen oder eine neue Anfrage starten – übersichtlich wie ein Postfach.
+              {canManageTeam
+                ? "Anfragen an VREMA oder Tickets deines Teams — alles an einem Ort."
+                : "Tickets durchsuchen, Antworten lesen oder eine neue Anfrage starten."}
             </p>
           </div>
         </div>
       </div>
 
-      <SupportInboxBridge />
+      <Suspense fallback={<p className="text-sm text-muted-foreground">Lade Support…</p>}>
+        <SupportHub
+          canManageTeam={canManageTeam}
+          vremaInbox={<SupportInboxBridge />}
+          teamInbox={<OrgTeamSupportInbox />}
+        />
+      </Suspense>
     </div>
   );
 }

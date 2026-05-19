@@ -22,16 +22,26 @@ import { getUnavailableDaysByUserIds } from "@/lib/actions/work-schedule";
 import { dateForPlannerCycleDay, dayOrderMonFirst } from "@/lib/planning/cycle-display-date";
 import { parsePlannerWeekIndex } from "@/lib/planning/focus-week";
 import { logServerError } from "@/lib/server-logger";
-import { Handshake, Inbox } from "lucide-react";
+import Link from "next/link";
+import { Handshake, Inbox, ListTodo } from "lucide-react";
+import { Suspense } from "react";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ShiftTradeApprovalDiff } from "@/components/planning/ShiftTradeApprovalDiff";
 
 const DAY_LABELS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
 export default async function PlanningPage({
   searchParams,
 }: {
-  searchParams: Promise<{ focusWeek?: string; focus?: string; week?: string; day?: string }>;
+  searchParams: Promise<{
+    focusWeek?: string;
+    focus?: string;
+    week?: string;
+    day?: string;
+    autopilot?: string;
+  }>;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/auth/login");
@@ -59,6 +69,8 @@ export default async function PlanningPage({
     const shiftCycleWeeksRaw = settled[3].status === "fulfilled" ? settled[3].value : 1;
     const shiftCycleWeeks = (shiftCycleWeeksRaw === 2 ? 2 : shiftCycleWeeksRaw === 3 ? 3 : 1) as 1 | 2 | 3;
     const initialFocusWeek = parsePlannerWeekIndex(params.focusWeek, shiftCycleWeeks);
+    const initialAutopilotAction =
+      params.autopilot === "suggest" ? "suggest" : params.autopilot === "1" ? "focus" : null;
     const pendingTrades =
       settled[4].status === "fulfilled" ? settled[4].value : ([] as Awaited<ReturnType<typeof getPendingTradeApprovals>>);
     settled.forEach((r, i) => {
@@ -72,12 +84,28 @@ export default async function PlanningPage({
     );
     return (
       <div className="mx-auto max-w-6xl space-y-4 px-1 sm:space-y-6 sm:px-0">
-        <div className="glass-card px-4 py-3 sm:px-5 sm:py-4">
-          <h1 className="text-base font-bold tracking-tight sm:text-xl md:text-2xl">Schichtplanung</h1>
-          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-            Leitung: Plan, Status und Freigaben. Mitarbeitende sehen unter demselben Menüpunkt nur „Mein Dienstplan“.
-          </p>
+        <div className="glass-card flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-4">
+          <div>
+            <h1 className="text-base font-bold tracking-tight sm:text-xl md:text-2xl">Schichtplanung</h1>
+            <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+              Leitung: Plan, Status und Freigaben. Mitarbeitende sehen unter demselben Menüpunkt nur „Mein Dienstplan“.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/tasks"
+            className="btn-outline inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl px-3 text-sm font-semibold"
+          >
+            <ListTodo className="h-4 w-4" aria-hidden />
+            Schicht-Tasks
+          </Link>
         </div>
+        <Suspense
+          fallback={
+            <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+              Planer lädt…
+            </div>
+          }
+        >
         <ShiftManager
           members={members.map((m) => ({
             id: m.id,
@@ -109,7 +137,9 @@ export default async function PlanningPage({
           vacationConflictDays={vacationConflictDays}
           unavailableDaysByUserId={unavailableDaysByUserId}
           enableTaskListActions={canManage}
+          initialAutopilotAction={initialAutopilotAction}
         />
+        </Suspense>
         <OpenShiftsBoard />
         {pendingTrades.length > 0 && (
           <section id="shift-trade-approvals" className="glass-card p-5">
@@ -129,10 +159,14 @@ export default async function PlanningPage({
                     className="rounded-xl border border-line bg-surface px-4 py-3 dark:border-white/10 dark:bg-surface/85"
                   >
                     <input type="hidden" name="shiftId" value={trade.id} />
-                    <p className="text-sm">
-                      {trade.requestedByName} möchte Schicht von {trade.fromName} übernehmen ({DAY_LABELS[trade.dayOfWeek]}{" "}
-                      {trade.startTime}-{trade.endTime})
-                    </p>
+                    <p className="text-sm font-medium text-foreground">Schicht-Tausch zur Freigabe</p>
+                    <ShiftTradeApprovalDiff
+                      dayLabel={DAY_LABELS[trade.dayOfWeek] ?? "Tag"}
+                      startTime={trade.startTime}
+                      endTime={trade.endTime}
+                      fromName={trade.fromName}
+                      toName={trade.requestedByName}
+                    />
                     {trade.intel ? (
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <StatusBadge tone={intelTone} glass size="sm">
@@ -202,13 +236,12 @@ export default async function PlanningPage({
       <section className="glass-card p-4 sm:p-5">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Nächste Einsätze</h2>
         {sortedShifts.length === 0 ? (
-          <div className="mt-4 rounded-xl border border-dashed border-line bg-surface-muted/60 px-4 py-8 text-center dark:border-white/10">
-            <Inbox className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden />
-            <p className="mt-2 text-sm font-medium text-foreground">Noch keine Schichten</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Sobald dich dein Team einplant, erscheinen die Termine hier als Liste.
-            </p>
-          </div>
+          <EmptyState
+            className="mt-4"
+            icon={Inbox}
+            title="Noch keine Schichten"
+            description="Sobald dich dein Team einplant, erscheinen deine Termine hier."
+          />
         ) : (
           <ul className="mt-4 space-y-3">
             {sortedShifts.map((r) => {
@@ -255,11 +288,12 @@ export default async function PlanningPage({
       <section className="glass-card p-5">
         <h2 className="text-base font-semibold tracking-tight">Offene Schichten</h2>
         {openTrades.length === 0 ? (
-          <div className="mt-3 rounded-xl border border-dashed border-line bg-surface-muted/70 px-4 py-6 text-center dark:border-white/10 dark:bg-surface-muted/40">
-            <Handshake className="mx-auto h-7 w-7 text-muted-foreground" aria-hidden />
-            <p className="mt-2 text-sm font-medium text-foreground">Keine offenen Tausche</p>
-            <p className="mt-1 text-sm text-muted-foreground">Wenn Kolleg:innen eine Schicht tauschen möchten, erscheint das hier.</p>
-          </div>
+          <EmptyState
+            className="mt-3"
+            icon={Handshake}
+            title="Keine offenen Tausche"
+            description="Wenn Kolleg:innen eine Schicht tauschen möchten, erscheint das hier."
+          />
         ) : (
           <ul className="mt-3 space-y-2">
             {openTrades.map((trade) => (
