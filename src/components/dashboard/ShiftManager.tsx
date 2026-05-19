@@ -17,6 +17,7 @@ import { StaffingHintBadge } from "@/components/planning/StaffingHintBadge";
 import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
 import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPanel";
+import { PlannerWeekBoard } from "@/components/planning/PlannerWeekBoard";
 import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildComplianceFlagsByShiftId, type ShiftPlanRow } from "@/lib/planning/compliance";
@@ -295,7 +296,7 @@ export function ShiftManager({
   const [endTime, setEndTime] = useState("16:00");
   const [message, setMessage] = useState<string | null>(null);
   /** Mobil: nur Einfach-Planer. Desktop: Einfach-Planer oder Timeline. */
-  const [viewMode, setViewMode] = useState<"simple" | "timeline">("simple");
+  const [viewMode, setViewMode] = useState<"week" | "simple" | "timeline">("week");
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<1 | 2 | 3>(
     initialFocusWeek && initialFocusWeek <= shiftCycleWeeks ? initialFocusWeek : 1,
   );
@@ -331,6 +332,17 @@ export function ShiftManager({
   const timelineWeekMondayIso = useMemo(
     () => isoFromPlannerDate(timelineWeekMonday),
     [timelineWeekMonday],
+  );
+  const planWeekMonday = useMemo(
+    () => mondayOfWeekContaining(dateForPlannerCycleDay(selectedWeekIndex, 1)),
+    [selectedWeekIndex],
+  );
+  const planWeekRangeLabel = useMemo(() => formatPlannerWeekRange(planWeekMonday), [planWeekMonday]);
+  const planWeekMondayIso = useMemo(() => isoFromPlannerDate(planWeekMonday), [planWeekMonday]);
+  const weekDayDates = useMemo(
+    () =>
+      [1, 2, 3, 4, 5, 6, 0].map((dow) => isoFromPlannerDate(dateForPlannerCycleDay(selectedWeekIndex, dow))),
+    [selectedWeekIndex],
   );
   const canTimelinePrevWeek = useMemo(() => {
     const parsed = new Date(`${timelineDate}T12:00:00`);
@@ -538,9 +550,7 @@ export function ShiftManager({
 
   useEffect(() => {
     const anchor =
-      viewMode === "timeline"
-        ? timelineDate.slice(0, 10)
-        : isoFromDate(dateForCycleDay(selectedWeekIndex, mobileSelectedDay));
+      viewMode === "timeline" ? timelineDate.slice(0, 10) : planWeekMondayIso;
     let cancelled = false;
     setWeatherFetchErr(null);
     fetch(`/api/planning/weather?anchorDate=${encodeURIComponent(anchor)}`)
@@ -568,7 +578,7 @@ export function ShiftManager({
     return () => {
       cancelled = true;
     };
-  }, [viewMode, timelineDate, selectedWeekIndex, mobileSelectedDay]);
+  }, [viewMode, timelineDate, planWeekMondayIso]);
 
   useEffect(() => {
     let cancelled = false;
@@ -667,6 +677,11 @@ export function ShiftManager({
         DAY_LABELS.map((_, d) => d).filter((d) => conflictTypeByCell.get(`${selectedUserId}-${d}`) === "SICK")
       ),
     [selectedUserId, conflictTypeByCell]
+  );
+  const timelineHasShifts = useMemo(
+    () =>
+      members.some((m) => shiftByUserAndDay.has(`${m.id}-${selectedWeekIndex}-${timelineDay}`)),
+    [members, shiftByUserAndDay, selectedWeekIndex, timelineDay],
   );
   const timelineRows = useMemo(() => {
     const previousDay = (timelineDay + 6) % 7;
@@ -2079,20 +2094,27 @@ export function ShiftManager({
 
   const DesktopView = (
     <>
-        <div className="mt-3 grid w-full max-w-full grid-cols-2 gap-2 rounded-xl border border-border bg-background p-2 text-xs sm:text-[13px]">
+        <div className="mt-3 grid w-full max-w-full grid-cols-3 gap-2 rounded-xl border border-border bg-background p-2 text-xs sm:text-[13px]">
+          <button
+            type="button"
+            onClick={() => setViewMode("week")}
+            className={`min-h-12 touch-manipulation rounded-lg px-2 py-2 font-medium sm:min-h-11 ${viewMode === "week" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground active:bg-muted/50"}`}
+          >
+            Wochenplan
+          </button>
           <button
             type="button"
             onClick={() => setViewMode("simple")}
             className={`min-h-12 touch-manipulation rounded-lg px-2 py-2 font-medium sm:min-h-11 ${viewMode === "simple" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground active:bg-muted/50"}`}
           >
-            Einfach-Planer
+            Eine Person
           </button>
           <button
             type="button"
             onClick={() => setViewMode("timeline")}
             className={`min-h-12 touch-manipulation rounded-lg px-2 py-2 font-medium sm:min-h-11 ${viewMode === "timeline" ? "bg-muted text-foreground shadow-sm" : "text-muted-foreground active:bg-muted/50"}`}
           >
-            Timeline
+            Feinplan
           </button>
         </div>
         <div className="mt-2 flex items-start gap-2">
@@ -2110,9 +2132,9 @@ export function ShiftManager({
           <div className="min-w-0 flex-1 space-y-2">
             {!desktopPlannerHelpOpen ? (
               <p className="text-[11px] leading-snug text-muted-foreground/90">
-                <span className="text-foreground/90">Autopilot</span> oben für Wochenvorschläge ·{" "}
-                <span className="text-foreground/90">Einfach</span> = eine Person, Tage tippen ·{" "}
-                <span className="text-foreground/90">Timeline</span> = ein Tag, alle Balken.
+                <span className="text-foreground/90">Autopilot</span> oben ·{" "}
+                <span className="text-foreground/90">Wochenplan</span> = Übersicht wie im Schichtplan ·{" "}
+                <span className="text-foreground/90">Feinplan</span> = ein Tag, Uhrzeiten ziehen.
               </p>
             ) : null}
             {desktopPlannerHelpOpen ? (
@@ -2121,18 +2143,133 @@ export function ShiftManager({
                 className="rounded-xl border border-border bg-surface-muted/40 px-3 py-2.5 text-[11px] leading-relaxed text-muted-foreground"
               >
                 <p>
-                  <strong className="text-foreground">Einfach-Planer:</strong> eine Person auswählen, Start/Ende oben
-                  setzen (oder Früh/Standard/Spät), dann Wochentage antippen – speichert sofort. Gleiche Zeit erneut
-                  antippen löscht den Tag.
+                  <strong className="text-foreground">Wochenplan:</strong> alle Mitarbeitenden und Tage auf einen Blick —
+                  Schichtkarte antippen zum Bearbeiten, „Hinzufügen“ legt die Zeit von Früh/Standard/Spät unten an.
                 </p>
                 <p className="mt-2">
-                  <strong className="text-foreground">Timeline:</strong> einen Kalendertag wählen, alle Mitarbeitenden
-                  als Zeilen; Balken ziehen oder klicken zum Bearbeiten. Hilfslinien im 15-Minuten-Raster.
+                  <strong className="text-foreground">Eine Person:</strong> schnell eine Person Mo–So befüllen.
+                </p>
+                <p className="mt-2">
+                  <strong className="text-foreground">Feinplan:</strong> ein Kalendertag, Balken im 15-Minuten-Raster
+                  ziehen — für Überlappungen und Mindestbesetzung pro Stunde.
                 </p>
               </div>
             ) : null}
           </div>
         </div>
+
+        {viewMode === "week" && (
+          <>
+            <div className="mt-4 flex flex-wrap items-end gap-3">
+              <div className="w-full sm:w-28">
+                <label
+                  htmlFor="vrema-week-needed-staff"
+                  className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
+                >
+                  Mindestbesetzung / Tag
+                </label>
+                <input
+                  id="vrema-week-needed-staff"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={neededStaff}
+                  onChange={(e) => setNeededStaff(Math.max(1, Number(e.target.value) || 1))}
+                  className="min-h-11 w-full touch-manipulation rounded-lg border border-border bg-surface px-3 py-2 text-sm tabular-nums"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStartTime("08:00");
+                    setEndTime("16:00");
+                  }}
+                  className="min-h-10 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-fg md:hover:bg-surface-muted"
+                >
+                  Früh 08–16
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStartTime("09:00");
+                    setEndTime("17:00");
+                  }}
+                  className="min-h-10 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-fg md:hover:bg-surface-muted"
+                >
+                  Standard 09–17
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStartTime("14:00");
+                    setEndTime("22:00");
+                  }}
+                  className="min-h-10 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-fg md:hover:bg-surface-muted"
+                >
+                  Spät 14–22
+                </button>
+              </div>
+            </div>
+            <PlannerWeekBoard
+              members={members}
+              shiftByUserAndDay={shiftByUserAndDay}
+              selectedWeekIndex={selectedWeekIndex}
+              neededStaff={neededStaff}
+              planWeekRangeLabel={planWeekRangeLabel}
+              weatherWeek={weatherWeek}
+              weekDayDates={weekDayDates}
+              conflictTypeByCell={conflictTypeByCell}
+              staffingHintByDay={staffingHintByDay}
+              isPending={isPending}
+              onEditShift={(userId, dayOfWeek, shift, label) => {
+                setShiftEdit({
+                  userId,
+                  dayOfWeek,
+                  label,
+                  startTime: shift.startTime,
+                  endTime: shift.endTime,
+                });
+              }}
+              onAddShift={(userId, dayOfWeek) => {
+                if (hasInvalidRange) {
+                  setMessage("Bitte zuerst gültige Start- und Endzeit wählen (Früh/Standard/Spät).");
+                  return;
+                }
+                const conflict = conflictTypeByCell.get(`${userId}-${dayOfWeek}`);
+                if (conflict) {
+                  setMessage(conflict === "SICK" ? "Tag ist als krank markiert." : "Tag liegt im Urlaub.");
+                  return;
+                }
+                setMessage(null);
+                startTransition(async () => {
+                  try {
+                    await setShiftForDay({
+                      userId,
+                      weekIndex: selectedWeekIndex,
+                      dayOfWeek,
+                      startTime,
+                      endTime,
+                    });
+                    setMessage(`Schicht gesetzt (${startTime}–${endTime}).`);
+                  } catch (e: unknown) {
+                    setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
+                  }
+                });
+              }}
+              onOpenTimelineDay={(dayOfWeek) => {
+                setViewMode("timeline");
+                setTimelineDate(isoFromPlannerDate(dateForPlannerCycleDay(selectedWeekIndex, dayOfWeek)));
+                window.requestAnimationFrame(() => {
+                  document.getElementById("planner-timeline-region")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                });
+              }}
+            />
+            {weatherFetchErr ? (
+              <p className="mt-2 text-[10px] text-muted-foreground">{weatherFetchErr}</p>
+            ) : null}
+          </>
+        )}
 
         {viewMode === "simple" && (
         <>
@@ -2506,7 +2643,7 @@ export function ShiftManager({
             </button>
           </div>
           <div className="mt-2 flex justify-end">
-            {firstGapWindow ? (
+            {firstGapWindow && timelineHasShifts ? (
               <button
                 type="button"
                 onClick={suggestAutofillForFirstGap}
@@ -2742,7 +2879,8 @@ export function ShiftManager({
                           }}
                           aria-hidden
                         />
-                        {timelineCoverage.map((slot, idx) =>
+                        {timelineHasShifts
+                          ? timelineCoverage.map((slot, idx) =>
                           slot.isGap ? (
                             <div
                               key={`gap-${idx}`}
@@ -2752,8 +2890,9 @@ export function ShiftManager({
                                 width: `${(coverageSlotMinutes / TIMELINE_TOTAL_MINUTES) * 100}%`,
                               }}
                             />
-                          ) : null
-                        )}
+                          ) : null,
+                            )
+                          : null}
                         {hourLinePercents.map((leftLine, idx) => (
                           <div
                             key={`hour-line-${idx}`}
@@ -3352,7 +3491,7 @@ export function ShiftManager({
                   }}
                   className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
                 >
-                  Timeline und Lücken anzeigen
+                  Feinplan (Uhrzeiten) öffnen
                 </button>
               ) : null}
               {renderDesktopTree && viewMode === "timeline" ? (
@@ -3423,7 +3562,7 @@ export function ShiftManager({
                   await setShiftForDay({
                     userId: shiftEdit.userId,
                     weekIndex: selectedWeekIndex,
-                    dayOfWeek: timelineDay,
+                    dayOfWeek: shiftEdit.dayOfWeek,
                     startTime: minutesToHHMM(s),
                     endTime: endTimeValue,
                   });
