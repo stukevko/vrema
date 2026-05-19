@@ -205,7 +205,7 @@ export function OnboardingWizard({ companyName, initial }: Props) {
                 placeholder="8500"
               />
               <span className="mt-2 block text-[11px] text-muted-foreground">
-                Du kannst diesen Wert jederzeit in den Einstellungen ändern.
+                Du kannst diesen Wert jederzeit ändern. Unter „Stoß & Umsatz“ markierst du später ruhige und starke Tage.
               </span>
             </label>
           </Step>

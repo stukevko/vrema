@@ -96,7 +96,7 @@ function DemoTopBanner() {
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-2.5">
         <p className="flex items-center gap-2 text-xs font-semibold text-amber-900 dark:text-amber-100">
           <Sparkles className="h-3.5 w-3.5" aria-hidden />
-          Live-Demo · Daten sind beispielhaft. {trialPricingIntroLine()}
+          Live-Demo · Nur Beispieldaten, kein echter Betrieb. {trialPricingIntroLine()}
         </p>
         <Link
           href="/auth/register"

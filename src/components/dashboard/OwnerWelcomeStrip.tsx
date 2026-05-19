@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, Timer, Users, X } from "lucide-react";
+import { CalendarDays, Timer, TrendingUp, Users, X } from "lucide-react";
 import { TRIAL_DAYS, TRIAL_MAX_EMPLOYEES } from "@/lib/trial/constants";
 
 const DISMISS_KEY = "vrema_owner_welcome_dismissed";
@@ -73,6 +73,12 @@ export function OwnerWelcomeStrip({ focusWeek }: { focusWeek?: number }) {
             <strong className="text-foreground">Woche planen</strong> — Schichten für die kommende Woche eintragen.
           </span>
         </li>
+        <li className="flex gap-3 rounded-xl border border-border/60 bg-background/50 px-3 py-2.5">
+          <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
+          <span>
+            <strong className="text-foreground">Stoßzeiten (optional)</strong> — z. B. Fr/Sa als „Stoß“ für Plan-Hinweise.
+          </span>
+        </li>
       </ol>
       <div className="mt-4 flex flex-wrap gap-2">
         <Link href="/dashboard/team#invite" className="btn-primary-solid inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold">
@@ -86,6 +92,9 @@ export function OwnerWelcomeStrip({ focusWeek }: { focusWeek?: number }) {
         </Link>
         <Link href={planningHref} className="btn-secondary-outline inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold">
           Woche planen
+        </Link>
+        <Link href="/dashboard/peaks" className="btn-secondary-outline inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold">
+          Stoß & Umsatz
         </Link>
       </div>
     </section>

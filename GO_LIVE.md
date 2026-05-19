@@ -105,8 +105,12 @@ npm run prod:cleanup
 | 3 | Planer: Autopilot → Entwurf → veröffentlichen | MA sieht Schicht |
 | 4 | Business: Berichte → DATEV-Export | CSV lädt (wenn Plan Business) |
 | 5 | Support: Ticket an VREMA | Antwort im Postfach |
+| 6 | **Stoß & Umsatz** → Fr/Sa „Stoß“ speichern | Planer zeigt ggf. „Stoß · +1 prüfen“ |
+| 7 | Berater einladen (Rolle Berater) | Nur `/dashboard/peaks` + Konto |
 
 Wenn A + B grün sind, ist der technische Deploy ok. C validiert die echte Gastro-Journey.
+
+**Pilot-Ablauf für Betreiber:** siehe `PILOT_CHECKLIST.md` (Tag 1–7).
 
 ---
 

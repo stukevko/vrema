@@ -23,6 +23,7 @@ export function PeakDemandEditor({ initial, readOnly = false }: Props) {
   );
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const allDefault = levels.every((l) => l === "NORMAL");
 
   const setDay = (index: number, value: PeakDayLevel) => {
     setLevels((prev) => prev.map((v, i) => (i === index ? value : v)));
@@ -48,6 +49,12 @@ export function PeakDemandEditor({ initial, readOnly = false }: Props) {
 
   return (
     <div className="space-y-6">
+      {allDefault && !readOnly ? (
+        <p className="rounded-xl border border-brand/20 bg-brand/5 px-3 py-2.5 text-sm text-foreground">
+          Tipp: Markiere deine starken Tage (z. B. Fr/Sa) als <strong>Stoß</strong> — der Planer zeigt dann „Stoß · +1
+          prüfen“, wenn Unterbesetzung droht.
+        </p>
+      ) : null}
       <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/12 text-brand">
