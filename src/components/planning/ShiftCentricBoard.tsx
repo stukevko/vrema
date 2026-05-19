@@ -4,13 +4,13 @@ import { useMemo } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { StatusTone } from "@/components/ui/StatusBadge";
+import type { ShiftTemplateRow } from "@/lib/actions/shift-templates";
 import type { PlannerStaffingHint } from "@/lib/actions/predictive";
 import type { DailyWeatherForecast } from "@/lib/weather/shared";
 import {
   buildMemberWeekMinutes,
   buildShiftSlotsByDay,
   MON_FIRST_DOW,
-  SHIFT_PRESETS,
   WEEK_SHORT_MON,
   type BoardMember,
   type BoardShiftRow,
@@ -18,6 +18,12 @@ import {
 } from "@/lib/planning/shift-board-model";
 import { shiftCardTone } from "@/lib/planning/shift-display";
 import { Cloud, CloudRain, CloudSun, Plus, Sun, UserPlus, X } from "lucide-react";
+
+function presetButtonLabel(t: ShiftTemplateRow): string {
+  const start = t.startTime.slice(0, 5);
+  const end = t.endTime.slice(0, 5);
+  return `${t.name} ${start}–${end}`;
+}
 
 function weatherIcon(day: DailyWeatherForecast | null, className: string) {
   if (!day) return null;
@@ -48,13 +54,14 @@ export type ShiftCentricBoardProps = {
   weatherWeek: Array<DailyWeatherForecast | null>;
   weekDayDates: string[];
   staffingHintByDay: Map<number, PlannerStaffingHint>;
-  activePreset: keyof typeof SHIFT_PRESETS;
+  shiftTemplates: ShiftTemplateRow[];
+  activeTemplateId: string | null;
   selectedMemberId: string | null;
   isPending: boolean;
-  onPresetChange: (preset: keyof typeof SHIFT_PRESETS) => void;
+  onSelectTemplate: (template: ShiftTemplateRow) => void;
   onNeededStaffChange: (n: number) => void;
   onSelectMember: (userId: string) => void;
-  onCreateSlot: (dayOfWeek: number) => void;
+  onOpenAddSlot: (dayOfWeek: number) => void;
   onAssignToSlot: (slot: BoardShiftSlot) => void;
   onEditAssignment: (slot: BoardShiftSlot, userId: string, shiftId: string) => void;
   onRemoveAssignment: (userId: string, dayOfWeek: number, shiftId: string) => void;
@@ -118,7 +125,9 @@ function ShiftSlotCard({
                 />
                 <span className="truncate text-[11px] font-medium">{a.name}</span>
                 {a.isDraft ? (
-                  <span className="text-[9px] font-semibold uppercase text-brand">Entwurf</span>
+                  <span className="shrink-0 rounded bg-brand/15 px-1 py-0.5 text-[8px] font-bold uppercase text-brand">
+                    Entwurf
+                  </span>
                 ) : null}
               </button>
               <button
@@ -128,7 +137,7 @@ function ShiftSlotCard({
                 className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-danger-soft hover:text-danger"
                 aria-label={`${a.name} von Schicht entfernen`}
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3 w-3" />
               </button>
             </li>
           );
@@ -140,10 +149,10 @@ function ShiftSlotCard({
           type="button"
           disabled={isPending}
           onClick={() => onAssignToSlot(slot)}
-          className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-current/30 py-1.5 text-[10px] font-semibold opacity-90 hover:bg-background/40"
+          className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-brand/35 bg-brand-soft/25 py-1.5 text-[10px] font-semibold text-brand hover:bg-brand-soft/50"
         >
-          <UserPlus className="h-3.5 w-3.5" aria-hidden />
-          Auswahl zuweisen
+          <UserPlus className="h-3 w-3" aria-hidden />
+          Zuweisen
         </button>
       ) : null}
     </article>
@@ -159,20 +168,21 @@ export function ShiftCentricBoard({
   weatherWeek,
   weekDayDates,
   staffingHintByDay,
-  activePreset,
+  shiftTemplates,
+  activeTemplateId,
   selectedMemberId,
   isPending,
-  onPresetChange,
+  onSelectTemplate,
   onNeededStaffChange,
   onSelectMember,
-  onCreateSlot,
+  onOpenAddSlot,
   onAssignToSlot,
   onEditAssignment,
   onRemoveAssignment,
 }: ShiftCentricBoardProps) {
   const slotsByDay = useMemo(
-    () => buildShiftSlotsByDay(shifts, selectedWeekIndex, members),
-    [shifts, selectedWeekIndex, members],
+    () => buildShiftSlotsByDay(shifts, selectedWeekIndex, members, shiftTemplates),
+    [shifts, selectedWeekIndex, members, shiftTemplates],
   );
   const memberMinutes = useMemo(
     () => buildMemberWeekMinutes(shifts, selectedWeekIndex, members.map((m) => m.id)),
@@ -181,7 +191,6 @@ export function ShiftCentricBoard({
 
   return (
     <div className="mt-3 flex min-h-[28rem] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-sm lg:min-h-[32rem] lg:flex-row">
-      {/* Mitarbeiter-Deck */}
       <aside className="shrink-0 border-b border-border bg-surface/50 lg:w-52 lg:border-b-0 lg:border-r">
         <div className="border-b border-border/60 px-3 py-2.5">
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Team</p>
@@ -225,7 +234,6 @@ export function ShiftCentricBoard({
         </ul>
       </aside>
 
-      {/* Kanban-Board */}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border px-3 py-3">
           <div>
@@ -244,18 +252,31 @@ export function ShiftCentricBoard({
                 className="h-8 w-full rounded-lg border border-border bg-background px-2 text-xs tabular-nums"
               />
             </div>
-            {(Object.keys(SHIFT_PRESETS) as Array<keyof typeof SHIFT_PRESETS>).map((key) => (
+            {shiftTemplates.map((t) => (
               <button
-                key={key}
+                key={t.id}
                 type="button"
-                onClick={() => onPresetChange(key)}
-                className={`h-8 rounded-lg border px-2 text-[11px] font-medium ${
-                  activePreset === key
+                onClick={() => onSelectTemplate(t)}
+                title={presetButtonLabel(t)}
+                className={`h-8 max-w-[10.5rem] truncate rounded-lg border px-2 text-[11px] font-medium ${
+                  activeTemplateId === t.id
                     ? "border-brand/40 bg-brand-soft text-brand"
                     : "border-border bg-background text-foreground hover:bg-muted/50"
                 }`}
+                style={
+                  activeTemplateId === t.id && t.color
+                    ? { borderColor: `${t.color}66`, backgroundColor: `${t.color}18` }
+                    : undefined
+                }
               >
-                {SHIFT_PRESETS[key].label}
+                <span className="inline-flex items-center gap-1.5">
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: t.color ?? "#94a3b8" }}
+                    aria-hidden
+                  />
+                  {presetButtonLabel(t)}
+                </span>
               </button>
             ))}
           </div>
@@ -303,9 +324,9 @@ export function ShiftCentricBoard({
                     )}
                     <button
                       type="button"
-                      disabled={isPending || !selectedMemberId}
-                      onClick={() => onCreateSlot(dow)}
-                      title={selectedMemberId ? "Neue Schicht für ausgewählte Person" : "Zuerst Person links wählen"}
+                      disabled={isPending}
+                      onClick={() => onOpenAddSlot(dow)}
+                      title="Schicht anlegen — Vorlage oder individuelle Zeiten"
                       className="mt-auto flex items-center justify-center gap-1 rounded-lg border border-dashed border-border py-2 text-[10px] font-semibold text-muted-foreground transition hover:border-brand/40 hover:bg-brand-soft/20 hover:text-brand disabled:opacity-40"
                     >
                       <Plus className="h-3.5 w-3.5" aria-hidden />

@@ -290,6 +290,7 @@ model Company {
   tickets           Ticket[]
   absences          Absence[]
   taskTemplates     TaskTemplate[]
+  shiftTemplates    ShiftTemplate[]
   shiftTaskLists    ShiftTaskList[]
   notifications     Notification[]
   apiKeys           ApiKey[]
@@ -640,6 +641,24 @@ model Shift {
   // findNextShift / queryActiveShiftTasks / Reports „shifts pro User in Woche/Tag"
   @@index([companyId, userId, isDraft, dayOfWeek])
   @@index([companyId, tradeStatus])
+}
+
+/// Wiederverwendbare Schicht-Vorlagen für den Planer (z. B. Frühschicht 08:00–16:00).
+model ShiftTemplate {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  startTime String
+  endTime   String
+  /// Optional: Hex-Akzent (#RRGGBB) für Karten im Schichtplan
+  color     String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, sortOrder])
 }
 
 model TaskTemplate {

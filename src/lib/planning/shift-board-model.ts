@@ -1,23 +1,38 @@
+import type { ShiftTemplateRow } from "@/lib/actions/shift-templates";
 import {
   formatShiftRange,
   isSuspiciousShiftTime,
   shiftNetDurationMinutes,
   shiftSlotKind,
+  shiftSlotTitle,
   type ShiftSlotKind,
 } from "@/lib/planning/shift-display";
 
 export const MON_FIRST_DOW = [1, 2, 3, 4, 5, 6, 0] as const;
 export const WEEK_SHORT_MON = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] as const;
 
-const SLOT_TITLES: Record<ShiftSlotKind, string> = {
-  morning: "Frühschicht",
-  day: "Tagschicht",
-  evening: "Spätschicht",
-  night: "Nachtschicht",
-};
+function normTime(t: string): string {
+  return t.trim().slice(0, 5);
+}
 
-export function shiftSlotTitle(startTime: string): string {
-  return SLOT_TITLES[shiftSlotKind(startTime)];
+export function resolveSlotTitle(startTime: string, endTime: string, templates: ShiftTemplateRow[]): string {
+  const s = normTime(startTime);
+  const e = normTime(endTime);
+  const match = templates.find((t) => normTime(t.startTime) === s && normTime(t.endTime) === e);
+  return match?.name ?? shiftSlotTitle(startTime);
+}
+
+export function resolveSlotColor(
+  startTime: string,
+  endTime: string,
+  templates: ShiftTemplateRow[],
+): string | null {
+  const s = normTime(startTime);
+  const e = normTime(endTime);
+  const match = templates.find((t) => normTime(t.startTime) === s && normTime(t.endTime) === e);
+  const c = match?.color?.trim();
+  if (c && /^#[0-9A-Fa-f]{6}$/.test(c)) return c;
+  return null;
 }
 
 export function slotKey(dayOfWeek: number, startTime: string, endTime: string): string {
@@ -86,6 +101,7 @@ export function buildShiftSlotsByDay(
   shifts: BoardShiftRow[],
   weekIndex: number,
   members: BoardMember[],
+  templates: ShiftTemplateRow[] = [],
 ): Map<number, BoardShiftSlot[]> {
   const memberById = new Map(members.map((m) => [m.id, m]));
   const buckets = new Map<string, BoardShiftSlot>();
@@ -111,7 +127,7 @@ export function buildShiftSlotsByDay(
         dayOfWeek: s.dayOfWeek,
         startTime: s.startTime,
         endTime: s.endTime,
-        title: shiftSlotTitle(s.startTime),
+        title: resolveSlotTitle(s.startTime, s.endTime, templates),
         rangeLabel: formatShiftRange(s.startTime, s.endTime),
         kind: shiftSlotKind(s.startTime),
         suspicious: isSuspiciousShiftTime(s.startTime, s.endTime),
@@ -133,8 +149,3 @@ export function buildShiftSlotsByDay(
   return byDay;
 }
 
-export const SHIFT_PRESETS = {
-  morning: { startTime: "08:00", endTime: "16:00", label: "Früh 08–16" },
-  standard: { startTime: "09:00", endTime: "17:00", label: "Standard 09–17" },
-  evening: { startTime: "14:00", endTime: "22:00", label: "Spät 14–22" },
-} as const;

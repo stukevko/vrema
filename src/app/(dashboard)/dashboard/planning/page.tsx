@@ -19,6 +19,7 @@ import { ShiftManager } from "@/components/dashboard/ShiftManager";
 import { TradePushHint } from "@/components/planning/TradePushHint";
 import { OpenShiftsBoard } from "@/components/planning/OpenShiftsBoard";
 import { getUnavailableDaysByUserIds } from "@/lib/actions/work-schedule";
+import { getShiftTemplates } from "@/lib/actions/shift-templates";
 import { dateForPlannerCycleDay, dayOrderMonFirst } from "@/lib/planning/cycle-display-date";
 import { parsePlannerWeekIndex } from "@/lib/planning/focus-week";
 import { logServerError } from "@/lib/server-logger";
@@ -62,6 +63,7 @@ export default async function PlanningPage({
       getVacationConflictDaysForPlanning(),
       getShiftCycleWeeks(),
       getPendingTradeApprovals(),
+      getShiftTemplates(),
     ]);
     const members = settled[0].status === "fulfilled" ? settled[0].value : [];
     const shifts = settled[1].status === "fulfilled" ? settled[1].value : [];
@@ -73,6 +75,7 @@ export default async function PlanningPage({
       params.autopilot === "suggest" ? "suggest" : params.autopilot === "1" ? "focus" : null;
     const pendingTrades =
       settled[4].status === "fulfilled" ? settled[4].value : ([] as Awaited<ReturnType<typeof getPendingTradeApprovals>>);
+    const shiftTemplates = settled[5].status === "fulfilled" ? settled[5].value : [];
     settled.forEach((r, i) => {
       if (r.status === "rejected") {
         logServerError(`planning.page.data[${i}]`, r.reason, { step: i });
@@ -138,6 +141,7 @@ export default async function PlanningPage({
           unavailableDaysByUserId={unavailableDaysByUserId}
           enableTaskListActions={canManage}
           initialAutopilotAction={initialAutopilotAction}
+          shiftTemplates={shiftTemplates}
         />
         </Suspense>
         <OpenShiftsBoard />

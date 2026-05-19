@@ -53,6 +53,17 @@ export function shiftSlotLabel(start: string): string {
   return SLOT_LABEL[shiftSlotKind(start)];
 }
 
+const SLOT_TITLES: Record<ShiftSlotKind, string> = {
+  morning: "Frühschicht",
+  day: "Tagschicht",
+  evening: "Spätschicht",
+  night: "Nachtschicht",
+};
+
+export function shiftSlotTitle(start: string): string {
+  return SLOT_TITLES[shiftSlotKind(start)];
+}
+
 export function formatShiftTime(value: string): string {
   const m = parseShiftMinutes(value);
   if (m === null) return value.slice(0, 5);

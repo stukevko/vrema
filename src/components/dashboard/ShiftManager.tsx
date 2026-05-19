@@ -18,6 +18,8 @@ import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
 import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPanel";
 import { ShiftCentricBoard } from "@/components/planning/ShiftCentricBoard";
+import { ShiftAddSheet } from "@/components/planning/ShiftAddSheet";
+import type { ShiftTemplateRow } from "@/lib/actions/shift-templates";
 import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildComplianceFlagsByShiftId, type ShiftPlanRow } from "@/lib/planning/compliance";
@@ -266,6 +268,7 @@ function scrollFieldIntoView(e: React.FocusEvent<HTMLElement>) {
 export function ShiftManager({
   members,
   shifts,
+  shiftTemplates = [],
   shiftCycleWeeks = 1,
   vacationConflictDays,
   unavailableDaysByUserId = {},
@@ -275,6 +278,7 @@ export function ShiftManager({
 }: {
   members: Member[];
   shifts: ShiftRow[];
+  shiftTemplates?: ShiftTemplateRow[];
   shiftCycleWeeks?: 1 | 2 | 3;
   vacationConflictDays?: Array<{ userId: string; dayOfWeek: number; type?: "VACATION" | "SICK" }>;
   /** userId → Wochentage (0–6), an denen die Person als nicht verfügbar markiert ist */
@@ -295,7 +299,11 @@ export function ShiftManager({
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("16:00");
   const [message, setMessage] = useState<string | null>(null);
-  const [shiftPreset, setShiftPreset] = useState<"morning" | "standard" | "evening">("standard");
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(
+    () => shiftTemplates[0]?.id ?? null,
+  );
+  const [boardAddSheetOpen, setBoardAddSheetOpen] = useState(false);
+  const [boardAddDay, setBoardAddDay] = useState<number | null>(null);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<1 | 2 | 3>(
     initialFocusWeek && initialFocusWeek <= shiftCycleWeeks ? initialFocusWeek : 1,
   );
@@ -2086,18 +2094,54 @@ export function ShiftManager({
     </>
   );
 
-  const applyShiftPreset = (preset: "morning" | "standard" | "evening") => {
-    setShiftPreset(preset);
-    if (preset === "morning") {
-      setStartTime("08:00");
-      setEndTime("16:00");
-    } else if (preset === "evening") {
-      setStartTime("14:00");
-      setEndTime("22:00");
-    } else {
-      setStartTime("09:00");
-      setEndTime("17:00");
+  const selectShiftTemplate = (t: ShiftTemplateRow) => {
+    setActiveTemplateId(t.id);
+    setStartTime(t.startTime.slice(0, 5));
+    setEndTime(t.endTime.slice(0, 5));
+  };
+
+  useEffect(() => {
+    if (shiftTemplates.length === 0) return;
+    if (activeTemplateId && shiftTemplates.some((t) => t.id === activeTemplateId)) return;
+    selectShiftTemplate(shiftTemplates[0]!);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- nur bei Template-Liste initialisieren
+  }, [shiftTemplates]);
+
+  const saveBoardShift = (dayOfWeek: number, slotStart: string, slotEnd: string) => {
+    if (!selectedUserId) {
+      setMessage("Zuerst links eine Person wählen.");
+      return;
     }
+    const slotStartNorm = slotStart.slice(0, 5);
+    const slotEndNorm = slotEnd.slice(0, 5);
+    const startM = toMinutes(slotStartNorm);
+    const endM = toMinutes(slotEndNorm);
+    if (startM === null || endM === null || startM === endM) {
+      setMessage("Bitte gültige Start- und Endzeit wählen.");
+      return;
+    }
+    const conflict = conflictTypeByCell.get(`${selectedUserId}-${dayOfWeek}`);
+    if (conflict) {
+      setMessage(conflict === "SICK" ? "Krank — keine Schicht möglich." : "Urlaub — keine Schicht möglich.");
+      return;
+    }
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        await setShiftForDay({
+          userId: selectedUserId,
+          weekIndex: selectedWeekIndex,
+          dayOfWeek,
+          startTime: slotStartNorm,
+          endTime: slotEndNorm,
+        });
+        setStartTime(slotStartNorm);
+        setEndTime(slotEndNorm);
+        setMessage(`Schicht angelegt (${slotStartNorm}–${slotEndNorm}).`);
+      } catch (e: unknown) {
+        setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
+      }
+    });
   };
 
   const DesktopView = (
@@ -2111,41 +2155,16 @@ export function ShiftManager({
         weatherWeek={weatherWeek}
         weekDayDates={weekDayDates}
         staffingHintByDay={staffingHintByDay}
-        activePreset={shiftPreset}
+        shiftTemplates={shiftTemplates}
+        activeTemplateId={activeTemplateId}
         selectedMemberId={selectedUserId || null}
         isPending={isPending}
-        onPresetChange={applyShiftPreset}
+        onSelectTemplate={selectShiftTemplate}
         onNeededStaffChange={setNeededStaff}
         onSelectMember={setSelectedUserId}
-        onCreateSlot={(dayOfWeek) => {
-          if (!selectedUserId) {
-            setMessage("Zuerst links eine Person wählen.");
-            return;
-          }
-          if (hasInvalidRange) {
-            setMessage("Bitte Früh, Standard oder Spät wählen.");
-            return;
-          }
-          const conflict = conflictTypeByCell.get(`${selectedUserId}-${dayOfWeek}`);
-          if (conflict) {
-            setMessage(conflict === "SICK" ? "Krank — keine Schicht möglich." : "Urlaub — keine Schicht möglich.");
-            return;
-          }
-          setMessage(null);
-          startTransition(async () => {
-            try {
-              await setShiftForDay({
-                userId: selectedUserId,
-                weekIndex: selectedWeekIndex,
-                dayOfWeek,
-                startTime,
-                endTime,
-              });
-              setMessage(`Schicht angelegt (${startTime}–${endTime}).`);
-            } catch (e: unknown) {
-              setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
-            }
-          });
+        onOpenAddSlot={(dayOfWeek) => {
+          setBoardAddDay(dayOfWeek);
+          setBoardAddSheetOpen(true);
         }}
         onAssignToSlot={(slot) => {
           if (!selectedUserId) {
@@ -2195,6 +2214,22 @@ export function ShiftManager({
               setMessage(userErrorMessage(e, "Entfernen fehlgeschlagen."));
             }
           });
+        }}
+      />
+      <ShiftAddSheet
+        open={boardAddSheetOpen}
+        dayOfWeek={boardAddDay}
+        memberLabel={selectedMember?.name ?? selectedMember?.email ?? null}
+        templates={shiftTemplates}
+        isPending={isPending}
+        onClose={() => {
+          setBoardAddSheetOpen(false);
+          setBoardAddDay(null);
+        }}
+        onConfirm={(dayOfWeek, slotStart, slotEnd) => {
+          saveBoardShift(dayOfWeek, slotStart, slotEnd);
+          setBoardAddSheetOpen(false);
+          setBoardAddDay(null);
         }}
       />
       {weatherFetchErr ? <p className="mt-2 text-[10px] text-muted-foreground">{weatherFetchErr}</p> : null}
