@@ -286,11 +286,11 @@ export default function LandingPage() {
               </div>
 
               <h1 className="mb-6 max-w-full hyphens-auto break-words text-4xl font-bold leading-[1.1] tracking-tight text-foreground md:text-6xl">
-                VREMA: Dein Zeitportal für Gastronomie — planen, stempeln, verstehen.
+                VREMA: Dein Zeitportal für Teams — planen, stempeln, verstehen.
               </h1>
 
               <p className="mb-10 max-w-full hyphens-auto break-words text-lg leading-relaxed text-muted-foreground md:max-w-xl">
-                Sonntag die nächste Woche vorbereiten, unter der Woche sehen wer da ist — und am Monatsende Export fürs Lohnbüro. Ohne GPS, mit klaren Tipps statt Score-Zahlen.
+                Schichten planen, Zeiten erfassen, Abwesenheit klären — und am Monatsende Export fürs Lohnbüro. Ohne GPS, mit klaren Hinweisen statt Score-Zahlen.
               </p>
 
               <div className="flex max-w-full flex-wrap items-center gap-4">

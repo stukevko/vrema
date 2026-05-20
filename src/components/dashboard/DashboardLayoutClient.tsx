@@ -10,7 +10,9 @@ import { DashboardPullToRefresh } from "@/components/dashboard/DashboardPullToRe
 import { PwaInstallHint } from "@/components/dashboard/PwaInstallHint";
 import { TrialStatusBanner } from "@/components/dashboard/TrialStatusBanner";
 import { PasskeySecurityNudge } from "@/components/dashboard/PasskeySecurityNudge";
+import { MobileWayfindingStrip } from "@/components/dashboard/MobileWayfindingStrip";
 import { getMyUnreadSupportRepliesCount } from "@/lib/actions/support";
+import type { CompanyModules } from "@/lib/company-modules";
 
 type SessionUser = {
   name?: string | null;
@@ -23,6 +25,7 @@ export function DashboardLayoutClient({
   children,
   role,
   plan,
+  companyModules,
   user,
   supportUnreadCount = 0,
   initialSuperOpenTickets = 0,
@@ -33,6 +36,7 @@ export function DashboardLayoutClient({
   children: React.ReactNode;
   role: string;
   plan: string;
+  companyModules: CompanyModules;
   user: SessionUser;
   supportUnreadCount?: number;
   initialSuperOpenTickets?: number;
@@ -75,6 +79,7 @@ export function DashboardLayoutClient({
         className="no-print"
         role={role}
         plan={plan}
+        companyModules={companyModules}
         initialSuperOpenTickets={initialSuperOpenTickets}
         unreadReplies={unreadReplies}
         onOpenSupport={(mode) => {
@@ -104,6 +109,7 @@ export function DashboardLayoutClient({
         >
           <DashboardPullToRefresh scrollRef={mainScrollRef} />
           <div className="dashboard-shell w-full min-w-0 max-w-full overflow-x-hidden">
+            <MobileWayfindingStrip role={role} companyModules={companyModules} />
             <PwaInstallHint />
           {trialBanner ? (
             <TrialStatusBanner
@@ -132,7 +138,7 @@ export function DashboardLayoutClient({
           </div>
         </main>
       </div>
-      <DashboardMobileBottomNav className="no-print" role={role} />
+      <DashboardMobileBottomNav className="no-print" role={role} companyModules={companyModules} />
       <SupportTicketOverlay
         open={supportOverlayOpen}
         initialFocusUnread={supportInitialUnread}

@@ -20,6 +20,7 @@ import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPan
 import { ShiftCentricBoard } from "@/components/planning/ShiftCentricBoard";
 import { ShiftAddSheet } from "@/components/planning/ShiftAddSheet";
 import type { ShiftTemplateRow } from "@/lib/actions/shift-templates";
+import type { CompanyModules } from "@/lib/company-modules";
 import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildComplianceFlagsByShiftId, type ShiftPlanRow } from "@/lib/planning/compliance";
@@ -269,6 +270,13 @@ export function ShiftManager({
   members,
   shifts,
   shiftTemplates = [],
+  companyModules = {
+    peaks: false,
+    plannerWeather: false,
+    shiftTrade: true,
+    shiftTasks: false,
+    autopilot: false,
+  },
   shiftCycleWeeks = 1,
   vacationConflictDays,
   unavailableDaysByUserId = {},
@@ -279,6 +287,7 @@ export function ShiftManager({
   members: Member[];
   shifts: ShiftRow[];
   shiftTemplates?: ShiftTemplateRow[];
+  companyModules?: CompanyModules;
   shiftCycleWeeks?: 1 | 2 | 3;
   vacationConflictDays?: Array<{ userId: string; dayOfWeek: number; type?: "VACATION" | "SICK" }>;
   /** userId → Wochentage (0–6), an denen die Person als nicht verfügbar markiert ist */
@@ -549,6 +558,12 @@ export function ShiftManager({
   }, [mobileEndPickerOpen]);
 
   useEffect(() => {
+    if (!companyModules.plannerWeather) {
+      setWeatherWeek([]);
+      setWeatherMondayIso(null);
+      setWeatherFetchErr(null);
+      return;
+    }
     const anchor = planWeekMondayIso;
     let cancelled = false;
     setWeatherFetchErr(null);
@@ -577,9 +592,13 @@ export function ShiftManager({
     return () => {
       cancelled = true;
     };
-  }, [planWeekMondayIso]);
+  }, [planWeekMondayIso, companyModules.plannerWeather]);
 
   useEffect(() => {
+    if (!companyModules.peaks) {
+      setStaffingHints([]);
+      return;
+    }
     let cancelled = false;
     getPlannerStaffingHints(selectedWeekIndex)
       .then((rows) => {
@@ -591,7 +610,7 @@ export function ShiftManager({
     return () => {
       cancelled = true;
     };
-  }, [selectedWeekIndex]);
+  }, [selectedWeekIndex, companyModules.peaks]);
 
   const staffingHintByDay = useMemo(() => {
     const m = new Map<number, PlannerStaffingHint>();
@@ -2152,9 +2171,9 @@ export function ShiftManager({
         selectedWeekIndex={selectedWeekIndex}
         neededStaff={neededStaff}
         planWeekRangeLabel={planWeekRangeLabel}
-        weatherWeek={weatherWeek}
+        weatherWeek={companyModules.plannerWeather ? weatherWeek : []}
         weekDayDates={weekDayDates}
-        staffingHintByDay={staffingHintByDay}
+        staffingHintByDay={companyModules.peaks ? staffingHintByDay : new Map()}
         shiftTemplates={shiftTemplates}
         activeTemplateId={activeTemplateId}
         selectedMemberId={selectedUserId || null}
@@ -2270,7 +2289,7 @@ export function ShiftManager({
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
-      {enableTaskListActions ? (
+      {enableTaskListActions && companyModules.autopilot ? (
         <div className="mb-4">
           <PlannerAutopilotPanel
             weekIndex={selectedWeekIndex}

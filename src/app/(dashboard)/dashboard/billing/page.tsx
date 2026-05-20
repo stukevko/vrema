@@ -6,6 +6,8 @@ import { createCheckoutSession, createBillingPortalSession } from "@/lib/actions
 import { Check, Zap, CreditCard, Clock } from "lucide-react";
 import Link from "next/link";
 import { getCompanyTrialState, TRIAL_DAYS, TRIAL_MAX_EMPLOYEES } from "@/lib/trial";
+import { grantCompanyPlanWithoutBilling } from "@/lib/actions/super-admin";
+import { Shield } from "lucide-react";
 
 export default async function BillingPage({
   searchParams,
@@ -19,6 +21,8 @@ export default async function BillingPage({
   const { companyId } = session.user as { companyId: string };
   const role = session.user.role ?? "EMPLOYEE";
   if (role === "EMPLOYEE") redirect("/dashboard");
+  const isSuperAdmin =
+    role === "SUPER_ADMIN" || session.user.id === process.env.SUPER_ADMIN_USER_ID;
 
   const company = await db.company.findUnique({
     where: { id: companyId },
@@ -29,6 +33,7 @@ export default async function BillingPage({
       stripeSubId: true,
       subEndsAt: true,
       trialEndsAt: true,
+      billingExempt: true,
     },
   });
 
@@ -46,7 +51,47 @@ export default async function BillingPage({
         <p className="text-muted-foreground text-sm mt-1">Tarif wählen und Zahlungsmethoden verwalten.</p>
       </div>
 
-      {showTrialExpired && !trial?.hasPaidSubscription && (
+      {company.billingExempt && (
+        <div className="rounded-xl border border-emerald-300/50 bg-emerald-50 px-4 py-4 dark:border-emerald-500/30 dark:bg-emerald-950/40">
+          <p className="text-sm font-semibold text-emerald-950 dark:text-emerald-100">Kostenfrei freigeschaltet</p>
+          <p className="mt-1 text-sm text-emerald-900/90 dark:text-emerald-100/90">
+            Dieser Zugang läuft ohne Stripe-Abbuchung. Plan: <strong>{currentPlan}</strong>
+            {company.stripeSubId
+              ? " — aktives Stripe-Abo wurde beim Freischalten beendet."
+              : " — kein aktives Abo."}
+          </p>
+        </div>
+      )}
+
+      {isSuperAdmin && !company.billingExempt && (
+        <form
+          action={async () => {
+            "use server";
+            await grantCompanyPlanWithoutBilling({
+              companyId,
+              plan: company.plan,
+              billingInterval: company.billingInterval,
+            });
+          }}
+          className="rounded-xl border border-brand/30 bg-brand-soft/50 px-4 py-3 dark:border-white/10 dark:bg-brand/10"
+        >
+          <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Shield className="h-4 w-4 text-brand" aria-hidden />
+            Super-Admin: eigenen Tenant schenken
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Setzt kostenfreien Zugang und beendet ein vorhandenes Stripe-Abo — keine weiteren Abbuchungen für diese Firma.
+          </p>
+          <button
+            type="submit"
+            className="mt-3 inline-flex min-h-10 items-center rounded-xl bg-brand px-4 text-sm font-bold text-brand-foreground"
+          >
+            {currentPlan} kostenfrei aktivieren
+          </button>
+        </form>
+      )}
+
+      {showTrialExpired && !trial?.hasPaidSubscription && !company.billingExempt && (
         <div className="rounded-xl border border-amber-300/50 bg-amber-50 px-4 py-4 dark:border-amber-500/30 dark:bg-amber-950/40">
           <div className="flex gap-3">
             <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden />
@@ -70,7 +115,7 @@ export default async function BillingPage({
         </div>
       )}
 
-      {trial?.isInAppTrial && (
+      {trial?.isInAppTrial && !company.billingExempt && (
         <div className="rounded-xl border border-brand/25 bg-brand-soft/60 px-4 py-3 text-sm dark:border-white/10 dark:bg-brand/15">
           <p className="font-medium text-foreground">
             Testphase läuft — noch {trial.daysRemaining} {trial.daysRemaining === 1 ? "Tag" : "Tage"}
@@ -101,7 +146,7 @@ export default async function BillingPage({
               </p>
             )}
           </div>
-          {company.stripeCustomerId && (
+          {company.stripeCustomerId && !company.billingExempt && (
             <form action={createBillingPortalSession}>
               <button
                 type="submit"
@@ -160,7 +205,7 @@ export default async function BillingPage({
                 ))}
               </ul>
 
-              {!isCurrent && key !== "ENTERPRISE" && (
+              {!isCurrent && key !== "ENTERPRISE" && !company.billingExempt && (
                 <div className="flex flex-col gap-2">
                   <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "monthly")}>
                     <button

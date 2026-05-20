@@ -11,7 +11,13 @@ export type CompanyTrialFields = {
   trialEndsAt: Date | null;
   stripeSubId: string | null;
   subEndsAt: Date | null;
+  billingExempt?: boolean;
 };
+
+/** Super-Admin / Demo: voller Zugang ohne Stripe. */
+export function isBillingExempt(company: CompanyTrialFields): boolean {
+  return Boolean(company.billingExempt);
+}
 
 /** Bezahltes Abo (Stripe) — unabhängig von der App-Testphase. */
 export function hasPaidSubscription(company: CompanyTrialFields): boolean {
@@ -20,20 +26,31 @@ export function hasPaidSubscription(company: CompanyTrialFields): boolean {
   return false;
 }
 
+/** Voller App-Zugang (Test, Abo oder kostenfrei freigeschaltet). */
+export function hasFullAppAccess(company: CompanyTrialFields): boolean {
+  if (isBillingExempt(company)) return true;
+  if (hasPaidSubscription(company)) return true;
+  if (!company.trialEndsAt) return true;
+  return company.trialEndsAt > new Date();
+}
+
 export function isInAppTrial(company: CompanyTrialFields): boolean {
+  if (isBillingExempt(company)) return false;
   if (!company.trialEndsAt) return false;
-  if (hasPaidSubscription(company)) return false;
+  if (company.stripeSubId || (company.subEndsAt && company.subEndsAt > new Date())) return false;
   return company.trialEndsAt > new Date();
 }
 
 export function isTrialExpired(company: CompanyTrialFields): boolean {
+  if (isBillingExempt(company)) return false;
   if (!company.trialEndsAt) return false;
-  if (hasPaidSubscription(company)) return false;
+  if (company.stripeSubId || (company.subEndsAt && company.subEndsAt > new Date())) return false;
   return company.trialEndsAt <= new Date();
 }
 
 export function trialDaysRemaining(company: CompanyTrialFields): number {
-  if (!company.trialEndsAt || hasPaidSubscription(company)) return 0;
+  if (isBillingExempt(company)) return 0;
+  if (!company.trialEndsAt || company.stripeSubId) return 0;
   const ms = company.trialEndsAt.getTime() - Date.now();
   return Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
 }
@@ -41,7 +58,7 @@ export function trialDaysRemaining(company: CompanyTrialFields): number {
 export async function getCompanyTrialState(companyId: string) {
   const company = await db.company.findUnique({
     where: { id: companyId },
-    select: { trialEndsAt: true, stripeSubId: true, subEndsAt: true },
+    select: { trialEndsAt: true, stripeSubId: true, subEndsAt: true, billingExempt: true },
   });
   if (!company) return null;
 
@@ -50,6 +67,8 @@ export async function getCompanyTrialState(companyId: string) {
     isInAppTrial: isInAppTrial(company),
     isTrialExpired: isTrialExpired(company),
     hasPaidSubscription: hasPaidSubscription(company),
+    billingExempt: isBillingExempt(company),
+    hasFullAppAccess: hasFullAppAccess(company),
     daysRemaining: trialDaysRemaining(company),
   };
 }

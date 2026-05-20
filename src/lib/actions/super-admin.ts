@@ -8,6 +8,7 @@ import { generateUniqueAffiliateCode, publicRegisterRefUrl } from "@/lib/affilia
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "@/lib/email/transactional";
+import { stripe } from "@/lib/stripe";
 
 function assertSuperAdmin(session: { user?: { role?: string | null; id?: string | null } } | null) {
   const allowed =
@@ -50,6 +51,8 @@ export async function getSuperAdminOverview() {
         plan: true,
         billingInterval: true,
         isActive: true,
+        billingExempt: true,
+        stripeSubId: true,
         createdAt: true,
       },
     }),
@@ -127,9 +130,23 @@ export async function updateCompanyBySuperAdmin(params: {
   plan: Plan;
   billingInterval: BillingInterval;
   isActive: boolean;
+  billingExempt?: boolean;
 }) {
   const session = await auth();
   assertSuperAdmin(session);
+
+  const existing = await db.company.findUnique({
+    where: { id: params.companyId },
+    select: { stripeSubId: true },
+  });
+
+  if (params.billingExempt && existing?.stripeSubId) {
+    try {
+      await stripe.subscriptions.cancel(existing.stripeSubId);
+    } catch {
+      // Stripe-Sub evtl. schon gelöscht — DB trotzdem bereinigen
+    }
+  }
 
   await db.company.update({
     where: { id: params.companyId },
@@ -137,11 +154,34 @@ export async function updateCompanyBySuperAdmin(params: {
       plan: params.plan,
       billingInterval: params.billingInterval,
       isActive: params.isActive,
+      ...(params.billingExempt !== undefined ? { billingExempt: params.billingExempt } : {}),
+      ...(params.billingExempt
+        ? { stripeSubId: null, subEndsAt: null }
+        : {}),
     },
   });
 
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/billing");
   revalidatePath("/dashboard/partners");
+}
+
+/** Eigenen Tenant oder Kunden: Plan setzen ohne Stripe (kostenfrei). */
+export async function grantCompanyPlanWithoutBilling(params: {
+  companyId: string;
+  plan: Plan;
+  billingInterval?: BillingInterval;
+}) {
+  const session = await auth();
+  assertSuperAdmin(session);
+
+  await updateCompanyBySuperAdmin({
+    companyId: params.companyId,
+    plan: params.plan,
+    billingInterval: params.billingInterval ?? "MONTHLY",
+    isActive: true,
+    billingExempt: true,
+  });
 }
 
 export async function deleteCompanyBySuperAdmin(companyId: string) {
@@ -191,6 +231,7 @@ export async function createCompanyBySuperAdmin(params: {
       plan: "STARTER",
       billingInterval: "MONTHLY",
       isActive: true,
+      billingExempt: true,
       users: {
         create: {
           name: ownerName,

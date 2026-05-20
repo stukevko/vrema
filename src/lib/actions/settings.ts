@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
+import { industryModuleDefaults } from "@/lib/company-modules";
 
 export async function getCompanySettings() {
   const { companyId } = await requireTenant();
@@ -56,6 +57,9 @@ export async function updateCompanySettings(data: {
       ? Math.max(0, data.estimatedWeeklyRevenue)
       : undefined;
 
+  const industryDefaults =
+    data.industry !== undefined ? industryModuleDefaults(data.industry) : null;
+
   await db.company.update({
     where: { id: companyId },
     data: {
@@ -74,12 +78,23 @@ export async function updateCompanySettings(data: {
       ...(data.region !== undefined
         ? { region: data.region && data.region.trim() ? data.region.trim() : null }
         : {}),
+      ...(industryDefaults
+        ? {
+            modulePeaks: industryDefaults.peaks,
+            modulePlannerWeather: industryDefaults.plannerWeather,
+            moduleShiftTrade: industryDefaults.shiftTrade,
+            moduleShiftTasks: industryDefaults.shiftTasks,
+            moduleAutopilot: industryDefaults.autopilot,
+          }
+        : {}),
     },
   });
 
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard/planning");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/insights");
+  revalidatePath("/dashboard/peaks");
 }
 
 export async function changePassword(data: {

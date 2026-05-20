@@ -260,6 +260,14 @@ model Company {
   estimatedWeeklyRevenue Float?
   /// Stoß-Profil Mo–So: LOW | NORMAL | HIGH (Index 0 = Montag)
   peakDayLevels       String[] @default(["NORMAL", "NORMAL", "NORMAL", "NORMAL", "NORMAL", "NORMAL", "NORMAL"])
+  /// Optionale Premium-Module (Owner schaltet unter Einstellungen)
+  modulePeaks           Boolean @default(false)
+  modulePlannerWeather  Boolean @default(false)
+  moduleShiftTrade      Boolean @default(true)
+  moduleShiftTasks      Boolean @default(false)
+  moduleAutopilot       Boolean @default(false)
+  /// Kostenfreier Zugang ohne Stripe-Abo (Super-Admin-Vergabe, Demo, interne Tenants).
+  billingExempt         Boolean @default(false)
   affiliateId       String?
   // ── Enterprise: Custom Branding ──────────────────────────────────────────
   /// Hex-Farbe (#RRGGBB), die als Brand-Akzent im Light-Mode genutzt wird.

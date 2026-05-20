@@ -14,10 +14,13 @@ import {
   UserCircle2,
   TrendingUp,
 } from "lucide-react";
+import type { CompanyModuleKey, CompanyModules } from "@/lib/company-modules";
 
 export type MobileBottomNavItem = {
   href: string;
   label: string;
+  /** Kurzer Kontext unter dem Tab-Label (nur Mobil). */
+  subtitle: string;
   icon: LucideIcon;
 };
 
@@ -26,40 +29,77 @@ export type DashboardNavItem = {
   label: string;
   icon: LucideIcon;
   plans: readonly string[];
+  /** Leer = immer sichtbar (Kern). Sonst müssen alle Module aktiv sein. */
+  requiresModules?: CompanyModuleKey[];
 };
 
 const ALL_PLANS = ["STARTER", "BUSINESS", "ENTERPRISE"] as const;
 
 /**
  * Mobil-Bottom-Nav (< md): feste 5 Tabs (App-Store-Niveau).
- * Support ist oben links (Glocke/Lifebuoy) erreichbar – nicht in der Leiste.
  */
-export function getMobileBottomNavItems(role: string): MobileBottomNavItem[] {
+export function getMobileBottomNavItems(role: string, modules: CompanyModules): MobileBottomNavItem[] {
   if (role === "ADVISOR") {
     return [
-      { href: "/dashboard/peaks", label: "Stoß & Umsatz", icon: TrendingUp },
-      { href: "/dashboard/account", label: "Profil", icon: UserCircle2 },
+      { href: "/dashboard/peaks", label: "Stoß", subtitle: "Umsatz", icon: TrendingUp },
+      { href: "/dashboard/account", label: "Profil", subtitle: "Konto", icon: UserCircle2 },
     ];
   }
   const profileHref = role === "EMPLOYEE" ? "/dashboard/account" : "/dashboard/settings";
   const fourthTab: MobileBottomNavItem =
     role === "EMPLOYEE"
-      ? { href: "/dashboard/vacation", label: "Urlaub", icon: CalendarClock }
-      : { href: "/dashboard/insights", label: "Einblicke", icon: Brain };
-  return [
-    { href: "/dashboard", label: "Übersicht", icon: LayoutDashboard },
-    { href: "/dashboard/planning", label: "Planer", icon: CalendarDays },
-    { href: "/dashboard/team", label: "Team", icon: Users },
+      ? { href: "/dashboard/vacation", label: "Urlaub", subtitle: "Frei/Tage", icon: CalendarClock }
+      : { href: "/dashboard/insights", label: "Auswertung", subtitle: "Hinweise", icon: Brain };
+  const items: MobileBottomNavItem[] = [
+    {
+      href: "/dashboard",
+      label: role === "EMPLOYEE" ? "Heute" : "Start",
+      subtitle: role === "EMPLOYEE" ? "Stempeln" : "Fokus",
+      icon: LayoutDashboard,
+    },
+    {
+      href: "/dashboard/planning",
+      label: "Planer",
+      subtitle: role === "EMPLOYEE" ? "Schichten" : "Woche",
+      icon: CalendarDays,
+    },
+    {
+      href: "/dashboard/team",
+      label: "Team",
+      subtitle: role === "EMPLOYEE" ? "Kollegen" : "Leute",
+      icon: Users,
+    },
     fourthTab,
-    { href: profileHref, label: "Profil", icon: UserCircle2 },
+    {
+      href: profileHref,
+      label: "Profil",
+      subtitle: role === "EMPLOYEE" ? "Konto" : "Setup",
+      icon: UserCircle2,
+    },
   ];
+  if (role !== "EMPLOYEE" && modules.peaks) {
+    return [
+      items[0]!,
+      items[1]!,
+      { href: "/dashboard/peaks", label: "Stoß", subtitle: "Tage", icon: TrendingUp },
+      items[3]!,
+      items[4]!,
+    ];
+  }
+  return items;
 }
 
-/** Schlank: Kern-Navigation ohne Doppelungen (Abwesenheit, Tasks, Team-Support). */
+/** Kern-Navigation — optionale Module per `requiresModules`. */
 const BASE_NAV: DashboardNavItem[] = [
   { href: "/dashboard", label: "Übersicht", icon: LayoutDashboard, plans: ALL_PLANS },
-  { href: "/dashboard/insights", label: "Einblicke", icon: Brain, plans: ALL_PLANS },
-  { href: "/dashboard/peaks", label: "Stoß & Umsatz", icon: TrendingUp, plans: ALL_PLANS },
+  { href: "/dashboard/insights", label: "Auswertung", icon: Brain, plans: ALL_PLANS },
+  {
+    href: "/dashboard/peaks",
+    label: "Stoß & Umsatz",
+    icon: TrendingUp,
+    plans: ALL_PLANS,
+    requiresModules: ["peaks"],
+  },
   { href: "/dashboard/team", label: "Team", icon: Users, plans: ALL_PLANS },
   { href: "/dashboard/planning", label: "Planung", icon: CalendarClock, plans: ALL_PLANS },
   { href: "/dashboard/vacation", label: "Abwesenheit", icon: CalendarDays, plans: ALL_PLANS },
@@ -74,13 +114,23 @@ const ADVISOR_NAV: DashboardNavItem[] = [
   { href: "/dashboard/account", label: "Mein Konto", icon: UserCircle2, plans: ALL_PLANS },
 ];
 
-export function getDashboardNavItems(role: string, plan: string): DashboardNavItem[] {
+function navItemAllowed(item: DashboardNavItem, modules: CompanyModules): boolean {
+  if (!item.requiresModules?.length) return true;
+  return item.requiresModules.every((m) => modules[m]);
+}
+
+export function getDashboardNavItems(
+  role: string,
+  plan: string,
+  modules: CompanyModules,
+): DashboardNavItem[] {
   if (role === "ADVISOR") {
     return ADVISOR_NAV.filter((item) => item.plans.includes(plan));
   }
 
   const visible = BASE_NAV.filter((item) => {
     if (!item.plans.includes(plan)) return false;
+    if (!navItemAllowed(item, modules)) return false;
     if (item.href === "/dashboard/billing" && role === "EMPLOYEE") return false;
     if (item.href === "/dashboard/reports" && role === "EMPLOYEE") return false;
     if (item.href === "/dashboard/insights" && role === "EMPLOYEE") return false;

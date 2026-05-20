@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { PeakDemandEditor } from "@/components/dashboard/PeakDemandEditor";
 import { getPeakDemandProfile } from "@/lib/actions/peak-demand";
+import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 import Link from "next/link";
 
 const CAN_ACCESS = new Set(["COMPANY_OWNER", "MANAGER", "ADVISOR", "SUPER_ADMIN"]);
@@ -12,6 +13,11 @@ export default async function PeakDemandPage() {
 
   const role = session.user.role ?? "EMPLOYEE";
   if (!CAN_ACCESS.has(role)) redirect("/dashboard");
+
+  const modules = await getCompanyModulesForTenant();
+  if (!modules.peaks && role !== "ADVISOR" && role !== "SUPER_ADMIN") {
+    redirect("/dashboard/settings#company-modules");
+  }
 
   const profile = await getPeakDemandProfile();
   const isAdvisor = role === "ADVISOR";

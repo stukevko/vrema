@@ -6,6 +6,7 @@ import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import clsx from "clsx";
 import { getDashboardNavItems, getMobileBottomNavItems } from "./dashboard-nav-config";
+import type { CompanyModules } from "@/lib/company-modules";
 import { useEffect, useState } from "react";
 import { countOpenSupportTicketsForSuperAdmin } from "@/lib/actions/support";
 import { countPendingShiftTradeApprovals } from "@/lib/actions/team";
@@ -17,6 +18,7 @@ import { SafeLucideIcon } from "@/lib/icons/safe-lucide";
 interface SidebarProps {
   role: string;
   plan: string;
+  companyModules: CompanyModules;
   className?: string;
   initialSuperOpenTickets?: number;
   unreadReplies?: number;
@@ -27,6 +29,7 @@ interface SidebarProps {
 export function DashboardSidebar({
   role,
   plan,
+  companyModules,
   className,
   initialSuperOpenTickets = 0,
   unreadReplies = 0,
@@ -34,10 +37,11 @@ export function DashboardSidebar({
   supportOverlayOpen = false,
 }: SidebarProps) {
   const pathname = usePathname();
-  const visibleItems = getDashboardNavItems(role, plan);
+  const visibleItems = getDashboardNavItems(role, plan, companyModules);
   const [pendingTradeApprovals, setPendingTradeApprovals] = useState(0);
   const [openSuperTickets, setOpenSuperTickets] = useState(initialSuperOpenTickets);
-  const canManageTrades = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
+  const canManageTrades =
+    companyModules.shiftTrade && ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
 
   useEffect(() => {
     setOpenSuperTickets(initialSuperOpenTickets);
@@ -198,9 +202,17 @@ export function DashboardSidebar({
   );
 }
 
-export function DashboardMobileBottomNav({ role, className }: { role: string; className?: string }) {
+export function DashboardMobileBottomNav({
+  role,
+  companyModules,
+  className,
+}: {
+  role: string;
+  companyModules: CompanyModules;
+  className?: string;
+}) {
   const pathname = usePathname();
-  const items = getMobileBottomNavItems(role);
+  const items = getMobileBottomNavItems(role, companyModules);
 
   return (
     <nav
@@ -210,7 +222,12 @@ export function DashboardMobileBottomNav({ role, className }: { role: string; cl
       )}
       aria-label="Hauptnavigation"
     >
-      <div className="mx-auto grid w-full min-w-0 max-w-lg grid-cols-5 gap-0.5 overflow-hidden">
+      <div
+        className={clsx(
+          "mx-auto grid w-full min-w-0 max-w-lg gap-0.5 overflow-hidden",
+          items.length === 2 ? "grid-cols-2" : "grid-cols-5",
+        )}
+      >
         {items.map((item) => {
           const isActive =
             pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
@@ -219,12 +236,21 @@ export function DashboardMobileBottomNav({ role, className }: { role: string; cl
               key={item.href}
               href={item.href}
               className={clsx(
-                "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1 text-[10px] font-semibold leading-tight transition-transform duration-100 active:scale-95",
-                isActive ? "bg-brand/12 text-brand" : "text-muted-foreground",
+                "flex min-h-[3.75rem] flex-col items-center justify-center gap-0 rounded-2xl px-1 py-1.5 transition-transform duration-100 active:scale-95",
+                isActive
+                  ? "bg-brand/15 text-brand ring-1 ring-inset ring-brand/25"
+                  : "text-muted-foreground",
               )}
+              aria-current={isActive ? "page" : undefined}
             >
-              <SafeLucideIcon icon={item.icon} className="h-6 w-6 shrink-0 stroke-[1.75]" />
-              <span className="line-clamp-2 text-center">{item.label}</span>
+              <SafeLucideIcon
+                icon={item.icon}
+                className={clsx("h-6 w-6 shrink-0 stroke-[1.75]", isActive && "text-brand")}
+              />
+              <span className={clsx("mt-0.5 text-[10px] font-bold leading-none", isActive && "text-brand")}>
+                {item.label}
+              </span>
+              <span className="mt-0.5 text-[8px] font-medium leading-none opacity-80">{item.subtitle}</span>
             </Link>
           );
         })}

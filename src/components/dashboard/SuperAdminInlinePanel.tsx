@@ -3,7 +3,12 @@
 import { userErrorMessage } from "@/lib/errors/user-message";
 import { useTransition } from "react";
 import Link from "next/link";
-import { createCompanyBySuperAdmin, deleteCompanyBySuperAdmin, updateCompanyBySuperAdmin } from "@/lib/actions/super-admin";
+import {
+  createCompanyBySuperAdmin,
+  deleteCompanyBySuperAdmin,
+  grantCompanyPlanWithoutBilling,
+  updateCompanyBySuperAdmin,
+} from "@/lib/actions/super-admin";
 import { Shield, Building2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -16,6 +21,8 @@ type CompanyRow = {
   plan: "STARTER" | "BUSINESS" | "ENTERPRISE";
   billingInterval: "MONTHLY" | "YEARLY";
   isActive: boolean;
+  billingExempt: boolean;
+  stripeSubId: string | null;
   createdAt: Date;
   userCount: number;
   activeUserCount: number;
@@ -167,6 +174,7 @@ export function SuperAdminInlinePanel({
               <th className="px-3 py-2 text-left">Plan</th>
               <th className="px-3 py-2 text-left">Intervall</th>
               <th className="px-3 py-2 text-left">Status</th>
+              <th className="px-3 py-2 text-left">Kostenfrei</th>
               <th className="px-3 py-2 text-left">User</th>
               <th className="px-3 py-2 text-left">Aktion</th>
             </tr>
@@ -174,7 +182,7 @@ export function SuperAdminInlinePanel({
           <tbody>
             {!hasCompanies && (
               <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-fg-muted">
+                <td colSpan={7} className="px-3 py-4 text-center text-fg-muted">
                   Keine Firmen vorhanden.
                 </td>
               </tr>
@@ -200,6 +208,7 @@ export function SuperAdminInlinePanel({
                           plan: e.target.value as CompanyRow["plan"],
                           billingInterval: c.billingInterval,
                           isActive: c.isActive,
+                          billingExempt: c.billingExempt,
                         });
                       })
                     }
@@ -221,6 +230,7 @@ export function SuperAdminInlinePanel({
                           plan: c.plan,
                           billingInterval: e.target.value as CompanyRow["billingInterval"],
                           isActive: c.isActive,
+                          billingExempt: c.billingExempt,
                         });
                       })
                     }
@@ -236,11 +246,59 @@ export function SuperAdminInlinePanel({
                     {c.isActive ? "Aktiv" : "Inaktiv"}
                   </StatusBadge>
                 </td>
+                <td className="px-3 py-2">
+                  <label className="flex items-center gap-2 text-[10px] font-medium text-fg">
+                    <input
+                      type="checkbox"
+                      defaultChecked={c.billingExempt}
+                      disabled={isPending}
+                      onChange={(e) =>
+                        startTransition(async () => {
+                          await updateCompanyBySuperAdmin({
+                            companyId: c.id,
+                            plan: c.plan,
+                            billingInterval: c.billingInterval,
+                            isActive: c.isActive,
+                            billingExempt: e.target.checked,
+                          });
+                          setResultMsg(
+                            e.target.checked
+                              ? `„${c.name}“ ist kostenfrei — Stripe-Abo wurde beendet (falls vorhanden).`
+                              : `„${c.name}“ nutzt wieder normale Abrechnung.`,
+                          );
+                        })
+                      }
+                      className="h-4 w-4 rounded border-line"
+                    />
+                    {c.billingExempt ? "Ja" : "Nein"}
+                  </label>
+                  {c.stripeSubId && !c.billingExempt ? (
+                    <p className="mt-1 text-[9px] text-warning">Stripe aktiv</p>
+                  ) : null}
+                </td>
                 <td className="px-3 py-2 text-fg">
                   {c.activeUserCount}/{c.userCount}
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        startTransition(async () => {
+                          await grantCompanyPlanWithoutBilling({
+                            companyId: c.id,
+                            plan: c.plan,
+                            billingInterval: c.billingInterval,
+                          });
+                          setResultMsg(`„${c.name}“: ${c.plan} kostenfrei freigeschaltet (ohne Stripe).`);
+                        })
+                      }
+                      disabled={isPending}
+                    >
+                      Schenken
+                    </Button>
                     <Button
                       type="button"
                       variant="outline"
@@ -253,6 +311,7 @@ export function SuperAdminInlinePanel({
                             plan: c.plan,
                             billingInterval: c.billingInterval,
                             isActive: !c.isActive,
+                            billingExempt: c.billingExempt,
                           });
                         })
                       }

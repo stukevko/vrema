@@ -20,6 +20,7 @@ import { TradePushHint } from "@/components/planning/TradePushHint";
 import { OpenShiftsBoard } from "@/components/planning/OpenShiftsBoard";
 import { getUnavailableDaysByUserIds } from "@/lib/actions/work-schedule";
 import { getShiftTemplates } from "@/lib/actions/shift-templates";
+import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 import { dateForPlannerCycleDay, dayOrderMonFirst } from "@/lib/planning/cycle-display-date";
 import { parsePlannerWeekIndex } from "@/lib/planning/focus-week";
 import { logServerError } from "@/lib/server-logger";
@@ -76,6 +77,13 @@ export default async function PlanningPage({
     const pendingTrades =
       settled[4].status === "fulfilled" ? settled[4].value : ([] as Awaited<ReturnType<typeof getPendingTradeApprovals>>);
     const shiftTemplates = settled[5].status === "fulfilled" ? settled[5].value : [];
+    const companyModules = await getCompanyModulesForTenant().catch(() => ({
+      peaks: false,
+      plannerWeather: false,
+      shiftTrade: true,
+      shiftTasks: false,
+      autopilot: false,
+    }));
     settled.forEach((r, i) => {
       if (r.status === "rejected") {
         logServerError(`planning.page.data[${i}]`, r.reason, { step: i });
@@ -94,13 +102,15 @@ export default async function PlanningPage({
               Leitung: Plan, Status und Freigaben. Mitarbeitende sehen unter demselben Menüpunkt nur „Mein Dienstplan“.
             </p>
           </div>
-          <Link
-            href="/dashboard/tasks"
-            className="btn-outline inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl px-3 text-sm font-semibold"
-          >
-            <ListTodo className="h-4 w-4" aria-hidden />
-            Schicht-Tasks
-          </Link>
+          {companyModules.shiftTasks ? (
+            <Link
+              href="/dashboard/tasks"
+              className="btn-outline inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl px-3 text-sm font-semibold"
+            >
+              <ListTodo className="h-4 w-4" aria-hidden />
+              Schicht-Tasks
+            </Link>
+          ) : null}
         </div>
         <Suspense
           fallback={
@@ -142,10 +152,11 @@ export default async function PlanningPage({
           enableTaskListActions={canManage}
           initialAutopilotAction={initialAutopilotAction}
           shiftTemplates={shiftTemplates}
+          companyModules={companyModules}
         />
         </Suspense>
-        <OpenShiftsBoard />
-        {pendingTrades.length > 0 && (
+        {companyModules.shiftTrade ? <OpenShiftsBoard /> : null}
+        {companyModules.shiftTrade && pendingTrades.length > 0 && (
           <section id="shift-trade-approvals" className="glass-card p-5">
             <h2 className="text-base font-semibold tracking-tight">Schicht-Tausch: Offene Bestätigungen</h2>
             <div className="mt-3 space-y-2">

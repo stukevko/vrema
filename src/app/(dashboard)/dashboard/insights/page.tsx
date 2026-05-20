@@ -14,6 +14,7 @@ import {
   DashboardManagerGuidance,
   DashboardGuidanceSection,
 } from "@/components/dashboard/DashboardManagerGuidance";
+import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 
 export const metadata = {
   title: "Einblicke",
@@ -34,6 +35,8 @@ export default async function InsightsPage() {
 
   if (!companyId) redirect("/auth/login");
 
+  const modules = await getCompanyModulesForTenant();
+
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-1 sm:px-0">
       <header className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -42,42 +45,48 @@ export default async function InsightsPage() {
             <Brain className="h-5 w-5" aria-hidden />
           </span>
           <div>
-            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Einblicke</h1>
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Auswertung</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Voraus planen und zurückschauen — Klartext aus Schichten und Stempelzeiten, ohne Score-Dashboards.
+              Rückblick und Hinweise aus Stempelzeiten und Schichtplan — klar und ohne Score-Dashboards.
             </p>
           </div>
         </div>
       </header>
 
-      <Link
-        href="/dashboard/peaks"
-        className="flex items-center justify-between gap-3 rounded-2xl border border-brand/25 bg-brand/5 px-4 py-3 text-sm transition-colors hover:bg-brand/10"
-      >
-        <span className="flex items-center gap-2 font-medium text-foreground">
-          <TrendingUp className="h-4 w-4 text-brand" aria-hidden />
-          Stoßzeiten & Umsatz pflegen
-        </span>
-        <span className="text-xs text-muted-foreground">Ruhig · Normal · Stoß pro Tag</span>
-      </Link>
+      {modules.peaks ? (
+        <Link
+          href="/dashboard/peaks"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-brand/25 bg-brand/5 px-4 py-3 text-sm transition-colors hover:bg-brand/10"
+        >
+          <span className="flex items-center gap-2 font-medium text-foreground">
+            <TrendingUp className="h-4 w-4 text-brand" aria-hidden />
+            Stoßzeiten & Umsatz pflegen
+          </span>
+          <span className="text-xs text-muted-foreground">Ruhig · Normal · Stoß pro Tag</span>
+        </Link>
+      ) : null}
 
       <DashboardManagerGuidance>
-        <DashboardGuidanceSection
-          title="Diese Woche planen"
-          description="Konkrete Tipps für die kommenden Tage — was du im Schichtplaner einplanen solltest."
-        >
-          <Suspense fallback={null}>
-            <PredictiveStaffingCard />
-          </Suspense>
-        </DashboardGuidanceSection>
+        {modules.peaks ? (
+          <DashboardGuidanceSection
+            title="Diese Woche planen"
+            description="Konkrete Tipps für die kommenden Tage — was du im Schichtplaner einplanen solltest."
+          >
+            <Suspense fallback={null}>
+              <PredictiveStaffingCard />
+            </Suspense>
+          </DashboardGuidanceSection>
+        ) : null}
 
         <DashboardGuidanceSection
           title="Aus deinen Betriebsdaten"
           description="Rückblick und Checks aus Stempeluhr, Plan und ArbZG."
         >
-          <Suspense fallback={null}>
-            <RevenueSignalCard companyId={companyId} />
-          </Suspense>
+          {modules.peaks ? (
+            <Suspense fallback={null}>
+              <RevenueSignalCard companyId={companyId} />
+            </Suspense>
+          ) : null}
           <Suspense fallback={null}>
             <PlanVsIstCard companyId={companyId} />
           </Suspense>

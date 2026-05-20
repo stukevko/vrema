@@ -5,6 +5,7 @@ import { PLANS } from "@/lib/stripe";
 import {
   TRIAL_MAX_EMPLOYEES,
   hasPaidSubscription,
+  isBillingExempt,
   isInAppTrial,
   isTrialExpired,
   type CompanyTrialFields,
@@ -60,7 +61,7 @@ export async function countActiveEmployees(companyId: string): Promise<number> {
 async function getCompanyTrialFields(companyId: string): Promise<CompanyTrialFields | null> {
   return db.company.findUnique({
     where: { id: companyId },
-    select: { trialEndsAt: true, stripeSubId: true, subEndsAt: true },
+    select: { trialEndsAt: true, stripeSubId: true, subEndsAt: true, billingExempt: true },
   });
 }
 
@@ -70,7 +71,7 @@ export async function getEffectiveEmployeeLimit(companyId: string, plan: string)
   const planLimit = maxEmployees(plan);
 
   if (!company) return planLimit;
-  if (hasPaidSubscription(company)) return planLimit;
+  if (isBillingExempt(company) || hasPaidSubscription(company)) return planLimit;
   if (isInAppTrial(company)) return TRIAL_MAX_EMPLOYEES;
   if (isTrialExpired(company)) {
     const current = await countActiveEmployees(companyId);

@@ -49,6 +49,8 @@ import { getTodayShiftTaskWall } from "@/lib/shift-tasks/wall";
 import { formatBerlinDate, formatBerlinTime, getBerlinNowHour, getDayBoundsUtc } from "@/lib/time/timezone";
 import { logServerError } from "@/lib/server-logger";
 import { resolveLucideIcon } from "@/lib/icons/safe-lucide";
+import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
+import type { CompanyModules } from "@/lib/company-modules";
 
 /**
  * Defensive: optionale Sektionen dürfen niemals die ganze Seite zerschießen.
@@ -73,7 +75,7 @@ type TeamStatsSnapshot = {
 };
 
 /** Eine klare Leitlinie für Owner/Manager/Super-Admin — weniger „Command Center“, mehr Führung. */
-function managerPrimaryFocus(stats: TeamStatsSnapshot) {
+function managerPrimaryFocus(stats: TeamStatsSnapshot, modules: CompanyModules) {
   if (stats.absentToday > 0) {
     return {
       title: `${stats.absentToday} fehlende Anwesenheit${stats.absentToday === 1 ? "" : "en"} heute`,
@@ -90,7 +92,7 @@ function managerPrimaryFocus(stats: TeamStatsSnapshot) {
       cta: "Korrekturen prüfen",
     };
   }
-  if (stats.pendingTradeApprovals > 0) {
+  if (modules.shiftTrade && stats.pendingTradeApprovals > 0) {
     return {
       title: `${stats.pendingTradeApprovals} Schicht-Tausch${stats.pendingTradeApprovals === 1 ? "" : "e"} warten auf Freigabe`,
       description: "Prüfe offene Übernahme-Anfragen, bevor die Schicht startet.",
@@ -138,6 +140,13 @@ export default async function DashboardPage({
   const isManager = role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN";
   const isOwner = role === "COMPANY_OWNER" || role === "SUPER_ADMIN";
   const isEmployee = role === "EMPLOYEE";
+  const companyModules = await getCompanyModulesForTenant().catch(() => ({
+    peaks: false,
+    plannerWeather: false,
+    shiftTrade: true,
+    shiftTasks: false,
+    autopilot: false,
+  }));
 
   let showOwnerWelcome = false;
   let ownerWelcomeFocusWeek: number | undefined;
@@ -318,7 +327,7 @@ export default async function DashboardPage({
     return acc + (end.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins;
   }, 0);
 
-  const focus = teamStats ? managerPrimaryFocus(teamStats) : null;
+  const focus = teamStats ? managerPrimaryFocus(teamStats, companyModules) : null;
 
   // Hero-KPI: Personalkosten heute. Wir nutzen den effektiven Brutto-Stundenlohn,
   // ziehen Pausen ab und beziehen offene Schichten bis "jetzt" mit ein.
@@ -371,7 +380,7 @@ export default async function DashboardPage({
       )}
 
       {showOwnerWelcome && isOwner ? (
-        <OwnerWelcomeStrip focusWeek={ownerWelcomeFocusWeek} />
+        <OwnerWelcomeStrip focusWeek={ownerWelcomeFocusWeek} showPeaksModule={companyModules.peaks} />
       ) : null}
 
       {/* Empty-State Banner (Owner ohne Team) — niemals „toter" leerer Bildschirm. */}
@@ -400,9 +409,11 @@ export default async function DashboardPage({
               <Brain className="h-4 w-4" aria-hidden />
             </span>
             <span>
-              <span className="font-semibold text-foreground">Planungs- & Betriebshinweise</span>
+              <span className="font-semibold text-foreground">Auswertung & Hinweise</span>
               <span className="mt-0.5 block text-xs text-muted-foreground">
-                Personal-Tipps, ArbZG, Umsatz — alles unter Einblicke
+                {companyModules.peaks
+                  ? "ArbZG, Plan vs. Ist, Personal-Tipps"
+                  : "ArbZG, Plan vs. Ist, Stunden im Blick"}
               </span>
             </span>
           </span>
@@ -434,7 +445,7 @@ export default async function DashboardPage({
       )}
 
       {/* Aufgaben prominent: nur sichtbar, wenn eingestempelt + Liste vorhanden */}
-      {activeLog && shiftTasksPayload && shiftTasksPayload.items.length > 0 ? (
+      {companyModules.shiftTasks && activeLog && shiftTasksPayload && shiftTasksPayload.items.length > 0 ? (
         <div className="order-2">
           <ActiveShiftTasksCard tasks={shiftTasksPayload} />
         </div>
@@ -470,7 +481,9 @@ export default async function DashboardPage({
 
           <LiveOperationsWidget rows={liveOpsRows} />
 
-          {teamStats.pendingTradeApprovals > 0 && !focus.href.startsWith("/dashboard/planning") && (
+          {companyModules.shiftTrade &&
+            teamStats.pendingTradeApprovals > 0 &&
+            !focus.href.startsWith("/dashboard/planning") && (
             <Link
               href="/dashboard/planning#shift-trade-approvals"
               className="block rounded-2xl border border-warning/30 bg-warning-soft px-5 py-4 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-warning/45 hover:shadow-[var(--shadow-card-hover)] active:brightness-95 dark:border-white/10 dark:bg-warning/18"

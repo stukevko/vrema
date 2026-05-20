@@ -60,6 +60,24 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
         className="pointer-events-none absolute -top-16 right-0 h-48 w-48 rounded-full bg-brand/15 blur-3xl max-md:opacity-50 md:-right-10 dark:bg-brand/22"
       />
 
+      <ol className="relative mb-4 flex gap-2 md:hidden" aria-label="Dein Ablauf heute">
+        {[
+          { n: "1", t: "Stempeln", active: true },
+          { n: "2", t: "Schicht", active: Boolean(data.nextShift) },
+          { n: "3", t: "Urlaub", active: data.vacation.pendingRequests > 0 },
+        ].map((step) => (
+          <li
+            key={step.n}
+            className={`flex flex-1 flex-col items-center rounded-xl border px-2 py-2 text-center ${
+              step.active ? "border-brand/35 bg-brand-soft/80" : "border-border/70 bg-muted/30"
+            }`}
+          >
+            <span className="text-[10px] font-bold text-brand">{step.n}</span>
+            <span className="text-[10px] font-semibold text-foreground">{step.t}</span>
+          </li>
+        ))}
+      </ol>
+
       {/* Hero: Begrüßung + Status */}
       <div className="relative mb-5 flex flex-col gap-1">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-brand">

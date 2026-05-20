@@ -11,6 +11,7 @@ import {
   getCompanyTrialState,
   isTrialExemptDashboardPath,
 } from "@/lib/trial";
+import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 
 export default async function DashboardLayout({
   children,
@@ -96,6 +97,14 @@ export default async function DashboardLayout({
   // Custom-Branding: nur applizieren, wenn Firma eine eigene Hex hinterlegt hat.
   // Sonst bleibt VREMA-Petrol (Default-Branding) aktiv – kein Style-Injection,
   // kein Flackern, keine zusätzliche CSS.
+  const companyModules = await getCompanyModulesForTenant().catch(() => ({
+    peaks: false,
+    plannerWeather: false,
+    shiftTrade: true,
+    shiftTasks: false,
+    autopilot: false,
+  }));
+
   const branding = await getCompanyBranding(session.user.companyId).catch(() => null);
   const hasCustomBrand = Boolean(branding && branding.brandHex.toLowerCase() !== VREMA_DEFAULT_BRAND_HEX.toLowerCase());
   const brandStyleCss = hasCustomBrand && branding ? buildBrandStyleCss(branding) : null;
@@ -112,6 +121,7 @@ export default async function DashboardLayout({
       <DashboardLayoutClient
         role={role}
         plan={session.user.plan ?? "STARTER"}
+        companyModules={companyModules}
         user={session.user}
         supportUnreadCount={supportUnreadCount}
         initialSuperOpenTickets={superOpenTickets}

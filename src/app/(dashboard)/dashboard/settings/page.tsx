@@ -6,7 +6,9 @@ import { listApiKeys } from "@/lib/actions/api-keys";
 import { getBrandingSettings } from "@/lib/actions/branding";
 import { getClockGeofenceSettings } from "@/lib/actions/clock-geofence";
 import { getShiftTemplates } from "@/lib/actions/shift-templates";
+import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 import { ShiftTemplatesSection } from "@/components/dashboard/ShiftTemplatesSection";
+import { CompanyModulesSection } from "@/components/dashboard/CompanyModulesSection";
 import { CompanySettingsForm } from "@/components/dashboard/CompanySettingsForm";
 import { PasswordChangeForm } from "@/components/dashboard/PasswordChangeForm";
 import { PasskeySecurityForm } from "@/components/dashboard/PasskeySecurityForm";
@@ -58,6 +60,7 @@ export default async function SettingsPage() {
   const branding = isOwner ? await getBrandingSettings().catch(() => null) : null;
   const geofence = isOwner ? await getClockGeofenceSettings().catch(() => ({ enabled: false, allowlist: [] })) : null;
   const shiftTemplates = isOwner ? await getShiftTemplates().catch(() => []) : [];
+  const companyModules = isOwner ? await getCompanyModulesForTenant().catch(() => null) : null;
 
   const mobileMoreLinks: { href: string; label: string; icon: LucideIcon }[] = [
     { href: "/dashboard/team", label: "Team", icon: Users },
@@ -155,6 +158,24 @@ export default async function SettingsPage() {
             <h2 className="font-semibold text-sm text-foreground uppercase tracking-widest font-sans">Firmendaten</h2>
           </div>
           <CompanySettingsForm company={company} />
+        </section>
+      )}
+
+      {isOwner && companyModules && (
+        <section
+          id="company-modules"
+          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <Brain className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
+              Module & Erweiterungen
+            </h2>
+          </div>
+          <CompanyModulesSection
+            initialModules={companyModules}
+            industry={company?.industry ?? null}
+          />
         </section>
       )}
 
