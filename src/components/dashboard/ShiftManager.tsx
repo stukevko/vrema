@@ -2350,7 +2350,11 @@ export function ShiftManager({
             endTime: slot.endTime,
           });
         }}
-        onRemoveAssignment={(_userId, _dayOfWeek, shiftId) => {
+        onRemoveAssignment={(userId, dayOfWeek, shiftId, slotStart, slotEnd) => {
+          if (!shiftId?.trim()) {
+            setMessage("Zuweisung konnte nicht identifiziert werden — bitte Seite neu laden.");
+            return;
+          }
           setMessage(null);
           startTransition(async () => {
             try {
@@ -2358,7 +2362,23 @@ export function ShiftManager({
               setMessage("Zuweisung entfernt.");
               router.refresh();
             } catch (e: unknown) {
-              setMessage(userErrorMessage(e, "Entfernen fehlgeschlagen."));
+              const primaryMsg = userErrorMessage(e, "Entfernen fehlgeschlagen.");
+              try {
+                const { removed } = await clearShiftSlot({
+                  weekIndex: selectedWeekIndex,
+                  dayOfWeek,
+                  startTime: slotStart,
+                  endTime: slotEnd,
+                });
+                if (removed > 0) {
+                  setMessage("Zuweisung entfernt.");
+                  router.refresh();
+                  return;
+                }
+              } catch {
+                /* Fallback fehlgeschlagen */
+              }
+              setMessage(primaryMsg);
             }
           });
         }}

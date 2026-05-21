@@ -38,11 +38,18 @@ function isSafeGermanUserMessage(message: string): boolean {
   return false;
 }
 
+const PRISMA_NOT_FOUND = /\bP2025\b|Record to delete does not exist|not found/i;
+const PRISMA_FORBIDDEN = /\bP2003\b|foreign key constraint/i;
+
 export function userErrorMessage(err: unknown, fallback: string): string {
   if (!(err instanceof Error)) return fallback;
   const raw = err.message?.trim() ?? "";
   if (!raw) return fallback;
   const message = raw.replace(/^Error:\s*/i, "");
+  if (PRISMA_NOT_FOUND.test(message)) return "Eintrag nicht gefunden — bitte Seite neu laden.";
+  if (PRISMA_FORBIDDEN.test(message)) {
+    return "Schicht kann nicht entfernt werden (noch verknüpfte Daten). Bitte Support kontaktieren.";
+  }
   if (isSafeGermanUserMessage(message)) return message;
   return fallback;
 }

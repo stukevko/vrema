@@ -68,7 +68,13 @@ export type ShiftCentricBoardProps = {
   onOpenAddSlot: (dayOfWeek: number) => void;
   onAssignMemberToSlot: (userId: string, slot: BoardShiftSlot) => void;
   onEditAssignment: (slot: BoardShiftSlot, userId: string, shiftId: string) => void;
-  onRemoveAssignment: (userId: string, dayOfWeek: number, shiftId: string) => void;
+  onRemoveAssignment: (
+    userId: string,
+    dayOfWeek: number,
+    shiftId: string,
+    startTime: string,
+    endTime: string,
+  ) => void;
   onClearSlot: (slot: BoardShiftSlot) => void;
   onOvertimeWarningClick: (userId: string, anchor: HTMLElement) => void;
 };
@@ -93,7 +99,13 @@ function ShiftSlotCard({
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
   onEditAssignment: (slot: BoardShiftSlot, userId: string, shiftId: string) => void;
-  onRemoveAssignment: (userId: string, dayOfWeek: number, shiftId: string) => void;
+  onRemoveAssignment: (
+    userId: string,
+    dayOfWeek: number,
+    shiftId: string,
+    startTime: string,
+    endTime: string,
+  ) => void;
   onClearSlot: (slot: BoardShiftSlot) => void;
 }) {
   const staffed = slot.assignments.length;
@@ -168,7 +180,7 @@ function ShiftSlotCard({
                 disabled={isPending}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onRemoveAssignment(a.userId, slot.dayOfWeek, a.shiftId);
+                  onRemoveAssignment(a.userId, slot.dayOfWeek, a.shiftId, slot.startTime, slot.endTime);
                 }}
                 className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-transparent text-muted-foreground hover:border-danger/30 hover:bg-danger-soft hover:text-danger"
                 aria-label={`${a.name} von Schicht entfernen`}

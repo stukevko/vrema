@@ -99,9 +99,16 @@ export function shiftCardTone(start: string, suspicious: boolean): string {
 }
 
 /** Speichern: 24:00 → 23:45, keine Volltag-Schicht. */
+function padHHMM(value: string): string {
+  const raw = value.trim().slice(0, 5);
+  const [h, m] = raw.split(":");
+  if (!h || m === undefined) return raw;
+  return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+}
+
 export function normalizeShiftTimesForSave(startTime: string, endTime: string): { startTime: string; endTime: string } {
-  let start = startTime.trim().slice(0, 5);
-  let end = endTime.trim().slice(0, 5);
+  let start = padHHMM(startTime);
+  let end = padHHMM(endTime);
   if (end === "24:00") end = "23:45";
   if (isSuspiciousShiftTime(start, end)) {
     throw new Error("Ungültige Schichtzeit. Bitte realistische Start- und Endzeit wählen (max. 16 h).");
