@@ -6,7 +6,9 @@ import { Drawer } from "vaul";
 import {
   applyStandardWeek,
   clearShiftForDay,
+  clearShiftSlot,
   copyWeekToAllMembers,
+  deleteShift,
   setShiftBreakDuration,
   setShiftForDay,
   toggleShiftTradeOffer,
@@ -434,6 +436,7 @@ export function ShiftManager({
   } | null>(null);
   const [shiftEdit, setShiftEdit] = useState<{
     userId: string;
+    shiftId?: string;
     dayOfWeek: number;
     label: string;
     startTime: string;
@@ -1071,6 +1074,8 @@ export function ShiftManager({
                   ? "Schichten konnten nicht gelöscht werden. Bitte erneut versuchen."
                   : `${failed} von ${targets.length} Schichten konnten nicht gelöscht werden.`
               );
+            } else {
+              router.refresh();
             }
           });
           setBulkUndo({ label: "Schichten gelöscht", items: undoItems });
@@ -1748,6 +1753,7 @@ export function ShiftManager({
                   onClick={() =>
                     setShiftEdit({
                       userId: shift.userId,
+                      shiftId: shift.id,
                       dayOfWeek: shift.dayOfWeek,
                       label: member?.name ?? member?.email ?? "Mitarbeiter",
                       startTime: shift.startTime,
@@ -2289,6 +2295,7 @@ export function ShiftManager({
         setStartTime(slotStartNorm);
         setEndTime(slotEndNorm);
         setMessage(`Schicht angelegt (${slotStartNorm}–${slotEndNorm}).`);
+        router.refresh();
       } catch (e: unknown) {
         setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
       }
@@ -2323,26 +2330,58 @@ export function ShiftManager({
         onOvertimeWarningClick={(userId, el) => {
           setOvertimePopover({ userId, rect: el.getBoundingClientRect() });
         }}
-        onEditAssignment={(slot, userId, _shiftId) => {
+        onEditAssignment={(slot, userId, shiftId) => {
           const assignment = slot.assignments.find((a) => a.userId === userId);
           const member = members.find((m) => m.id === userId);
           if (!assignment) return;
           setShiftEdit({
             userId,
+            shiftId,
             dayOfWeek: slot.dayOfWeek,
             label: member?.name ?? member?.email ?? "Mitarbeiter",
             startTime: slot.startTime,
             endTime: slot.endTime,
           });
         }}
-        onRemoveAssignment={(userId, dayOfWeek, _shiftId) => {
+        onRemoveAssignment={(_userId, _dayOfWeek, shiftId) => {
           setMessage(null);
           startTransition(async () => {
             try {
-              await clearShiftForDay({ userId, weekIndex: selectedWeekIndex, dayOfWeek });
+              await deleteShift(shiftId);
               setMessage("Zuweisung entfernt.");
+              router.refresh();
             } catch (e: unknown) {
               setMessage(userErrorMessage(e, "Entfernen fehlgeschlagen."));
+            }
+          });
+        }}
+        onClearSlot={(slot) => {
+          if (slot.assignments.length === 0) return;
+          const n = slot.assignments.length;
+          if (
+            !window.confirm(
+              `${slot.title} (${slot.rangeLabel}): ${n} Zuweisung${n === 1 ? "" : "en"} entfernen? Die Schichtkarte wird danach leer.`,
+            )
+          ) {
+            return;
+          }
+          setMessage(null);
+          startTransition(async () => {
+            try {
+              const { removed } = await clearShiftSlot({
+                weekIndex: selectedWeekIndex,
+                dayOfWeek: slot.dayOfWeek,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+              });
+              setMessage(
+                removed > 0
+                  ? `${removed} Zuweisung${removed === 1 ? "" : "en"} entfernt — offene Lücke im Board.`
+                  : "Keine Zuweisungen mehr vorhanden.",
+              );
+              router.refresh();
+            } catch (e: unknown) {
+              setMessage(userErrorMessage(e, "Schicht konnte nicht geleert werden."));
             }
           });
         }}
@@ -2656,6 +2695,7 @@ export function ShiftManager({
                   });
                   setShiftEdit(null);
                   setMessage("Schicht gespeichert.");
+                  router.refresh();
                 } catch (err: unknown) {
                   setMessage(userErrorMessage(err, "Speichern fehlgeschlagen."));
                 }
@@ -2719,6 +2759,7 @@ export function ShiftManager({
                       });
                       setShiftEdit(null);
                       setMessage("Schicht gespeichert.");
+                      router.refresh();
                     } catch (err: unknown) {
                       setMessage(userErrorMessage(err, "Speichern fehlgeschlagen."));
                     }
@@ -2735,13 +2776,18 @@ export function ShiftManager({
                   setMessage(null);
                   startTransition(async () => {
                     try {
-                      await clearShiftForDay({
-                        userId: shiftEdit.userId,
-                        weekIndex: selectedWeekIndex,
-                        dayOfWeek: shiftEdit.dayOfWeek,
-                      });
+                      if (shiftEdit.shiftId) {
+                        await deleteShift(shiftEdit.shiftId);
+                      } else {
+                        await clearShiftForDay({
+                          userId: shiftEdit.userId,
+                          weekIndex: selectedWeekIndex,
+                          dayOfWeek: shiftEdit.dayOfWeek,
+                        });
+                      }
                       setShiftEdit(null);
                       setMessage("Schicht gelöscht.");
+                      router.refresh();
                     } catch (err: unknown) {
                       setMessage(userErrorMessage(err, "Löschen fehlgeschlagen."));
                     }

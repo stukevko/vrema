@@ -69,6 +69,7 @@ export type ShiftCentricBoardProps = {
   onAssignMemberToSlot: (userId: string, slot: BoardShiftSlot) => void;
   onEditAssignment: (slot: BoardShiftSlot, userId: string, shiftId: string) => void;
   onRemoveAssignment: (userId: string, dayOfWeek: number, shiftId: string) => void;
+  onClearSlot: (slot: BoardShiftSlot) => void;
   onOvertimeWarningClick: (userId: string, anchor: HTMLElement) => void;
 };
 
@@ -82,6 +83,7 @@ function ShiftSlotCard({
   onDrop,
   onEditAssignment,
   onRemoveAssignment,
+  onClearSlot,
 }: {
   slot: BoardShiftSlot;
   neededStaff: number;
@@ -92,6 +94,7 @@ function ShiftSlotCard({
   onDrop: (e: React.DragEvent) => void;
   onEditAssignment: (slot: BoardShiftSlot, userId: string, shiftId: string) => void;
   onRemoveAssignment: (userId: string, dayOfWeek: number, shiftId: string) => void;
+  onClearSlot: (slot: BoardShiftSlot) => void;
 }) {
   const staffed = slot.assignments.length;
   const tone = coverageTone(staffed, neededStaff);
@@ -111,9 +114,25 @@ function ShiftSlotCard({
           <p className="text-[11px] font-bold leading-tight">{slot.title}</p>
           <p className="text-[10px] font-medium tabular-nums opacity-90">{slot.rangeLabel}</p>
         </div>
-        <StatusBadge tone={tone} size="sm" glass withDot={false} className="shrink-0 tabular-nums">
-          {staffed}/{neededStaff}
-        </StatusBadge>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <StatusBadge tone={tone} size="sm" glass withDot={false} className="tabular-nums">
+            {staffed}/{neededStaff}
+          </StatusBadge>
+          {staffed > 0 ? (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClearSlot(slot);
+              }}
+              className="text-[9px] font-semibold text-muted-foreground underline-offset-2 hover:text-danger hover:underline disabled:opacity-40"
+              title="Alle Zuweisungen für diese Schicht entfernen"
+            >
+              Schicht leeren
+            </button>
+          ) : null}
+        </div>
       </div>
       {understaffed ? (
         <p className="mt-1 text-[9px] font-medium text-muted-foreground">Offene Lücke</p>
@@ -147,11 +166,14 @@ function ShiftSlotCard({
               <button
                 type="button"
                 disabled={isPending}
-                onClick={() => onRemoveAssignment(a.userId, slot.dayOfWeek, a.shiftId)}
-                className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-danger-soft hover:text-danger"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveAssignment(a.userId, slot.dayOfWeek, a.shiftId);
+                }}
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-transparent text-muted-foreground hover:border-danger/30 hover:bg-danger-soft hover:text-danger"
                 aria-label={`${a.name} von Schicht entfernen`}
               >
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </li>
           );
@@ -183,6 +205,7 @@ export function ShiftCentricBoard({
   onAssignMemberToSlot,
   onEditAssignment,
   onRemoveAssignment,
+  onClearSlot,
   onOvertimeWarningClick,
 }: ShiftCentricBoardProps) {
   const [dragOverSlotKey, setDragOverSlotKey] = useState<string | null>(null);
@@ -393,6 +416,7 @@ export function ShiftCentricBoard({
                           onDrop={(e) => handleDropOnSlot(e, slot)}
                           onEditAssignment={onEditAssignment}
                           onRemoveAssignment={onRemoveAssignment}
+                          onClearSlot={onClearSlot}
                         />
                       ))
                     )}

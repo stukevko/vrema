@@ -596,6 +596,35 @@ export async function clearShiftForDay(input: { userId: string; weekIndex?: numb
   revalidatePath("/dashboard/planning");
 }
 
+/** Entfernt alle Zuweisungen einer Schichtkarte (Tag + Zeitfenster) im Planer-Board. */
+export async function clearShiftSlot(input: {
+  weekIndex?: number;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+}) {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
+    throw new Error("Keine Berechtigung.");
+  }
+
+  const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
+  const { startTime, endTime } = normalizeShiftTimesForSave(input.startTime, input.endTime);
+
+  const deleted = await db.shift.deleteMany({
+    where: tenantWhere(companyId, {
+      weekIndex,
+      dayOfWeek: input.dayOfWeek,
+      startTime,
+      endTime,
+    }),
+  });
+
+  revalidatePath("/dashboard/team");
+  revalidatePath("/dashboard/planning");
+  return { removed: deleted.count };
+}
+
 export async function getMyShifts() {
   const { companyId, userId } = await requireTenant();
   const company = await db.company.findUnique({
