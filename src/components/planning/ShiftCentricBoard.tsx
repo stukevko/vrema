@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { StatusTone } from "@/components/ui/StatusBadge";
 import type { ShiftTemplateRow } from "@/lib/actions/shift-templates";
+import type { MemberSaldoSnapshot } from "@/lib/actions/planner-board";
 import type { PlannerStaffingHint } from "@/lib/actions/predictive";
 import type { DailyWeatherForecast } from "@/lib/weather/shared";
 import {
@@ -16,8 +17,9 @@ import {
   type BoardShiftRow,
   type BoardShiftSlot,
 } from "@/lib/planning/shift-board-model";
+import { formatSaldoHours } from "@/lib/planning/board-assistant";
 import { shiftCardTone } from "@/lib/planning/shift-display";
-import { Cloud, CloudRain, CloudSun, Plus, Sun, UserPlus, X } from "lucide-react";
+import { Cloud, CloudRain, CloudSun, Flame, Plus, Sun, UserPlus, X } from "lucide-react";
 
 function presetButtonLabel(t: ShiftTemplateRow): string {
   const start = t.startTime.slice(0, 5);
@@ -57,43 +59,52 @@ export type ShiftCentricBoardProps = {
   shiftTemplates: ShiftTemplateRow[];
   activeTemplateId: string | null;
   selectedMemberId: string | null;
+  memberSaldoById: Record<string, MemberSaldoSnapshot>;
+  overtimeFilterOnly: boolean;
   isPending: boolean;
   onSelectTemplate: (template: ShiftTemplateRow) => void;
   onNeededStaffChange: (n: number) => void;
   onSelectMember: (userId: string) => void;
   onOpenAddSlot: (dayOfWeek: number) => void;
-  onAssignToSlot: (slot: BoardShiftSlot) => void;
+  onAssignMemberToSlot: (userId: string, slot: BoardShiftSlot) => void;
   onEditAssignment: (slot: BoardShiftSlot, userId: string, shiftId: string) => void;
   onRemoveAssignment: (userId: string, dayOfWeek: number, shiftId: string) => void;
+  onOvertimeWarningClick: (userId: string, anchor: HTMLElement) => void;
 };
 
 function ShiftSlotCard({
   slot,
   neededStaff,
   isPending,
-  selectedMemberId,
-  onAssignToSlot,
+  dragOver,
+  onDragOver,
+  onDragLeave,
+  onDrop,
   onEditAssignment,
   onRemoveAssignment,
 }: {
   slot: BoardShiftSlot;
   neededStaff: number;
   isPending: boolean;
-  selectedMemberId: string | null;
-  onAssignToSlot: (slot: BoardShiftSlot) => void;
+  dragOver: boolean;
+  onDragOver: (e: React.DragEvent) => void;
+  onDragLeave: () => void;
+  onDrop: (e: React.DragEvent) => void;
   onEditAssignment: (slot: BoardShiftSlot, userId: string, shiftId: string) => void;
   onRemoveAssignment: (userId: string, dayOfWeek: number, shiftId: string) => void;
 }) {
   const staffed = slot.assignments.length;
   const tone = coverageTone(staffed, neededStaff);
-  const canAdd =
-    selectedMemberId &&
-    !slot.assignments.some((a) => a.userId === selectedMemberId) &&
-    !slot.suspicious;
+  const understaffed = staffed < neededStaff;
 
   return (
     <article
-      className={`rounded-xl border p-2.5 shadow-sm ${shiftCardTone(slot.startTime, slot.suspicious)}`}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      className={`rounded-xl border p-2.5 shadow-sm transition-colors ${shiftCardTone(slot.startTime, slot.suspicious)} ${
+        dragOver ? "ring-2 ring-brand/50" : ""
+      } ${understaffed && staffed === 0 ? "border-dashed" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -104,6 +115,9 @@ function ShiftSlotCard({
           {staffed}/{neededStaff}
         </StatusBadge>
       </div>
+      {understaffed ? (
+        <p className="mt-1 text-[9px] font-medium text-muted-foreground">Offene Lücke</p>
+      ) : null}
 
       <ul className="mt-2 space-y-1.5">
         {slot.assignments.map((a) => {
@@ -143,18 +157,6 @@ function ShiftSlotCard({
           );
         })}
       </ul>
-
-      {canAdd ? (
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() => onAssignToSlot(slot)}
-          className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-brand/35 bg-brand-soft/25 py-1.5 text-[10px] font-semibold text-brand hover:bg-brand-soft/50"
-        >
-          <UserPlus className="h-3 w-3" aria-hidden />
-          Zuweisen
-        </button>
-      ) : null}
     </article>
   );
 }
@@ -171,15 +173,21 @@ export function ShiftCentricBoard({
   shiftTemplates,
   activeTemplateId,
   selectedMemberId,
+  memberSaldoById,
+  overtimeFilterOnly,
   isPending,
   onSelectTemplate,
   onNeededStaffChange,
   onSelectMember,
   onOpenAddSlot,
-  onAssignToSlot,
+  onAssignMemberToSlot,
   onEditAssignment,
   onRemoveAssignment,
+  onOvertimeWarningClick,
 }: ShiftCentricBoardProps) {
+  const [dragOverSlotKey, setDragOverSlotKey] = useState<string | null>(null);
+  const [draggingUserId, setDraggingUserId] = useState<string | null>(null);
+
   const slotsByDay = useMemo(
     () => buildShiftSlotsByDay(shifts, selectedWeekIndex, members, shiftTemplates),
     [shifts, selectedWeekIndex, members, shiftTemplates],
@@ -189,48 +197,109 @@ export function ShiftCentricBoard({
     [shifts, selectedWeekIndex, members],
   );
 
+  const visibleMembers = useMemo(() => {
+    if (!overtimeFilterOnly) return members;
+    return members.filter((m) => memberSaldoById[m.id]?.isCriticalOvertime);
+  }, [members, overtimeFilterOnly, memberSaldoById]);
+
+  const handleDropOnSlot = (e: React.DragEvent, slot: BoardShiftSlot) => {
+    e.preventDefault();
+    setDragOverSlotKey(null);
+    const userId = e.dataTransfer.getData("text/vrema-member-id") || draggingUserId;
+    if (!userId) return;
+    if (slot.assignments.some((a) => a.userId === userId)) return;
+    onAssignMemberToSlot(userId, slot);
+    setDraggingUserId(null);
+  };
+
   return (
     <div className="mt-3 flex min-h-[28rem] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-sm lg:min-h-[32rem] lg:flex-row">
-      <aside className="shrink-0 border-b border-border bg-surface/50 lg:w-52 lg:border-b-0 lg:border-r">
+      <aside className="shrink-0 border-b border-border bg-surface/50 lg:w-56 lg:border-b-0 lg:border-r">
         <div className="border-b border-border/60 px-3 py-2.5">
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Team</p>
-          <p className="text-[11px] text-muted-foreground">Zum Zuweisen antippen</p>
+          <p className="text-[11px] text-muted-foreground">
+            {overtimeFilterOnly ? "Nur kritische Überstunden" : "Antippen oder in Schicht ziehen"}
+          </p>
         </div>
         <ul className="max-h-48 overflow-y-auto scrollbar-hide lg:max-h-none lg:flex-1">
-          {members.map((member) => {
-            const planned = memberMinutes.get(member.id) ?? 0;
-            const target = member.weeklyHours ?? 0;
-            const over = target > 0 && planned / 60 > target;
-            const active = selectedMemberId === member.id;
-            const initials = (member.name ?? member.email).slice(0, 2).toUpperCase();
-            return (
-              <li key={member.id}>
-                <button
-                  type="button"
-                  onClick={() => onSelectMember(member.id)}
-                  className={`flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors ${
-                    active ? "bg-brand-soft ring-1 ring-inset ring-brand/35" : "hover:bg-muted/40"
-                  }`}
-                >
-                  <Avatar
-                    src={member.image}
-                    fallback={initials}
-                    alt={member.name ?? member.email}
-                    className="h-8 w-8 shrink-0"
-                    fallbackClassName="text-[9px]"
-                  />
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-semibold text-foreground">{member.name ?? member.email}</p>
-                    <p
-                      className={`text-[10px] tabular-nums ${over ? "font-semibold text-warning-foreground" : "text-muted-foreground"}`}
+          {visibleMembers.length === 0 ? (
+            <li className="px-3 py-6 text-center text-[11px] text-muted-foreground">
+              {overtimeFilterOnly ? "Keine kritischen Überstunden in dieser Woche." : "Kein Team geladen."}
+            </li>
+          ) : (
+            visibleMembers.map((member) => {
+              const planned = memberMinutes.get(member.id) ?? 0;
+              const target = member.weeklyHours ?? 0;
+              const over = target > 0 && planned / 60 > target;
+              const active = selectedMemberId === member.id;
+              const initials = (member.name ?? member.email).slice(0, 2).toUpperCase();
+              const saldo = memberSaldoById[member.id];
+              const critical = saldo?.isCriticalOvertime ?? false;
+              return (
+                <li key={member.id}>
+                  <div
+                    className={`flex w-full items-center gap-1 px-2 py-1 transition-colors ${
+                      active ? "bg-brand-soft ring-1 ring-inset ring-brand/35" : "hover:bg-muted/40"
+                    } ${draggingUserId === member.id ? "opacity-60" : ""}`}
+                  >
+                    <button
+                      type="button"
+                      draggable
+                      disabled={isPending}
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData("text/vrema-member-id", member.id);
+                        e.dataTransfer.effectAllowed = "move";
+                        setDraggingUserId(member.id);
+                      }}
+                      onDragEnd={() => setDraggingUserId(null)}
+                      onClick={() => onSelectMember(member.id)}
+                      className="flex min-w-0 flex-1 items-center gap-2 py-1.5 text-left"
                     >
-                      {target > 0 ? `${Math.round(planned / 60)}/${Math.round(target)}h` : `${Math.round(planned / 60)}h`}
-                    </p>
+                      <Avatar
+                        src={member.image}
+                        fallback={initials}
+                        alt={member.name ?? member.email}
+                        className="h-8 w-8 shrink-0"
+                        fallbackClassName="text-[9px]"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold text-foreground">{member.name ?? member.email}</p>
+                        <p
+                          className={`text-[10px] tabular-nums ${
+                            critical || over
+                              ? "font-semibold text-warning-foreground"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {target > 0
+                            ? `${Math.round(planned / 60)}/${Math.round(target)}h Plan`
+                            : `${Math.round(planned / 60)}h Plan`}
+                          {saldo && saldo.saldoMinutes !== 0 ? (
+                            <span className="ml-1">· Saldo {formatSaldoHours(saldo.saldoMinutes)}</span>
+                          ) : null}
+                        </p>
+                      </div>
+                    </button>
+                    {critical ? (
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        title="Überstunden abbauen — Empfehlung anzeigen"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOvertimeWarningClick(member.id, e.currentTarget);
+                        }}
+                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-warning/40 bg-warning-soft text-warning-foreground hover:bg-warning/20"
+                        aria-label="Überstunden-Hilfe"
+                      >
+                        <Flame className="h-4 w-4" />
+                      </button>
+                    ) : null}
                   </div>
-                </button>
-              </li>
-            );
-          })}
+                </li>
+              );
+            })
+          )}
         </ul>
       </aside>
 
@@ -315,8 +384,13 @@ export function ShiftCentricBoard({
                           slot={slot}
                           neededStaff={neededStaff}
                           isPending={isPending}
-                          selectedMemberId={selectedMemberId}
-                          onAssignToSlot={onAssignToSlot}
+                          dragOver={dragOverSlotKey === slot.key}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setDragOverSlotKey(slot.key);
+                          }}
+                          onDragLeave={() => setDragOverSlotKey((k) => (k === slot.key ? null : k))}
+                          onDrop={(e) => handleDropOnSlot(e, slot)}
                           onEditAssignment={onEditAssignment}
                           onRemoveAssignment={onRemoveAssignment}
                         />

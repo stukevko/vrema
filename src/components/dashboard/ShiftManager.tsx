@@ -18,7 +18,18 @@ import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
 import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPanel";
 import { ShiftCentricBoard } from "@/components/planning/ShiftCentricBoard";
+import { buildMemberWeekMinutes, type BoardShiftSlot } from "@/lib/planning/shift-board-model";
 import { ShiftAddSheet } from "@/components/planning/ShiftAddSheet";
+import { OvertimeRecoveryPopover } from "@/components/planning/OvertimeRecoveryPopover";
+import { AssignmentGuardDialog } from "@/components/planning/AssignmentGuardDialog";
+import { getPlannerBoardMemberSaldos } from "@/lib/actions/planner-board";
+import {
+  countCriticalOvertimeMembers,
+  evaluateMemberAssignmentRisk,
+  pickAlternativeAssignee,
+  type AssignmentRisk,
+  type MemberSaldoSnapshot,
+} from "@/lib/planning/board-assistant";
 import type { ShiftTemplateRow } from "@/lib/actions/shift-templates";
 import type { CompanyModules } from "@/lib/company-modules";
 import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
@@ -29,6 +40,7 @@ import {
   AlarmClock,
   Brain,
   Coffee,
+  Flame,
   CornerDownRight,
   Info,
   Loader2,
@@ -484,6 +496,15 @@ export function ShiftManager({
   const [desktopPlannerHelpOpen, setDesktopPlannerHelpOpen] = useState(false);
   /** Leitungs-Statuszeile: Fußnote zu Lücken/Ruhezeit optional. */
   const [planStatusMetricsHelpOpen, setPlanStatusMetricsHelpOpen] = useState(false);
+  const [memberSaldoById, setMemberSaldoById] = useState<Record<string, MemberSaldoSnapshot>>({});
+  const [overtimeFilterOnly, setOvertimeFilterOnly] = useState(false);
+  const [overtimePopover, setOvertimePopover] = useState<{ userId: string; rect: DOMRect } | null>(null);
+  const [assignmentGuard, setAssignmentGuard] = useState<{
+    userId: string;
+    slot: BoardShiftSlot;
+    risk: AssignmentRisk;
+    alternative: { userId: string; name: string; saldoHours: number } | null;
+  } | null>(null);
   const [showMobilePlannerInfo, setShowMobilePlannerInfo] = useState(false);
   const [mobileSelectedDay, setMobileSelectedDay] = useState(() => {
     const d = new Date().getDay();
@@ -681,6 +702,28 @@ export function ShiftManager({
     }
     return map;
   }, [vacationConflictDays]);
+
+  useEffect(() => {
+    if (members.length === 0) {
+      setMemberSaldoById({});
+      return;
+    }
+    let cancelled = false;
+    void getPlannerBoardMemberSaldos(members.map((m) => m.id)).then((map) => {
+      if (!cancelled) setMemberSaldoById(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [members]);
+
+  const saldoMap = useMemo(() => new Map(Object.entries(memberSaldoById)), [memberSaldoById]);
+
+  const criticalOvertimeCount = useMemo(
+    () => countCriticalOvertimeMembers(saldoMap),
+    [saldoMap],
+  );
+
   const draftShiftsInWeek = useMemo(
     () => shifts.filter((s) => s.weekIndex === selectedWeekIndex && s.isDraft),
     [shifts, selectedWeekIndex]
@@ -2126,6 +2169,95 @@ export function ShiftManager({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- nur bei Template-Liste initialisieren
   }, [shiftTemplates]);
 
+  const plannedMinutesByUser = useMemo(
+    () => buildMemberWeekMinutes(shifts, selectedWeekIndex, members.map((m) => m.id)),
+    [shifts, selectedWeekIndex, members],
+  );
+
+  const shiftPlanRows: ShiftPlanRow[] = useMemo(
+    () =>
+      shifts.map((s) => ({
+        id: s.id,
+        userId: s.userId,
+        weekIndex: s.weekIndex,
+        dayOfWeek: s.dayOfWeek,
+        startTime: s.startTime,
+        endTime: s.endTime,
+      })),
+    [shifts],
+  );
+
+  const executeShiftAssignment = (userId: string, slot: BoardShiftSlot) => {
+    const conflict = conflictTypeByCell.get(`${userId}-${slot.dayOfWeek}`);
+    if (conflict) {
+      setMessage(conflict === "SICK" ? "Krank — keine Schicht möglich." : "Urlaub — keine Schicht möglich.");
+      return;
+    }
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        await setShiftForDay({
+          userId,
+          weekIndex: selectedWeekIndex,
+          dayOfWeek: slot.dayOfWeek,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+        });
+        setSelectedUserId(userId);
+        setMessage("Zugewiesen.");
+        router.refresh();
+      } catch (e: unknown) {
+        setMessage(userErrorMessage(e, "Zuweisen fehlgeschlagen."));
+      }
+    });
+  };
+
+  const requestAssignMemberToSlot = (userId: string, slot: BoardShiftSlot) => {
+    const member = members.find((m) => m.id === userId);
+    const saldo = memberSaldoById[userId] ?? null;
+    const planned = plannedMinutesByUser.get(userId) ?? 0;
+    const risk = evaluateMemberAssignmentRisk({
+      userId,
+      dayOfWeek: slot.dayOfWeek,
+      weekIndex: selectedWeekIndex,
+      saldo,
+      weeklyHours: member?.weeklyHours,
+      plannedWeekMinutes: planned,
+      shifts: shiftPlanRows,
+      proposedStartTime: slot.startTime,
+      proposedEndTime: slot.endTime,
+    });
+
+    if (risk.level === "ok") {
+      executeShiftAssignment(userId, slot);
+      return;
+    }
+
+    const conflictDays: Record<string, number[]> = {};
+    for (const m of members) {
+      const days: number[] = [];
+      for (let d = 0; d <= 6; d++) {
+        if (conflictTypeByCell.has(`${m.id}-${d}`)) days.push(d);
+      }
+      if (days.length) conflictDays[m.id] = days;
+    }
+
+    const alternative = pickAlternativeAssignee({
+      slotDayOfWeek: slot.dayOfWeek,
+      members,
+      saldoByUserId: saldoMap,
+      excludeUserId: userId,
+      conflictDaysByUserId: conflictDays,
+    });
+
+    setAssignmentGuard({
+      userId,
+      slot,
+      risk,
+      alternative,
+    });
+  };
+
   const saveBoardShift = (dayOfWeek: number, slotStart: string, slotEnd: string) => {
     if (!selectedUserId) {
       setMessage("Zuerst links eine Person wählen.");
@@ -2177,6 +2309,8 @@ export function ShiftManager({
         shiftTemplates={shiftTemplates}
         activeTemplateId={activeTemplateId}
         selectedMemberId={selectedUserId || null}
+        memberSaldoById={memberSaldoById}
+        overtimeFilterOnly={overtimeFilterOnly}
         isPending={isPending}
         onSelectTemplate={selectShiftTemplate}
         onNeededStaffChange={setNeededStaff}
@@ -2185,31 +2319,9 @@ export function ShiftManager({
           setBoardAddDay(dayOfWeek);
           setBoardAddSheetOpen(true);
         }}
-        onAssignToSlot={(slot) => {
-          if (!selectedUserId) {
-            setMessage("Zuerst links eine Person wählen.");
-            return;
-          }
-          const conflict = conflictTypeByCell.get(`${selectedUserId}-${slot.dayOfWeek}`);
-          if (conflict) {
-            setMessage(conflict === "SICK" ? "Krank — keine Schicht möglich." : "Urlaub — keine Schicht möglich.");
-            return;
-          }
-          setMessage(null);
-          startTransition(async () => {
-            try {
-              await setShiftForDay({
-                userId: selectedUserId,
-                weekIndex: selectedWeekIndex,
-                dayOfWeek: slot.dayOfWeek,
-                startTime: slot.startTime,
-                endTime: slot.endTime,
-              });
-              setMessage("Zugewiesen.");
-            } catch (e: unknown) {
-              setMessage(userErrorMessage(e, "Zuweisen fehlgeschlagen."));
-            }
-          });
+        onAssignMemberToSlot={requestAssignMemberToSlot}
+        onOvertimeWarningClick={(userId, el) => {
+          setOvertimePopover({ userId, rect: el.getBoundingClientRect() });
         }}
         onEditAssignment={(slot, userId, _shiftId) => {
           const assignment = slot.assignments.find((a) => a.userId === userId);
@@ -2233,6 +2345,41 @@ export function ShiftManager({
               setMessage(userErrorMessage(e, "Entfernen fehlgeschlagen."));
             }
           });
+        }}
+      />
+      <OvertimeRecoveryPopover
+        open={overtimePopover != null}
+        userId={overtimePopover?.userId ?? null}
+        weekIndex={selectedWeekIndex}
+        anchorRect={overtimePopover?.rect ?? null}
+        onClose={() => setOvertimePopover(null)}
+        onApplied={() => {
+          router.refresh();
+          void getPlannerBoardMemberSaldos(members.map((m) => m.id)).then(setMemberSaldoById);
+        }}
+      />
+      <AssignmentGuardDialog
+        open={assignmentGuard != null}
+        memberName={
+          members.find((m) => m.id === assignmentGuard?.userId)?.name ??
+          members.find((m) => m.id === assignmentGuard?.userId)?.email ??
+          "Mitarbeiter"
+        }
+        slotLabel={assignmentGuard ? `${assignmentGuard.slot.title} ${assignmentGuard.slot.rangeLabel}` : ""}
+        risk={assignmentGuard?.risk ?? null}
+        alternative={assignmentGuard?.alternative ?? null}
+        isPending={isPending}
+        onClose={() => setAssignmentGuard(null)}
+        onConfirm={() => {
+          if (!assignmentGuard) return;
+          executeShiftAssignment(assignmentGuard.userId, assignmentGuard.slot);
+          setAssignmentGuard(null);
+        }}
+        onPickAlternative={() => {
+          if (!assignmentGuard?.alternative) return;
+          setSelectedUserId(assignmentGuard.alternative.userId);
+          executeShiftAssignment(assignmentGuard.alternative.userId, assignmentGuard.slot);
+          setAssignmentGuard(null);
         }}
       />
       <ShiftAddSheet
@@ -2372,6 +2519,38 @@ export function ShiftManager({
                   {restRiskShiftCount === 0
                     ? "Keine Ruhezeit-Konflikte"
                     : `${restRiskShiftCount} Ruhezeit-Warnung${restRiskShiftCount === 1 ? "" : "en"} (< 11h)`}
+                </span>
+                <span
+                  className={
+                    criticalOvertimeCount > 0
+                      ? "inline-flex flex-wrap items-center gap-2 rounded-full border border-warning/50 bg-warning-soft px-3 py-1 text-warning-foreground"
+                      : "inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1 text-foreground"
+                  }
+                >
+                  <Flame className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  {criticalOvertimeCount > 0 ? (
+                    <>
+                      <span>
+                        {criticalOvertimeCount} Mitarbeitende mit kritischen Überstunden
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOvertimeFilterOnly((v) => !v);
+                          setMessage(
+                            overtimeFilterOnly
+                              ? "Alle Mitarbeitenden im Deck angezeigt."
+                              : "Deck zeigt nur kritische Überstunden — Flammen-Icon für Empfehlung.",
+                          );
+                        }}
+                        className="text-xs font-bold underline underline-offset-2"
+                      >
+                        {overtimeFilterOnly ? "Alle anzeigen" : "Jetzt lösen"}
+                      </button>
+                    </>
+                  ) : (
+                    "Keine kritischen Überstunden"
+                  )}
                 </span>
               </div>
               <div className="flex items-start gap-2">
