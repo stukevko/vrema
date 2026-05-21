@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { savePeakDemandProfile, type PeakDemandProfile } from "@/lib/actions/peak-demand";
 import { userErrorMessage } from "@/lib/errors/user-message";
 import {
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export function PeakDemandEditor({ initial, readOnly = false }: Props) {
+  const router = useRouter();
   const [levels, setLevels] = useState<PeakDayLevel[]>(initial.peakDayLevels);
   const [revenue, setRevenue] = useState(
     initial.estimatedWeeklyRevenue != null ? String(Math.round(initial.estimatedWeeklyRevenue)) : "",
@@ -41,6 +43,7 @@ export function PeakDemandEditor({ initial, readOnly = false }: Props) {
         }
         await savePeakDemandProfile({ peakDayLevels: levels, estimatedWeeklyRevenue });
         setMessage("Gespeichert — der Planer nutzt dein Stoß-Profil ab sofort.");
+        router.refresh();
       } catch (e: unknown) {
         setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
       }

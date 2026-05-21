@@ -13,6 +13,7 @@ import {
   Brain,
   UserCircle2,
   TrendingUp,
+  ListTodo,
 } from "lucide-react";
 import type { CompanyModuleKey, CompanyModules } from "@/lib/company-modules";
 
@@ -77,12 +78,12 @@ export function getMobileBottomNavItems(role: string, modules: CompanyModules): 
       icon: UserCircle2,
     },
   ];
-  if (role !== "EMPLOYEE" && modules.peaks) {
+  if (role !== "EMPLOYEE") {
     return [
       items[0]!,
       items[1]!,
-      { href: "/dashboard/peaks", label: "Stoß", subtitle: "Tage", icon: TrendingUp },
-      items[3]!,
+      items[2]!,
+      { href: "/dashboard/reports", label: "Berichte", subtitle: "Stunden", icon: FileText },
       items[4]!,
     ];
   }
@@ -102,6 +103,13 @@ const BASE_NAV: DashboardNavItem[] = [
   },
   { href: "/dashboard/team", label: "Team", icon: Users, plans: ALL_PLANS },
   { href: "/dashboard/planning", label: "Planung", icon: CalendarClock, plans: ALL_PLANS },
+  {
+    href: "/dashboard/tasks",
+    label: "Schicht-Tasks",
+    icon: ListTodo,
+    plans: ALL_PLANS,
+    requiresModules: ["shiftTasks"],
+  },
   { href: "/dashboard/vacation", label: "Abwesenheit", icon: CalendarDays, plans: ALL_PLANS },
   { href: "/dashboard/reports", label: "Berichte", icon: FileText, plans: ALL_PLANS },
   { href: "/dashboard/support", label: "Hilfe & Support", icon: LifeBuoy, plans: ALL_PLANS },

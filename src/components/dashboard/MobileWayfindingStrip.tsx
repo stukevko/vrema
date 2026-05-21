@@ -26,8 +26,8 @@ function guideForPath(
     }
     return {
       title: "Schichtplan",
-      hint: "Links Person wählen, dann + Schicht — Vorlage oder eigene Zeiten.",
-      cta: { href: "/dashboard/team", label: "Team verwalten" },
+      hint: "Team oben wählen · Schichtkarte antippen (+) · Person per X oder „Schicht leeren“ entfernen. Wischen = Tage.",
+      cta: { href: "/dashboard/settings", label: "Module & Vorlagen" },
     };
   }
   if (pathname.startsWith("/dashboard/team")) {
@@ -76,6 +76,19 @@ function guideForPath(
       hint: "Tarif und Zahlung — oder kostenfrei, wenn vom Admin freigeschaltet.",
     };
   }
+  if (pathname.startsWith("/dashboard/tasks")) {
+    return {
+      title: "Schicht-Tasks",
+      hint: "Checklisten pro Schicht — nur sichtbar, wenn das Modul in den Einstellungen aktiv ist.",
+      cta: { href: "/dashboard/planning", label: "Zum Planer" },
+    };
+  }
+  if (pathname.startsWith("/dashboard/support")) {
+    return {
+      title: "Hilfe & Support",
+      hint: "Ticket erstellen oder Status prüfen — Antworten siehst du hier und per E-Mail.",
+    };
+  }
   if (pathname === "/dashboard" || pathname === "/dashboard/") {
     if (role === "EMPLOYEE") {
       return {
@@ -105,7 +118,7 @@ export function MobileWayfindingStrip({
   if (!guide) return null;
 
   return (
-    <div className="mb-4 rounded-2xl border border-brand/25 bg-gradient-to-r from-brand/10 via-card to-card px-4 py-3 shadow-sm md:hidden dark:from-brand/15">
+    <div className="mb-4 rounded-2xl border border-brand/25 bg-gradient-to-r from-brand/10 via-card to-card px-4 py-3 shadow-sm dark:from-brand/15">
       <div className="flex items-start gap-3">
         <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand dark:bg-brand/25">
           <MapPin className="h-4 w-4" aria-hidden />

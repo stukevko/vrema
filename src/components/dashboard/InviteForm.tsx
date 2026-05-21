@@ -2,6 +2,7 @@
 import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { inviteEmployee } from "@/lib/actions/team";
 import { UserPlus, Loader2, Copy, CheckCheck, Terminal } from "lucide-react";
@@ -17,6 +18,7 @@ export function InviteForm({
   activeEmployees?: number;
 }) {
   const atTrialLimit = trialActive && activeEmployees >= TRIAL_MAX_EMPLOYEES;
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{
@@ -52,6 +54,7 @@ export function InviteForm({
         });
         setResult({ name: user.name ?? "", email: user.email, tempPassword, terminalPin });
         form.reset();
+        router.refresh();
       } catch (err: unknown) {
         setError(userErrorMessage(err, "Fehler beim Einladen."));
       }

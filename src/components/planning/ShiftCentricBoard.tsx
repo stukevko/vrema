@@ -236,15 +236,15 @@ export function ShiftCentricBoard({
   };
 
   return (
-    <div className="mt-3 flex min-h-[28rem] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-sm lg:min-h-[32rem] lg:flex-row">
-      <aside className="shrink-0 border-b border-border bg-surface/50 lg:w-56 lg:border-b-0 lg:border-r">
+    <div className="mt-3 flex min-h-[22rem] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-sm sm:min-h-[28rem] lg:min-h-[32rem] lg:flex-row">
+      <aside className="shrink-0 border-b border-border bg-surface/50 max-lg:max-h-[40vh] lg:w-56 lg:max-h-none lg:border-b-0 lg:border-r">
         <div className="border-b border-border/60 px-3 py-2.5">
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Team</p>
           <p className="text-[11px] text-muted-foreground">
             {overtimeFilterOnly ? "Nur kritische Überstunden" : "Antippen oder in Schicht ziehen"}
           </p>
         </div>
-        <ul className="max-h-48 overflow-y-auto scrollbar-hide lg:max-h-none lg:flex-1">
+        <ul className="max-h-[min(36vh,14rem)] overflow-y-auto scrollbar-hide sm:max-h-48 lg:max-h-none lg:flex-1">
           {visibleMembers.length === 0 ? (
             <li className="px-3 py-6 text-center text-[11px] text-muted-foreground">
               {overtimeFilterOnly ? "Keine kritischen Überstunden in dieser Woche." : "Kein Team geladen."}

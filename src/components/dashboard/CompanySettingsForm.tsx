@@ -2,6 +2,7 @@
 import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updateCompanySettings } from "@/lib/actions/settings";
 import { RevenueCsvImport } from "@/components/dashboard/RevenueCsvImport";
 import { Loader2, Save, ShieldCheck } from "lucide-react";
@@ -48,6 +49,7 @@ interface Props {
 }
 
 export function CompanySettingsForm({ company }: Props) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -80,6 +82,7 @@ export function CompanySettingsForm({ company }: Props) {
           region: region === "" ? null : region,
         });
         setSuccess(true);
+        router.refresh();
         setTimeout(() => setSuccess(false), 3000);
       } catch (err: unknown) {
         setError(userErrorMessage(err, "Fehler beim Speichern."));

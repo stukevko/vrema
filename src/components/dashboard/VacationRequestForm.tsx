@@ -2,10 +2,12 @@
 import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { requestSickLeave, requestVacation } from "@/lib/actions/vacation";
 import { CalendarDays, Loader2, ShieldCheck } from "lucide-react";
 
 export function VacationRequestForm() {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -39,6 +41,7 @@ export function VacationRequestForm() {
         }
         setSuccess(true);
         form.reset();
+        router.refresh();
       } catch (err: unknown) {
         setError(userErrorMessage(err, "Fehler beim Einreichen"));
       }

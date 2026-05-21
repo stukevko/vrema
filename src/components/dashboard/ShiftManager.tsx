@@ -35,6 +35,7 @@ import {
 import type { ShiftTemplateRow } from "@/lib/actions/shift-templates";
 import type { CompanyModules } from "@/lib/company-modules";
 import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildComplianceFlagsByShiftId, type ShiftPlanRow } from "@/lib/planning/compliance";
 import { countWeekCoverageGapSlots } from "@/lib/planning/planner-coverage-metrics";
@@ -1105,14 +1106,15 @@ export function ShiftManager({
       if (key === "v") {
         if (!copiedShift || !timelineFocusedUserId) return;
         startTransition(async () => {
-          await setShiftForDay({
-            userId: timelineFocusedUserId,
-            weekIndex: selectedWeekIndex,
-            dayOfWeek: timelineDay,
-            startTime: copiedShift.startTime,
-            endTime: copiedShift.endTime,
-            breakDuration: copiedShift.breakDuration,
-          });
+        await setShiftForDay({
+          userId: timelineFocusedUserId,
+          weekIndex: selectedWeekIndex,
+          dayOfWeek: timelineDay,
+          startTime: copiedShift.startTime,
+          endTime: copiedShift.endTime,
+          breakDuration: copiedShift.breakDuration,
+        });
+          router.refresh();
         });
         setFlashAssignedKey(`${timelineFocusedUserId}-${timelineDay}`);
         window.setTimeout(() => setFlashAssignedKey(null), 1200);
@@ -1169,6 +1171,7 @@ export function ShiftManager({
           breakDuration,
         });
         setMessage(`Schicht gesetzt: ${DAY_LABELS[timelineDay]} (${startTimeValue}-${endTimeValue}).`);
+        router.refresh();
       } catch (e: unknown) {
         setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
       }
@@ -1407,11 +1410,13 @@ export function ShiftManager({
           await clearShiftForDay({ userId: selectedUserId, weekIndex: selectedWeekIndex, dayOfWeek });
           setMessage(`Schicht für ${DAY_LABELS[dayOfWeek]} gelöscht.`);
           setRecentDayAction({ dayOfWeek, action: "deleted" });
+          router.refresh();
           return;
         }
         await setShiftForDay({ userId: selectedUserId, weekIndex: selectedWeekIndex, dayOfWeek, startTime, endTime });
         setMessage(`Schicht für ${DAY_LABELS[dayOfWeek]} gesetzt (${startTime}-${endTime}).`);
         setRecentDayAction({ dayOfWeek, action: "saved" });
+        router.refresh();
       } catch (e: unknown) {
         setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
       }
@@ -1429,6 +1434,7 @@ export function ShiftManager({
       try {
         await applyStandardWeek({ userId: selectedUserId, weekIndex: selectedWeekIndex, startTime, endTime });
         setMessage("Standardwoche (Mo-Fr) gespeichert.");
+        router.refresh();
       } catch (e: unknown) {
         setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
       }
@@ -1443,6 +1449,7 @@ export function ShiftManager({
       try {
         const result = await copyWeekToAllMembers(selectedUserId);
         setMessage(`Woche auf ${result.copiedTo} Mitarbeiter übertragen.`);
+        router.refresh();
       } catch (e: unknown) {
         setMessage(userErrorMessage(e, "Übertragen fehlgeschlagen."));
       }
@@ -1633,7 +1640,7 @@ export function ShiftManager({
         {showMobilePlannerInfo ? (
           <div className="rounded-2xl border border-border bg-background px-4 py-3 text-xs text-muted-foreground">
             <p className="font-semibold text-foreground">Planer-Info</p>
-            <p className="mt-1">Schichtkarte antippen zum Bearbeiten, Plus unten rechts für neue Schicht.</p>
+            <p className="mt-1">Schicht antippen = bearbeiten oder löschen. Plus unten rechts = neue Schicht.</p>
             <p className="mt-1">Compliance: Pause bei &gt;6h und Ruhezeit &lt;11h (Hinweis, keine Rechtsberatung).</p>
             <p className="mt-1 font-medium text-foreground">
               Woche {selectedWeekIndex}:{" "}
@@ -2605,23 +2612,32 @@ export function ShiftManager({
                 </button>
                 {planStatusMetricsHelpOpen ? (
                   <p className="text-[10px] leading-snug text-muted-foreground">
-                    Zeitfenster: jeweils {coverageSlotMinutes} Minuten von 0–24 Uhr, Mo–So. Ein Fenster zählt als offen,
-                    wenn dort weniger parallele Schichten liegen als die Mindestbesetzung (Zahl neben der Timeline).
+                    Offene Fenster: Mo–So in {coverageSlotMinutes}-Minuten-Slots. Ein Slot gilt als besetzt, wenn mindestens
+                    so viele parallele Schichten liegen wie die Mindestbesetzung (Zahl oben rechts am Planer).
                     Ruhezeit: weniger als 11 Stunden Pause zwischen zwei Schichten derselben Person in dieser Zykluswoche.
                   </p>
                 ) : null}
               </div>
             </div>
             <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap lg:flex-col lg:items-end">
-              <button
-                type="button"
-                disabled={isPending || autopilotBusy}
-                onClick={scrollToAutopilot}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand/35 bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm ring-1 ring-inset ring-white/15 transition-colors hover:bg-brand/90 disabled:opacity-50"
-              >
-                <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
-                Zum Autopilot
-              </button>
+              {companyModules.autopilot ? (
+                <button
+                  type="button"
+                  disabled={isPending || autopilotBusy}
+                  onClick={scrollToAutopilot}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand/35 bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm ring-1 ring-inset ring-white/15 transition-colors hover:bg-brand/90 disabled:opacity-50"
+                >
+                  <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
+                  Zum Autopilot
+                </button>
+              ) : (
+                <Link
+                  href="/dashboard/settings"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-background px-4 py-2.5 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
+                >
+                  Autopilot in Einstellungen aktivieren
+                </Link>
+              )}
               {renderDesktopTree ? (
                 <a
                   href="#planner-compliance-radar"
@@ -2635,28 +2651,32 @@ export function ShiftManager({
         </div>
       ) : null}
 
-      {!renderDesktopTree ? (
+      {enableTaskListActions ? (
+        <div className="block">
+          <h2 className="text-lg font-semibold tracking-tight">Schichtplan</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {renderDesktopTree
+              ? "Team links · Schichtkarten in der Woche · Zuweisen per Drag oder Antippen."
+              : "Gleicher Plan wie am Desktop: Team wählen, Karten horizontal wischen, + für neue Schicht."}
+          </p>
+          {!renderDesktopTree ? (
+            <p className="mt-2 rounded-xl border border-brand/25 bg-brand-soft/40 px-3 py-2 text-[11px] text-foreground">
+              <strong className="font-semibold">Tipp:</strong> Wische über die Tages-Spalten. X entfernt eine Person, „Schicht leeren“
+              die ganze Karte.
+            </p>
+          ) : null}
+          {weekPicker}
+          {DesktopView}
+        </div>
+      ) : (
         <div className="block">
           <h2 className="text-lg font-semibold tracking-tight">Einfach-Planer</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Mitarbeiter, Zeiten und Wochentage – nur diese Planung, kein Timeline-Modus.
-          </p>
+          <p className="mt-1 text-xs text-muted-foreground">Mitarbeiter wählen, dann Schichten pro Tag pflegen.</p>
           {weekPicker}
           {selectedMemberChip}
           {MobileView}
         </div>
-      ) : null}
-
-      {renderDesktopTree ? (
-        <div className="block">
-          <h2 className="text-lg font-semibold tracking-tight">Schichtplan</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Person links wählen · Schicht anlegen oder zu bestehender Karte zuweisen.
-          </p>
-          {weekPicker}
-          {DesktopView}
-        </div>
-      ) : null}
+      )}
 
       {message && <p className="mt-3 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground">{message}</p>}
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { saveMyWorkSchedule, type WorkScheduleRow } from "@/lib/actions/work-schedule";
 import { userErrorMessage } from "@/lib/errors/user-message";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 const DAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
 export function AvailabilityEditor({ initial }: { initial: WorkScheduleRow[] }) {
+  const router = useRouter();
   const [rows, setRows] = useState(initial);
   const [pending, startTransition] = useTransition();
 
@@ -20,6 +22,7 @@ export function AvailabilityEditor({ initial }: { initial: WorkScheduleRow[] }) 
       try {
         await saveMyWorkSchedule(rows);
         toast.success("Verfügbarkeit gespeichert");
+        router.refresh();
       } catch (e: unknown) {
         toast.error(userErrorMessage(e, "Speichern fehlgeschlagen."));
       }

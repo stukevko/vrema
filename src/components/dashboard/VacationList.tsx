@@ -2,6 +2,7 @@
 import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { approveVacation, rejectVacation, type VacationDecisionContext } from "@/lib/actions/vacation";
 import { Check, X, Clock, AlertTriangle, Users, ShieldCheck, Loader2, Info, Inbox } from "lucide-react";
@@ -63,6 +64,7 @@ const REMAINING_CONTAINER: Record<"positive" | "tight" | "over", string> = {
 };
 
 export function VacationList({ requests, canApprove }: VacationListProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [decision, setDecision] = useState<{ id: string; mode: "APPROVE" | "REJECT"; note: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +88,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
           show("Antrag abgelehnt – Begründung wurde in der E-Mail mitgeschickt.", "success");
         }
         setDecision(null);
+        router.refresh();
       } catch (err) {
         setError(userErrorMessage(err, "Aktion konnte nicht abgeschlossen werden."));
       }

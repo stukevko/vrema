@@ -102,15 +102,25 @@ export default async function PlanningPage({
               Leitung: Plan, Status und Freigaben. Mitarbeitende sehen unter demselben Menüpunkt nur „Mein Dienstplan“.
             </p>
           </div>
-          {companyModules.shiftTasks ? (
-            <Link
-              href="/dashboard/tasks"
-              className="btn-outline inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl px-3 text-sm font-semibold"
-            >
-              <ListTodo className="h-4 w-4" aria-hidden />
-              Schicht-Tasks
-            </Link>
-          ) : null}
+          <div className="flex shrink-0 flex-col gap-2 self-start">
+            {companyModules.shiftTasks ? (
+              <Link
+                href="/dashboard/tasks"
+                className="btn-outline inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold"
+              >
+                <ListTodo className="h-4 w-4" aria-hidden />
+                Schicht-Tasks
+              </Link>
+            ) : null}
+            {!companyModules.peaks || !companyModules.autopilot ? (
+              <Link
+                href="/dashboard/settings"
+                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-border bg-background px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
+              >
+                Erweiterungen in Einstellungen
+              </Link>
+            ) : null}
+          </div>
         </div>
         <Suspense
           fallback={
@@ -228,7 +238,18 @@ export default async function PlanningPage({
     );
   }
 
-  const [myShifts, openTrades] = await Promise.all([getMyShifts(), getOpenShiftTradesForMyRole()]);
+  const employeeModules = await getCompanyModulesForTenant().catch(() => ({
+    peaks: false,
+    plannerWeather: false,
+    shiftTrade: false,
+    shiftTasks: false,
+    autopilot: false,
+  }));
+
+  const [myShifts, openTrades] = await Promise.all([
+    getMyShifts(),
+    employeeModules.shiftTrade ? getOpenShiftTradesForMyRole() : Promise.resolve([]),
+  ]);
 
   const sortedShifts = [...myShifts].sort((a, b) => {
     const da = dayOrderMonFirst(a.dayOfWeek);
@@ -246,7 +267,7 @@ export default async function PlanningPage({
         </p>
       </div>
 
-      <TradePushHint />
+      {employeeModules.shiftTrade ? <TradePushHint /> : null}
 
       <section className="glass-card p-4 sm:p-5">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Nächste Einsätze</h2>
@@ -283,15 +304,17 @@ export default async function PlanningPage({
                         Zum Tausch angeboten
                       </StatusBadge>
                     ) : null}
-                    <form action={planningToggleTradeOfferFormAction} className="inline">
-                      <input type="hidden" name="shiftId" value={r.id} />
-                      <input type="hidden" name="makeOpen" value={r.isOpenForTrade ? "false" : "true"} />
-                      <FormSubmitButton
-                        label={r.isOpenForTrade ? "Tausch beenden" : "Zum Tausch anbieten"}
-                        pendingLabel="Speichere..."
-                        className="btn-outline text-xs"
-                      />
-                    </form>
+                    {employeeModules.shiftTrade ? (
+                      <form action={planningToggleTradeOfferFormAction} className="inline">
+                        <input type="hidden" name="shiftId" value={r.id} />
+                        <input type="hidden" name="makeOpen" value={r.isOpenForTrade ? "false" : "true"} />
+                        <FormSubmitButton
+                          label={r.isOpenForTrade ? "Tausch beenden" : "Zum Tausch anbieten"}
+                          pendingLabel="Speichere..."
+                          className="btn-outline text-xs"
+                        />
+                      </form>
+                    ) : null}
                   </div>
                 </li>
               );
@@ -300,6 +323,7 @@ export default async function PlanningPage({
         )}
       </section>
 
+      {employeeModules.shiftTrade ? (
       <section className="glass-card p-5">
         <h2 className="text-base font-semibold tracking-tight">Offene Schichten</h2>
         {openTrades.length === 0 ? (
@@ -332,6 +356,7 @@ export default async function PlanningPage({
           </ul>
         )}
       </section>
+      ) : null}
     </div>
   );
 }

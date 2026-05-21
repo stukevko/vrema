@@ -943,6 +943,7 @@ export function ReportsClient({
         });
         show("Eintrag aktualisiert und protokolliert.", "success");
         setEditingLog(null);
+        router.refresh();
       } catch (err: unknown) {
         show(userErrorMessage(err, "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen."), "error");
       }
@@ -972,6 +973,7 @@ export function ReportsClient({
           editReason: reason.trim(),
         });
         show("Fehlender Tag wurde korrigiert.", "success");
+        router.refresh();
       } catch (err: unknown) {
         show(userErrorMessage(err, "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen."), "error");
       }
@@ -988,6 +990,7 @@ export function ReportsClient({
       try {
         await deleteWorkLogByManager(log.id, reason.trim());
         show("Eintrag gelöscht.", "success");
+        router.refresh();
       } catch (err: unknown) {
         show(userErrorMessage(err, "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen."), "error");
       }
@@ -1018,6 +1021,7 @@ export function ReportsClient({
           reason: requestReason.trim(),
         });
         show("Korrekturantrag gesendet.", "success");
+        router.refresh();
         setRequestMode("existing");
         setRequestLogId("");
         setRequestClockIn("");
@@ -1053,6 +1057,7 @@ export function ReportsClient({
           "success"
         );
         setCorrectionDecision(null);
+        router.refresh();
       } catch (err: unknown) {
         show(userErrorMessage(err, "Die Aktion konnte nicht abgeschlossen werden."), "error");
       }

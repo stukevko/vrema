@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updateCompanyModules } from "@/lib/actions/company-modules";
 import {
   COMPANY_MODULE_LABELS,
@@ -26,6 +27,7 @@ type Props = {
 };
 
 export function CompanyModulesSection({ initialModules, industry }: Props) {
+  const router = useRouter();
   const [modules, setModules] = useState(initialModules);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -37,7 +39,8 @@ export function CompanyModulesSection({ initialModules, industry }: Props) {
       try {
         await updateCompanyModules(defaults);
         setModules(defaults);
-        setMessage("Vorschläge für deine Branche übernommen.");
+        setMessage("Vorschläge für deine Branche übernommen — Navigation und Planer aktualisiert.");
+        router.refresh();
       } catch (e: unknown) {
         setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
       }
@@ -50,6 +53,12 @@ export function CompanyModulesSection({ initialModules, industry }: Props) {
       try {
         await updateCompanyModules({ [key]: value });
         setModules((prev) => ({ ...prev, [key]: value }));
+        setMessage(
+          value
+            ? `${COMPANY_MODULE_LABELS[key].title} aktiviert — erscheint in Menü und Planer.`
+            : `${COMPANY_MODULE_LABELS[key].title} deaktiviert.`,
+        );
+        router.refresh();
       } catch (e: unknown) {
         setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
       }

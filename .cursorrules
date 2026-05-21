@@ -13,3 +13,10 @@ Deine oberste Priorität ist nicht nur funktionierender Code, sondern eine fehle
 
 ## Workflow-Vorgabe:
 Bevor du Code für eine UI-Komponente schreibst oder änderst, **musst du mir in 1-2 Sätzen die User Journey erklären**. Sag mir kurz, was der User sieht, klickt und welches Feedback er bekommt. Erst danach lieferst du den Code.
+
+## Produkt-Prinzip „Lego, nicht SAP“:
+- **Kern** (immer sichtbar): Stempeln, Planer, Team, Abwesenheit, Berichte.
+- **Erweiterungen** nur wenn Modul aktiv — dann auch in Nav/Planer verlinkt, sonst nicht.
+- **Ein Planer für Chefs** auf allen Geräten (Schichtkarten-Board), keine parallele „versteckte“ Mobil-Welt.
+- **Jede Aktion mit Feedback**: Toast/Meldung + `router.refresh()` nach Server Actions.
+- Vor neuem Feature: Wo dockt es an? Was passiert wenn das Modul aus ist?

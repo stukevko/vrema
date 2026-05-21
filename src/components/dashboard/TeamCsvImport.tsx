@@ -2,6 +2,7 @@
 import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, AlertTriangle, AlertOctagon, Upload, Download } from "lucide-react";
 import { previewTeamImport, commitTeamImport } from "@/lib/actions/team-import";
 import { useToast } from "@/components/ui/Toast";
@@ -13,6 +14,7 @@ Mehmet Öztürk,mehmet@beispiel.de,MANAGER,40
 Sofia Romano,sofia@beispiel.de,EMPLOYEE,20`;
 
 export function TeamCsvImport() {
+  const router = useRouter();
   const { show } = useToast();
   const [csv, setCsv] = useState<string>("");
   const [rows, setRows] = useState<ImportRowDiagnosis[] | null>(null);
@@ -64,6 +66,7 @@ export function TeamCsvImport() {
         setCsv("");
         setRows(null);
         setSummary(null);
+        router.refresh();
       } catch (e) {
         show(userErrorMessage(e, "Import fehlgeschlagen."), "error");
       }

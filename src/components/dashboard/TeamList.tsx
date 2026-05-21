@@ -2,6 +2,7 @@
 import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   toggleEmployeeActive,
@@ -67,6 +68,7 @@ export function TeamList({
   canManage: boolean;
   currentUserId: string;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [hourlyWageDrafts, setHourlyWageDrafts] = useState<Record<string, string>>({});
   const [weeklyHoursDrafts, setWeeklyHoursDrafts] = useState<Record<string, string>>({});
@@ -307,6 +309,8 @@ export function TeamList({
                                   );
                                   setFeedback("Wochenstunden gespeichert.");
                                   show("Wochenstunden gespeichert.", "success");
+                                router.refresh();
+                                  router.refresh();
                                 } catch (err) {
                                   const message =
                                     userErrorMessage(err, "Speichern fehlgeschlagen.");
@@ -354,6 +358,8 @@ export function TeamList({
                                   );
                                   setFeedback("Stundenlohn gespeichert.");
                                   show("Stundenlohn gespeichert.", "success");
+                                  router.refresh();
+                                  router.refresh();
                                 } catch (err) {
                                   const message =
                                     userErrorMessage(err, "Speichern fehlgeschlagen.");
@@ -399,6 +405,7 @@ export function TeamList({
                           onClick={() =>
                             startTransition(async () => {
                               await toggleEmployeeActive(member.id);
+                              router.refresh();
                             })
                           }
                           title={member.isActive ? "Deaktivieren" : "Aktivieren"}
@@ -477,6 +484,7 @@ export function TeamList({
                         onClick={() =>
                           startTransition(async () => {
                             await toggleEmployeeActive(member.id);
+                            router.refresh();
                           })
                         }
                         className={clsx(
@@ -525,6 +533,7 @@ export function TeamList({
                                 );
                                 setFeedback("Wochenstunden gespeichert.");
                                 show("Wochenstunden gespeichert.", "success");
+                                router.refresh();
                               } catch (err) {
                                 const message =
                                   userErrorMessage(err, "Speichern fehlgeschlagen.");
@@ -574,6 +583,8 @@ export function TeamList({
                                   );
                                   setFeedback("Stundenlohn gespeichert.");
                                   show("Stundenlohn gespeichert.", "success");
+                                  router.refresh();
+                                  router.refresh();
                                 } catch (err) {
                                   const message =
                                     userErrorMessage(err, "Speichern fehlgeschlagen.");

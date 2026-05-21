@@ -17,7 +17,7 @@ import {
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 
 export const metadata = {
-  title: "Einblicke",
+  title: "Auswertung",
   description: "Planungs- und Betriebshinweise aus deinen Schicht- und Zeitdaten.",
 };
 
@@ -52,6 +52,20 @@ export default async function InsightsPage() {
           </div>
         </div>
       </header>
+
+      {!modules.peaks ? (
+        <div className="rounded-2xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground">Stoßzeiten-Modul ist aus</p>
+          <p className="mt-1">
+            Personal-Tipps mit Umsatzbezug fehlen deshalb hier. Aktiviere{" "}
+            <strong className="text-foreground">Stoßzeiten & Umsatz</strong> unter{" "}
+            <Link href="/dashboard/settings#company-modules" className="font-semibold text-brand underline-offset-2">
+              Einstellungen → Module
+            </Link>
+            .
+          </p>
+        </div>
+      ) : null}
 
       {modules.peaks ? (
         <Link
