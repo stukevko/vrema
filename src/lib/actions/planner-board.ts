@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { calculateSaldoForUser } from "@/lib/time/saldo-for-user";
-import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
+import { requireTenant, requireTenantAction, tenantWhere } from "@/lib/tenant-guard";
 import { revalidatePath } from "next/cache";
 import { dateForPlannerCycleDay } from "@/lib/planning/cycle-display-date";
 import {
@@ -21,10 +21,12 @@ export type { MemberSaldoSnapshot, OvertimeRecoveryDay };
 export async function getPlannerBoardMemberSaldos(
   userIds: string[],
 ): Promise<Record<string, MemberSaldoSnapshot>> {
-  const { companyId, role } = await requireTenant();
-  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
+  const tenant = await requireTenantAction();
+  if (!tenant.ok) return {};
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(tenant.role ?? "")) {
     return {};
   }
+  const { companyId } = tenant;
 
   const unique = [...new Set(userIds.filter(Boolean))];
   const entries = await Promise.all(

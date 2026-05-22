@@ -172,16 +172,11 @@ export async function inviteEmployeeForCompany(
   return { user, tempPassword, terminalPin: terminalPin ?? "" };
 }
 
-/** Vergibt fehlende Personalnummern (nur Leitung). Idempotent; revalidiert nur bei Änderungen. */
+/** Vergibt fehlende Personalnummern (nur Leitung). Kein revalidatePath — darf auch beim Seiten-Render laufen. */
 export async function ensureEmployeeNumbersAssigned(): Promise<number> {
   const { companyId, role } = await requireTenant();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) return 0;
-  const n = await assignMissingEmployeeNumbersForCompany(companyId);
-  if (n > 0) {
-    revalidatePath("/dashboard/team");
-    revalidatePath("/dashboard/reports");
-  }
-  return n;
+  return assignMissingEmployeeNumbersForCompany(companyId);
 }
 
 export async function getTeamMembers() {

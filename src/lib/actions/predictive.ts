@@ -1,6 +1,6 @@
 "use server";
 
-import { requireTenant } from "@/lib/tenant-guard";
+import { requireTenant, requireTenantAction } from "@/lib/tenant-guard";
 import { buildForecastHorizon, type ForecastWeekSlot } from "@/lib/planning/forecast-horizon";
 import { cycleWeekStartIso } from "@/lib/planning/cycle-week-start";
 import {
@@ -65,10 +65,11 @@ export type PlannerStaffingHint = {
 
 /** Kompakte Personal-Hinweise pro Tag für den Schichtplaner (aktuelle Zykluswoche). */
 export async function getPlannerStaffingHints(weekIndex: number): Promise<PlannerStaffingHint[]> {
-  const { companyId, role } = await requireTenant();
-  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
-    throw new Error("Keine Berechtigung.");
+  const tenant = await requireTenantAction();
+  if (!tenant.ok || !["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(tenant.role ?? "")) {
+    return [];
   }
+  const { companyId } = tenant;
   const wk = Math.min(3, Math.max(1, Math.floor(weekIndex))) as 1 | 2 | 3;
   const weekStart = cycleWeekStartIso(wk);
   const map = await staffingByDayForPlannerWeek(companyId, wk, weekStart);

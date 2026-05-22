@@ -49,8 +49,10 @@ async function seedDefaultTemplates(companyId: string) {
   });
 }
 
-export async function getShiftTemplates(): Promise<ShiftTemplateRow[]> {
-  const { companyId, role } = await requireTenant();
+export async function getShiftTemplatesForCompany(
+  companyId: string,
+  role: string,
+): Promise<ShiftTemplateRow[]> {
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
     return [];
   }
@@ -85,6 +87,11 @@ export async function getShiftTemplates(): Promise<ShiftTemplateRow[]> {
   }
 
   return rows;
+}
+
+export async function getShiftTemplates(): Promise<ShiftTemplateRow[]> {
+  const { companyId, role } = await requireTenant();
+  return getShiftTemplatesForCompany(companyId, role ?? "EMPLOYEE");
 }
 
 export async function createShiftTemplate(input: {

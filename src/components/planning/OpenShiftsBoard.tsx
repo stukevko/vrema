@@ -1,16 +1,22 @@
 import Link from "next/link";
 import { Handshake } from "lucide-react";
-import { getOpenShiftsForCompany } from "@/lib/actions/team";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { planningToggleTradeOfferFormAction } from "@/app/(dashboard)/dashboard/planning/planning-trade-actions";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { OpenShiftVacancyForm } from "@/components/planning/OpenShiftVacancyForm";
+import type { loadPlanningOpenShifts } from "@/lib/planning/planning-page-data";
 
 const DAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
-export async function OpenShiftsBoard({ defaultWeekIndex = 1, defaultDayOfWeek = 1 }: { defaultWeekIndex?: number; defaultDayOfWeek?: number }) {
-  const open = await getOpenShiftsForCompany();
-
+export function OpenShiftsBoard({
+  open,
+  defaultWeekIndex = 1,
+  defaultDayOfWeek = 1,
+}: {
+  open: Awaited<ReturnType<typeof loadPlanningOpenShifts>>;
+  defaultWeekIndex?: number;
+  defaultDayOfWeek?: number;
+}) {
   return (
     <section className="glass-card p-5" id="open-shifts">
       <h2 className="text-base font-semibold tracking-tight">Offene Schichten</h2>

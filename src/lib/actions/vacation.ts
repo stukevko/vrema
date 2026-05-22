@@ -453,10 +453,8 @@ export async function getTeamVacationRequestsWithContext() {
   return enriched;
 }
 
-export async function getVacationConflictDaysForPlanning() {
-  const { companyId, role } = await requireTenant();
-  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) return [];
-
+/** Planer-RSC: companyId aus Session — kein requireTenant/redirect. */
+export async function getVacationConflictDaysForCompany(companyId: string) {
   const now = new Date();
   const horizonEnd = new Date(now);
   horizonEnd.setDate(horizonEnd.getDate() + 120);
@@ -532,4 +530,10 @@ export async function getVacationConflictDaysForPlanning() {
       }
     })
     .filter((x): x is { userId: string; dayOfWeek: number; type: "VACATION" | "SICK" } => x != null);
+}
+
+export async function getVacationConflictDaysForPlanning() {
+  const { companyId, role } = await requireTenant();
+  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) return [];
+  return getVacationConflictDaysForCompany(companyId);
 }
