@@ -2572,23 +2572,28 @@ export function ShiftManager({
     [displayShifts],
   );
 
-  const weekPicker = (
-    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+  const weekPicker = enableTaskListActions ? (
+    <div className="mt-4 space-y-3">
       {shiftCycleWeeks > 1 ? (
-        <div className="inline-flex max-w-full rounded-lg border border-border bg-background p-1 text-xs">
+        <div
+          className="inline-flex max-w-full gap-1 overflow-x-auto rounded-2xl border border-line bg-surface-muted/80 p-1 scrollbar-hide dark:border-white/10"
+          role="tablist"
+          aria-label="Planungswoche"
+        >
           {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
             const week = (idx + 1) as 1 | 2 | 3;
+            const active = selectedWeekIndex === week;
             return (
               <button
                 key={week}
                 type="button"
-                onClick={() => {
-                  setSelectedWeekIndex(week);
-                }}
-                className={`min-h-11 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${
-                  selectedWeekIndex === week
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setSelectedWeekIndex(week)}
+                className={`min-h-11 min-w-[4.5rem] touch-manipulation rounded-xl px-4 py-2 text-xs font-semibold transition-all sm:min-h-9 ${
+                  active
+                    ? "bg-brand text-brand-foreground shadow-[var(--shadow-button)]"
+                    : "text-muted-foreground hover:bg-surface hover:text-foreground"
                 }`}
               >
                 Woche {week}
@@ -2596,21 +2601,35 @@ export function ShiftManager({
             );
           })}
         </div>
-      ) : (
-        <p className="text-xs text-muted-foreground">Einzelwochen-Zyklus</p>
-      )}
-      {enableTaskListActions ? (
-        <ShiftPlanPdfExport
-          companyName={companyName}
-          plan={plan}
-          shiftCycleWeeks={shiftCycleWeeks}
-          weekIndex={selectedWeekIndex}
-          members={pdfMembers}
-          shifts={pdfShifts}
-        />
       ) : null}
+      <ShiftPlanPdfExport
+        companyName={companyName}
+        plan={plan}
+        shiftCycleWeeks={shiftCycleWeeks}
+        weekIndex={selectedWeekIndex}
+        members={pdfMembers}
+        shifts={pdfShifts}
+      />
     </div>
-  );
+  ) : shiftCycleWeeks > 1 ? (
+    <div className="mt-3 inline-flex max-w-full gap-1 rounded-2xl border border-line bg-surface-muted/80 p-1 dark:border-white/10">
+      {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
+        const week = (idx + 1) as 1 | 2 | 3;
+        return (
+          <button
+            key={week}
+            type="button"
+            onClick={() => setSelectedWeekIndex(week)}
+            className={`min-h-11 rounded-xl px-4 py-2 text-xs font-semibold ${
+              selectedWeekIndex === week ? "bg-brand text-brand-foreground" : "text-muted-foreground"
+            }`}
+          >
+            Woche {week}
+          </button>
+        );
+      })}
+    </div>
+  ) : null;
 
   const selectedMemberChip =
     selectedMember ? (

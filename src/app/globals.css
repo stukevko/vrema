@@ -863,10 +863,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     break-inside: avoid;
     box-shadow: none !important;
     border: 1px solid #e2e8f0 !important;
+    padding: 1rem !important;
   }
 
-  .employee-schedule-print .grid {
+  .employee-schedule-print .flex.min-w-min {
+    display: grid !important;
+    min-width: 0 !important;
     grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    overflow: visible !important;
+  }
+
+  .employee-schedule-print .flex.min-w-min > div {
+    width: auto !important;
+    min-height: 5rem !important;
   }
 
   .print-root {

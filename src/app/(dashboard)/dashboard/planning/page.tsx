@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getMySchedule, getOpenShiftTradesForMyRole } from "@/lib/actions/team";
 import { EmployeeScheduleBoard } from "@/components/planning/EmployeeScheduleBoard";
+import { EmployeeShiftList } from "@/components/planning/EmployeeShiftList";
+import { formatShiftRange, shiftSlotLabel } from "@/lib/planning/shift-display";
 import {
   planningDecideTradeFormAction,
   planningRequestTakeoverFormAction,
@@ -58,11 +60,16 @@ export default async function PlanningPage({
             nutzbar — bitte Seite neu laden oder Support, falls es anhält.
           </p>
         ) : null}
-        <div className="glass-card flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-4">
+        <div className="glass-card relative flex flex-col gap-3 overflow-hidden px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-5">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/15"
+          />
           <div>
-            <h1 className="text-base font-bold tracking-tight sm:text-xl md:text-2xl">Schichtplanung</h1>
-            <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-              Leitung: Plan, Status und Freigaben. Mitarbeitende sehen unter demselben Menüpunkt nur „Mein Dienstplan“.
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">Führungskraft</p>
+            <h1 className="mt-1 text-xl font-extrabold tracking-tight text-foreground md:text-2xl">Schichtplanung</h1>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+              Team planen, PDF fürs WhatsApp-Team teilen, Tausche freigeben. Mitarbeitende sehen nur ihren eigenen Dienstplan.
             </p>
           </div>
           <div className="flex shrink-0 flex-col gap-2 self-start">
@@ -220,12 +227,44 @@ export default async function PlanningPage({
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
+  const firstUpcomingId = sortedShifts.find((r) => {
+    const wk = Math.min(3, Math.max(1, Math.floor(r.weekIndex ?? 1))) as 1 | 2 | 3;
+    return dateForPlannerCycleDay(wk, r.dayOfWeek).getTime() >= todayStart.getTime();
+  })?.id;
+
+  const listItems = sortedShifts.map((r) => {
+    const wk = Math.min(3, Math.max(1, Math.floor(r.weekIndex ?? 1))) as 1 | 2 | 3;
+    const when = dateForPlannerCycleDay(wk, r.dayOfWeek);
+    const isPast = when.getTime() < todayStart.getTime();
+    return {
+      id: r.id,
+      dateLine: when.toLocaleDateString("de-DE", {
+        weekday: "long",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+      timeLine: `${formatShiftRange(String(r.startTime), String(r.endTime))} Uhr`,
+      slotLabel: shiftSlotLabel(String(r.startTime)),
+      weekLabel: schedule.shiftCycleWeeks > 1 ? `Woche ${wk}` : undefined,
+      isPast,
+      isNext: r.id === firstUpcomingId,
+      isOpenForTrade: Boolean(r.isOpenForTrade),
+      breakMinutes: Number(r.breakDuration ?? 0),
+    };
+  });
+
   return (
     <div className="mx-auto max-w-3xl min-w-0 space-y-5 px-1 sm:space-y-6 sm:px-0">
-      <div className="glass-card px-4 py-4 sm:px-5">
-        <h1 className="text-base font-bold tracking-tight sm:text-2xl">Mein Dienstplan</h1>
-        <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-          Dein Schichtzyklus auf einen Blick — Woche für Woche, Mo bis So. Unten findest du Details und Tausch.
+      <div className="glass-card relative overflow-hidden px-4 py-5 sm:px-6">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/15"
+        />
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">Planung</p>
+        <h1 className="mt-1 text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">Mein Dienstplan</h1>
+        <p className="mt-2 max-w-lg text-sm text-muted-foreground">
+          Woche, Uhrzeit und Tausch — ohne den Chef-Planer. Oben siehst du die Woche, unten alle Termine mit Aktionen.
         </p>
       </div>
 
@@ -246,78 +285,25 @@ export default async function PlanningPage({
         initialWeekIndex={schedule.currentWeekIndex}
       />
 
-      <section className="glass-card p-4 sm:p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {schedule.shiftCycleWeeks > 1 ? "Alle Einsätze im Zyklus" : "Deine Einsätze"}
-        </h2>
-        {sortedShifts.length === 0 ? (
-          <EmptyState
-            className="mt-4"
-            icon={Inbox}
-            title="Noch keine Schichten"
-            description="Sobald dich dein Team einplant, erscheinen deine Termine hier."
-          />
-        ) : (
-          <ul className="mt-4 space-y-3">
-            {sortedShifts.map((r) => {
-              const wk = Math.min(3, Math.max(1, Math.floor(r.weekIndex ?? 1))) as 1 | 2 | 3;
-              const when = dateForPlannerCycleDay(wk, r.dayOfWeek);
-              const isPast = when.getTime() < todayStart.getTime();
-              const dateLine = when.toLocaleDateString("de-DE", {
-                weekday: "long",
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              });
-              return (
-                <li
-                  key={r.id}
-                  className={`rounded-2xl border px-4 py-3 shadow-sm dark:border-white/10 ${
-                    isPast
-                      ? "border-line/60 bg-muted/25 opacity-80"
-                      : "border-line bg-surface dark:bg-surface/90"
-                  }`}
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{dateLine}</p>
-                    {schedule.shiftCycleWeeks > 1 ? (
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                        Woche {wk}
-                      </span>
-                    ) : null}
-                    {isPast ? (
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                        vergangen
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-1 font-sans text-lg font-bold tabular-nums text-brand">
-                    {String(r.startTime).slice(0, 5)} – {String(r.endTime).slice(0, 5)} Uhr
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    {r.isOpenForTrade ? (
-                      <StatusBadge tone="warning" glass size="sm" withDot={false}>
-                        Zum Tausch angeboten
-                      </StatusBadge>
-                    ) : null}
-                    {employeeModules.shiftTrade ? (
-                      <form action={planningToggleTradeOfferFormAction} className="inline">
-                        <input type="hidden" name="shiftId" value={r.id} />
-                        <input type="hidden" name="makeOpen" value={r.isOpenForTrade ? "false" : "true"} />
-                        <FormSubmitButton
-                          label={r.isOpenForTrade ? "Tausch beenden" : "Zum Tausch anbieten"}
-                          pendingLabel="Speichere..."
-                          className="btn-outline text-xs"
-                        />
-                      </form>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+      <EmployeeShiftList
+        title={schedule.shiftCycleWeeks > 1 ? "Alle Einsätze im Zyklus" : "Deine Einsätze"}
+        items={listItems}
+        renderTradeAction={
+          employeeModules.shiftTrade
+            ? (item) => (
+                <form action={planningToggleTradeOfferFormAction} className="inline">
+                  <input type="hidden" name="shiftId" value={item.id} />
+                  <input type="hidden" name="makeOpen" value={item.isOpenForTrade ? "false" : "true"} />
+                  <FormSubmitButton
+                    label={item.isOpenForTrade ? "Tausch beenden" : "Zum Tausch anbieten"}
+                    pendingLabel="Speichere..."
+                    className="btn-outline text-xs"
+                  />
+                </form>
+              )
+            : undefined
+        }
+      />
 
       {employeeModules.shiftTrade ? (
         <section className="glass-card p-5">

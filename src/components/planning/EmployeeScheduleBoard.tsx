@@ -1,16 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarDays, Printer } from "lucide-react";
+import { CalendarDays, Clock3, Printer, Sparkles } from "lucide-react";
 import {
   dateForPlannerCycleDay,
   formatPlannerWeekRange,
   mondayOfWeekContaining,
 } from "@/lib/planning/cycle-display-date";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
-import { formatShiftRange } from "@/lib/planning/shift-display";
+import { formatShiftRange, shiftCardTone, shiftSlotLabel } from "@/lib/planning/shift-display";
+import { Button } from "@/components/ui/Button";
+import { comparePlannerShifts } from "@/lib/planning/sort-shifts";
 
-const DAY_NAMES = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"] as const;
+const DAY_NAMES = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"] as const;
+const DAY_NAMES_FULL = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"] as const;
 const PLANNER_DAYS_MON_FIRST = [1, 2, 3, 4, 5, 6, 0] as const;
 
 export type EmployeeShiftRow = {
@@ -43,8 +46,9 @@ export function EmployeeScheduleBoard({
   initialWeekIndex,
 }: Props) {
   const today = new Date();
-  const defaultWeek =
-    initialWeekIndex ?? getWeekCycleIndex(today, shiftCycleWeeks);
+  const todayStart = new Date(today);
+  todayStart.setHours(0, 0, 0, 0);
+  const defaultWeek = initialWeekIndex ?? getWeekCycleIndex(today, shiftCycleWeeks);
   const [selectedWeek, setSelectedWeek] = useState<1 | 2 | 3>(defaultWeek);
 
   const weekRangeLabel = useMemo(() => {
@@ -62,103 +66,199 @@ export function EmployeeScheduleBoard({
     return map;
   }, [shifts, selectedWeek]);
 
-  const totalInWeek = PLANNER_DAYS_MON_FIRST.filter((d) => shiftsByDay.has(d)).length;
+  const weekShifts = useMemo(
+    () => shifts.filter((s) => s.weekIndex === selectedWeek),
+    [shifts, selectedWeek],
+  );
+
+  const totalInWeek = weekShifts.length;
+
+  const nextShiftLabel = useMemo(() => {
+    const upcoming = [...weekShifts]
+      .filter((s) => {
+        const wk = Math.min(3, Math.max(1, s.weekIndex)) as 1 | 2 | 3;
+        const when = dateForPlannerCycleDay(wk, s.dayOfWeek);
+        return when.getTime() >= todayStart.getTime();
+      })
+      .sort((a, b) => comparePlannerShifts(a, b));
+    const next = upcoming[0];
+    if (!next) return null;
+    const when = dateForPlannerCycleDay(
+      Math.min(3, Math.max(1, next.weekIndex)) as 1 | 2 | 3,
+      next.dayOfWeek,
+    );
+    const dayName = isSameCalendarDay(when, today)
+      ? "Heute"
+      : DAY_NAMES_FULL[next.dayOfWeek];
+    return `${dayName}, ${formatShiftRange(next.startTime, next.endTime)} Uhr`;
+  }, [weekShifts, todayStart]);
 
   return (
-    <section className="employee-schedule-print glass-card overflow-hidden p-4 sm:p-5">
-      <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            <CalendarDays className="h-4 w-4 text-brand" aria-hidden />
-            Dein Wochenüberblick
+    <section className="employee-schedule-print glass-card relative overflow-hidden p-4 sm:p-6">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/15"
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-brand/12 blur-3xl"
+      />
+
+      <div className="no-print relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          {companyName?.trim() ? (
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">{companyName.trim()}</p>
+          ) : null}
+          <h2 className="mt-1 flex items-center gap-2 text-lg font-extrabold tracking-tight text-foreground sm:text-xl">
+            <CalendarDays className="h-5 w-5 shrink-0 text-brand" aria-hidden />
+            Dein Wochenplan
           </h2>
-          <p className="mt-1 text-xs text-muted-foreground">{weekRangeLabel}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{weekRangeLabel}</p>
         </div>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
+          leadingIcon={<Printer className="h-4 w-4" />}
           onClick={() => window.print()}
-          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground hover:bg-muted/40"
+          className="shrink-0 self-start"
         >
-          <Printer className="h-3.5 w-3.5" aria-hidden />
-          Drucken / PDF speichern
-        </button>
+          Drucken / PDF
+        </Button>
+      </div>
+
+      <div className="no-print relative mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <div className="rounded-2xl border border-line bg-surface/80 px-3 py-2.5 dark:border-white/10">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Einsätze</p>
+          <p className="mt-0.5 text-xl font-extrabold tabular-nums text-foreground">
+            {totalInWeek}
+            <span className="ml-1 text-sm font-semibold text-muted-foreground">
+              {totalInWeek === 1 ? "Tag" : "Tage"}
+            </span>
+          </p>
+        </div>
+        <div className="col-span-2 rounded-2xl border border-brand/25 bg-brand-soft/50 px-3 py-2.5 sm:col-span-1 dark:border-white/10 dark:bg-brand/15">
+          <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-brand">
+            <Clock3 className="h-3 w-3" aria-hidden />
+            Nächster Dienst
+          </p>
+          <p className="mt-0.5 text-sm font-bold leading-snug text-foreground">
+            {nextShiftLabel ?? "Diese Woche frei"}
+          </p>
+        </div>
       </div>
 
       {shiftCycleWeeks > 1 ? (
-        <div className="no-print mt-4 inline-flex max-w-full rounded-lg border border-border bg-background p-1 text-xs">
+        <div
+          className="no-print mt-4 flex gap-1 overflow-x-auto rounded-2xl border border-line bg-surface-muted/80 p-1 scrollbar-hide dark:border-white/10"
+          role="tablist"
+          aria-label="Schichtzyklus-Woche"
+        >
           {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
             const week = (idx + 1) as 1 | 2 | 3;
             const isCurrent = week === getWeekCycleIndex(today, shiftCycleWeeks);
+            const active = selectedWeek === week;
             return (
               <button
                 key={week}
                 type="button"
+                role="tab"
+                aria-selected={active}
                 onClick={() => setSelectedWeek(week)}
-                className={`min-h-10 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${
-                  selectedWeek === week
-                    ? "bg-brand text-brand-foreground font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
+                className={`min-h-11 min-w-[5.5rem] flex-1 touch-manipulation rounded-xl px-3 py-2 text-center text-xs font-semibold transition-all sm:min-h-9 ${
+                  active
+                    ? "bg-brand text-brand-foreground shadow-[var(--shadow-button)]"
+                    : "text-muted-foreground hover:bg-surface hover:text-foreground"
                 }`}
               >
                 Woche {week}
-                {isCurrent ? " · jetzt" : ""}
+                {isCurrent ? (
+                  <span className={`mt-0.5 block text-[10px] font-medium ${active ? "text-brand-foreground/90" : "text-brand"}`}>
+                    aktuell
+                  </span>
+                ) : null}
               </button>
             );
           })}
         </div>
       ) : null}
 
-      <p className="print-only mt-2 text-sm font-semibold text-foreground">
+      <p className="print-only mt-3 text-sm font-semibold text-foreground">
         {companyName?.trim() ? `${companyName.trim()} — ` : ""}
         Dienstplan Woche {selectedWeek} ({weekRangeLabel})
       </p>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-        {PLANNER_DAYS_MON_FIRST.map((dayOfWeek) => {
-          const cellDate = dateForPlannerCycleDay(selectedWeek, dayOfWeek);
-          const isToday = isSameCalendarDay(cellDate, today);
-          const shift = shiftsByDay.get(dayOfWeek);
-          const shortDate = cellDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
-          return (
-            <div
-              key={dayOfWeek}
-              className={`flex min-h-[5.5rem] flex-col rounded-2xl border px-2.5 py-2.5 sm:min-h-[6.5rem] ${
-                isToday
-                  ? "border-brand/50 bg-brand-soft/60 ring-2 ring-brand/25"
-                  : shift
-                    ? "border-brand/25 bg-surface shadow-sm dark:border-white/10"
-                    : "border-line/80 bg-muted/20 dark:border-white/8"
-              }`}
-            >
-              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                {DAY_NAMES[dayOfWeek].slice(0, 2)}
-              </p>
-              <p className="text-[11px] tabular-nums text-muted-foreground">{shortDate}</p>
-              {shift ? (
-                <>
-                  <p className="mt-auto font-sans text-sm font-bold tabular-nums leading-tight text-brand sm:text-base">
-                    {formatShiftRange(shift.startTime, shift.endTime)} Uhr
-                  </p>
-                  {(shift.breakDuration ?? 0) > 0 ? (
-                    <p className="text-[10px] text-muted-foreground">Pause {shift.breakDuration} Min</p>
-                  ) : null}
-                  {shift.isOpenForTrade ? (
-                    <p className="text-[10px] font-medium text-warning-foreground">Tausch offen</p>
-                  ) : null}
-                </>
-              ) : (
-                <p className="mt-auto text-xs font-medium text-muted-foreground">Frei</p>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      {totalInWeek === 0 ? (
+        <div className="mt-5 rounded-2xl border border-dashed border-brand/30 bg-brand-soft/40 px-4 py-8 text-center dark:border-white/10 dark:bg-brand/12">
+          <Sparkles className="mx-auto h-8 w-8 text-brand opacity-80" aria-hidden />
+          <p className="mt-3 text-sm font-semibold text-foreground">Noch nichts eingeplant</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            In Woche {selectedWeek} steht für dich noch kein Dienst — bei Fragen kurz die Führung ansprechen.
+          </p>
+        </div>
+      ) : (
+        <div className="no-print mt-4 -mx-1 overflow-x-auto px-1 pb-1 scrollbar-hide sm:mx-0 sm:overflow-visible sm:px-0">
+          <div className="flex min-w-min gap-2 sm:grid sm:min-w-0 sm:grid-cols-7 sm:gap-2">
+            {PLANNER_DAYS_MON_FIRST.map((dayOfWeek) => {
+              const cellDate = dateForPlannerCycleDay(selectedWeek, dayOfWeek);
+              const isToday = isSameCalendarDay(cellDate, today);
+              const shift = shiftsByDay.get(dayOfWeek);
+              const shortDate = cellDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+              const tone = shift ? shiftCardTone(shift.startTime, false) : "";
 
-      <p className="mt-3 text-[11px] text-muted-foreground">
-        {totalInWeek === 0
-          ? "In dieser Zyklus-Woche bist du noch nicht eingeplant."
-          : `${totalInWeek} Einsatz${totalInWeek === 1 ? "" : "e"} in Woche ${selectedWeek}.`}
-        {shiftCycleWeeks > 1 ? " Wechsle oben die Woche, um den ganzen Schichtzyklus zu sehen." : null}
+              return (
+                <div
+                  key={dayOfWeek}
+                  className={`flex w-[4.75rem] shrink-0 flex-col rounded-2xl border p-2.5 sm:w-auto sm:min-h-[7.5rem] sm:p-3 ${
+                    isToday
+                      ? "border-brand/50 ring-2 ring-brand/20"
+                      : shift
+                        ? tone
+                        : "border-line/70 bg-muted/15 dark:border-white/8"
+                  } ${isToday && !shift ? "bg-brand-soft/40" : ""}`}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wide opacity-80">
+                      {DAY_NAMES[dayOfWeek]}
+                    </p>
+                    {isToday ? (
+                      <span className="rounded-full bg-brand px-1.5 py-0.5 text-[8px] font-bold uppercase text-brand-foreground">
+                        Heute
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="text-[11px] tabular-nums opacity-70">{shortDate}</p>
+                  {shift ? (
+                    <div className="mt-auto pt-2">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide opacity-70">
+                        {shiftSlotLabel(shift.startTime)}
+                      </p>
+                      <p className="mt-0.5 text-sm font-extrabold tabular-nums leading-tight">
+                        {formatShiftRange(shift.startTime, shift.endTime)}
+                      </p>
+                      {(shift.breakDuration ?? 0) > 0 ? (
+                        <p className="mt-0.5 text-[9px] opacity-70">Pause {shift.breakDuration}m</p>
+                      ) : null}
+                      {shift.isOpenForTrade ? (
+                        <p className="mt-1 text-[9px] font-bold uppercase tracking-wide text-warning-foreground">
+                          Tausch
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <p className="mt-auto pt-3 text-xs font-medium opacity-50">Frei</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <p className="relative mt-4 text-[11px] text-muted-foreground">
+        {shiftCycleWeeks > 1
+          ? "Wische die Tage auf dem Handy. Oben wechselst du den Zyklus (Woche 1–3)."
+          : "Farben: Früh (gold), Tag (blau), Spät (violett), Nacht (grau)."}
       </p>
     </section>
   );
