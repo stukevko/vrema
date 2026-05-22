@@ -58,10 +58,11 @@ export function ShiftAddSheet({
           <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
             <div>
               <Drawer.Title className="text-base font-semibold text-foreground">Schicht anlegen</Drawer.Title>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <Drawer.Description className="mt-0.5 text-xs text-muted-foreground">
                 {dayLabel}
                 {memberLabel ? ` · ${memberLabel}` : ""}
-              </p>
+                {" — Vorlage wählen oder individuelle Zeiten eingeben."}
+              </Drawer.Description>
             </div>
             <button
               type="button"

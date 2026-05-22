@@ -34,7 +34,7 @@ export function DialogContent({
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-[200] bg-background/75 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
       <DialogPrimitive.Content
-        aria-describedby={ariaDescribedBy}
+        aria-describedby={ariaDescribedBy ?? undefined}
         className={clsx(
           "fixed left-1/2 top-[50%] z-[210] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2",
           "rounded-2xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.08)]",

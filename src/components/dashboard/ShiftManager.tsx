@@ -7,7 +7,6 @@ import {
   applyStandardWeek,
   clearShiftForDay,
   copyWeekToAllMembers,
-  deleteShift,
   setShiftBreakDuration,
   setShiftForDay,
   toggleShiftTradeOffer,
@@ -24,7 +23,7 @@ import { ShiftAddSheet } from "@/components/planning/ShiftAddSheet";
 import { OvertimeRecoveryPopover } from "@/components/planning/OvertimeRecoveryPopover";
 import { AssignmentGuardDialog } from "@/components/planning/AssignmentGuardDialog";
 import { getPlannerBoardMemberSaldos } from "@/lib/actions/planner-board";
-import { clearPlannerShiftSlot, removePlannerShift } from "@/lib/actions/planner-shift-remove";
+import { clearPlannerShiftSlot } from "@/lib/actions/planner-shift-remove";
 import {
   countCriticalOvertimeMembers,
   evaluateMemberAssignmentRisk,
@@ -456,26 +455,22 @@ export function ShiftManager({
     [shifts, hiddenShiftIds],
   );
 
-  /** Bei POST-500 der Server Action: API-Route als Fallback (ohne router.refresh). */
-  const removeShiftOnBoard = async (
+  /** Nur API-Route — vermeidet POST-500 auf /dashboard/planning (Server Action). */
+  const removeShiftViaApi = async (
     shiftId: string,
   ): Promise<{ ok: true } | { ok: false; error: string }> => {
     try {
-      return await removePlannerShift(shiftId);
+      const res = await fetch("/api/dashboard/planning/remove-shift", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shiftId }),
+        credentials: "same-origin",
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (res.ok && data.ok) return { ok: true };
+      return { ok: false, error: data.error ?? "Schicht konnte nicht entfernt werden." };
     } catch {
-      try {
-        const res = await fetch("/api/dashboard/planning/remove-shift", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shiftId }),
-          credentials: "same-origin",
-        });
-        const data = (await res.json()) as { ok?: boolean; error?: string };
-        if (res.ok && data.ok) return { ok: true };
-        return { ok: false, error: data.error ?? "Schicht konnte nicht entfernt werden." };
-      } catch {
-        return { ok: false, error: "Schicht konnte nicht entfernt werden. Bitte erneut versuchen." };
-      }
+      return { ok: false, error: "Schicht konnte nicht entfernt werden. Bitte erneut versuchen." };
     }
   };
   const [activeDrag, setActiveDrag] = useState<{
@@ -1995,6 +1990,9 @@ export function ShiftManager({
           <Drawer.Content className="fixed inset-x-0 bottom-0 z-[102] flex max-h-[85vh] flex-col rounded-t-[28px] border border-border bg-card outline-none">
             <Drawer.Handle className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/35" />
             <Drawer.Title className="px-4 pt-2 text-xl font-bold text-foreground">Startzeit</Drawer.Title>
+            <Drawer.Description className="px-4 pb-2 text-sm text-muted-foreground">
+              Wähle eine Startzeit für die neue Schicht.
+            </Drawer.Description>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4">
               <div className="flex flex-col gap-4">
                 {(["06:00", "08:00", "09:00", "14:00"] as const).map((t) => (
@@ -2043,6 +2041,9 @@ export function ShiftManager({
           <Drawer.Content className="fixed inset-x-0 bottom-0 z-[102] flex max-h-[85vh] flex-col rounded-t-[28px] border border-border bg-card outline-none">
             <Drawer.Handle className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/35" />
             <Drawer.Title className="px-4 pt-2 text-xl font-bold text-foreground">Endzeit</Drawer.Title>
+            <Drawer.Description className="px-4 pb-2 text-sm text-muted-foreground">
+              Wähle eine Endzeit für die neue Schicht.
+            </Drawer.Description>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4">
               <div className="flex flex-col gap-4">
                 {(["16:00", "17:00", "18:00", "22:00"] as const).map((t) => (
@@ -2388,7 +2389,7 @@ export function ShiftManager({
           }
           setMessage(null);
           startTransition(async () => {
-            const result = await removeShiftOnBoard(shiftId);
+            const result = await removeShiftViaApi(shiftId);
             if (!result.ok) {
               setMessage(result.error);
               return;
@@ -2843,7 +2844,12 @@ export function ShiftManager({
                   startTransition(async () => {
                     try {
                       if (shiftEdit.shiftId) {
-                        await deleteShift(shiftEdit.shiftId);
+                        const removed = await removeShiftViaApi(shiftEdit.shiftId);
+                        if (!removed.ok) {
+                          setMessage(removed.error);
+                          return;
+                        }
+                        setHiddenShiftIds((prev) => new Set(prev).add(shiftEdit.shiftId!));
                       } else {
                         await clearShiftForDay({
                           userId: shiftEdit.userId,

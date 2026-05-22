@@ -28,21 +28,21 @@ function canManagePlanner(role: string | undefined): boolean {
 
 /** Einzelne Schicht-Zuweisung vom Planer-Board entfernen (per ID). */
 export async function removePlannerShift(shiftId: unknown): Promise<PlannerShiftRemoveResult> {
-  const tenant = await requireTenantAction();
-  if (!tenant.ok) return { ok: false, error: tenant.error };
-  if (!canManagePlanner(tenant.role)) return { ok: false, error: "Keine Berechtigung." };
-
-  const id = coerceShiftId(shiftId);
-  if (!id) return { ok: false, error: "Ungültige Schicht-Referenz." };
-
   try {
+    const tenant = await requireTenantAction();
+    if (!tenant.ok) return { ok: false, error: tenant.error };
+    if (!canManagePlanner(tenant.role)) return { ok: false, error: "Keine Berechtigung." };
+
+    const id = coerceShiftId(shiftId);
+    if (!id) return { ok: false, error: "Ungültige Schicht-Referenz." };
+
     const count = await deletePlannerShiftCore(tenant.companyId, id);
     if (count === 0) {
       return { ok: false, error: "Schicht nicht gefunden — bitte Seite neu laden." };
     }
     return { ok: true };
   } catch (err) {
-    logServerError("planner.removePlannerShift", err, { shiftId: id, companyId: tenant.companyId });
+    logServerError("planner.removePlannerShift", err, { shiftId });
     return { ok: false, error: "Schicht konnte nicht entfernt werden. Bitte erneut versuchen." };
   }
 }
@@ -54,23 +54,23 @@ export async function clearPlannerShiftSlot(input: {
   startTime: string;
   endTime: string;
 }): Promise<PlannerShiftClearSlotResult> {
-  const tenant = await requireTenantAction();
-  if (!tenant.ok) return { ok: false, error: tenant.error };
-  if (!canManagePlanner(tenant.role)) return { ok: false, error: "Keine Berechtigung." };
-
-  const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
-  const dayOfWeek = Math.min(6, Math.max(0, Math.floor(input.dayOfWeek)));
-
-  let startTime: string;
-  let endTime: string;
   try {
-    ({ startTime, endTime } = normalizeShiftTimesForSave(input.startTime, input.endTime));
-  } catch (normErr) {
-    logServerError("planner.clearPlannerShiftSlot.normalize", normErr, input);
-    return { ok: false, error: "Ungültige Schichtzeiten." };
-  }
+    const tenant = await requireTenantAction();
+    if (!tenant.ok) return { ok: false, error: tenant.error };
+    if (!canManagePlanner(tenant.role)) return { ok: false, error: "Keine Berechtigung." };
 
-  try {
+    const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
+    const dayOfWeek = Math.min(6, Math.max(0, Math.floor(input.dayOfWeek)));
+
+    let startTime: string;
+    let endTime: string;
+    try {
+      ({ startTime, endTime } = normalizeShiftTimesForSave(input.startTime, input.endTime));
+    } catch (normErr) {
+      logServerError("planner.clearPlannerShiftSlot.normalize", normErr, input);
+      return { ok: false, error: "Ungültige Schichtzeiten." };
+    }
+
     const matches = await db.shift.findMany({
       where: tenantWhere(tenant.companyId, { weekIndex, dayOfWeek, startTime, endTime }),
       select: { id: true },
@@ -83,13 +83,7 @@ export async function clearPlannerShiftSlot(input: {
 
     return { ok: true, removed };
   } catch (err) {
-    logServerError("planner.clearPlannerShiftSlot", err, {
-      companyId: tenant.companyId,
-      weekIndex,
-      dayOfWeek,
-      startTime,
-      endTime,
-    });
+    logServerError("planner.clearPlannerShiftSlot", err, input);
     return { ok: false, error: "Schichtkarte konnte nicht geleert werden." };
   }
 }
