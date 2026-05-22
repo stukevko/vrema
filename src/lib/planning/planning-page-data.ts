@@ -61,6 +61,7 @@ const SHIFT_SELECT = {
 } as const;
 
 export type PlanningManagerPageData = {
+  companyName: string;
   members: Awaited<ReturnType<typeof loadPlanningTeamMembers>>;
   shifts: Awaited<ReturnType<typeof loadPlanningShifts>>;
   vacationConflictDays: Awaited<ReturnType<typeof getVacationConflictDaysForCompany>>;
@@ -97,6 +98,14 @@ export async function loadPlanningShiftCycleWeeks(companyId: string): Promise<1 
     select: { shiftCycleWeeks: true },
   });
   return normalizeCycleWeeks(company?.shiftCycleWeeks);
+}
+
+export async function loadPlanningCompanyName(companyId: string): Promise<string> {
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+    select: { name: true },
+  });
+  return company?.name?.trim() ?? "";
 }
 
 export async function loadPlanningCompanyModules(companyId: string): Promise<CompanyModules> {
@@ -210,9 +219,18 @@ export async function loadPlanningManagerPageData(
     loadPlanningShiftCycleWeeks(companyId),
     loadPlanningPendingTrades(companyId),
     getShiftTemplatesForCompany(companyId, role),
+    loadPlanningCompanyName(companyId),
   ]);
 
-  const labels = ["members", "shifts", "vacationConflicts", "cycleWeeks", "pendingTrades", "templates"];
+  const labels = [
+    "members",
+    "shifts",
+    "vacationConflicts",
+    "cycleWeeks",
+    "pendingTrades",
+    "templates",
+    "companyName",
+  ];
   settled.forEach((r, i) => {
     if (r.status === "rejected") {
       logServerError(`planning.page.${labels[i]}`, r.reason, { companyId });
@@ -227,6 +245,7 @@ export async function loadPlanningManagerPageData(
   const shiftCycleWeeks = (shiftCycleWeeksRaw === 2 ? 2 : shiftCycleWeeksRaw === 3 ? 3 : 1) as 1 | 2 | 3;
   const pendingTrades = settled[4].status === "fulfilled" ? settled[4].value : [];
   const shiftTemplates = settled[5].status === "fulfilled" ? settled[5].value : [];
+  const companyName = settled[6].status === "fulfilled" ? settled[6].value : "";
   const companyModules = await loadPlanningCompanyModules(companyId);
 
   let openShifts: Awaited<ReturnType<typeof loadPlanningOpenShifts>> = [];
@@ -254,6 +273,7 @@ export async function loadPlanningManagerPageData(
   }
 
   return {
+    companyName,
     members,
     shifts,
     vacationConflictDays,

@@ -1,9 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import {
-  getMyShifts,
-  getOpenShiftTradesForMyRole,
-} from "@/lib/actions/team";
+import { getMySchedule, getOpenShiftTradesForMyRole } from "@/lib/actions/team";
+import { EmployeeScheduleBoard } from "@/components/planning/EmployeeScheduleBoard";
 import {
   planningDecideTradeFormAction,
   planningRequestTakeoverFormAction,
@@ -94,6 +92,8 @@ export default async function PlanningPage({
           }
         >
           <ShiftManager
+            companyName={data.companyName}
+            plan={session.user.plan ?? "STARTER"}
             members={data.members.map((m) => ({
               id: m.id,
               name: m.name,
@@ -210,12 +210,12 @@ export default async function PlanningPage({
     autopilot: false,
   }));
 
-  const [myShifts, openTrades] = await Promise.all([
-    getMyShifts(),
+  const [schedule, openTrades] = await Promise.all([
+    getMySchedule(),
     employeeModules.shiftTrade ? getOpenShiftTradesForMyRole() : Promise.resolve([]),
   ]);
 
-  const sortedShifts = [...myShifts].sort((a, b) => {
+  const sortedShifts = [...schedule.shifts].sort((a, b) => {
     const da = dayOrderMonFirst(a.dayOfWeek);
     const db = dayOrderMonFirst(b.dayOfWeek);
     if (da !== db) return da - db;
@@ -223,15 +223,30 @@ export default async function PlanningPage({
   });
 
   return (
-    <div className="mx-auto max-w-lg min-w-0 space-y-5 px-1 sm:max-w-xl sm:space-y-6 sm:px-0">
+    <div className="mx-auto max-w-3xl min-w-0 space-y-5 px-1 sm:space-y-6 sm:px-0">
       <div className="glass-card px-4 py-4 sm:px-5">
         <h1 className="text-base font-bold tracking-tight sm:text-2xl">Mein Dienstplan</h1>
         <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-          Nur deine Soll-Schichten – getrennt vom Planer der Führungskraft. Zeiten und Tausch an einem Ort.
+          Dein Schichtzyklus auf einen Blick — Woche für Woche, Mo bis So. Unten findest du Details und Tausch.
         </p>
       </div>
 
       {employeeModules.shiftTrade ? <TradePushHint /> : null}
+
+      <EmployeeScheduleBoard
+        shifts={schedule.shifts.map((r) => ({
+          id: r.id,
+          weekIndex: Number(r.weekIndex),
+          dayOfWeek: Number(r.dayOfWeek),
+          startTime: String(r.startTime),
+          endTime: String(r.endTime),
+          breakDuration: Number(r.breakDuration ?? 0),
+          isOpenForTrade: Boolean(r.isOpenForTrade),
+        }))}
+        shiftCycleWeeks={schedule.shiftCycleWeeks}
+        companyName={schedule.companyName}
+        initialWeekIndex={schedule.currentWeekIndex}
+      />
 
       <section className="glass-card p-4 sm:p-5">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Nächste Einsätze</h2>

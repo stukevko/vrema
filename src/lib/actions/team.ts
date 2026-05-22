@@ -629,14 +629,20 @@ export async function clearShiftSlot(input: {
 }
 
 export async function getMyShifts() {
+  const { shifts } = await getMySchedule();
+  return shifts;
+}
+
+/** Alle Soll-Schichten des Users über den gesamten Zyklus (nicht nur „aktuelle“ Woche). */
+export async function getMySchedule() {
   const { companyId, userId } = await requireTenant();
   const company = await db.company.findUnique({
     where: { id: companyId },
-    select: { shiftCycleWeeks: true },
+    select: { shiftCycleWeeks: true, name: true },
   });
-  const currentWeekIndex = getWeekCycleIndex(new Date(), company?.shiftCycleWeeks);
-  return db.shift.findMany({
-    where: tenantWhere(companyId, { userId, weekIndex: currentWeekIndex, isDraft: false }),
+  const shiftCycleWeeks = normalizeCycleWeeks(company?.shiftCycleWeeks);
+  const shifts = await db.shift.findMany({
+    where: tenantWhere(companyId, { userId, isDraft: false }),
     select: {
       id: true,
       userId: true,
@@ -649,8 +655,15 @@ export async function getMyShifts() {
       tradeStatus: true,
       tradeRequestedBy: true,
     },
-    orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
+    orderBy: [{ weekIndex: "asc" }, { dayOfWeek: "asc" }, { startTime: "asc" }],
   });
+  const currentWeekIndex = getWeekCycleIndex(new Date(), shiftCycleWeeks);
+  return {
+    shifts,
+    shiftCycleWeeks,
+    companyName: company?.name ?? "",
+    currentWeekIndex,
+  };
 }
 
 export async function toggleShiftTradeOffer(shiftId: string, makeOpen: boolean) {

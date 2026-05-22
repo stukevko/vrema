@@ -1,12 +1,9 @@
 import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import bcrypt from "bcryptjs";
+import { OPEN_SHIFT_EMAIL_SUFFIX } from "@/lib/planning/open-shift-email";
 
-export const OPEN_SHIFT_EMAIL_SUFFIX = "@vrema.local";
-
-export function isOpenShiftPlaceholderEmail(email: string): boolean {
-  return email.endsWith(OPEN_SHIFT_EMAIL_SUFFIX) && email.startsWith("open-slot+");
-}
+export { OPEN_SHIFT_EMAIL_SUFFIX, isOpenShiftPlaceholderEmail } from "@/lib/planning/open-shift-email";
 
 /** Technischer Platzhalter pro Firma — zählt nicht als aktiver Mitarbeiter. */
 export async function ensureOpenShiftPlaceholderUser(companyId: string): Promise<string> {

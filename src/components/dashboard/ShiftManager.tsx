@@ -20,6 +20,8 @@ import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPan
 import { ShiftCentricBoard } from "@/components/planning/ShiftCentricBoard";
 import { buildMemberWeekMinutes, type BoardShiftSlot } from "@/lib/planning/shift-board-model";
 import { ShiftAddSheet } from "@/components/planning/ShiftAddSheet";
+import { ShiftPlanPdfExport } from "@/components/planning/ShiftPlanPdfExport";
+import { isOpenShiftPlaceholderEmail } from "@/lib/planning/open-shift-email";
 import { OvertimeRecoveryPopover } from "@/components/planning/OvertimeRecoveryPopover";
 import { AssignmentGuardDialog } from "@/components/planning/AssignmentGuardDialog";
 import { getPlannerBoardMemberSaldos } from "@/lib/actions/planner-board";
@@ -284,6 +286,8 @@ function scrollFieldIntoView(e: React.FocusEvent<HTMLElement>) {
 export function ShiftManager({
   members,
   shifts,
+  companyName = "",
+  plan = "STARTER",
   shiftTemplates = [],
   companyModules = {
     peaks: false,
@@ -301,6 +305,8 @@ export function ShiftManager({
 }: {
   members: Member[];
   shifts: ShiftRow[];
+  companyName?: string;
+  plan?: string;
   shiftTemplates?: ShiftTemplateRow[];
   companyModules?: CompanyModules;
   shiftCycleWeeks?: 1 | 2 | 3;
@@ -2525,28 +2531,72 @@ export function ShiftManager({
   );
 
 
-  const weekPicker =
-    shiftCycleWeeks > 1 ? (
-      <div className="mt-3 inline-flex max-w-full rounded-lg border border-border bg-background p-1 text-xs">
-        {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
-          const week = (idx + 1) as 1 | 2 | 3;
-          return (
-            <button
-              key={week}
-              type="button"
-              onClick={() => {
-                setSelectedWeekIndex(week);
-              }}
-              className={`min-h-11 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${
-                selectedWeekIndex === week ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Woche {week}
-            </button>
-          );
-        })}
-      </div>
-    ) : null;
+  const pdfMembers = useMemo(
+    () =>
+      members
+        .filter((m) => !isOpenShiftPlaceholderEmail(m.email))
+        .map((m) => ({
+          id: m.id,
+          name: (m.name ?? m.email).trim(),
+          area: m.planningWorkArea ?? null,
+        })),
+    [members],
+  );
+
+  const pdfShifts = useMemo(
+    () =>
+      displayShifts
+        .filter((s) => !s.isDraft)
+        .map((s) => ({
+          userId: s.userId,
+          weekIndex: s.weekIndex,
+          dayOfWeek: s.dayOfWeek,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          breakDuration: s.breakDuration ?? 0,
+        })),
+    [displayShifts],
+  );
+
+  const weekPicker = (
+    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+      {shiftCycleWeeks > 1 ? (
+        <div className="inline-flex max-w-full rounded-lg border border-border bg-background p-1 text-xs">
+          {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
+            const week = (idx + 1) as 1 | 2 | 3;
+            return (
+              <button
+                key={week}
+                type="button"
+                onClick={() => {
+                  setSelectedWeekIndex(week);
+                }}
+                className={`min-h-11 touch-manipulation rounded-md px-4 py-2 sm:min-h-0 sm:px-3 sm:py-1.5 ${
+                  selectedWeekIndex === week
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Woche {week}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">Einzelwochen-Zyklus</p>
+      )}
+      {enableTaskListActions ? (
+        <ShiftPlanPdfExport
+          companyName={companyName}
+          plan={plan}
+          shiftCycleWeeks={shiftCycleWeeks}
+          weekIndex={selectedWeekIndex}
+          members={pdfMembers}
+          shifts={pdfShifts}
+        />
+      ) : null}
+    </div>
+  );
 
   const selectedMemberChip =
     selectedMember ? (
@@ -2729,12 +2779,16 @@ export function ShiftManager({
 
       {enableTaskListActions ? (
         <div className="block">
-          <h2 className="text-lg font-semibold tracking-tight">Schichtplan</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {renderDesktopTree
-              ? "Team links · Schichtkarten in der Woche · Zuweisen per Drag oder Antippen."
-              : "Gleicher Plan wie am Desktop: Team wählen, Karten horizontal wischen, + für neue Schicht."}
-          </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Schichtplan</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {renderDesktopTree
+                  ? "Team links · Schichtkarten in der Woche · Zuweisen per Drag oder Antippen."
+                  : "Gleicher Plan wie am Desktop: Team wählen, Karten horizontal wischen, + für neue Schicht."}
+              </p>
+            </div>
+          </div>
           {!renderDesktopTree ? (
             <p className="mt-2 rounded-xl border border-brand/25 bg-brand-soft/40 px-3 py-2 text-[11px] text-foreground">
               <strong className="font-semibold">Tipp:</strong> Wische über die Tages-Spalten. X entfernt eine Person, „Schicht leeren“
