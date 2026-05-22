@@ -111,6 +111,61 @@ export function parseBerlinShiftStart(baseDate: Date, hhmm: string): Date | null
   );
 }
 
+/** Kalendertag in Europe/Berlin um N Tage verschieben (für Schicht-Ende nach Mitternacht). */
+export function addBerlinCalendarDays(baseDate: Date, days: number): Date {
+  const key = getBerlinDateKey(baseDate);
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days, 12, 0, 0));
+}
+
+/**
+ * Schicht-Ende in Berlin: liegt die End-Uhrzeit vor der Start-Uhrzeit am selben Tag,
+ * gilt die Schicht als Nachtschicht über Mitternacht → Ende am Folgetag.
+ */
+export function parseBerlinShiftEnd(baseDate: Date, endHhmm: string, startHhmm: string): Date | null {
+  const start = parseBerlinShiftStart(baseDate, startHhmm);
+  let end = parseBerlinShiftStart(baseDate, endHhmm);
+  if (!end) return null;
+  if (start && end.getTime() <= start.getTime()) {
+    end = parseBerlinShiftStart(addBerlinCalendarDays(baseDate, 1), endHhmm);
+  }
+  return end;
+}
+
+/**
+ * Parst `datetime-local` / `YYYY-MM-DDTHH:mm` als Europe/Berlin-Wandzeit (DST-sicher).
+ * Verhindert +24h-Drift, wenn der Server in UTC läuft.
+ */
+export function parseDateTimeLocalBerlin(value: string): Date | null {
+  const trimmed = value.trim();
+  const localMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if (localMatch) {
+    const year = Number(localMatch[1]);
+    const month = Number(localMatch[2]);
+    const day = Number(localMatch[3]);
+    const hour = Number(localMatch[4]);
+    const minute = Number(localMatch[5]);
+    const second = localMatch[6] ? Number(localMatch[6]) : 0;
+    if ([year, month, day, hour, minute, second].some((n) => !Number.isFinite(n))) return null;
+    return zonedDateTimeToUtc({ year, month, day, hour, minute, second }, BERLIN_TZ);
+  }
+  const d = new Date(trimmed);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+export function getBerlinWallClockMinutes(date: Date): number {
+  const p = extractParts(date, BERLIN_TZ);
+  return p.hour * 60 + p.minute;
+}
+
+export function daysBetweenBerlinDateKeys(startKey: string, endKey: string): number {
+  const [sy, sm, sd] = startKey.split("-").map(Number);
+  const [ey, em, ed] = endKey.split("-").map(Number);
+  const startUtc = Date.UTC(sy, sm - 1, sd);
+  const endUtc = Date.UTC(ey, em - 1, ed);
+  return Math.round((endUtc - startUtc) / (24 * 60 * 60 * 1000));
+}
+
 export function getBerlinDateKey(date: Date) {
   return date.toLocaleDateString("en-CA", {
     timeZone: BERLIN_TZ,

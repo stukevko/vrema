@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToast, ToastContainer } from "@/components/ui/Toast";
+import { KorrekturModal, type KorrekturStatus } from "@/components/dashboard/reports/KorrekturModal";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useHashHighlight } from "@/components/dashboard/useHashHighlight";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -240,12 +241,14 @@ function formatDateDE(value: Date) {
   });
 }
 
-/** Striktes TT.MM.JJJJ für Lohn-/DATEV-Exporte (unabhängig von Browser-Locale-Details). */
+/** Striktes TT.MM.JJJJ für Lohn-/DATEV-Exporte (Europe/Berlin). */
 function formatDateCsv(value: Date) {
-  const d = value.getDate().toString().padStart(2, "0");
-  const m = (value.getMonth() + 1).toString().padStart(2, "0");
-  const y = value.getFullYear();
-  return `${d}.${m}.${y}`;
+  return value.toLocaleDateString("de-DE", {
+    timeZone: DISPLAY_TIME_ZONE,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
 function formatTimeCsv(value: Date) {
@@ -395,6 +398,10 @@ export function ReportsClient({
   const [editStatus, setEditStatus] = useState<LogRow["status"]>("MANUAL_ADJUSTED");
   const [editNote, setEditNote] = useState("");
   const [editReason, setEditReason] = useState("");
+  const [korrekturModal, setKorrekturModal] = useState<{
+    mode: "correct" | "delete";
+    log: LogRow;
+  } | null>(null);
 
   const correctionSectionRef = useRef<HTMLDivElement | null>(null);
   const highlightCorrections = useHashHighlight("zeitkorrekturen", correctionSectionRef);
@@ -477,42 +484,48 @@ export function ReportsClient({
   }, {});
 
   const buildPdfDocAndName = () => {
-    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const marginL = 10;
+    const marginR = 10;
+    const marginT = 15;
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
+    const contentRight = pageWidth - marginR;
+    const tableWidth = pageWidth - marginL - marginR;
+    const summaryY = marginT + 9;
+    const boxH = 12;
+    const sectionContentStartY = summaryY + boxH + 6;
     const drawHeader = () => {
       doc.setDrawColor(226, 232, 240);
       doc.setLineWidth(0.2);
-      doc.line(10, 20, pageWidth - 10, 20);
+      doc.line(marginL, marginT + 5, contentRight, marginT + 5);
       doc.setTextColor(0, 0, 0);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
-      doc.text("VREMA", 10, 10);
+      doc.text("VREMA", marginL, marginT - 5);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text(pdfHeaderFirmenzeile(companyName), 10, 15);
-      doc.text(month, pageWidth - 10, 10, { align: "right" });
+      doc.text(pdfHeaderFirmenzeile(companyName), marginL, marginT);
+      doc.text(month, contentRight, marginT - 5, { align: "right" });
       doc.setFontSize(8);
-      doc.text(`Erstellt: ${formatDateDE(new Date())}`, pageWidth - 10, 15, { align: "right" });
+      doc.text(`Erstellt: ${formatDateDE(new Date())}`, contentRight, marginT, { align: "right" });
 
-      const colW = (pageWidth - 20) / 3;
-      const summaryY = 24;
-      const boxH = 12;
+      const colW = tableWidth / 3;
       doc.setDrawColor(226, 232, 240);
-      doc.rect(10, summaryY, pageWidth - 20, boxH);
-      doc.line(10 + colW, summaryY, 10 + colW, summaryY + boxH);
-      doc.line(10 + colW * 2, summaryY, 10 + colW * 2, summaryY + boxH);
+      doc.rect(marginL, summaryY, tableWidth, boxH);
+      doc.line(marginL + colW, summaryY, marginL + colW, summaryY + boxH);
+      doc.line(marginL + colW * 2, summaryY, marginL + colW * 2, summaryY + boxH);
       doc.setFontSize(6.5);
       doc.setTextColor(71, 85, 105);
-      doc.text("MANDANT", 12, summaryY + 4);
-      doc.text("ZEITRAUM", 12 + colW, summaryY + 4);
-      doc.text("GESAMTSTUNDEN", 12 + colW * 2, summaryY + 4);
+      doc.text("MANDANT", marginL + 2, summaryY + 4);
+      doc.text("ZEITRAUM", marginL + colW + 2, summaryY + 4);
+      doc.text("GESAMTSTUNDEN", marginL + colW * 2 + 2, summaryY + 4);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
       doc.setTextColor(0, 0, 0);
-      doc.text(pdfHeaderFirmenzeile(companyName), 12, summaryY + 9.5);
-      doc.text(month, 12 + colW, summaryY + 9.5);
-      doc.text(`${decimalHoursDE(totalMinutes)} h`, 12 + colW * 2, summaryY + 9.5);
+      doc.text(pdfHeaderFirmenzeile(companyName), marginL + 2, summaryY + 9.5);
+      doc.text(month, marginL + colW + 2, summaryY + 9.5);
+      doc.text(`${decimalHoursDE(totalMinutes)} h`, marginL + colW * 2 + 2, summaryY + 9.5);
       doc.setFont("helvetica", "normal");
     };
     drawHeader();
@@ -534,30 +547,30 @@ export function ReportsClient({
       const userSoll = monthlySollMinutesByUser[first.userId] ?? Math.round(first.weeklyHours * 60 * 4.33);
       const diff = userIst - userSoll;
       const ratio = userSoll > 0 ? Math.max(0, Math.min(1, userIst / userSoll)) : 0;
-      const sectionStartY = 40;
+      const sectionStartY = sectionContentStartY;
       const headerHeight = 11;
       const nameY = sectionStartY + 4.5;
 
       doc.setDrawColor(226, 232, 240);
       doc.setLineWidth(0.15);
-      doc.line(10, sectionStartY, pageWidth - 10, sectionStartY);
-      doc.line(10, sectionStartY + headerHeight, pageWidth - 10, sectionStartY + headerHeight);
+      doc.line(marginL, sectionStartY, contentRight, sectionStartY);
+      doc.line(marginL, sectionStartY + headerHeight, contentRight, sectionStartY + headerHeight);
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.setTextColor(0, 0, 0);
       doc.text(
         `${first.userName}${first.employeeNumber ? ` (#${first.employeeNumber})` : ""}`,
-        12,
+        marginL + 2,
         nameY,
       );
 
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
+      doc.setFontSize(8);
       doc.setTextColor(0, 0, 0);
       doc.text(
         `Ist ${decimalHoursDE(userIst)} h · Soll ${decimalHoursDE(userSoll)} h · Diff. ${decimalHoursDE(diff)} h · ${Math.round(ratio * 100)} % Soll`,
-        pageWidth - 12,
+        contentRight - 2,
         nameY,
         { align: "right" },
       );
@@ -587,14 +600,16 @@ export function ReportsClient({
 
       autoTable(doc, {
         startY: sectionStartY + headerHeight + 3,
+        margin: { left: marginL, right: marginR },
+        tableWidth,
         head: [
           [
             "Datum",
             "Einstempelzeit",
             "Ausstempelzeit",
-            "Pause (Minuten)",
-            "Arbeitszeit netto (Minuten)",
-            "Stunden (Dezimal)",
+            "Pause (Min)",
+            "Netto (Min)",
+            "Std. (Dez.)",
             "Status",
             "Bemerkung",
           ],
@@ -602,8 +617,9 @@ export function ReportsClient({
         body: sortedLogs,
         theme: "plain",
         styles: {
-          fontSize: 8,
-          cellPadding: 1.4,
+          fontSize: 9,
+          cellPadding: 1.2,
+          overflow: "linebreak",
           lineColor: [226, 232, 240],
           lineWidth: 0.1,
           textColor: [0, 0, 0],
@@ -613,20 +629,20 @@ export function ReportsClient({
           fillColor: [255, 255, 255],
           textColor: [0, 0, 0],
           fontStyle: "bold",
-          fontSize: 7,
+          fontSize: 8,
           lineWidth: 0.15,
           lineColor: [203, 213, 225],
         },
         alternateRowStyles: { fillColor: [255, 255, 255] },
         columnStyles: {
-          0: { cellWidth: 22 },
-          1: { cellWidth: 22 },
-          2: { cellWidth: 22 },
-          3: { cellWidth: 16 },
-          4: { cellWidth: 26 },
-          5: { cellWidth: 22 },
-          6: { cellWidth: 22 },
-          7: { cellWidth: "auto" },
+          0: { cellWidth: tableWidth * 0.1 },
+          1: { cellWidth: tableWidth * 0.11 },
+          2: { cellWidth: tableWidth * 0.11 },
+          3: { cellWidth: tableWidth * 0.08 },
+          4: { cellWidth: tableWidth * 0.1 },
+          5: { cellWidth: tableWidth * 0.1 },
+          6: { cellWidth: tableWidth * 0.12 },
+          7: { cellWidth: tableWidth * 0.28 },
         },
         didParseCell: (data) => {
           if (data.section !== "body" || data.column.index !== 6) return;
@@ -950,49 +966,53 @@ export function ReportsClient({
     });
   };
   const handleAbsentOverride = (log: LogRow) => {
-    const next = window.prompt(
-      "Neuer Status: ON_TIME | LATE | MANUAL_ADJUSTED",
-      log.status === "ABSENT" ? "MANUAL_ADJUSTED" : log.status
-    );
-    if (!next) return;
-    const reason = window.prompt("Grund der manuellen Korrektur (Pflicht)");
-    if (!reason || !reason.trim()) {
-      show("Korrekturgrund ist erforderlich.", "error");
-      return;
-    }
-    if (!["ON_TIME", "LATE", "MANUAL_ADJUSTED"].includes(next)) {
-      show("Ungültiger Status.", "error");
-      return;
-    }
+    setKorrekturModal({ mode: "correct", log });
+  };
+
+  const handleDelete = (log: LogRow) => {
+    setKorrekturModal({ mode: "delete", log });
+  };
+
+  const submitKorrekturModal = (payload: {
+    clockIn: string;
+    clockOut: string;
+    breakMins: number;
+    status: KorrekturStatus;
+    reason: string;
+  }) => {
+    const target = korrekturModal?.log;
+    if (!target) return;
     startTransition(async () => {
       try {
         await updateWorkLogByManager({
-          logId: log.id,
-          status: next as "ON_TIME" | "LATE" | "MANUAL_ADJUSTED",
-          note: (log.note ? `${log.note} | ` : "") + "[MANUELLE-KORREKTUR]",
-          editReason: reason.trim(),
+          logId: target.id,
+          clockIn: new Date(payload.clockIn).toISOString(),
+          clockOut: payload.clockOut ? new Date(payload.clockOut).toISOString() : null,
+          breakMins: payload.breakMins,
+          status: payload.status,
+          note: (target.note ? `${target.note} | ` : "") + "[MANUELLE-KORREKTUR]",
+          editReason: payload.reason,
         });
         show("Fehlender Tag wurde korrigiert.", "success");
+        setKorrekturModal(null);
         router.refresh();
       } catch (err: unknown) {
-        show(userErrorMessage(err, "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen."), "error");
+        show(userErrorMessage(err, "Die Korrektur konnte nicht gespeichert werden. Bitte Eingaben prüfen."), "error");
       }
     });
   };
 
-  const handleDelete = (log: LogRow) => {
-    const reason = window.prompt("Grund der Löschung (Pflicht)");
-    if (!reason || !reason.trim()) {
-      show("Löschgrund ist erforderlich.", "error");
-      return;
-    }
+  const submitKorrekturDelete = (reason: string) => {
+    const target = korrekturModal?.log;
+    if (!target) return;
     startTransition(async () => {
       try {
-        await deleteWorkLogByManager(log.id, reason.trim());
+        await deleteWorkLogByManager(target.id, reason);
         show("Eintrag gelöscht.", "success");
+        setKorrekturModal(null);
         router.refresh();
       } catch (err: unknown) {
-        show(userErrorMessage(err, "Die Aktion konnte nicht abgeschlossen werden. Bitte erneut versuchen."), "error");
+        show(userErrorMessage(err, "Der Eintrag konnte nicht gelöscht werden. Bitte erneut versuchen."), "error");
       }
     });
   };
@@ -1767,14 +1787,14 @@ export function ReportsClient({
                         <div>
                           <dt className="text-muted-foreground">Einstempelung</dt>
                           <dd className="font-mono text-foreground">
-                            {clockInDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+                            {formatTimeCsv(clockInDate)}
                           </dd>
                         </div>
                         <div>
                           <dt className="text-muted-foreground">Ausstempelung</dt>
                           <dd className="font-mono text-foreground">
                             {log.clockOut ? (
-                              new Date(log.clockOut).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
+                              formatTimeCsv(new Date(log.clockOut))
                             ) : (
                               <span className="text-warning">offen</span>
                             )}
@@ -1879,11 +1899,11 @@ export function ReportsClient({
                             {formatDateCsv(clockInDate)}
                           </td>
                           <td className="px-5 py-4 tabular-nums text-foreground">
-                            {clockInDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+                            {formatTimeCsv(clockInDate)}
                           </td>
                           <td className="px-5 py-4 tabular-nums text-foreground">
                             {log.clockOut
-                              ? new Date(log.clockOut).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
+                              ? formatTimeCsv(new Date(log.clockOut))
                               : <span className="animate-pulse text-warning">offen</span>}
                           </td>
                           <td className="px-5 py-4 tabular-nums text-xs text-muted-foreground">
@@ -2079,6 +2099,19 @@ export function ReportsClient({
           </div>
         </div>
       )}
+
+      <KorrekturModal
+        open={korrekturModal != null}
+        mode={korrekturModal?.mode ?? "correct"}
+        log={korrekturModal?.log ?? null}
+        isPending={isSaving}
+        formatForDateTimeLocal={formatForDateTimeLocal}
+        onOpenChange={(next) => {
+          if (!next) setKorrekturModal(null);
+        }}
+        onSubmitCorrect={submitKorrekturModal}
+        onSubmitDelete={submitKorrekturDelete}
+      />
 
     </>
   );

@@ -5,6 +5,7 @@ import {
   berlinDateKeyToDayOfWeek,
   getBerlinDateKey,
   getDayBoundsUtc,
+  parseBerlinShiftEnd,
   parseBerlinShiftStart,
 } from "@/lib/time/timezone";
 
@@ -62,7 +63,10 @@ export async function createAbsentEntriesForMissingShifts(prisma: PrismaClient):
       continue;
     }
 
-    const shiftEnd = parseShiftTimeToDate(now, shift.endTime) ?? shiftStart;
+    const shiftEnd =
+      parseBerlinShiftEnd(now, shift.endTime, shift.startTime) ??
+      parseShiftTimeToDate(now, shift.endTime) ??
+      shiftStart;
     const created = await prisma.$transaction(async (tx) => {
       const existingToday = await tx.workLog.findFirst({
         where: {

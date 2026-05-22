@@ -16,6 +16,8 @@ import {
   planningToggleTradeOfferFormAction,
 } from "@/app/(dashboard)/dashboard/planning/planning-trade-actions";
 import { ShiftManager } from "@/components/dashboard/ShiftManager";
+// Planer-Lösch-Actions an diese Route binden (stabile Server-Action-IDs)
+export { clearPlannerShiftSlot, removePlannerShift } from "@/lib/actions/planner-shift-remove";
 import { TradePushHint } from "@/components/planning/TradePushHint";
 import { OpenShiftsBoard } from "@/components/planning/OpenShiftsBoard";
 import { getUnavailableDaysByUserIds } from "@/lib/actions/work-schedule";

@@ -85,7 +85,12 @@ export function CompanySettingsForm({ company }: Props) {
         router.refresh();
         setTimeout(() => setSuccess(false), 3000);
       } catch (err: unknown) {
-        setError(userErrorMessage(err, "Fehler beim Speichern."));
+        setError(
+          userErrorMessage(
+            err,
+            "Die Firmeneinstellungen konnten nicht gespeichert werden. Bitte überprüfe deine Eingaben.",
+          ),
+        );
       }
     });
   };

@@ -8,7 +8,7 @@ import { validateAllowlistEntry } from "@/lib/security/ip-allowlist";
 export async function getClockGeofenceSettings() {
   const { companyId, role } = await requireTenant();
   if (role !== "COMPANY_OWNER" && role !== "SUPER_ADMIN") {
-    throw new Error("Unauthorized: Geofence-Einstellungen sind Owner-only.");
+    throw new Error("Stempel-Geofence darf nur vom Inhaber konfiguriert werden.");
   }
   const company = await db.company.findUnique({
     where: { id: companyId },
@@ -26,7 +26,7 @@ export async function updateClockGeofence(input: {
 }) {
   const { companyId, role } = await requireTenant();
   if (role !== "COMPANY_OWNER" && role !== "SUPER_ADMIN") {
-    throw new Error("Unauthorized: Geofence-Einstellungen sind Owner-only.");
+    throw new Error("Stempel-Geofence darf nur vom Inhaber konfiguriert werden.");
   }
 
   // Sanitize + validate

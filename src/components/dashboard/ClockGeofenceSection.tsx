@@ -2,6 +2,7 @@
 import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updateClockGeofence } from "@/lib/actions/clock-geofence";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export function ClockGeofenceSection({ initial }: Props) {
+  const router = useRouter();
   const [enabled, setEnabled] = useState(initial.enabled);
   const [allowlist, setAllowlist] = useState<string[]>(initial.allowlist);
   const [newEntry, setNewEntry] = useState("");
@@ -46,8 +48,9 @@ export function ClockGeofenceSection({ initial }: Props) {
             : "Standortprüfung deaktiviert.",
           "success",
         );
+        router.refresh();
       } catch (err) {
-        show(userErrorMessage(err, "Speichern fehlgeschlagen."), "error");
+        show(userErrorMessage(err, "Geofence-Einstellungen konnten nicht gespeichert werden."), "error");
       }
     });
   };

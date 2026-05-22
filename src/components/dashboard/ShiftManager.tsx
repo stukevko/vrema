@@ -6,7 +6,6 @@ import { Drawer } from "vaul";
 import {
   applyStandardWeek,
   clearShiftForDay,
-  clearShiftSlot,
   copyWeekToAllMembers,
   deleteShift,
   setShiftBreakDuration,
@@ -25,6 +24,7 @@ import { ShiftAddSheet } from "@/components/planning/ShiftAddSheet";
 import { OvertimeRecoveryPopover } from "@/components/planning/OvertimeRecoveryPopover";
 import { AssignmentGuardDialog } from "@/components/planning/AssignmentGuardDialog";
 import { getPlannerBoardMemberSaldos } from "@/lib/actions/planner-board";
+import { clearPlannerShiftSlot, removePlannerShift } from "@/lib/actions/planner-shift-remove";
 import {
   countCriticalOvertimeMembers,
   evaluateMemberAssignmentRisk,
@@ -2357,29 +2357,13 @@ export function ShiftManager({
           }
           setMessage(null);
           startTransition(async () => {
-            try {
-              await deleteShift(shiftId);
-              setMessage("Zuweisung entfernt.");
-              router.refresh();
-            } catch (e: unknown) {
-              const primaryMsg = userErrorMessage(e, "Entfernen fehlgeschlagen.");
-              try {
-                const { removed } = await clearShiftSlot({
-                  weekIndex: selectedWeekIndex,
-                  dayOfWeek,
-                  startTime: slotStart,
-                  endTime: slotEnd,
-                });
-                if (removed > 0) {
-                  setMessage("Zuweisung entfernt.");
-                  router.refresh();
-                  return;
-                }
-              } catch {
-                /* Fallback fehlgeschlagen */
-              }
-              setMessage(primaryMsg);
+            const result = await removePlannerShift(shiftId);
+            if (!result.ok) {
+              setMessage(result.error);
+              return;
             }
+            setMessage("Zuweisung entfernt.");
+            router.refresh();
           });
         }}
         onClearSlot={(slot) => {
@@ -2394,22 +2378,22 @@ export function ShiftManager({
           }
           setMessage(null);
           startTransition(async () => {
-            try {
-              const { removed } = await clearShiftSlot({
-                weekIndex: selectedWeekIndex,
-                dayOfWeek: slot.dayOfWeek,
-                startTime: slot.startTime,
-                endTime: slot.endTime,
-              });
-              setMessage(
-                removed > 0
-                  ? `${removed} Zuweisung${removed === 1 ? "" : "en"} entfernt — offene Lücke im Board.`
-                  : "Keine Zuweisungen mehr vorhanden.",
-              );
-              router.refresh();
-            } catch (e: unknown) {
-              setMessage(userErrorMessage(e, "Schicht konnte nicht geleert werden."));
+            const result = await clearPlannerShiftSlot({
+              weekIndex: selectedWeekIndex,
+              dayOfWeek: slot.dayOfWeek,
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+            });
+            if (!result.ok) {
+              setMessage(result.error);
+              return;
             }
+            setMessage(
+              result.removed > 0
+                ? `${result.removed} Zuweisung${result.removed === 1 ? "" : "en"} entfernt — offene Lücke im Board.`
+                : "Keine Zuweisungen mehr vorhanden.",
+            );
+            router.refresh();
           });
         }}
       />

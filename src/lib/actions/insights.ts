@@ -14,7 +14,7 @@ const CAN_VIEW = new Set(["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"]);
  */
 export async function getInsightsForOwner(): Promise<Insight[]> {
   const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+  if (!session?.user) throw new Error("Bitte erneut anmelden.");
   const { companyId, role } = await requireTenant();
   if (!CAN_VIEW.has(role ?? "")) {
     throw new Error("Keine Berechtigung für Insights.");

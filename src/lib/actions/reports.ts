@@ -3,6 +3,7 @@
 import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
 import { db } from "@/lib/db";
 import { getMonthBoundsUtc } from "@/lib/time/timezone";
+import { workedMinutes } from "@/lib/time/payroll";
 
 export type DatevLohnart = "STANDARD" | "NACHT";
 
@@ -16,12 +17,6 @@ export type DatevExportRow = {
 
 /** All report bucketing uses Europe/Berlin (DST-safe day/month bounds). */
 const DISPLAY_TZ = "Europe/Berlin";
-
-function workedMinutes(clockIn: Date, clockOut: Date | null, breakMins: number) {
-  if (!clockOut) return 0;
-  const gross = Math.max(0, Math.round((clockOut.getTime() - clockIn.getTime()) / 60000));
-  return Math.max(0, gross - Math.max(0, breakMins));
-}
 
 /**
  * Stable sortable calendar key YYYY-MM-DD in Berlin (not for end-user UI).
@@ -85,7 +80,11 @@ export async function prepareDatevExportData(monthKey: string): Promise<DatevExp
   return logs.map((log) => ({
     employeeId: log.user.employeeNumber?.trim() || `FEHLT_${log.userId.slice(-8).toUpperCase()}`,
     date: toBerlinDateKey(log.clockIn),
-    netWorkMinutes: workedMinutes(log.clockIn, log.clockOut, log.breakMins),
+    netWorkMinutes: workedMinutes({
+      clockIn: log.clockIn,
+      clockOut: log.clockOut,
+      breakMins: log.breakMins,
+    }),
     breakMinutes: Math.max(0, log.breakMins),
     wageType: inferWageType(log.clockIn, log.clockOut),
   }));

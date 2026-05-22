@@ -12,7 +12,18 @@ import {
   ensureWorkLogAuditTable,
   writeWorkLogAudit,
 } from "@/lib/worklogs/clock-core";
-import { getMonthBoundsUtc } from "@/lib/time/timezone";
+import { getMonthBoundsUtc, parseDateTimeLocalBerlin } from "@/lib/time/timezone";
+
+function parseClockInstant(value: string | null | undefined): Date | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const berlin = parseDateTimeLocalBerlin(trimmed);
+  if (berlin) return berlin;
+  const d = new Date(trimmed);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
 import { assertClockIpAllowed } from "@/lib/security/ip-allowlist-server";
 
 export async function clockIn() {
@@ -130,8 +141,13 @@ export async function updateWorkLogByManager(params: {
     note?: string | null;
     status?: EntryStatus;
   } = {};
-  const clockIn = params.clockIn ? new Date(params.clockIn) : null;
-  const clockOut = params.clockOut ? new Date(params.clockOut) : params.clockOut === null ? null : undefined;
+  const clockIn = params.clockIn ? parseClockInstant(params.clockIn) : null;
+  const clockOut =
+    params.clockOut === null
+      ? null
+      : params.clockOut
+        ? parseClockInstant(params.clockOut)
+        : undefined;
   if (clockIn && Number.isNaN(clockIn.getTime())) throw new Error("Ungültige Einstempelzeit.");
   if (clockOut instanceof Date && Number.isNaN(clockOut.getTime())) throw new Error("Ungültige Ausstempelzeit.");
   if (clockIn && clockOut instanceof Date && clockOut <= clockIn) {
@@ -283,9 +299,9 @@ export async function createWorkLogCorrectionRequest(input: {
   const reason = input.reason.trim();
   if (!reason) throw new Error("Bitte Begründung angeben.");
 
-  const requestedClockIn = new Date(input.requestedClockIn);
-  if (Number.isNaN(requestedClockIn.getTime())) throw new Error("Ungültige Einstempelzeit.");
-  const requestedClockOut = input.requestedClockOut ? new Date(input.requestedClockOut) : null;
+  const requestedClockIn = parseClockInstant(input.requestedClockIn);
+  if (!requestedClockIn) throw new Error("Ungültige Einstempelzeit.");
+  const requestedClockOut = input.requestedClockOut ? parseClockInstant(input.requestedClockOut) : null;
   if (requestedClockOut && Number.isNaN(requestedClockOut.getTime())) throw new Error("Ungültige Ausstempelzeit.");
   if (requestedClockOut && requestedClockOut <= requestedClockIn) {
     throw new Error("Ausstempelzeit muss nach Einstempelzeit liegen.");

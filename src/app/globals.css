@@ -795,8 +795,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 @media print {
   @page {
-    margin: 14mm 12mm;
-    size: A4 landscape;
+    margin: 15mm 10mm;
+    size: A4 portrait;
   }
 
   :root,

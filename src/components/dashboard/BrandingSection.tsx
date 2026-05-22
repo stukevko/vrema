@@ -2,6 +2,7 @@
 import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updateBranding } from "@/lib/actions/branding";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import { Loader2, RefreshCcw, Save } from "lucide-react";
@@ -22,6 +23,7 @@ function isValidHex(hex: string): boolean {
 }
 
 export function BrandingSection({ initial }: Props) {
+  const router = useRouter();
   const [light, setLight] = useState<string>(initial.brandColor ?? DEFAULT_LIGHT);
   const [dark, setDark] = useState<string>(initial.brandColorDark ?? DEFAULT_DARK);
   const [isPending, startTransition] = useTransition();
@@ -41,9 +43,10 @@ export function BrandingSection({ initial }: Props) {
     startTransition(async () => {
       try {
         await updateBranding({ brandColor: light, brandColorDark: dark });
-        show("Branding gespeichert — das Team sieht den neuen Look nach dem nächsten Seitenaufruf.", "success");
+        show("Branding gespeichert.", "success");
+        router.refresh();
       } catch (err) {
-        show(userErrorMessage(err, "Speichern fehlgeschlagen."), "error");
+        show(userErrorMessage(err, "Branding konnte nicht gespeichert werden. Bitte Hex-Codes prüfen."), "error");
       }
     });
   };
@@ -55,8 +58,9 @@ export function BrandingSection({ initial }: Props) {
         setLight(DEFAULT_LIGHT);
         setDark(DEFAULT_DARK);
         show("Auf VREMA-Standard zurückgesetzt.", "success");
+        router.refresh();
       } catch (err) {
-        show(userErrorMessage(err, "Reset fehlgeschlagen."), "error");
+        show(userErrorMessage(err, "Branding konnte nicht zurückgesetzt werden."), "error");
       }
     });
   };

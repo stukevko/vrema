@@ -2,11 +2,13 @@
 import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { KeyRound, Loader2 } from "lucide-react";
 import { setTerminalPin } from "@/lib/actions/settings";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 
 export function TerminalPinForm() {
+  const router = useRouter();
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,7 @@ export function TerminalPinForm() {
         show("Terminal-PIN erfolgreich aktualisiert.", "success");
         setPin("");
         setConfirmPin("");
+        router.refresh();
       } catch (err) {
         const message = userErrorMessage(err, "PIN konnte nicht gespeichert werden.");
         setError(message);

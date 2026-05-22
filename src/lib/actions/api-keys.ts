@@ -5,11 +5,11 @@ import { db } from "@/lib/db";
 import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
 import { issueApiKey } from "@/lib/api/keys";
 
-/** Owner / Super-Admin only. Andere Rollen werfen `Unauthorized`. */
+/** Owner / Super-Admin only. */
 async function requireOwner() {
   const { companyId, userId, role } = await requireTenant();
   if (role !== "COMPANY_OWNER" && role !== "SUPER_ADMIN") {
-    throw new Error("Unauthorized: nur Inhaber / Super-Admin dürfen API-Keys verwalten.");
+    throw new Error("API-Keys dürfen nur vom Inhaber oder Super-Admin verwaltet werden.");
   }
   return { companyId, userId };
 }

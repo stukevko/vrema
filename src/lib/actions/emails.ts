@@ -27,7 +27,7 @@ export async function sendPayrollReportEmail(data: {
 }) {
   const { role, plan } = await requireTenant();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
-    throw new Error("Unauthorized: nur Manager dürfen den Lohnbüro-Export verschicken.");
+    throw new Error("Lohnbüro-Versand ist nur für Inhaber und Manager verfügbar.");
   }
   const { assertPlanFeature } = await import("@/lib/plan-limits");
   assertPlanFeature(plan ?? "STARTER", "payrollEmail");

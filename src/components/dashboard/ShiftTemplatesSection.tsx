@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   createShiftTemplate,
   deleteShiftTemplate,
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export function ShiftTemplatesSection({ initialTemplates }: Props) {
+  const router = useRouter();
   const [templates, setTemplates] = useState(initialTemplates);
   const [name, setName] = useState("");
   const [startTime, setStartTime] = useState("08:00");
@@ -31,8 +33,9 @@ export function ShiftTemplatesSection({ initialTemplates }: Props) {
         setTemplates((prev) => [...prev, created].sort((a, b) => a.sortOrder - b.sortOrder));
         setName("");
         setMessage("Vorlage gespeichert.");
+        router.refresh();
       } catch (e: unknown) {
-        setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
+        setMessage(userErrorMessage(e, "Schicht-Vorlage konnte nicht gespeichert werden."));
       }
     });
   };
@@ -45,8 +48,9 @@ export function ShiftTemplatesSection({ initialTemplates }: Props) {
         await deleteShiftTemplate(id);
         setTemplates((prev) => prev.filter((t) => t.id !== id));
         setMessage("Vorlage gelöscht.");
+        router.refresh();
       } catch (e: unknown) {
-        setMessage(userErrorMessage(e, "Löschen fehlgeschlagen."));
+        setMessage(userErrorMessage(e, "Schicht-Vorlage konnte nicht gelöscht werden."));
       }
     });
   };

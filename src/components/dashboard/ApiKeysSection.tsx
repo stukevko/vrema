@@ -2,6 +2,7 @@
 import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { createApiKey, deleteApiKey, revokeApiKey } from "@/lib/actions/api-keys";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -37,6 +38,7 @@ function formatDate(d: Date | string | null) {
 }
 
 export function ApiKeysSection({ apiKeys }: Props) {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [isPending, startTransition] = useTransition();
   const [revealed, setRevealed] = useState<{ id: string; name: string; key: string } | null>(null);
@@ -54,8 +56,9 @@ export function ApiKeysSection({ apiKeys }: Props) {
         setRevealed({ id: issued.id, name: issued.name, key: issued.plainKey });
         setName("");
         show("API-Key erstellt — Klartext wird nur einmal angezeigt.", "success");
+        router.refresh();
       } catch (err) {
-        show(userErrorMessage(err, "Erstellung fehlgeschlagen."), "error");
+        show(userErrorMessage(err, "API-Key konnte nicht erstellt werden."), "error");
       }
     });
   };
@@ -65,8 +68,9 @@ export function ApiKeysSection({ apiKeys }: Props) {
       try {
         await revokeApiKey(id);
         show("Key deaktiviert.", "success");
+        router.refresh();
       } catch (err) {
-        show(userErrorMessage(err, "Fehler beim Revoken."), "error");
+        show(userErrorMessage(err, "API-Key konnte nicht deaktiviert werden."), "error");
       }
     });
   };
@@ -77,8 +81,9 @@ export function ApiKeysSection({ apiKeys }: Props) {
       try {
         await deleteApiKey(id);
         show("Key gelöscht.", "success");
+        router.refresh();
       } catch (err) {
-        show(userErrorMessage(err, "Fehler beim Löschen."), "error");
+        show(userErrorMessage(err, "API-Key konnte nicht gelöscht werden."), "error");
       }
     });
   };

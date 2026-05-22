@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { createTeamInviteLink } from "@/lib/actions/team";
 import { Copy, Loader2, Share2 } from "lucide-react";
 
 export function TeamInviteLinkCard() {
+  const router = useRouter();
   const [role, setRole] = useState<"USER" | "MANAGER" | "ADVISOR">("USER");
   const [inviteUrl, setInviteUrl] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -16,8 +18,9 @@ export function TeamInviteLinkCard() {
       try {
         const result = await createTeamInviteLink(role);
         setInviteUrl(result.url);
+        router.refresh();
       } catch {
-        setFeedback("Link konnte nicht erstellt werden.");
+        setFeedback("Einladungslink konnte nicht erstellt werden. Bitte erneut versuchen.");
       }
     });
   };

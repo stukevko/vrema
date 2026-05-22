@@ -8,7 +8,7 @@ import { normalizeHex, VREMA_DEFAULT_BRAND_HEX, VREMA_DEFAULT_BRAND_HEX_DARK } f
 export async function getBrandingSettings() {
   const { companyId, role } = await requireTenant();
   if (role !== "COMPANY_OWNER" && role !== "SUPER_ADMIN") {
-    throw new Error("Unauthorized: Branding ist eine Owner-Funktion.");
+    throw new Error("Branding-Einstellungen sind nur für den Inhaber verfügbar.");
   }
   const company = await db.company.findUnique({
     where: { id: companyId },
@@ -27,7 +27,7 @@ export async function updateBranding(data: {
 }) {
   const { companyId, role } = await requireTenant();
   if (role !== "COMPANY_OWNER" && role !== "SUPER_ADMIN") {
-    throw new Error("Unauthorized: Branding ist eine Owner-Funktion.");
+    throw new Error("Branding-Einstellungen sind nur für den Inhaber verfügbar.");
   }
 
   // Plan-Gate: Custom-Branding ist Enterprise-Feature.

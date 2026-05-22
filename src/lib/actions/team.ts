@@ -442,19 +442,14 @@ export async function deleteShift(shiftId: string) {
   const id = typeof shiftId === "string" ? shiftId.trim() : "";
   if (!id) throw new Error("Ungültige Schicht-Referenz.");
 
-  const existing = await db.shift.findFirst({
+  const deleted = await db.shift.deleteMany({
     where: tenantWhere(companyId, { id }),
-    select: { id: true },
   });
-  if (!existing) throw new Error("Schicht nicht gefunden.");
-
-  await db.$transaction([
-    db.shiftTaskList.deleteMany({ where: tenantWhere(companyId, { shiftId: id }) }),
-    db.shift.deleteMany({ where: tenantWhere(companyId, { id }) }),
-  ]);
+  if (deleted.count === 0) throw new Error("Schicht nicht gefunden.");
 
   revalidatePath("/dashboard/team");
   revalidatePath("/dashboard/planning");
+  revalidatePath("/dashboard");
 }
 
 export async function applyStandardWeek(input: {
@@ -617,15 +612,13 @@ export async function clearShiftSlot(input: {
 
   const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
   const { startTime, endTime } = normalizeShiftTimesForSave(input.startTime, input.endTime);
-  const startVariants = Array.from(new Set([startTime, input.startTime.trim().slice(0, 5)]));
-  const endVariants = Array.from(new Set([endTime, input.endTime.trim().slice(0, 5)]));
 
   const deleted = await db.shift.deleteMany({
     where: tenantWhere(companyId, {
       weekIndex,
       dayOfWeek: input.dayOfWeek,
-      startTime: { in: startVariants },
-      endTime: { in: endVariants },
+      startTime,
+      endTime,
     }),
   });
 

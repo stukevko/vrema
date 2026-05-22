@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import type { AIInsightItem, AIInsightsPayload } from "@/lib/ai/types";
 import { getDayBoundsUtc } from "@/lib/time/timezone";
+import { workedMinutes as payrollWorkedMinutes } from "@/lib/time/payroll";
 import { getFiscalHealthCheck } from "@/lib/planning/intelligence";
 
 type DashboardFacts = {
@@ -27,9 +28,7 @@ function addDays(base: Date, days: number) {
 }
 
 function workedMinutes(clockIn: Date, clockOut: Date | null, breakMins: number) {
-  if (!clockOut) return 0;
-  const gross = Math.max(0, Math.round((clockOut.getTime() - clockIn.getTime()) / 60000));
-  return Math.max(0, gross - Math.max(0, breakMins));
+  return payrollWorkedMinutes({ clockIn, clockOut, breakMins });
 }
 
 async function loadDashboardFacts(companyId: string): Promise<DashboardFacts> {

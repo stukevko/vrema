@@ -30,7 +30,7 @@ export type WeeklyComplianceReport = {
 export async function getWeeklyComplianceReport(weekStart: string): Promise<WeeklyComplianceReport> {
   const { companyId, role } = await requireTenant();
   if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
-    throw new Error("Unauthorized: Compliance ist eine Manager-Funktion.");
+    throw new Error("Compliance-Berichte sind nur für Inhaber und Manager verfügbar.");
   }
 
   const [sy, sm, sd] = weekStart.split("-").map(Number);
