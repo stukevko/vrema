@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { applyOvertimeRecovery, getOvertimeRecoveryRecommendation } from "@/lib/actions/planner-board";
 import {
-  applyOvertimeRecovery,
-  getOvertimeRecoveryRecommendation,
+  formatSaldoHours,
   type MemberSaldoSnapshot,
   type OvertimeRecoveryDay,
-} from "@/lib/actions/planner-board";
-import { formatSaldoHours } from "@/lib/planning/board-assistant";
+} from "@/lib/planning/board-assistant";
 import { userErrorMessage } from "@/lib/errors/user-message";
 import { Button } from "@/components/ui/Button";
 import { Flame, Loader2, X } from "lucide-react";

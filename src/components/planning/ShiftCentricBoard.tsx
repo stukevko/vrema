@@ -5,7 +5,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { StatusTone } from "@/components/ui/StatusBadge";
 import type { ShiftTemplateRow } from "@/lib/actions/shift-templates";
-import type { MemberSaldoSnapshot } from "@/lib/actions/planner-board";
+import type { MemberSaldoSnapshot } from "@/lib/planning/board-assistant";
 import type { PlannerStaffingHint } from "@/lib/actions/predictive";
 import type { DailyWeatherForecast } from "@/lib/weather/shared";
 import {

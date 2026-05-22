@@ -16,8 +16,6 @@ import { cycleWeekStartIso } from "@/lib/planning/cycle-week-start";
 import { getPlannerStaffingHints } from "@/lib/actions/predictive";
 import { AbsenceRequestStatus, AbsenceType } from "@prisma/client";
 
-export type { MemberSaldoSnapshot, OvertimeRecoveryDay };
-
 export async function getPlannerBoardMemberSaldos(
   userIds: string[],
 ): Promise<Record<string, MemberSaldoSnapshot>> {
