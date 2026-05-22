@@ -61,13 +61,19 @@ export function ShiftPlanPdfExport({
   }
 
   return (
-    <button
-      type="button"
-      onClick={exportPdf}
-      className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-brand/30 bg-brand-soft/50 px-3 text-xs font-semibold text-foreground transition-colors hover:bg-brand-soft"
-    >
-      <FileDown className="h-3.5 w-3.5 text-brand" aria-hidden />
-      Schichtplan als PDF
-    </button>
+    <div className="flex flex-col items-start gap-1">
+      <button
+        type="button"
+        onClick={exportPdf}
+        className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-brand/30 bg-brand-soft/50 px-3 text-xs font-semibold text-foreground transition-colors hover:bg-brand-soft"
+        aria-label={`Schichtplan Woche ${weekIndex} als PDF herunterladen`}
+      >
+        <FileDown className="h-3.5 w-3.5 text-brand" aria-hidden />
+        Schichtplan als PDF
+      </button>
+      <p className="max-w-[14rem] text-[10px] leading-snug text-muted-foreground">
+        Querformat für WhatsApp & Ausdruck — Woche {weekIndex}, alle Teammitglieder.
+      </p>
+    </div>
   );
 }

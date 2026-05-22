@@ -120,9 +120,11 @@ export function buildShiftPlanPdf(input: {
     ...PLANNER_DAYS_MON_FIRST.map((d) => dayColumnHeader(weekIndex, d)),
   ];
 
+  const shiftsInWeek = weekShifts.length;
+
   const body =
     sortedMembers.length === 0
-      ? [["—", ...PLANNER_DAYS_MON_FIRST.map(() => "—")]]
+      ? [["Kein Team eingetragen", ...PLANNER_DAYS_MON_FIRST.map(() => "—")]]
       : sortedMembers.map((m) => {
           const label = m.area?.trim()
             ? `${pdfSafe(m.name)}\n(${pdfSafe(m.area.trim())})`
@@ -136,8 +138,18 @@ export function buildShiftPlanPdf(input: {
           ];
         });
 
+  if (shiftsInWeek === 0 && sortedMembers.length > 0) {
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text(
+      "Hinweis: In dieser Woche sind noch keine Schichten eingetragen.",
+      marginL,
+      marginT + 7,
+    );
+  }
+
   autoTable(doc, {
-    startY: marginT + 8,
+    startY: marginT + (shiftsInWeek === 0 && sortedMembers.length > 0 ? 11 : 8),
     margin: { left: marginL, right: marginR },
     head: [head],
     body,

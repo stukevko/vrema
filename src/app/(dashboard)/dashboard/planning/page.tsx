@@ -12,7 +12,8 @@ import { TradePushHint } from "@/components/planning/TradePushHint";
 import { OpenShiftsBoard } from "@/components/planning/OpenShiftsBoard";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 import { loadPlanningManagerPageData } from "@/lib/planning/planning-page-data";
-import { dateForPlannerCycleDay, dayOrderMonFirst } from "@/lib/planning/cycle-display-date";
+import { dateForPlannerCycleDay } from "@/lib/planning/cycle-display-date";
+import { sortPlannerShiftsChronologically } from "@/lib/planning/sort-shifts";
 import { parsePlannerWeekIndex } from "@/lib/planning/focus-week";
 import Link from "next/link";
 import { Handshake, Inbox, ListTodo } from "lucide-react";
@@ -215,12 +216,9 @@ export default async function PlanningPage({
     employeeModules.shiftTrade ? getOpenShiftTradesForMyRole() : Promise.resolve([]),
   ]);
 
-  const sortedShifts = [...schedule.shifts].sort((a, b) => {
-    const da = dayOrderMonFirst(a.dayOfWeek);
-    const db = dayOrderMonFirst(b.dayOfWeek);
-    if (da !== db) return da - db;
-    return String(a.startTime).localeCompare(String(b.startTime), "de");
-  });
+  const sortedShifts = sortPlannerShiftsChronologically(schedule.shifts);
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
 
   return (
     <div className="mx-auto max-w-3xl min-w-0 space-y-5 px-1 sm:space-y-6 sm:px-0">
@@ -249,7 +247,9 @@ export default async function PlanningPage({
       />
 
       <section className="glass-card p-4 sm:p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Nächste Einsätze</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          {schedule.shiftCycleWeeks > 1 ? "Alle Einsätze im Zyklus" : "Deine Einsätze"}
+        </h2>
         {sortedShifts.length === 0 ? (
           <EmptyState
             className="mt-4"
@@ -260,8 +260,9 @@ export default async function PlanningPage({
         ) : (
           <ul className="mt-4 space-y-3">
             {sortedShifts.map((r) => {
-              const wk = (r.weekIndex ?? 1) as 1 | 2 | 3;
+              const wk = Math.min(3, Math.max(1, Math.floor(r.weekIndex ?? 1))) as 1 | 2 | 3;
               const when = dateForPlannerCycleDay(wk, r.dayOfWeek);
+              const isPast = when.getTime() < todayStart.getTime();
               const dateLine = when.toLocaleDateString("de-DE", {
                 weekday: "long",
                 day: "2-digit",
@@ -271,9 +272,25 @@ export default async function PlanningPage({
               return (
                 <li
                   key={r.id}
-                  className="rounded-2xl border border-line bg-surface px-4 py-3 shadow-sm dark:border-white/10 dark:bg-surface/90"
+                  className={`rounded-2xl border px-4 py-3 shadow-sm dark:border-white/10 ${
+                    isPast
+                      ? "border-line/60 bg-muted/25 opacity-80"
+                      : "border-line bg-surface dark:bg-surface/90"
+                  }`}
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{dateLine}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{dateLine}</p>
+                    {schedule.shiftCycleWeeks > 1 ? (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                        Woche {wk}
+                      </span>
+                    ) : null}
+                    {isPast ? (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        vergangen
+                      </span>
+                    ) : null}
+                  </div>
                   <p className="mt-1 font-sans text-lg font-bold tabular-nums text-brand">
                     {String(r.startTime).slice(0, 5)} – {String(r.endTime).slice(0, 5)} Uhr
                   </p>

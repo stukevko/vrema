@@ -1125,15 +1125,17 @@ export function ShiftManager({
             breakDuration: s.breakDuration ?? 0,
           }));
           startTransition(async () => {
-            const results = await Promise.allSettled(
-              targets.map((s) => clearShiftForDay({ userId: s.userId, weekIndex: s.weekIndex, dayOfWeek: s.dayOfWeek }))
+            const results = await Promise.all(
+              targets.map((s) =>
+                clearShiftForDay({ userId: s.userId, weekIndex: s.weekIndex, dayOfWeek: s.dayOfWeek }),
+              ),
             );
-            const failed = results.filter((r) => r.status === "rejected").length;
-            if (failed > 0) {
+            const failed = results.filter((r) => !r.ok);
+            if (failed.length > 0) {
               setMessage(
-                failed === targets.length
-                  ? "Schichten konnten nicht gelöscht werden. Bitte erneut versuchen."
-                  : `${failed} von ${targets.length} Schichten konnten nicht gelöscht werden.`
+                failed.length === targets.length
+                  ? (failed[0]?.error ?? "Schichten konnten nicht gelöscht werden.")
+                  : `${failed.length} von ${targets.length} Schichten konnten nicht gelöscht werden.`,
               );
             } else {
               router.refresh();
@@ -1468,7 +1470,15 @@ export function ShiftManager({
     startTransition(async () => {
       try {
         if (existing && existing.startTime === startTime && existing.endTime === endTime) {
-          await clearShiftForDay({ userId: selectedUserId, weekIndex: selectedWeekIndex, dayOfWeek });
+          const cleared = await clearShiftForDay({
+            userId: selectedUserId,
+            weekIndex: selectedWeekIndex,
+            dayOfWeek,
+          });
+          if (!cleared.ok) {
+            setMessage(cleared.error);
+            return;
+          }
           setMessage(`Schicht für ${DAY_LABELS[dayOfWeek]} gelöscht.`);
           setRecentDayAction({ dayOfWeek, action: "deleted" });
           router.refresh();
@@ -2534,7 +2544,11 @@ export function ShiftManager({
   const pdfMembers = useMemo(
     () =>
       members
-        .filter((m) => !isOpenShiftPlaceholderEmail(m.email))
+        .filter(
+          (m) =>
+            !isOpenShiftPlaceholderEmail(m.email) &&
+            ["EMPLOYEE", "MANAGER", "COMPANY_OWNER"].includes(m.role ?? "EMPLOYEE"),
+        )
         .map((m) => ({
           id: m.id,
           name: (m.name ?? m.email).trim(),
@@ -2923,27 +2937,27 @@ export function ShiftManager({
                 onClick={() => {
                   setMessage(null);
                   startTransition(async () => {
-                    try {
-                      if (shiftEdit.shiftId) {
-                        const removed = await removeShiftViaApi(shiftEdit.shiftId);
-                        if (!removed.ok) {
-                          setMessage(removed.error);
-                          return;
-                        }
-                        setHiddenShiftIds((prev) => new Set(prev).add(shiftEdit.shiftId!));
-                      } else {
-                        await clearShiftForDay({
-                          userId: shiftEdit.userId,
-                          weekIndex: selectedWeekIndex,
-                          dayOfWeek: shiftEdit.dayOfWeek,
-                        });
+                    if (shiftEdit.shiftId) {
+                      const removed = await removeShiftViaApi(shiftEdit.shiftId);
+                      if (!removed.ok) {
+                        setMessage(removed.error);
+                        return;
                       }
-                      setShiftEdit(null);
-                      setMessage("Schicht gelöscht.");
-                      router.refresh();
-                    } catch (err: unknown) {
-                      setMessage(userErrorMessage(err, "Löschen fehlgeschlagen."));
+                      setHiddenShiftIds((prev) => new Set(prev).add(shiftEdit.shiftId!));
+                    } else {
+                      const cleared = await clearShiftForDay({
+                        userId: shiftEdit.userId,
+                        weekIndex: selectedWeekIndex,
+                        dayOfWeek: shiftEdit.dayOfWeek,
+                      });
+                      if (!cleared.ok) {
+                        setMessage(cleared.error);
+                        return;
+                      }
                     }
+                    setShiftEdit(null);
+                    setMessage("Schicht gelöscht.");
+                    router.refresh();
                   });
                 }}
                 className="min-h-12 w-full touch-manipulation rounded-lg border border-danger/35 bg-danger-soft px-4 py-3 text-sm text-danger-foreground transition-colors hover:bg-danger-soft/90 disabled:opacity-50 sm:w-auto sm:py-2"

@@ -22,7 +22,10 @@ Manuelle Checkliste **vor jedem Production-Push** (ca. 15–20 Min.). Bei einem 
 
 - [ ] **Schicht zuweisen** im Planer → Person erscheint in der Schichtkarte
 - [ ] **Zuweisung entfernen** → kein 500 in Netzwerk-Tab, Person verschwindet nach Aktion
+- [ ] **Ungültige Zeit** (z. B. >18 h) → konkrete Fehlermeldung, nicht nur „Speichern fehlgeschlagen“
 - [ ] **Schicht-Vorlage** anlegen/löschen (Einstellungen) → Liste aktualisiert ohne Hard-Reload
+- [ ] **Schichtplan PDF** (Business): Button im Planer → PDF mit Team × Mo–So, lesbar auf dem Handy
+- [ ] **Mitarbeiter „Mein Dienstplan“**: Wochen-Raster + Liste chronologisch, Drucken/PDF speichern möglich
 
 ## Team & Einstellungen
 

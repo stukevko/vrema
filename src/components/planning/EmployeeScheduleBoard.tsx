@@ -8,6 +8,7 @@ import {
   mondayOfWeekContaining,
 } from "@/lib/planning/cycle-display-date";
 import { getWeekCycleIndex } from "@/lib/shift-cycle";
+import { formatShiftRange } from "@/lib/planning/shift-display";
 
 const DAY_NAMES = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"] as const;
 const PLANNER_DAYS_MON_FIRST = [1, 2, 3, 4, 5, 6, 0] as const;
@@ -29,10 +30,6 @@ type Props = {
   initialWeekIndex?: 1 | 2 | 3;
 };
 
-function formatTime(value: string): string {
-  return value.slice(0, 5);
-}
-
 function isSameCalendarDay(a: Date, b: Date): boolean {
   return (
     a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
@@ -51,11 +48,11 @@ export function EmployeeScheduleBoard({
   const [selectedWeek, setSelectedWeek] = useState<1 | 2 | 3>(defaultWeek);
 
   const weekRangeLabel = useMemo(() => {
-    const monday = mondayOfWeekContaining(today);
+    const monday = mondayOfWeekContaining(new Date());
     const weekMonday = new Date(monday);
     weekMonday.setDate(monday.getDate() + (selectedWeek - 1) * 7);
     return formatPlannerWeekRange(weekMonday);
-  }, [selectedWeek, today]);
+  }, [selectedWeek]);
 
   const shiftsByDay = useMemo(() => {
     const map = new Map<number, EmployeeShiftRow>();
@@ -140,7 +137,7 @@ export function EmployeeScheduleBoard({
               {shift ? (
                 <>
                   <p className="mt-auto font-sans text-sm font-bold tabular-nums leading-tight text-brand sm:text-base">
-                    {formatTime(shift.startTime)}–{formatTime(shift.endTime)}
+                    {formatShiftRange(shift.startTime, shift.endTime)} Uhr
                   </p>
                   {(shift.breakDuration ?? 0) > 0 ? (
                     <p className="text-[10px] text-muted-foreground">Pause {shift.breakDuration} Min</p>

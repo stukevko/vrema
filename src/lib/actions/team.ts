@@ -580,23 +580,38 @@ export async function setShiftForDay(input: {
   }
 }
 
-export async function clearShiftForDay(input: { userId: string; weekIndex?: number; dayOfWeek: number }) {
-  const { companyId, role } = await requireTenant();
-  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
-    throw new Error("Keine Berechtigung.");
+export type ClearShiftForDayResult = { ok: true } | { ok: false; error: string };
+
+export async function clearShiftForDay(input: {
+  userId: string;
+  weekIndex?: number;
+  dayOfWeek: number;
+}): Promise<ClearShiftForDayResult> {
+  try {
+    const tenant = await requireTenantAction();
+    if (!tenant.ok) return { ok: false, error: tenant.error };
+    if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(tenant.role ?? "")) {
+      return { ok: false, error: "Keine Berechtigung." };
+    }
+    const { companyId } = tenant;
+
+    const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
+    await db.shift.deleteMany({
+      where: tenantWhere(companyId, {
+        userId: input.userId,
+        weekIndex,
+        dayOfWeek: input.dayOfWeek,
+      }),
+    });
+
+    revalidatePath("/dashboard/team");
+    revalidatePath("/dashboard/planning");
+    return { ok: true };
+  } catch (err) {
+    const { logServerError } = await import("@/lib/server-logger");
+    logServerError("team.clearShiftForDay", err, input);
+    return { ok: false, error: "Schicht konnte nicht entfernt werden. Bitte erneut versuchen." };
   }
-
-  const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
-  await db.shift.deleteMany({
-    where: tenantWhere(companyId, {
-      userId: input.userId,
-      weekIndex,
-      dayOfWeek: input.dayOfWeek,
-    }),
-  });
-
-  revalidatePath("/dashboard/team");
-  revalidatePath("/dashboard/planning");
 }
 
 /** Entfernt alle Zuweisungen einer Schichtkarte (Tag + Zeitfenster) im Planer-Board. */
