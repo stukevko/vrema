@@ -20,7 +20,6 @@ import {
   TriangleAlert,
   ClipboardCheck,
   ChevronDown,
-  Target,
   CalendarPlus,
   FileText,
   PartyPopper,
@@ -51,6 +50,9 @@ import { logServerError } from "@/lib/server-logger";
 import { resolveLucideIcon } from "@/lib/icons/safe-lucide";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 import type { CompanyModules } from "@/lib/company-modules";
+import { getVacationConflictDaysForPlanning } from "@/lib/actions/vacation";
+import { getManagerFocusSnapshot } from "@/lib/dashboard/manager-focus-snapshot";
+import { ManagerFocusCards } from "@/components/dashboard/ManagerFocusCards";
 
 /**
  * Defensive: optionale Sektionen dürfen niemals die ganze Seite zerschießen.
@@ -329,6 +331,17 @@ export default async function DashboardPage({
 
   const focus = teamStats ? managerPrimaryFocus(teamStats, companyModules) : null;
 
+  const managerFocusSnapshot =
+    isManager && teamStats
+      ? await safe(
+          getVacationConflictDaysForPlanning().then((conflicts) =>
+            getManagerFocusSnapshot(companyId, teamStats, companyModules, conflicts),
+          ),
+          "dashboard.managerFocus",
+          null,
+        )
+      : null;
+
   // Hero-KPI: Personalkosten heute. Wir nutzen den effektiven Brutto-Stundenlohn,
   // ziehen Pausen ab und beziehen offene Schichten bis "jetzt" mit ein.
   const todayPersonnelCostsEuro = (() => {
@@ -378,6 +391,12 @@ export default async function DashboardPage({
           />
         </div>
       )}
+
+      {managerFocusSnapshot ? (
+        <div className="order-2 min-w-0">
+          <ManagerFocusCards snapshot={managerFocusSnapshot} />
+        </div>
+      ) : null}
 
       {showOwnerWelcome && isOwner ? (
         <OwnerWelcomeStrip focusWeek={ownerWelcomeFocusWeek} showPeaksModule={companyModules.peaks} />
@@ -460,24 +479,15 @@ export default async function DashboardPage({
       {/* Team stats (for owners/managers) — Fokus-Karte + Details für Kennzahlen */}
       {teamStats && focus && (
         <div className="order-5 min-w-0 space-y-4 md:order-4">
-          <div className="glass-card border-brand/25 bg-gradient-to-br from-brand/14 via-surface/30 to-transparent p-5 sm:p-6 dark:from-brand/18 dark:via-surface/20">
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand-soft text-brand shadow-sm dark:border-white/10 dark:bg-brand/22 dark:text-brand-foreground">
-                <Target className="h-4 w-4" aria-hidden />
-              </span>
-              <div className="min-w-0 flex-1 space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">Heute im Fokus</p>
-                <h2 className="text-base font-bold tracking-tight text-fg sm:text-lg">{focus.title}</h2>
-                <p className="text-sm text-fg-muted">{focus.description}</p>
-                <Link
-                  href={focus.href + (focus.href === "/dashboard/planning" && teamStats.pendingTradeApprovals > 0 ? "#shift-trade-approvals" : "")}
-                  className="btn-brand inline-flex min-h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold active:scale-[0.99]"
-                >
-                  {focus.cta}
-                </Link>
-              </div>
+          {focus.title !== "Heute keine kritischen Hinweise" ? (
+            <div className="rounded-2xl border border-warning/30 bg-warning-soft/40 px-4 py-3 text-sm text-foreground">
+              <p className="font-semibold">{focus.title}</p>
+              <p className="mt-0.5 text-muted-foreground">{focus.description}</p>
+              <Link href={focus.href} className="mt-2 inline-flex text-sm font-bold text-brand underline-offset-2">
+                {focus.cta} →
+              </Link>
             </div>
-          </div>
+          ) : null}
 
           <LiveOperationsWidget rows={liveOpsRows} />
 
