@@ -18,7 +18,7 @@ import {
 import { ShiftManager } from "@/components/dashboard/ShiftManager";
 import { TradePushHint } from "@/components/planning/TradePushHint";
 import { OpenShiftsBoard } from "@/components/planning/OpenShiftsBoard";
-import { getUnavailableDaysByUserIds } from "@/lib/actions/work-schedule";
+import { getUnavailableDaysForCompany } from "@/lib/actions/work-schedule";
 import { getShiftTemplates } from "@/lib/actions/shift-templates";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 import { dateForPlannerCycleDay, dayOrderMonFirst } from "@/lib/planning/cycle-display-date";
@@ -50,9 +50,10 @@ export default async function PlanningPage({
 
   const params = await searchParams;
   const role = session.user.role ?? "EMPLOYEE";
+  const companyId = session.user.companyId;
   const canManage = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
 
-  if (canManage) {
+  if (canManage && companyId) {
     try {
       await ensureEmployeeNumbersAssigned();
     } catch {
@@ -89,10 +90,18 @@ export default async function PlanningPage({
         logServerError(`planning.page.data[${i}]`, r.reason, { step: i });
       }
     });
-    const unavailableMap = await getUnavailableDaysByUserIds(members.map((m) => m.id));
-    const unavailableDaysByUserId = Object.fromEntries(
-      [...unavailableMap.entries()].map(([userId, days]) => [userId, [...days]]),
-    );
+    let unavailableDaysByUserId: Record<string, number[]> = {};
+    try {
+      const unavailableMap = await getUnavailableDaysForCompany(
+        companyId,
+        members.map((m) => m.id),
+      );
+      unavailableDaysByUserId = Object.fromEntries(
+        [...unavailableMap.entries()].map(([userId, days]) => [userId, [...days]]),
+      );
+    } catch (err) {
+      logServerError("planning.page.unavailableDays", err);
+    }
     return (
       <div className="mx-auto max-w-6xl space-y-4 px-1 sm:space-y-6 sm:px-0">
         <div className="glass-card flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-4">

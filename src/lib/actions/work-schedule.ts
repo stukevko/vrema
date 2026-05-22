@@ -84,6 +84,14 @@ export async function getUnavailableDaysByUserIds(
   userIds: string[],
 ): Promise<Map<string, Set<number>>> {
   const { companyId } = await requireTenant();
+  return getUnavailableDaysForCompany(companyId, userIds);
+}
+
+/** Planer-Seite: ohne erneuten requireTenant/redirect während RSC-Render. */
+export async function getUnavailableDaysForCompany(
+  companyId: string,
+  userIds: string[],
+): Promise<Map<string, Set<number>>> {
   if (userIds.length === 0) return new Map();
 
   const rows = await db.workSchedule.findMany({

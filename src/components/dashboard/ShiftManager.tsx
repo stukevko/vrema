@@ -455,6 +455,29 @@ export function ShiftManager({
     () => shifts.filter((s) => !hiddenShiftIds.has(s.id)),
     [shifts, hiddenShiftIds],
   );
+
+  /** Bei POST-500 der Server Action: API-Route als Fallback (ohne router.refresh). */
+  const removeShiftOnBoard = async (
+    shiftId: string,
+  ): Promise<{ ok: true } | { ok: false; error: string }> => {
+    try {
+      return await removePlannerShift(shiftId);
+    } catch {
+      try {
+        const res = await fetch("/api/dashboard/planning/remove-shift", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ shiftId }),
+          credentials: "same-origin",
+        });
+        const data = (await res.json()) as { ok?: boolean; error?: string };
+        if (res.ok && data.ok) return { ok: true };
+        return { ok: false, error: data.error ?? "Schicht konnte nicht entfernt werden." };
+      } catch {
+        return { ok: false, error: "Schicht konnte nicht entfernt werden. Bitte erneut versuchen." };
+      }
+    }
+  };
   const [activeDrag, setActiveDrag] = useState<{
     userId: string;
     mode: "create" | "move" | "resize-start" | "resize-end";
@@ -2365,14 +2388,13 @@ export function ShiftManager({
           }
           setMessage(null);
           startTransition(async () => {
-            const result = await removePlannerShift(shiftId);
+            const result = await removeShiftOnBoard(shiftId);
             if (!result.ok) {
               setMessage(result.error);
               return;
             }
             setHiddenShiftIds((prev) => new Set(prev).add(shiftId));
             setMessage("Zuweisung entfernt.");
-            router.refresh();
           });
         }}
         onClearSlot={(slot) => {
@@ -2387,12 +2409,18 @@ export function ShiftManager({
           }
           setMessage(null);
           startTransition(async () => {
-            const result = await clearPlannerShiftSlot({
-              weekIndex: selectedWeekIndex,
-              dayOfWeek: slot.dayOfWeek,
-              startTime: slot.startTime,
-              endTime: slot.endTime,
-            });
+            let result: Awaited<ReturnType<typeof clearPlannerShiftSlot>>;
+            try {
+              result = await clearPlannerShiftSlot({
+                weekIndex: selectedWeekIndex,
+                dayOfWeek: slot.dayOfWeek,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+              });
+            } catch {
+              setMessage("Schichtkarte konnte nicht geleert werden.");
+              return;
+            }
             if (!result.ok) {
               setMessage(result.error);
               return;
@@ -2408,7 +2436,6 @@ export function ShiftManager({
                 ? `${result.removed} Zuweisung${result.removed === 1 ? "" : "en"} entfernt — offene Lücke im Board.`
                 : "Keine Zuweisungen mehr vorhanden.",
             );
-            router.refresh();
           });
         }}
       />

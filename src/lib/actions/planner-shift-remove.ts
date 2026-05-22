@@ -1,18 +1,12 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { deletePlannerShiftCore } from "@/lib/planning/delete-shift-core";
 import { normalizeShiftTimesForSave } from "@/lib/planning/shift-display";
+import { db } from "@/lib/db";
 import { requireTenantAction, tenantWhere } from "@/lib/tenant-guard";
 import { logServerError } from "@/lib/server-logger";
-import { revalidatePath } from "next/cache";
 
 const MANAGER_ROLES = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"] as const;
-
-function revalidatePlannerPaths() {
-  revalidatePath("/dashboard/planning");
-  revalidatePath("/dashboard/team");
-  revalidatePath("/dashboard");
-}
 
 export type PlannerShiftRemoveResult =
   | { ok: true }
@@ -22,54 +16,33 @@ export type PlannerShiftClearSlotResult =
   | { ok: true; removed: number }
   | { ok: false; error: string };
 
-function isShiftTaskListUnavailable(err: unknown): boolean {
-  const msg = err instanceof Error ? err.message : String(err);
-  return /ShiftTaskList|relation.*does not exist|P2021/i.test(msg);
+function coerceShiftId(raw: unknown): string {
+  if (typeof raw === "string") return raw.trim();
+  if (Array.isArray(raw) && typeof raw[0] === "string") return raw[0].trim();
+  return "";
 }
 
-async function deleteShiftById(companyId: string, shiftId: string): Promise<number> {
-  try {
-    return await db.$transaction(async (tx) => {
-      await tx.shiftTaskList.deleteMany({
-        where: tenantWhere(companyId, { shiftId }),
-      });
-      const deleted = await tx.shift.deleteMany({
-        where: tenantWhere(companyId, { id: shiftId }),
-      });
-      return deleted.count;
-    });
-  } catch (err) {
-    if (!isShiftTaskListUnavailable(err)) throw err;
-    logServerError("planner.deleteShiftById.fallback", err, { shiftId });
-    const deleted = await db.shift.deleteMany({
-      where: tenantWhere(companyId, { id: shiftId }),
-    });
-    return deleted.count;
-  }
+function canManagePlanner(role: string | undefined): boolean {
+  return Boolean(role && MANAGER_ROLES.includes(role as (typeof MANAGER_ROLES)[number]));
 }
 
 /** Einzelne Schicht-Zuweisung vom Planer-Board entfernen (per ID). */
-export async function removePlannerShift(shiftId: string): Promise<PlannerShiftRemoveResult> {
+export async function removePlannerShift(shiftId: unknown): Promise<PlannerShiftRemoveResult> {
   const tenant = await requireTenantAction();
   if (!tenant.ok) return { ok: false, error: tenant.error };
+  if (!canManagePlanner(tenant.role)) return { ok: false, error: "Keine Berechtigung." };
 
-  const { companyId, role } = tenant;
-  if (!role || !MANAGER_ROLES.includes(role as (typeof MANAGER_ROLES)[number])) {
-    return { ok: false, error: "Keine Berechtigung." };
-  }
-
-  const id = typeof shiftId === "string" ? shiftId.trim() : "";
+  const id = coerceShiftId(shiftId);
   if (!id) return { ok: false, error: "Ungültige Schicht-Referenz." };
 
   try {
-    const count = await deleteShiftById(companyId, id);
+    const count = await deletePlannerShiftCore(tenant.companyId, id);
     if (count === 0) {
       return { ok: false, error: "Schicht nicht gefunden — bitte Seite neu laden." };
     }
-    revalidatePlannerPaths();
     return { ok: true };
   } catch (err) {
-    logServerError("planner.removePlannerShift", err, { shiftId: id, companyId });
+    logServerError("planner.removePlannerShift", err, { shiftId: id, companyId: tenant.companyId });
     return { ok: false, error: "Schicht konnte nicht entfernt werden. Bitte erneut versuchen." };
   }
 }
@@ -83,11 +56,7 @@ export async function clearPlannerShiftSlot(input: {
 }): Promise<PlannerShiftClearSlotResult> {
   const tenant = await requireTenantAction();
   if (!tenant.ok) return { ok: false, error: tenant.error };
-
-  const { companyId, role } = tenant;
-  if (!role || !MANAGER_ROLES.includes(role as (typeof MANAGER_ROLES)[number])) {
-    return { ok: false, error: "Keine Berechtigung." };
-  }
+  if (!canManagePlanner(tenant.role)) return { ok: false, error: "Keine Berechtigung." };
 
   const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
   const dayOfWeek = Math.min(6, Math.max(0, Math.floor(input.dayOfWeek)));
@@ -103,22 +72,24 @@ export async function clearPlannerShiftSlot(input: {
 
   try {
     const matches = await db.shift.findMany({
-      where: tenantWhere(companyId, { weekIndex, dayOfWeek, startTime, endTime }),
+      where: tenantWhere(tenant.companyId, { weekIndex, dayOfWeek, startTime, endTime }),
       select: { id: true },
     });
-    if (matches.length === 0) {
-      return { ok: true, removed: 0 };
-    }
 
     let removed = 0;
     for (const row of matches) {
-      removed += await deleteShiftById(companyId, row.id);
+      removed += await deletePlannerShiftCore(tenant.companyId, row.id);
     }
 
-    revalidatePlannerPaths();
     return { ok: true, removed };
   } catch (err) {
-    logServerError("planner.clearPlannerShiftSlot", err, { companyId, weekIndex, dayOfWeek, startTime, endTime });
+    logServerError("planner.clearPlannerShiftSlot", err, {
+      companyId: tenant.companyId,
+      weekIndex,
+      dayOfWeek,
+      startTime,
+      endTime,
+    });
     return { ok: false, error: "Schichtkarte konnte nicht geleert werden." };
   }
 }
