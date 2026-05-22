@@ -37,6 +37,7 @@ import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildComplianceFlagsByShiftId, type ShiftPlanRow } from "@/lib/planning/compliance";
+import { validateShiftTimesForSave } from "@/lib/planning/shift-display";
 import { countWeekCoverageGapSlots } from "@/lib/planning/planner-coverage-metrics";
 import {
   AlarmClock,
@@ -454,6 +455,29 @@ export function ShiftManager({
     () => shifts.filter((s) => !hiddenShiftIds.has(s.id)),
     [shifts, hiddenShiftIds],
   );
+
+  /** Server Action liefert { ok, error } — echte deutsche Meldung statt „Speichern fehlgeschlagen“. */
+  const persistShiftForDay = async (
+    input: Parameters<typeof setShiftForDay>[0],
+    successMessage: string,
+  ): Promise<boolean> => {
+    const pre = validateShiftTimesForSave(input.startTime, input.endTime);
+    if (!pre.ok) {
+      setMessage(pre.error);
+      return false;
+    }
+    const result = await setShiftForDay({
+      ...input,
+      startTime: pre.startTime,
+      endTime: pre.endTime,
+    });
+    if (!result.ok) {
+      setMessage(result.error);
+      return false;
+    }
+    setMessage(successMessage);
+    return true;
+  };
 
   /** Nur API-Route — vermeidet POST-500 auf /dashboard/planning (Server Action). */
   const removeShiftViaApi = async (
@@ -1033,14 +1057,18 @@ export function ShiftManager({
         if (idx === 0) {
           const nextDay = (contextMenu.dayOfWeek + 1) % 7;
           startTransition(async () => {
-            await setShiftForDay({
-              userId: contextMenu.userId,
-              weekIndex: selectedWeekIndex,
-              dayOfWeek: nextDay,
-              startTime: contextMenu.startTime,
-              endTime: contextMenu.endTime,
-              breakDuration: contextMenu.breakDuration,
-            });
+            const ok = await persistShiftForDay(
+              {
+                userId: contextMenu.userId,
+                weekIndex: selectedWeekIndex,
+                dayOfWeek: nextDay,
+                startTime: contextMenu.startTime,
+                endTime: contextMenu.endTime,
+                breakDuration: contextMenu.breakDuration,
+              },
+              `Schicht auf ${DAY_LABELS[nextDay]} kopiert.`,
+            );
+            if (ok) router.refresh();
           });
         }
         if (idx === 1) {
@@ -1132,19 +1160,22 @@ export function ShiftManager({
       if (key === "v") {
         if (!copiedShift || !timelineFocusedUserId) return;
         startTransition(async () => {
-        await setShiftForDay({
-          userId: timelineFocusedUserId,
-          weekIndex: selectedWeekIndex,
-          dayOfWeek: timelineDay,
-          startTime: copiedShift.startTime,
-          endTime: copiedShift.endTime,
-          breakDuration: copiedShift.breakDuration,
-        });
+          const ok = await persistShiftForDay(
+            {
+              userId: timelineFocusedUserId,
+              weekIndex: selectedWeekIndex,
+              dayOfWeek: timelineDay,
+              startTime: copiedShift.startTime,
+              endTime: copiedShift.endTime,
+              breakDuration: copiedShift.breakDuration,
+            },
+            "Schicht eingefügt.",
+          );
+          if (!ok) return;
           router.refresh();
+          setFlashAssignedKey(`${timelineFocusedUserId}-${timelineDay}`);
+          window.setTimeout(() => setFlashAssignedKey(null), 1200);
         });
-        setFlashAssignedKey(`${timelineFocusedUserId}-${timelineDay}`);
-        window.setTimeout(() => setFlashAssignedKey(null), 1200);
-        setMessage("Schicht eingefügt.");
         e.preventDefault();
       }
     };
@@ -1187,20 +1218,18 @@ export function ShiftManager({
     const endTimeValue = minutesToHHMM(snappedEnd);
     setMessage(null);
     startTransition(async () => {
-      try {
-        await setShiftForDay({
+      const ok = await persistShiftForDay(
+        {
           userId,
           weekIndex: selectedWeekIndex,
           dayOfWeek: timelineDay,
           startTime: startTimeValue,
           endTime: endTimeValue,
           breakDuration,
-        });
-        setMessage(`Schicht gesetzt: ${DAY_LABELS[timelineDay]} (${startTimeValue}-${endTimeValue}).`);
-        router.refresh();
-      } catch (e: unknown) {
-        setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
-      }
+        },
+        `Schicht gesetzt: ${DAY_LABELS[timelineDay]} (${startTimeValue}–${endTimeValue}).`,
+      );
+      if (ok) router.refresh();
     });
   };
 
@@ -1439,8 +1468,11 @@ export function ShiftManager({
           router.refresh();
           return;
         }
-        await setShiftForDay({ userId: selectedUserId, weekIndex: selectedWeekIndex, dayOfWeek, startTime, endTime });
-        setMessage(`Schicht für ${DAY_LABELS[dayOfWeek]} gesetzt (${startTime}-${endTime}).`);
+        const ok = await persistShiftForDay(
+          { userId: selectedUserId, weekIndex: selectedWeekIndex, dayOfWeek, startTime, endTime },
+          `Schicht für ${DAY_LABELS[dayOfWeek]} gesetzt (${startTime}–${endTime}).`,
+        );
+        if (!ok) return;
         setRecentDayAction({ dayOfWeek, action: "saved" });
         router.refresh();
       } catch (e: unknown) {
@@ -1902,24 +1934,23 @@ export function ShiftManager({
                         onClick={() => {
                           setMessage(null);
                           startTransition(async () => {
-                            try {
-                              await setShiftForDay({
+                            const ok = await persistShiftForDay(
+                              {
                                 userId: row.userId,
                                 weekIndex: selectedWeekIndex,
                                 dayOfWeek: mobileSelectedDay,
                                 startTime: row.startTime,
                                 endTime: row.endTime,
-                              });
-                              setSelectedUserId(row.userId);
-                              setStartTime(row.startTime);
-                              setEndTime(row.endTime);
-                              setAiQuickOpen(false);
-                              setAiQuickRows([]);
-                              router.refresh();
-                              setMessage(`Schicht für ${row.displayName} angelegt (${row.startTime}–${row.endTime}).`);
-                            } catch (e: unknown) {
-                              setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
-                            }
+                              },
+                              `Schicht für ${row.displayName} angelegt (${row.startTime}–${row.endTime}).`,
+                            );
+                            if (!ok) return;
+                            setSelectedUserId(row.userId);
+                            setStartTime(row.startTime);
+                            setEndTime(row.endTime);
+                            setAiQuickOpen(false);
+                            setAiQuickRows([]);
+                            router.refresh();
                           });
                         }}
                       >
@@ -2240,20 +2271,19 @@ export function ShiftManager({
     }
     setMessage(null);
     startTransition(async () => {
-      try {
-        await setShiftForDay({
+      const ok = await persistShiftForDay(
+        {
           userId,
           weekIndex: selectedWeekIndex,
           dayOfWeek: slot.dayOfWeek,
           startTime: slot.startTime,
           endTime: slot.endTime,
-        });
-        setSelectedUserId(userId);
-        setMessage("Zugewiesen.");
-        router.refresh();
-      } catch (e: unknown) {
-        setMessage(userErrorMessage(e, "Zuweisen fehlgeschlagen."));
-      }
+        },
+        "Zugewiesen.",
+      );
+      if (!ok) return;
+      setSelectedUserId(userId);
+      router.refresh();
     });
   };
 
@@ -2323,21 +2353,20 @@ export function ShiftManager({
     }
     setMessage(null);
     startTransition(async () => {
-      try {
-        await setShiftForDay({
+      const ok = await persistShiftForDay(
+        {
           userId: selectedUserId,
           weekIndex: selectedWeekIndex,
           dayOfWeek,
           startTime: slotStartNorm,
           endTime: slotEndNorm,
-        });
-        setStartTime(slotStartNorm);
-        setEndTime(slotEndNorm);
-        setMessage(`Schicht angelegt (${slotStartNorm}–${slotEndNorm}).`);
-        router.refresh();
-      } catch (e: unknown) {
-        setMessage(userErrorMessage(e, "Speichern fehlgeschlagen."));
-      }
+        },
+        `Schicht angelegt (${slotStartNorm}–${slotEndNorm}).`,
+      );
+      if (!ok) return;
+      setStartTime(slotStartNorm);
+      setEndTime(slotEndNorm);
+      router.refresh();
     });
   };
 
@@ -2752,20 +2781,19 @@ export function ShiftManager({
               const endTimeValue = minutesToHHMM(snappedEnd >= 24 * 60 ? snappedEnd - 24 * 60 : snappedEnd);
               setMessage(null);
               startTransition(async () => {
-                try {
-                  await setShiftForDay({
+                const ok = await persistShiftForDay(
+                  {
                     userId: shiftEdit.userId,
                     weekIndex: selectedWeekIndex,
                     dayOfWeek: shiftEdit.dayOfWeek,
                     startTime: minutesToHHMM(s),
                     endTime: endTimeValue,
-                  });
-                  setShiftEdit(null);
-                  setMessage("Schicht gespeichert.");
-                  router.refresh();
-                } catch (err: unknown) {
-                  setMessage(userErrorMessage(err, "Speichern fehlgeschlagen."));
-                }
+                  },
+                  "Schicht gespeichert.",
+                );
+                if (!ok) return;
+                setShiftEdit(null);
+                router.refresh();
               });
             }
           }}
@@ -2816,20 +2844,19 @@ export function ShiftManager({
                   e = Math.max(s + TIMELINE_SNAP_MINUTES, snapMinutes(e));
                   setMessage(null);
                   startTransition(async () => {
-                    try {
-                      await setShiftForDay({
+                    const ok = await persistShiftForDay(
+                      {
                         userId: shiftEdit.userId,
                         weekIndex: selectedWeekIndex,
                         dayOfWeek: shiftEdit.dayOfWeek,
                         startTime: minutesToHHMM(s),
                         endTime: minutesToHHMM(e),
-                      });
-                      setShiftEdit(null);
-                      setMessage("Schicht gespeichert.");
-                      router.refresh();
-                    } catch (err: unknown) {
-                      setMessage(userErrorMessage(err, "Speichern fehlgeschlagen."));
-                    }
+                      },
+                      "Schicht gespeichert.",
+                    );
+                    if (!ok) return;
+                    setShiftEdit(null);
+                    router.refresh();
                   });
                 }}
                 className="min-h-12 w-full touch-manipulation rounded-lg border border-brand/35 bg-brand-soft px-4 py-3 text-sm font-semibold text-brand transition-all hover:bg-brand/15 hover:shadow-md disabled:opacity-50 sm:w-auto sm:py-2"

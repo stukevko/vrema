@@ -23,6 +23,9 @@ export function shiftNetDurationMinutes(start: string, end: string, breakDuratio
   return Math.max(0, shiftDurationMinutes(start, end) - Math.max(0, breakDuration));
 }
 
+/** Gastronomie: lange Schichten bis 18 h (darüber meist Eingabefehler). */
+export const MAX_SHIFT_DURATION_MINUTES = 18 * 60;
+
 /** Offensichtlich kaputte Timeline-Zeiten (voller Tag, Mitternacht-Falle). */
 export function isSuspiciousShiftTime(start: string, end: string): boolean {
   const s = parseShiftMinutes(start);
@@ -30,7 +33,29 @@ export function isSuspiciousShiftTime(start: string, end: string): boolean {
   if (s === null || e === null) return true;
   if (s === 0 && e >= 24 * 60) return true;
   const dur = shiftDurationMinutes(start, end);
-  return dur <= 0 || dur > 16 * 60;
+  return dur <= 0 || dur > MAX_SHIFT_DURATION_MINUTES;
+}
+
+export type ShiftTimesValidation =
+  | { ok: true; startTime: string; endTime: string }
+  | { ok: false; error: string };
+
+/** Client + Server: gleiche Regeln, lesbare Fehlermeldung statt generischem 500. */
+export function validateShiftTimesForSave(startTime: string, endTime: string): ShiftTimesValidation {
+  let start = padHHMM(startTime);
+  let end = padHHMM(endTime);
+  if (end === "24:00") end = "23:45";
+  if (isSuspiciousShiftTime(start, end)) {
+    const dur = shiftDurationMinutes(start, end);
+    if (dur <= 0) {
+      return { ok: false, error: "Start- und Endzeit dürfen nicht gleich sein." };
+    }
+    return {
+      ok: false,
+      error: `Schichtdauer ${Math.round(dur / 60)} h — bitte kürzer planen (max. ${MAX_SHIFT_DURATION_MINUTES / 60} h) oder Endzeit am Folgetag prüfen.`,
+    };
+  }
+  return { ok: true, startTime: start, endTime: end };
 }
 
 export function shiftSlotKind(start: string): ShiftSlotKind {
@@ -107,11 +132,7 @@ function padHHMM(value: string): string {
 }
 
 export function normalizeShiftTimesForSave(startTime: string, endTime: string): { startTime: string; endTime: string } {
-  let start = padHHMM(startTime);
-  let end = padHHMM(endTime);
-  if (end === "24:00") end = "23:45";
-  if (isSuspiciousShiftTime(start, end)) {
-    throw new Error("Ungültige Schichtzeit. Bitte realistische Start- und Endzeit wählen (max. 16 h).");
-  }
-  return { startTime: start, endTime: end };
+  const v = validateShiftTimesForSave(startTime, endTime);
+  if (!v.ok) throw new Error(v.error);
+  return { startTime: v.startTime, endTime: v.endTime };
 }

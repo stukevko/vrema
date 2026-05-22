@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
+import { requireTenant, requireTenantAction, tenantWhere } from "@/lib/tenant-guard";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "@/lib/email/transactional";
@@ -21,7 +21,7 @@ import {
 } from "@/lib/team/allocate-employee-number";
 import { assertCanAddEmployees } from "@/lib/plan-limits";
 import { ensureOpenShiftPlaceholderUser, isOpenShiftPlaceholderEmail } from "@/lib/planning/open-shift-placeholder";
-import { normalizeShiftTimesForSave } from "@/lib/planning/shift-display";
+import { normalizeShiftTimesForSave, validateShiftTimesForSave } from "@/lib/planning/shift-display";
 
 const MINUTES_PER_DAY = 24 * 60;
 const DAYS_PER_WEEK = 7;
@@ -493,6 +493,8 @@ export async function applyStandardWeek(input: {
   revalidatePath("/dashboard/planning");
 }
 
+export type SetShiftForDayResult = { ok: true } | { ok: false; error: string };
+
 export async function setShiftForDay(input: {
   userId: string;
   weekIndex?: number;
@@ -500,65 +502,82 @@ export async function setShiftForDay(input: {
   startTime: string;
   endTime: string;
   breakDuration?: number;
-}) {
-  const { companyId, role } = await requireTenant();
-  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
-    throw new Error("Keine Berechtigung.");
-  }
+}): Promise<SetShiftForDayResult> {
+  try {
+    const tenant = await requireTenantAction();
+    if (!tenant.ok) return { ok: false, error: tenant.error };
+    if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(tenant.role ?? "")) {
+      return { ok: false, error: "Keine Berechtigung." };
+    }
+    const { companyId } = tenant;
 
-  const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
-  const { startTime, endTime } = normalizeShiftTimesForSave(input.startTime, input.endTime);
-  const breakDuration = Math.max(0, Math.min(180, Math.floor(input.breakDuration ?? 0)));
-  if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
-    throw new Error("Ungültiges Zeitformat. Erwartet HH:MM.");
-  }
+    const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
+    const times = validateShiftTimesForSave(input.startTime, input.endTime);
+    if (!times.ok) return times;
+    const { startTime, endTime } = times;
+    const breakDuration = Math.max(0, Math.min(180, Math.floor(input.breakDuration ?? 0)));
 
-  const replacedSameDay = await db.shift.findMany({
-    where: tenantWhere(companyId, {
-      userId: input.userId,
-      weekIndex,
-      dayOfWeek: input.dayOfWeek,
-    }),
-    select: { id: true },
-  });
-  const ignoredShiftIds = replacedSameDay.map((s) => s.id);
-
-  await assertNoShiftOverlap({
-    companyId,
-    userId: input.userId,
-    weekIndex,
-    dayOfWeek: input.dayOfWeek,
-    startTime,
-    endTime,
-    ignoredShiftIds,
-  });
-
-  await db.$transaction([
-    db.shift.deleteMany({
+    const replacedSameDay = await db.shift.findMany({
       where: tenantWhere(companyId, {
         userId: input.userId,
         weekIndex,
         dayOfWeek: input.dayOfWeek,
       }),
-    }),
-    db.shift.create({
-      data: {
+      select: { id: true },
+    });
+    const ignoredShiftIds = replacedSameDay.map((s) => s.id);
+
+    try {
+      await assertNoShiftOverlap({
         companyId,
         userId: input.userId,
         weekIndex,
         dayOfWeek: input.dayOfWeek,
         startTime,
         endTime,
-        breakDuration,
-        isOpenForTrade: false,
-        tradeStatus: ShiftTradeStatus.NONE,
-        tradeRequestedBy: null,
-      },
-    }),
-  ]);
+        ignoredShiftIds,
+      });
+    } catch (overlapErr) {
+      const msg = overlapErr instanceof Error ? overlapErr.message : "";
+      return { ok: false, error: msg || "Schicht überschneidet sich mit einer bestehenden Schicht." };
+    }
 
-  revalidatePath("/dashboard/team");
-  revalidatePath("/dashboard/planning");
+    await db.$transaction([
+      db.shift.deleteMany({
+        where: tenantWhere(companyId, {
+          userId: input.userId,
+          weekIndex,
+          dayOfWeek: input.dayOfWeek,
+        }),
+      }),
+      db.shift.create({
+        data: {
+          companyId,
+          userId: input.userId,
+          weekIndex,
+          dayOfWeek: input.dayOfWeek,
+          startTime,
+          endTime,
+          breakDuration,
+          isOpenForTrade: false,
+          tradeStatus: ShiftTradeStatus.NONE,
+          tradeRequestedBy: null,
+        },
+      }),
+    ]);
+
+    revalidatePath("/dashboard/team");
+    revalidatePath("/dashboard/planning");
+    return { ok: true };
+  } catch (err) {
+    const { logServerError } = await import("@/lib/server-logger");
+    logServerError("team.setShiftForDay", err, input);
+    const msg = err instanceof Error ? err.message.trim() : "";
+    if (msg && /[äöüßÄÖÜ]|Bitte|Keine|Schicht|Ungültig|Berechtigung/i.test(msg)) {
+      return { ok: false, error: msg };
+    }
+    return { ok: false, error: "Schicht konnte nicht gespeichert werden. Bitte erneut versuchen." };
+  }
 }
 
 export async function clearShiftForDay(input: { userId: string; weekIndex?: number; dayOfWeek: number }) {
@@ -1046,7 +1065,7 @@ export async function publishOpenShiftVacancy(input: {
   const dayOfWeek = Math.min(6, Math.max(0, Math.floor(input.dayOfWeek)));
   const placeholderId = await ensureOpenShiftPlaceholderUser(companyId);
 
-  await setShiftForDay({
+  const saved = await setShiftForDay({
     userId: placeholderId,
     weekIndex,
     dayOfWeek,
@@ -1054,6 +1073,7 @@ export async function publishOpenShiftVacancy(input: {
     endTime: input.endTime,
     breakDuration: input.breakDuration ?? 0,
   });
+  if (!saved.ok) throw new Error(saved.error);
 
   const shift = await db.shift.findFirst({
     where: tenantWhere(companyId, {
