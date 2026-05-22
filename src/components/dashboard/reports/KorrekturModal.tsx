@@ -15,7 +15,7 @@ import { Loader2 } from "lucide-react";
 const STATUS_OPTIONS = [
   { value: "ON_TIME", label: "Pünktlich" },
   { value: "LATE", label: "Verspätet" },
-  { value: "MANUAL_ADJUSTED", label: "Manuell korrigiert" },
+  { value: "MANUAL_ADJUSTED", label: "Manuell korrigiert (Chef)" },
 ] as const;
 
 export type KorrekturStatus = (typeof STATUS_OPTIONS)[number]["value"];

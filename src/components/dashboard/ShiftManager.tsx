@@ -447,6 +447,14 @@ export function ShiftManager({
   const dragSnapshotRef = useRef<{ start: number; end: number } | null>(null);
   const shiftsRef = useRef(shifts);
   shiftsRef.current = shifts;
+  const [hiddenShiftIds, setHiddenShiftIds] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    setHiddenShiftIds(new Set());
+  }, [shifts]);
+  const displayShifts = useMemo(
+    () => shifts.filter((s) => !hiddenShiftIds.has(s.id)),
+    [shifts, hiddenShiftIds],
+  );
   const [activeDrag, setActiveDrag] = useState<{
     userId: string;
     mode: "create" | "move" | "resize-start" | "resize-end";
@@ -2183,13 +2191,13 @@ export function ShiftManager({
   }, [shiftTemplates]);
 
   const plannedMinutesByUser = useMemo(
-    () => buildMemberWeekMinutes(shifts, selectedWeekIndex, members.map((m) => m.id)),
-    [shifts, selectedWeekIndex, members],
+    () => buildMemberWeekMinutes(displayShifts, selectedWeekIndex, members.map((m) => m.id)),
+    [displayShifts, selectedWeekIndex, members],
   );
 
   const shiftPlanRows: ShiftPlanRow[] = useMemo(
     () =>
-      shifts.map((s) => ({
+      displayShifts.map((s) => ({
         id: s.id,
         userId: s.userId,
         weekIndex: s.weekIndex,
@@ -2197,7 +2205,7 @@ export function ShiftManager({
         startTime: s.startTime,
         endTime: s.endTime,
       })),
-    [shifts],
+    [displayShifts],
   );
 
   const executeShiftAssignment = (userId: string, slot: BoardShiftSlot) => {
@@ -2313,7 +2321,7 @@ export function ShiftManager({
     <>
       <ShiftCentricBoard
         members={members}
-        shifts={shifts}
+        shifts={displayShifts}
         selectedWeekIndex={selectedWeekIndex}
         neededStaff={neededStaff}
         planWeekRangeLabel={planWeekRangeLabel}
@@ -2362,6 +2370,7 @@ export function ShiftManager({
               setMessage(result.error);
               return;
             }
+            setHiddenShiftIds((prev) => new Set(prev).add(shiftId));
             setMessage("Zuweisung entfernt.");
             router.refresh();
           });
@@ -2388,6 +2397,12 @@ export function ShiftManager({
               setMessage(result.error);
               return;
             }
+            const idsToHide = slot.assignments.map((a) => a.shiftId);
+            setHiddenShiftIds((prev) => {
+              const next = new Set(prev);
+              for (const id of idsToHide) next.add(id);
+              return next;
+            });
             setMessage(
               result.removed > 0
                 ? `${result.removed} Zuweisung${result.removed === 1 ? "" : "en"} entfernt — offene Lücke im Board.`

@@ -40,6 +40,12 @@ import {
   type GatedBusinessFeature,
 } from "@/lib/plan-upgrade-messages";
 import { minutesToDecimalHours, workedMinutes } from "@/lib/time/payroll";
+import {
+  humanizeWorkLogNote,
+  workLogStatusLabel,
+  workLogStatusPrintLabel,
+  type WorkLogStatus,
+} from "@/lib/reports/work-log-display";
 import type { AIReportAnalysisPayload } from "@/lib/ai/types";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -290,19 +296,15 @@ function pdfHeaderFirmenzeile(companyName: string) {
 }
 
 function statusLabel(status: LogRow["status"]) {
-  if (status === "ON_TIME") return "Pünktlich";
-  if (status === "LATE") return "Zu spät";
-  if (status === "ABSENT") return "Fehlend";
-  return "Manuell";
+  return workLogStatusLabel(status as WorkLogStatus);
 }
 
-/** Schwarz-Weiß-taugliche Status für Druck & PDF (Symbol statt Farbe). */
 function statusPrintLabel(status: LogRow["status"]) {
-  const label = statusLabel(status);
-  if (status === "LATE") return `▲ ${label}`;
-  if (status === "ABSENT") return `■ ${label}`;
-  if (status === "MANUAL_ADJUSTED") return `◆ ${label}`;
-  return `● ${label}`;
+  return workLogStatusPrintLabel(status as WorkLogStatus);
+}
+
+function noteLabel(note: string | null) {
+  return humanizeWorkLogNote(note);
 }
 
 function statusPrintClass(status: LogRow["status"]) {
@@ -594,7 +596,7 @@ export function ReportsClient({
             netMin !== null ? netMin : "—",
             netMin !== null ? decimalHoursDE(netMin) : "—",
             statusPrintLabel(log.status),
-            log.note ?? "",
+            noteLabel(log.note),
           ];
         });
 
@@ -647,7 +649,7 @@ export function ReportsClient({
         didParseCell: (data) => {
           if (data.section !== "body" || data.column.index !== 6) return;
           const raw = String(data.cell.raw ?? "");
-          if (raw.includes("▲") || raw.includes("■") || raw.includes("◆")) {
+          if (raw.includes("Zu spät") || raw.includes("Nicht erschienen") || raw.includes("Manuell")) {
             data.cell.styles.fontStyle = "bold";
             data.cell.styles.textColor = [0, 0, 0];
           }
@@ -773,7 +775,7 @@ export function ReportsClient({
           "",
           "",
           statusLabel(log.status),
-          log.note ?? "",
+          noteLabel(log.note),
         ]);
       });
 
@@ -990,7 +992,7 @@ export function ReportsClient({
           clockOut: payload.clockOut ? new Date(payload.clockOut).toISOString() : null,
           breakMins: payload.breakMins,
           status: payload.status,
-          note: (target.note ? `${target.note} | ` : "") + "[MANUELLE-KORREKTUR]",
+          note: (target.note ? `${target.note} | ` : "") + "Manuell korrigiert",
           editReason: payload.reason,
         });
         show("Fehlender Tag wurde korrigiert.", "success");
@@ -1096,8 +1098,10 @@ export function ReportsClient({
       const correctionNeeds = logs.filter(
         (log) =>
           log.status === "MANUAL_ADJUSTED" ||
+          (log.note?.includes("Korrektur durch Chef") ?? false) ||
           (log.note?.includes("MANAGER-BEARBEITUNG") ?? false) ||
-          (log.note?.includes("MANAGER_EDIT") ?? false)
+          (log.note?.includes("MANAGER_EDIT") ?? false) ||
+          (log.note?.includes("Manuell korrigiert") ?? false)
       ).length;
       const analysis = buildReportAnalysisFromFacts({
         month,
@@ -1157,8 +1161,8 @@ export function ReportsClient({
           <div className="print-only print-legend">
             <span className="print-status--ok">Pünktlich</span>
             <span className="print-status--late">Zu spät</span>
-            <span className="print-status--absent">Fehlend</span>
-            <span className="print-status--manual">Manuell</span>
+            <span className="print-status--absent">Nicht erschienen</span>
+            <span className="print-status--manual">Manuell korrigiert</span>
           </div>
         )}
 
@@ -1813,7 +1817,7 @@ export function ReportsClient({
                       </dl>
                       <p className="mt-3 text-xs text-muted-foreground">
                         <span className="font-medium text-foreground/80">Bemerkung: </span>
-                        {log.note ?? "–"}
+                        {noteLabel(log.note)}
                       </p>
                       {isManager && (
                         <div className="mt-4 flex flex-wrap gap-2">
@@ -1926,7 +1930,7 @@ export function ReportsClient({
                             </StatusBadge>
                           </td>
                           <td className="max-w-[120px] truncate px-5 py-4 text-xs text-muted-foreground">
-                            {log.note ?? "–"}
+                            {noteLabel(log.note)}
                           </td>
                           {isManager && (
                             <td className="no-print px-5 py-4">
@@ -2028,8 +2032,8 @@ export function ReportsClient({
               >
                 <option value="ON_TIME">Pünktlich</option>
                 <option value="LATE">Zu spät</option>
-                <option value="ABSENT">Fehlend</option>
-                <option value="MANUAL_ADJUSTED">Manuell angepasst</option>
+                <option value="ABSENT">Nicht erschienen</option>
+                <option value="MANUAL_ADJUSTED">Manuell korrigiert</option>
               </select>
               <input
                 type="text"

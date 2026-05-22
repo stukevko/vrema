@@ -434,22 +434,9 @@ export async function upsertShift(input: {
 }
 
 export async function deleteShift(shiftId: string) {
-  const { companyId, role } = await requireTenant();
-  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
-    throw new Error("Keine Berechtigung.");
-  }
-
-  const id = typeof shiftId === "string" ? shiftId.trim() : "";
-  if (!id) throw new Error("Ungültige Schicht-Referenz.");
-
-  const deleted = await db.shift.deleteMany({
-    where: tenantWhere(companyId, { id }),
-  });
-  if (deleted.count === 0) throw new Error("Schicht nicht gefunden.");
-
-  revalidatePath("/dashboard/team");
-  revalidatePath("/dashboard/planning");
-  revalidatePath("/dashboard");
+  const { removePlannerShift } = await import("@/lib/actions/planner-shift-remove");
+  const result = await removePlannerShift(shiftId);
+  if (!result.ok) throw new Error(result.error);
 }
 
 export async function applyStandardWeek(input: {

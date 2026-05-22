@@ -115,7 +115,7 @@ export async function createClockInEntry(params: {
       }
     }
   } else {
-    extraShiftNote = "[EXTRA-SCHICHT] Kein geplanter Schichtslot gefunden.";
+    extraShiftNote = "Nicht nach Zeitplan eingestempelt.";
   }
 
   const log = await db.$transaction(async (tx) => {

@@ -22,6 +22,31 @@ export async function requireTenant() {
   };
 }
 
+/** Für Server Actions: kein redirect() — verhindert 500, wenn die Session abgelaufen ist. */
+export type TenantActionResult =
+  | {
+      ok: true;
+      userId: string;
+      companyId: string;
+      role: string | undefined;
+      plan: string | undefined;
+    }
+  | { ok: false; error: string };
+
+export async function requireTenantAction(): Promise<TenantActionResult> {
+  const session = await auth();
+  if (!session?.user?.id || !session?.user?.companyId) {
+    return { ok: false, error: "Bitte erneut anmelden." };
+  }
+  return {
+    ok: true,
+    userId: session.user.id,
+    companyId: session.user.companyId,
+    role: session.user.role,
+    plan: session.user.plan,
+  };
+}
+
 /**
  * Wraps a Prisma where-clause to always include company_id.
  * Prevents accidental cross-tenant queries.

@@ -85,7 +85,7 @@ export async function createAbsentEntriesForMissingShifts(prisma: PrismaClient):
           clockIn: shiftStart,
           clockOut: shiftEnd,
           breakMins: 0,
-          note: "[AUTO-ABWESEND] Automatisch als fehlend markiert.",
+          note: "Automatisch als fehlend erfasst.",
           status: "ABSENT",
         },
       });
