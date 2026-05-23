@@ -17,6 +17,7 @@ import {
   Printer,
 } from "lucide-react";
 import { VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -1166,17 +1167,16 @@ export function ReportsClient({
           </div>
         )}
 
-        {/* Header */}
-        <div className="no-print flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="text-base font-bold tracking-tight sm:text-2xl md:text-3xl">Berichte</h1>
-            <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-              {month} · {logs.length} Einträge
-            </p>
-          </div>
+        <div className="no-print space-y-4">
+          <DashboardPageHeader
+            variant="card"
+            icon={FileText}
+            eyebrow="Export"
+            title="Berichte"
+            description={`${month} · ${logs.length} Einträge — Stunden, Korrekturen, PDF & Lohnbüro.`}
+          />
 
-          {/* Action buttons */}
-          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 md:flex md:w-auto md:flex-wrap md:justify-end md:gap-2">
+          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 md:flex md:flex-wrap md:justify-end md:gap-2">
             <select
               value={monthKey}
               onChange={(e) => {

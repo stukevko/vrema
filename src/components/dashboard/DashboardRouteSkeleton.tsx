@@ -9,11 +9,16 @@ export function DashboardRouteSkeleton({
   bodyRows?: number;
 }) {
   return (
-    <div className={`mx-auto ${maxWidthClass} space-y-5 px-2 sm:space-y-6 sm:px-0`}>
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-44 sm:h-9 sm:w-52" />
-        <Skeleton className="h-4 w-full max-w-md" />
-        <Skeleton className="h-4 w-2/3 max-w-sm" />
+    <div className={`mx-auto ${maxWidthClass} space-y-5 px-1 sm:space-y-6 sm:px-0`}>
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] sm:p-5">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-7 w-44 sm:w-52" />
+            <Skeleton className="h-4 w-full max-w-md" />
+          </div>
+        </div>
       </div>
       <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
         <Skeleton className="mb-4 h-5 w-32" />

@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { BlogPost, BlogPostCategory } from "@prisma/client";
 import { Loader2, Plus, Trash2, Pencil, BookOpen } from "lucide-react";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { BLOG_FORM_CATEGORIES } from "@/lib/blog/category-options";
 import { BLOG_YOUTUBE_MARKER } from "@/lib/blog/blog-html";
 import {
@@ -77,18 +79,20 @@ export function BlogAdminPanel({
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-1 sm:px-0">
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Super Admin</p>
-        <h1 className="mt-1 flex items-center gap-2 text-xl font-bold sm:text-2xl">
-          <BookOpen className="h-6 w-6 shrink-0 text-muted-foreground" aria-hidden />
-          Blog-Manager
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Artikel veröffentlichen, bearbeiten und YouTube-ID setzen. Video im Fließtext: Platzhalter{" "}
-          <code className="rounded bg-muted px-1 py-0.5 text-[11px]">{BLOG_YOUTUBE_MARKER}</code> im HTML einfügen.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
+    <DashboardPageShell maxWidth="6xl" className="space-y-8">
+      <DashboardPageHeader
+        variant="card"
+        icon={BookOpen}
+        eyebrow="Super-Admin"
+        title="Blog-Manager"
+        description={
+          <>
+            Artikel veröffentlichen, bearbeiten und YouTube-ID setzen. Video im Fließtext: Platzhalter{" "}
+            <code className="rounded bg-muted px-1 py-0.5 text-[11px]">{BLOG_YOUTUBE_MARKER}</code> im HTML einfügen.
+          </>
+        }
+        actions={
+          <div className="flex flex-wrap gap-2">
           <Link
             href="/dashboard/super-admin/blog"
             className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${mode === "list" ? "border-primary bg-primary/10 text-foreground" : "border-border bg-card hover:bg-muted/50"}`}
@@ -105,8 +109,9 @@ export function BlogAdminPanel({
           <Link href="/dashboard/partners" className="rounded-xl px-3 py-2 text-sm text-muted-foreground hover:text-foreground">
             ← Vertriebspartner
           </Link>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       {error && (
         <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>
@@ -277,6 +282,6 @@ export function BlogAdminPanel({
           )}
         </section>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }

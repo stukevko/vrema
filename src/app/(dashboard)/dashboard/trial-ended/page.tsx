@@ -2,6 +2,8 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getCompanyTrialState } from "@/lib/trial";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 export default async function TrialEndedPage() {
   const session = await auth();
@@ -21,14 +23,18 @@ export default async function TrialEndedPage() {
     session.user.role === "SUPER_ADMIN";
 
   return (
-    <div className="premium-enter mx-auto max-w-lg px-1 py-8 text-center sm:py-16">
-      <p className="text-xs font-semibold uppercase tracking-widest text-brand">Testphase</p>
-      <h1 className="mt-3 text-2xl font-bold tracking-tight">Die Testphase ist vorbei</h1>
-      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-        {isManager
-          ? "Wähle einen Tarif, damit dein Team weiter stempeln und planen kann."
-          : "Dein Betrieb muss einen Tarif wählen. Sprich mit der Geschäftsführung oder dem Schichtleiter."}
-      </p>
+    <DashboardPageShell maxWidth="2xl" animateEnter className="py-8 text-center sm:py-16">
+      <DashboardPageHeader
+        variant="plain"
+        eyebrow="Testphase"
+        title="Die Testphase ist vorbei"
+        description={
+          isManager
+            ? "Wähle einen Tarif, damit dein Team weiter stempeln und planen kann."
+            : "Dein Betrieb muss einen Tarif wählen. Sprich mit der Geschäftsführung oder dem Schichtleiter."
+        }
+        className="mx-auto max-w-lg"
+      />
       {isManager ? (
         <Link
           href="/dashboard/billing?trial_expired=1"
@@ -44,6 +50,6 @@ export default async function TrialEndedPage() {
           Zu meinem Konto
         </Link>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }

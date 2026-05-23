@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { Timer, CalendarDays } from "lucide-react";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 export default async function DashboardWelcomePage() {
   const session = await auth();
@@ -14,16 +16,15 @@ export default async function DashboardWelcomePage() {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-2 sm:px-0">
-      <section className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm sm:p-8">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-primary">Willkommen</p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          Hallo im Team von {company?.name ?? "deinem Betrieb"}!
-        </h1>
-        <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-          In drei Schritten bist du startklar — Stempeln dauert unter 10 Sekunden.
-        </p>
-        <ol className="mt-5 space-y-3 text-sm">
+    <DashboardPageShell maxWidth="3xl">
+      <DashboardPageHeader
+        variant="hero"
+        eyebrow="Willkommen"
+        title={`Hallo im Team von ${company?.name ?? "deinem Betrieb"}!`}
+        description="In drei Schritten startklar — Stempeln dauert unter 10 Sekunden."
+      />
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-6">
+        <ol className="space-y-3 text-sm">
           <li className="flex gap-3 rounded-xl border border-border/60 bg-background/50 px-4 py-3">
             <Timer className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
             <span>
@@ -63,6 +64,6 @@ export default async function DashboardWelcomePage() {
           </Link>
         </div>
       </section>
-    </div>
+    </DashboardPageShell>
   );
 }

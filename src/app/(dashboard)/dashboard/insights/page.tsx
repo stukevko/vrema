@@ -15,6 +15,8 @@ import {
   DashboardGuidanceSection,
 } from "@/components/dashboard/DashboardManagerGuidance";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 export const metadata = {
   title: "Auswertung",
@@ -38,20 +40,14 @@ export default async function InsightsPage() {
   const modules = await getCompanyModulesForTenant();
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-1 sm:px-0">
-      <header className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <Brain className="h-5 w-5" aria-hidden />
-          </span>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Auswertung</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Rückblick und Hinweise aus Stempelzeiten und Schichtplan — klar und ohne Score-Dashboards.
-            </p>
-          </div>
-        </div>
-      </header>
+    <DashboardPageShell maxWidth="4xl" className="space-y-6">
+      <DashboardPageHeader
+        variant="card"
+        icon={Brain}
+        eyebrow="Betrieb"
+        title="Auswertung"
+        description="Rückblick und Hinweise aus Stempelzeiten und Schichtplan — klar und ohne Score-Dashboards."
+      />
 
       {!modules.peaks ? (
         <div className="rounded-2xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
@@ -127,6 +123,6 @@ export default async function InsightsPage() {
           Zum Planer
         </Link>
       </p>
-    </div>
+    </DashboardPageShell>
   );
 }

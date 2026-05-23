@@ -24,6 +24,8 @@ import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ShiftTradeApprovalDiff } from "@/components/planning/ShiftTradeApprovalDiff";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 const DAY_LABELS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
@@ -53,45 +55,40 @@ export default async function PlanningPage({
       params.autopilot === "suggest" ? "suggest" : params.autopilot === "1" ? "focus" : null;
 
     return (
-      <div className="mx-auto max-w-6xl space-y-4 px-1 sm:space-y-6 sm:px-0">
+      <DashboardPageShell maxWidth="6xl">
         {data.loadErrors.length > 0 ? (
           <p className="rounded-xl border border-warning/30 bg-warning-soft/40 px-4 py-2 text-xs text-warning-foreground">
             Einige Planer-Daten konnten nicht geladen werden ({data.loadErrors.join(", ")}). Der Planer bleibt
             nutzbar — bitte Seite neu laden oder Support, falls es anhält.
           </p>
         ) : null}
-        <div className="glass-card relative flex flex-col gap-3 overflow-hidden px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-5">
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/15"
-          />
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">Führungskraft</p>
-            <h1 className="mt-1 text-xl font-extrabold tracking-tight text-foreground md:text-2xl">Schichtplanung</h1>
-            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-              Team planen, PDF fürs WhatsApp-Team teilen, Tausche freigeben. Mitarbeitende sehen nur ihren eigenen Dienstplan.
-            </p>
-          </div>
-          <div className="flex shrink-0 flex-col gap-2 self-start">
-            {data.companyModules.shiftTasks ? (
-              <Link
-                href="/dashboard/tasks"
-                className="btn-outline inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold"
-              >
-                <ListTodo className="h-4 w-4" aria-hidden />
-                Schicht-Tasks
-              </Link>
-            ) : null}
-            {!data.companyModules.peaks || !data.companyModules.autopilot ? (
-              <Link
-                href="/dashboard/settings"
-                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-border bg-background px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
-              >
-                Erweiterungen in Einstellungen
-              </Link>
-            ) : null}
-          </div>
-        </div>
+        <DashboardPageHeader
+          variant="hero"
+          eyebrow="Führungskraft"
+          title="Schichtplanung"
+          description="Team planen, PDF fürs WhatsApp-Team teilen, Tausche freigeben. Mitarbeitende sehen nur ihren eigenen Dienstplan."
+          actions={
+            <div className="flex flex-col gap-2">
+              {data.companyModules.shiftTasks ? (
+                <Link
+                  href="/dashboard/tasks"
+                  className="btn-outline inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold"
+                >
+                  <ListTodo className="h-4 w-4" aria-hidden />
+                  Schicht-Tasks
+                </Link>
+              ) : null}
+              {!data.companyModules.peaks || !data.companyModules.autopilot ? (
+                <Link
+                  href="/dashboard/settings"
+                  className="inline-flex min-h-10 items-center justify-center rounded-xl border border-border bg-background px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  Erweiterungen in Einstellungen
+                </Link>
+              ) : null}
+            </div>
+          }
+        />
         <Suspense
           fallback={
             <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
@@ -206,7 +203,7 @@ export default async function PlanningPage({
             </div>
           </section>
         )}
-      </div>
+      </DashboardPageShell>
     );
   }
 
@@ -255,18 +252,13 @@ export default async function PlanningPage({
   });
 
   return (
-    <div className="mx-auto max-w-3xl min-w-0 space-y-5 px-1 sm:space-y-6 sm:px-0">
-      <div className="glass-card relative overflow-hidden px-4 py-5 sm:px-6">
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/15"
-        />
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">Planung</p>
-        <h1 className="mt-1 text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">Mein Dienstplan</h1>
-        <p className="mt-2 max-w-lg text-sm text-muted-foreground">
-          Woche, Uhrzeit und Tausch — ohne den Chef-Planer. Oben siehst du die Woche, unten alle Termine mit Aktionen.
-        </p>
-      </div>
+    <DashboardPageShell maxWidth="3xl">
+      <DashboardPageHeader
+        variant="hero"
+        eyebrow="Planung"
+        title="Mein Dienstplan"
+        description="Woche, Uhrzeit und Tausch — ohne den Chef-Planer. Oben die Woche, unten alle Termine mit Aktionen."
+      />
 
       {employeeModules.shiftTrade ? <TradePushHint /> : null}
 
@@ -339,6 +331,6 @@ export default async function PlanningPage({
           )}
         </section>
       ) : null}
-    </div>
+    </DashboardPageShell>
   );
 }

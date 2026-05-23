@@ -43,6 +43,9 @@ import { ProfileAvatarForm } from "@/components/dashboard/ProfileAvatarForm";
 import { TerminalPinForm } from "@/components/dashboard/TerminalPinForm";
 import { TerminalAccessSection } from "@/components/dashboard/TerminalAccessSection";
 import { getSiteUrl } from "@/lib/seo/site";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -82,27 +85,21 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5 px-1 sm:space-y-6 sm:px-0">
-      <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
-        <h1 className="flex items-center gap-2 text-xl font-bold sm:text-2xl">
-          <Settings className="w-6 h-6 text-muted-foreground" />
-          Einstellungen
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Zuerst Terminal & Team — erweiterte Optionen findest du unten unter „Erweitert“.
-        </p>
-      </div>
+    <DashboardPageShell maxWidth="3xl">
+      <DashboardPageHeader
+        variant="card"
+        icon={Settings}
+        eyebrow="Verwaltung"
+        title="Einstellungen"
+        description="Zuerst Terminal & Team — erweiterte Optionen findest du unten unter „Erweitert“."
+      />
 
-      <section className="rounded-2xl border border-brand/25 bg-brand-soft/30 p-4 shadow-sm dark:border-white/10 dark:bg-brand/10 sm:p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <Timer className="h-4 w-4 text-brand" />
-          <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
-            Täglicher Betrieb
-          </h2>
-        </div>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Tablet-Link und PIN — das brauchst du für die Stempeluhr im Betrieb.
-        </p>
+      <DashboardSectionCard
+        tone="brand"
+        title="Täglicher Betrieb"
+        icon={Timer}
+        description="Tablet-Link und PIN — das brauchst du für die Stempeluhr im Betrieb."
+      >
         <TerminalPinForm />
         {company?.slug ? (
           <div className="mt-4">
@@ -119,7 +116,7 @@ export default async function SettingsPage() {
           <Users className="h-4 w-4" aria-hidden />
           Team einladen
         </Link>
-      </section>
+      </DashboardSectionCard>
 
       <nav
         className="md:hidden rounded-2xl border border-border bg-card p-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
@@ -303,6 +300,6 @@ export default async function SettingsPage() {
       )}
         </div>
       </details>
-    </div>
+    </DashboardPageShell>
   );
 }

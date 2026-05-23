@@ -7,8 +7,10 @@ import {
 import { ticketStatusDe, ticketTypeDe } from "@/lib/support/ticket-labels";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Inbox } from "lucide-react";
+import { Inbox, LifeBuoy } from "lucide-react";
 import { TicketStatus } from "@prisma/client";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 export default async function SuperAdminTicketsPage() {
   const session = await auth();
@@ -19,13 +21,14 @@ export default async function SuperAdminTicketsPage() {
   const tickets = await listSupportTicketsForSuperAdmin();
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 px-1 sm:px-0">
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <h1 className="text-2xl font-bold">Support-Tickets (System)</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Alle Mandanten. Enthält eine Antwort, wird der Status automatisch auf „Beantwortet“ gesetzt (sonst gewählter Status).
-        </p>
-      </div>
+    <DashboardPageShell maxWidth="6xl">
+      <DashboardPageHeader
+        variant="card"
+        icon={LifeBuoy}
+        eyebrow="Super-Admin"
+        title="Support-Tickets (System)"
+        description="Alle Mandanten. Mit Antwort wird der Status automatisch auf „Beantwortet“ gesetzt (sonst gewählter Status)."
+      />
 
       <div className="space-y-3">
         {tickets.length === 0 ? (
@@ -96,6 +99,6 @@ export default async function SuperAdminTicketsPage() {
           ))
         )}
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }

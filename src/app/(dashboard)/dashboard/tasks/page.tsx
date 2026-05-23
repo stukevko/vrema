@@ -5,6 +5,8 @@ import { ListTodo } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Link from "next/link";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 export default async function ShiftTasksLiveWallPage() {
   const { companyId, role } = await requireTenant();
@@ -13,20 +15,14 @@ export default async function ShiftTasksLiveWallPage() {
   const rows = await getTodayShiftTaskWall(companyId);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 px-1 sm:space-y-6 sm:px-0">
-      <div className="glass-card px-4 py-3 sm:px-5 sm:py-4">
-        <div className="flex items-start gap-3">
-          <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand-soft text-brand dark:border-white/10 dark:bg-brand/25">
-            <ListTodo className="h-5 w-5" aria-hidden />
-          </span>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Schicht-Tasks · Live</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Eingestempelte Schichten heute mit Checklisten-Fortschritt (wird beim Einchecken oder manuell im Planer erzeugt).
-            </p>
-          </div>
-        </div>
-      </div>
+    <DashboardPageShell maxWidth="3xl">
+      <DashboardPageHeader
+        variant="card"
+        icon={ListTodo}
+        eyebrow="Betrieb"
+        title="Schicht-Tasks · Live"
+        description="Eingestempelte Schichten heute mit Checklisten-Fortschritt — beim Einchecken oder im Planer erzeugt."
+      />
 
       {rows.length === 0 ? (
         <EmptyState
@@ -77,6 +73,6 @@ export default async function ShiftTasksLiveWallPage() {
           })}
         </ul>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }

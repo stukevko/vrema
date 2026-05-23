@@ -1,7 +1,9 @@
 "use client";
 
 import { signOut } from "next-auth/react";
-import { Copy } from "lucide-react";
+import { Copy, Handshake } from "lucide-react";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
 
 type Row = {
@@ -80,22 +82,24 @@ export function PartnerDashboardClient({
   const totalSuccessCents = starterTotalCents + businessTotalCents;
 
   return (
-    <div className="premium-enter min-h-screen bg-background p-6 text-foreground">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Partner Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
-              Willkommen, {name}. Hier finden Sie Ihre Abschlüsse und Provisionen im Überblick.
-            </p>
-          </div>
-          <button
-            onClick={() => signOut({ callbackUrl: "/partner-login" })}
-            className="btn-outline text-sm"
-          >
-            Abmelden
-          </button>
-        </div>
+    <div className="premium-enter min-h-screen bg-background p-4 text-foreground sm:p-6">
+      <DashboardPageShell maxWidth="6xl" className="space-y-6">
+        <DashboardPageHeader
+          variant="card"
+          icon={Handshake}
+          eyebrow="Affiliate"
+          title="Partner-Dashboard"
+          description={`Willkommen, ${name}. Abschlüsse und Provisionen im Überblick.`}
+          actions={
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: "/partner-login" })}
+              className="btn-outline text-sm"
+            >
+              Abmelden
+            </button>
+          }
+        />
 
         <div className="glass-card p-5">
           <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">Ihr Referenzlink</p>
@@ -250,7 +254,7 @@ export function PartnerDashboardClient({
             </table>
           </div>
         </div>
-      </div>
+      </DashboardPageShell>
     </div>
   );
 }

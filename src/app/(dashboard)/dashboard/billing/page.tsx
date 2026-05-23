@@ -8,6 +8,8 @@ import Link from "next/link";
 import { getCompanyTrialState, TRIAL_DAYS, TRIAL_MAX_EMPLOYEES } from "@/lib/trial";
 import { grantCompanyPlanWithoutBilling } from "@/lib/actions/super-admin";
 import { Shield } from "lucide-react";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 export default async function BillingPage({
   searchParams,
@@ -45,11 +47,13 @@ export default async function BillingPage({
   const highlightBusiness = params.upgrade === "business";
 
   return (
-    <div className="premium-enter mx-auto max-w-5xl space-y-6 px-1 text-foreground sm:space-y-8 sm:px-0">
-      <div className="rounded-2xl glass-panel p-5 sm:p-8">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Abonnement</h1>
-        <p className="text-muted-foreground text-sm mt-1">Tarif wählen und Zahlungsmethoden verwalten.</p>
-      </div>
+    <DashboardPageShell maxWidth="5xl" animateEnter className="sm:space-y-8">
+      <DashboardPageHeader
+        variant="hero"
+        eyebrow="Abonnement"
+        title="Tarif & Zahlung"
+        description="Plan wählen, Stripe-Portal öffnen oder Testphase verlängern."
+      />
 
       {company.billingExempt && (
         <div className="rounded-xl border border-emerald-300/50 bg-emerald-50 px-4 py-4 dark:border-emerald-500/30 dark:bg-emerald-950/40">
@@ -254,6 +258,6 @@ export default async function BillingPage({
         </Link>
         .
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }

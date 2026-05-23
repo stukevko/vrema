@@ -5,6 +5,8 @@ import { TeamList } from "@/components/dashboard/TeamList";
 import { InviteForm } from "@/components/dashboard/InviteForm";
 import { TeamInviteLinkCard } from "@/components/dashboard/TeamInviteLinkCard";
 import { Users, UserCheck, UserMinus, ShieldCheck } from "lucide-react";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { getCompanyTrialState } from "@/lib/trial";
 import { countActiveEmployees } from "@/lib/plan-limits";
 
@@ -62,15 +64,14 @@ export default async function TeamPage() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 px-1 sm:space-y-6 sm:px-0">
-      {/* Hero */}
+    <DashboardPageShell maxWidth="6xl">
       <section className="flex flex-col gap-4">
-        <div className="min-w-0">
-          <h1 className="text-base font-bold tracking-tight sm:text-xl md:text-2xl">Team</h1>
-          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-            {active} aktiv{inactive > 0 ? ` · ${inactive} deaktiviert` : ""}
-          </p>
-        </div>
+        <DashboardPageHeader
+          variant="plain"
+          eyebrow="Personal"
+          title="Team"
+          description={`${active} aktiv${inactive > 0 ? ` · ${inactive} deaktiviert` : ""} — einladen, Rollen und Stundenlohn.`}
+        />
 
         {/* Stats-Pills */}
         <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto scrollbar-hide px-1 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-3 sm:overflow-visible sm:px-0 lg:grid-cols-4">
@@ -103,6 +104,6 @@ export default async function TeamPage() {
           </div>
         )}
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }

@@ -53,6 +53,7 @@ import type { CompanyModules } from "@/lib/company-modules";
 import { getVacationConflictDaysForPlanning } from "@/lib/actions/vacation";
 import { getManagerFocusSnapshot } from "@/lib/dashboard/manager-focus-snapshot";
 import { ManagerFocusCards } from "@/components/dashboard/ManagerFocusCards";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 /**
  * Defensive: optionale Sektionen dürfen niemals die ganze Seite zerschießen.
@@ -367,14 +368,17 @@ export default async function DashboardPage({
     <div className="dashboard-page-root mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 overflow-x-hidden px-0 text-foreground sm:max-w-6xl sm:gap-6 sm:px-2 md:gap-8 md:px-0">
       {/* Header — für Mitarbeiter überspringen, weil das Cockpit selbst begrüßt */}
       {!isEmployee && (
-        <div className="order-1 min-w-0 max-w-full shrink-0 overflow-hidden rounded-2xl glass-panel p-5 sm:p-8">
-          <h1 className="break-words text-base font-bold tracking-tight sm:text-2xl md:text-3xl">
-            Guten {berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"},{" "}
-            {session.user.name?.split(" ")[0] ?? "Nutzer"} 👋
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-            {formatBerlinDate(now, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-          </p>
+        <div className="order-1 min-w-0 max-w-full shrink-0">
+          <DashboardPageHeader
+            variant="hero"
+            title={`Guten ${berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"}, ${session.user.name?.split(" ")[0] ?? "Nutzer"} 👋`}
+            description={formatBerlinDate(now, {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          />
         </div>
       )}
 

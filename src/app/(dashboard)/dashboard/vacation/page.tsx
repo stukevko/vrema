@@ -5,6 +5,9 @@ import { VacationList } from "@/components/dashboard/VacationList";
 import { VacationRequestForm } from "@/components/dashboard/VacationRequestForm";
 import { TeamVacationSection } from "@/components/dashboard/TeamVacationSection";
 import { TeamAbsencesSection } from "@/components/dashboard/TeamAbsencesSection";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { CalendarDays } from "lucide-react";
 
 export default async function VacationPage() {
   const session = await auth();
@@ -22,16 +25,21 @@ export default async function VacationPage() {
   const pendingTeamCount = teamRequests.filter((r) => r.status === "PENDING").length;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-1 text-foreground sm:space-y-8 sm:px-0">
-      <div className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90 sm:p-8">
-        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Urlaub & Abwesenheit</h1>
-        <p className="text-muted-foreground text-sm mt-1">Anträge stellen, verwalten und genehmigen.</p>
-        {isManager && pendingTeamCount > 0 ? (
-          <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
-            {pendingTeamCount} {pendingTeamCount === 1 ? "Antrag" : "Anträge"} warten auf Entscheidung
-          </p>
-        ) : null}
-      </div>
+    <DashboardPageShell maxWidth="5xl" className="sm:space-y-8">
+      <DashboardPageHeader
+        variant="card"
+        icon={CalendarDays}
+        eyebrow="Abwesenheit"
+        title="Urlaub & Abwesenheit"
+        description="Anträge stellen, verwalten und als Führungskraft freigeben."
+        badge={
+          isManager && pendingTeamCount > 0 ? (
+            <p className="inline-flex items-center gap-2 rounded-full bg-warning-soft px-3 py-1 text-xs font-semibold text-warning-foreground">
+              {pendingTeamCount} {pendingTeamCount === 1 ? "Antrag" : "Anträge"} warten auf Entscheidung
+            </p>
+          ) : null
+        }
+      />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="min-w-0">
@@ -62,6 +70,6 @@ export default async function VacationPage() {
       ) : null}
 
       {isManager ? <TeamAbsencesSection companyId={companyId} /> : null}
-    </div>
+    </DashboardPageShell>
   );
 }
