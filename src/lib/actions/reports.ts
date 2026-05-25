@@ -4,6 +4,7 @@ import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
 import { db } from "@/lib/db";
 import { getMonthBoundsUtc } from "@/lib/time/timezone";
 import { workedMinutes } from "@/lib/time/payroll";
+import { formatPayrollHoursDE, isoDateKeyToPayrollDE } from "@/lib/exports/payroll-formats";
 
 export type DatevLohnart = "STANDARD" | "NACHT";
 
@@ -101,18 +102,29 @@ export async function generateDatevCsv(data: DatevExportRow[]) {
   const header = [
     "Personalnummer",
     "Datum",
-    "Arbeitszeit_Minuten",
-    "Pause_Minuten",
+    "Arbeitszeit (Minuten)",
+    "Arbeitszeit (Stunden)",
+    "Pause (Minuten)",
     "Lohnart",
   ];
   const rows = data.map((row) => [
     row.employeeId,
-    row.date,
+    isoDateKeyToPayrollDE(row.date),
     row.netWorkMinutes,
+    formatPayrollHoursDE(row.netWorkMinutes),
     row.breakMinutes,
-    row.wageType,
+    row.wageType === "NACHT" ? "Nachtarbeit" : "Regulär",
   ]);
-  return [header.map(csvCell).join(separator), ...rows.map((r) => r.map(csvCell).join(separator))].join("\n");
+  const preamble = [
+    "# VREMA Lohnexport (DATEV-kompatibel)",
+    "# Datum TT.MM.JJJJ · Stunden-Spalte mit Dezimalkomma",
+    "#",
+  ];
+  return [
+    ...preamble,
+    header.map(csvCell).join(separator),
+    ...rows.map((r) => r.map(csvCell).join(separator)),
+  ].join("\n");
 }
 
 export async function exportDatevCsvAction(monthKey: string) {

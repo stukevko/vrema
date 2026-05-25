@@ -20,6 +20,9 @@ type HeroStatsProps = {
   attentionCount: number;
   attentionBreakdown: { absent: number; late: number };
   pendingApprovalsCount: number;
+  /** Nur Mobil: Grußzeile über den KPIs (kein zweites Hero-Card). */
+  mobileGreeting?: string;
+  mobileDateLine?: string;
 };
 
 function formatEuroCents(value: number) {
@@ -37,19 +40,25 @@ export function HeroStats({
   attentionCount,
   attentionBreakdown,
   pendingApprovalsCount,
+  mobileGreeting,
+  mobileDateLine,
 }: HeroStatsProps) {
   const presentTone = presentNow > 0 ? "brand" : "muted";
   const attentionTone = attentionCount === 0 ? "brand" : attentionCount <= 2 ? "warning" : "danger";
 
   return (
-    <section
-      aria-label="Heutige Kennzahlen"
-      className="dashboard-kpi-grid grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-3 sm:gap-4"
-    >
+    <section aria-label="Heutige Kennzahlen" className="w-full min-w-0 max-w-full space-y-2 sm:space-y-0">
+      {mobileGreeting ? (
+        <div className="md:hidden">
+          <p className="text-lg font-extrabold tracking-tight text-foreground">{mobileGreeting}</p>
+          {mobileDateLine ? <p className="mt-0.5 text-xs text-muted-foreground">{mobileDateLine}</p> : null}
+        </div>
+      ) : null}
+      <div className="dashboard-kpi-grid grid w-full min-w-0 max-w-full grid-cols-2 gap-2 max-md:[&>*:nth-child(3)]:col-span-2 sm:grid-cols-3 sm:gap-4">
       {/* KPI 1 – Anwesend jetzt (Petrol, ruhig) */}
       <Link
         href="/dashboard/reports"
-        className="group/kpi block min-w-0 max-w-full overflow-hidden rounded-2xl border border-line/60 bg-white/55 p-5 transition-[box-shadow,border-color] duration-150 max-md:shadow-none md:backdrop-blur-md md:hover:border-brand/35 md:hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025] sm:p-6"
+        className="group/kpi block min-w-0 max-w-full overflow-hidden rounded-xl border border-line/60 bg-white/55 p-3.5 transition-[box-shadow,border-color] duration-150 max-md:shadow-none sm:rounded-2xl sm:p-6 md:backdrop-blur-md md:hover:border-brand/35 md:hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025]"
       >
         <div className="flex min-w-0 items-center justify-between gap-2">
           <p className="min-w-0 text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
@@ -62,7 +71,7 @@ export function HeroStats({
           </span>
         </div>
         <p
-          className={`mt-3 min-w-0 max-w-full text-[clamp(1.35rem,5.5vw,1.875rem)] font-bold leading-tight tabular-nums ${presentTone === "brand" ? "text-brand" : "text-fg"}`}
+          className={`mt-2 min-w-0 max-w-full text-[clamp(1.15rem,4.5vw,1.875rem)] font-bold leading-tight tabular-nums sm:mt-3 ${presentTone === "brand" ? "text-brand" : "text-fg"}`}
         >
           {presentNow}
           <span className="ml-1 text-base font-medium text-fg-muted">/ {totalEmployees}</span>
@@ -77,7 +86,7 @@ export function HeroStats({
       {/* KPI 2 – Heutige Personalkosten (Petrol, Detail über Tooltip) */}
       <Link
         href="/dashboard/reports"
-        className="group/kpi block min-w-0 max-w-full overflow-hidden rounded-2xl border border-line/60 bg-white/55 p-5 transition-[box-shadow,border-color] duration-150 max-md:shadow-none md:backdrop-blur-md md:hover:border-brand/35 md:hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025] sm:p-6"
+        className="group/kpi block min-w-0 max-w-full overflow-hidden rounded-xl border border-line/60 bg-white/55 p-3.5 transition-[box-shadow,border-color] duration-150 max-md:shadow-none sm:rounded-2xl sm:p-6 md:backdrop-blur-md md:hover:border-brand/35 md:hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025]"
       >
         <div className="flex min-w-0 items-center justify-between gap-2">
           <p className="min-w-0 text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
@@ -90,7 +99,7 @@ export function HeroStats({
           </span>
         </div>
         <p
-          className="mt-3 min-w-0 max-w-full text-[clamp(1.1rem,4.8vw,1.875rem)] font-bold leading-tight tabular-nums text-brand break-all sm:break-normal"
+          className="mt-2 min-w-0 max-w-full text-[clamp(1rem,4vw,1.875rem)] font-bold leading-tight tabular-nums text-brand break-all sm:mt-3 sm:break-normal"
           title={todayPersonnelCostsEuro > 0 ? formatEuroCents(todayPersonnelCostsEuro) : undefined}
         >
           {todayPersonnelCostsEuro > 0 ? formatEuroCents(todayPersonnelCostsEuro) : "—"}
@@ -106,7 +115,7 @@ export function HeroStats({
       <Link
         href="/dashboard/reports"
         className={[
-          "group/kpi block min-w-0 max-w-full overflow-hidden rounded-2xl border p-5 transition-[box-shadow,border-color] duration-150 max-md:shadow-none md:backdrop-blur-md sm:p-6",
+          "group/kpi block min-w-0 max-w-full overflow-hidden rounded-xl border p-3.5 transition-[box-shadow,border-color] duration-150 max-md:shadow-none sm:rounded-2xl sm:p-6 md:backdrop-blur-md max-md:flex max-md:flex-row max-md:items-center max-md:justify-between max-md:gap-3",
           attentionTone === "brand"
             ? "border-line/60 bg-white/55 md:hover:border-brand/35 md:hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025]"
             : attentionTone === "warning"
@@ -114,6 +123,7 @@ export function HeroStats({
               : "border-rose-300/45 bg-rose-50/70 md:hover:border-rose-400/55 md:hover:shadow-[0_18px_42px_-22px_rgba(190,18,60,0.25)] dark:border-rose-300/20 dark:bg-rose-500/[0.06]",
         ].join(" ")}
       >
+        <div className="flex min-w-0 flex-1 flex-col max-md:min-w-0">
         <div className="flex min-w-0 items-center justify-between gap-2">
           <p className="min-w-0 text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
             <Tooltip content="Verspätet + Fehlend zusammen, plus offene Anträge & Korrekturen, die auf Freigabe warten.">
@@ -122,7 +132,7 @@ export function HeroStats({
           </p>
           <span
             className={[
-              "inline-flex h-8 w-8 items-center justify-center rounded-xl",
+              "inline-flex h-7 w-7 items-center justify-center rounded-lg sm:h-8 sm:w-8 sm:rounded-xl",
               attentionTone === "brand"
                 ? "bg-brand-soft text-brand dark:bg-brand/15"
                 : attentionTone === "warning"
@@ -135,7 +145,7 @@ export function HeroStats({
         </div>
         <p
           className={[
-            "mt-3 min-w-0 max-w-full text-[clamp(1.35rem,5.5vw,1.875rem)] font-bold leading-tight tabular-nums",
+            "mt-2 min-w-0 max-w-full text-[clamp(1.15rem,4.5vw,1.875rem)] font-bold leading-tight tabular-nums sm:mt-3",
             attentionTone === "brand"
               ? "text-brand"
               : attentionTone === "warning"
@@ -145,7 +155,7 @@ export function HeroStats({
         >
           {attentionCount}
         </p>
-        <p className="mt-1 text-xs text-fg-muted">
+        <p className="mt-0.5 text-[11px] text-fg-muted sm:mt-1 sm:text-xs">
           {attentionCount === 0
             ? pendingApprovalsCount > 0
               ? `Alles ruhig · ${pendingApprovalsCount} ${pendingApprovalsCount === 1 ? "Antrag" : "Anträge"} offen`
@@ -160,7 +170,9 @@ export function HeroStats({
                 .filter(Boolean)
                 .join(" · ")}
         </p>
+        </div>
       </Link>
+      </div>
     </section>
   );
 }

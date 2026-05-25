@@ -41,6 +41,7 @@ import {
   type GatedBusinessFeature,
 } from "@/lib/plan-upgrade-messages";
 import { minutesToDecimalHours, workedMinutes } from "@/lib/time/payroll";
+import { payrollDocumentTitle, payrollFileSlug, pdfAsciiSafe } from "@/lib/exports/payroll-formats";
 import {
   humanizeWorkLogNote,
   workLogStatusLabel,
@@ -288,12 +289,8 @@ function formatForDateTimeLocal(iso: string) {
   return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
 }
 
-/** PDF-Kopf: Mandantenname oder neutraler VREMA-Titel (ohne Hersteller-Branding in der Kopfzeile). */
 function pdfHeaderFirmenzeile(companyName: string) {
-  const t = companyName.trim();
-  if (!t) return "VREMA Report";
-  if (/^kevkostudio$/i.test(t)) return "VREMA Report";
-  return t;
+  return pdfAsciiSafe(payrollDocumentTitle(companyName));
 }
 
 function statusLabel(status: LogRow["status"]) {
@@ -504,14 +501,18 @@ export function ReportsClient({
       doc.line(marginL, marginT + 5, contentRight, marginT + 5);
       doc.setTextColor(0, 0, 0);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text("VREMA", marginL, marginT - 5);
+      doc.setFontSize(13);
+      doc.text("Monats-Stundenzettel", marginL, marginT - 5);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.text(pdfHeaderFirmenzeile(companyName), marginL, marginT);
       doc.text(month, contentRight, marginT - 5, { align: "right" });
+      doc.setFontSize(7);
+      doc.setTextColor(100, 116, 139);
+      doc.text("Erstellt mit VREMA", marginL, marginT + 4);
+      doc.setTextColor(0, 0, 0);
       doc.setFontSize(8);
-      doc.text(`Erstellt: ${formatDateDE(new Date())}`, contentRight, marginT, { align: "right" });
+      doc.text(`Stand: ${formatDateDE(new Date())}`, contentRight, marginT, { align: "right" });
 
       const colW = tableWidth / 3;
       doc.setDrawColor(226, 232, 240);
@@ -520,9 +521,9 @@ export function ReportsClient({
       doc.line(marginL + colW * 2, summaryY, marginL + colW * 2, summaryY + boxH);
       doc.setFontSize(6.5);
       doc.setTextColor(71, 85, 105);
-      doc.text("MANDANT", marginL + 2, summaryY + 4);
-      doc.text("ZEITRAUM", marginL + colW + 2, summaryY + 4);
-      doc.text("GESAMTSTUNDEN", marginL + colW * 2 + 2, summaryY + 4);
+      doc.text("Mandant", marginL + 2, summaryY + 4);
+      doc.text("Abrechnungszeitraum", marginL + colW + 2, summaryY + 4);
+      doc.text("Summe Arbeitszeit", marginL + colW * 2 + 2, summaryY + 4);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
       doc.setTextColor(0, 0, 0);
@@ -608,11 +609,11 @@ export function ReportsClient({
         head: [
           [
             "Datum",
-            "Einstempelzeit",
-            "Ausstempelzeit",
-            "Pause (Min)",
-            "Netto (Min)",
-            "Std. (Dez.)",
+            "Beginn",
+            "Ende",
+            "Pause (Min.)",
+            "Netto (Min.)",
+            "Stunden",
             "Status",
             "Bemerkung",
           ],
@@ -706,8 +707,9 @@ export function ReportsClient({
       }
     });
 
-    const safeMonth = month.replace(/\s+/g, "_").replace(/[^\w\-]/g, "");
-    return { doc, fileName: `vrema-report-${safeMonth || "monat"}.pdf` };
+    const slug = payrollFileSlug(companyName);
+    const safeMonth = monthKey || month.replace(/\s+/g, "_").replace(/[^\w\-]/g, "");
+    return { doc, fileName: `VREMA_Stundenzettel_${slug}_${safeMonth}.pdf` };
   };
   const exportPdf = () => {
     const { doc, fileName } = buildPdfDocAndName();
@@ -719,21 +721,21 @@ export function ReportsClient({
   };
   const buildCsv = () => {
     const separator = ";";
-    const personalHeaders = isManager ? (["Mitarbeiter-Nr", "Mitarbeiter Name"] as const) : [];
+    const personalHeaders = isManager ? (["Personalnummer", "Mitarbeiter"] as const) : [];
     const headers = [
       ...personalHeaders,
       "Zeilenart",
       "Datum",
-      "Einstempelzeit",
-      "Ausstempelzeit",
-      "Pause (Minuten)",
-      "Arbeitszeit netto (Minuten)",
-      "Stunden (Dezimal)",
-      "Lohnart-Code",
-      "Lohnart-Bezeichnung",
-      "Sollzeit Monat (Std)",
-      "Istzeit Monat (Std)",
-      "Differenz (Std)",
+      "Beginn",
+      "Ende",
+      "Pause (Min.)",
+      "Netto (Min.)",
+      "Stunden",
+      "Lohnart-Nr.",
+      "Lohnart",
+      "Soll (Std.)",
+      "Ist (Std.)",
+      "Differenz (Std.)",
       "Status",
       "Bemerkung",
     ];
@@ -842,7 +844,15 @@ export function ReportsClient({
       }
     });
 
+    const preamble = [
+      "VREMA Monats-Stundenzettel (CSV)",
+      `Mandant: ${companyName}`,
+      `Zeitraum: ${month}`,
+      "Format: Semikolon · Datum TT.MM.JJJJ · Stunden mit Komma",
+      "",
+    ];
     const csv = [
+      ...preamble,
       headers.map(toCsvCell).join(separator),
       ...rows.map((row) => row.map((cell) => toCsvCell(cell)).join(separator)),
     ].join("\n");
@@ -893,7 +903,7 @@ export function ReportsClient({
     const link = document.createElement("a");
     const safeMonth = month.replace(/\s+/g, "_").replace(/[^\w\-]/g, "");
     link.href = url;
-    link.download = `vrema-report-${safeMonth || "monat"}.csv`;
+    link.download = `VREMA_Stundenzettel_${payrollFileSlug(companyName)}_${monthKey || safeMonth || "monat"}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1269,29 +1279,8 @@ export function ReportsClient({
           </div>
         </div>
 
-        {/* Summary cards */}
-        <div className="no-print grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
-          {[
-            { label: "Gesamtstunden", value: `${totalHoursDecimal} h`, tone: "text-foreground", note: "Zusammenfassung der monatlichen Arbeitszeiten" },
-            { label: costSummaryLabel, value: costSummaryValue, tone: "text-foreground", note: costSummaryNote },
-            { label: "Ø Stunden pro Arbeitstag", value: `${avgHoursPerDay} h`, tone: "text-muted-foreground", note: `${productiveDays} Arbeitstage erfasst` },
-            { label: "Zeiteinträge", value: String(logs.length), tone: "text-muted-foreground", note: "Anzahl erfasster Buchungen im Monat" },
-          ].map((s) => (
-            <motion.div
-              key={s.label}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
-              className="animate-in fade-in slide-in-from-bottom-4 rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] duration-500 sm:p-6"
-            >
-              <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-2">{s.label}</p>
-              <p className={`text-4xl font-extrabold tracking-tight tabular-nums ${s.tone}`}>{s.value}</p>
-              <p className="mt-2 text-xs text-muted-foreground">{s.note}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="no-print rounded-2xl border border-brand/20 bg-brand-soft/50 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
+        <div className="no-print flex flex-col gap-3 sm:gap-4">
+        <div className="order-2 rounded-2xl border border-brand/20 bg-brand-soft/50 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] max-md:order-1 sm:p-6">
             <div className="flex items-start gap-3">
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
                 <CheckCircle2 className="h-5 w-5" aria-hidden />
@@ -1317,13 +1306,13 @@ export function ReportsClient({
                     loading={isAckPending}
                     onClick={() => {
                       startAckTransition(async () => {
-                        try {
-                          await confirmTimesheetMonth(monthKey);
-                          show("Stunden für den Monat bestätigt.", "success");
-                          router.refresh();
-                        } catch (err: unknown) {
-                          show(userErrorMessage(err, "Bestätigung fehlgeschlagen."), "error");
+                        const result = await confirmTimesheetMonth(monthKey);
+                        if (!result.ok) {
+                          show(result.error, "error");
+                          return;
                         }
+                        show("Stunden für den Monat bestätigt.", "success");
+                        router.refresh();
                       });
                     }}
                   >
@@ -1333,6 +1322,28 @@ export function ReportsClient({
               </div>
             </div>
           </div>
+
+        <div className="no-print order-1 grid grid-cols-2 gap-2 max-md:order-2 sm:gap-4 sm:grid-cols-2 xl:[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+          {[
+            { label: "Gesamtstunden", value: `${totalHoursDecimal} h`, tone: "text-foreground", note: "Monat gesamt" },
+            { label: costSummaryLabel, value: costSummaryValue, tone: "text-foreground", note: costSummaryNote },
+            { label: "Ø pro Tag", value: `${avgHoursPerDay} h`, tone: "text-muted-foreground", note: `${productiveDays} Tage` },
+            { label: "Einträge", value: String(logs.length), tone: "text-muted-foreground", note: "Buchungen" },
+          ].map((s) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className="rounded-xl border border-border bg-card p-3.5 shadow-sm sm:rounded-2xl sm:p-5 sm:shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{s.label}</p>
+              <p className={`mt-1 text-2xl font-extrabold tracking-tight tabular-nums sm:text-3xl ${s.tone}`}>{s.value}</p>
+              <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground sm:mt-1 sm:text-xs">{s.note}</p>
+            </motion.div>
+          ))}
+        </div>
+        </div>
 
         {(isAIAnalyzing || aiAnalysis) && (
           <div className="no-print rounded-2xl border border-brand/20 bg-surface p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">

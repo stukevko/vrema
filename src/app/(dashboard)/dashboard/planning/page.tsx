@@ -18,7 +18,7 @@ import { dateForPlannerCycleDay } from "@/lib/planning/cycle-display-date";
 import { sortPlannerShiftsChronologically } from "@/lib/planning/sort-shifts";
 import { parsePlannerWeekIndex } from "@/lib/planning/focus-week";
 import Link from "next/link";
-import { Handshake, Inbox, ListTodo } from "lucide-react";
+import { CalendarClock, Handshake, Inbox, ListTodo } from "lucide-react";
 import { Suspense } from "react";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -63,32 +63,37 @@ export default async function PlanningPage({
           </p>
         ) : null}
         <DashboardPageHeader
-          variant="hero"
-          eyebrow="Führungskraft"
-          title="Schichtplanung"
-          description="Team planen, PDF fürs WhatsApp-Team teilen, Tausche freigeben. Mitarbeitende sehen nur ihren eigenen Dienstplan."
-          actions={
-            <div className="flex flex-col gap-2">
-              {data.companyModules.shiftTasks ? (
-                <Link
-                  href="/dashboard/tasks"
-                  className="btn-outline inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold"
-                >
-                  <ListTodo className="h-4 w-4" aria-hidden />
-                  Schicht-Tasks
-                </Link>
-              ) : null}
-              {!data.companyModules.peaks || !data.companyModules.autopilot ? (
-                <Link
-                  href="/dashboard/settings"
-                  className="inline-flex min-h-10 items-center justify-center rounded-xl border border-border bg-background px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
-                >
-                  Erweiterungen in Einstellungen
-                </Link>
-              ) : null}
-            </div>
-          }
+          variant="card"
+          icon={CalendarClock}
+          eyebrow="Planung"
+          title="Schichtplan"
+          description="Person wählen · Tag antippen · PDF teilen. Mitarbeitende sehen nur ihren Plan."
+          className="hidden md:block"
         />
+        <DashboardPageHeader
+          variant="plain"
+          eyebrow="Planung"
+          title="Schichtplan"
+          description="Person → Tag (+) · Wischen = andere Tage"
+          className="md:hidden"
+        />
+        <div className="flex flex-wrap gap-2 md:hidden">
+          {data.companyModules.shiftTasks ? (
+            <Link
+              href="/dashboard/tasks"
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-xs font-semibold text-foreground"
+            >
+              <ListTodo className="h-3.5 w-3.5" aria-hidden />
+              Tasks
+            </Link>
+          ) : null}
+          <Link
+            href="/dashboard/settings"
+            className="inline-flex min-h-9 items-center rounded-xl border border-border bg-card px-3 text-xs font-semibold text-muted-foreground"
+          >
+            Einstellungen
+          </Link>
+        </div>
         <Suspense
           fallback={
             <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">

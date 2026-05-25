@@ -47,7 +47,7 @@ export function DashboardPageHeader({
     return (
       <header
         className={clsx(
-          "glass-card relative overflow-hidden px-4 py-4 sm:flex sm:items-start sm:justify-between sm:gap-4 sm:px-5 sm:py-5",
+          "glass-card relative overflow-hidden px-3 py-3 sm:flex sm:items-start sm:justify-between sm:gap-4 sm:px-5 sm:py-5",
           className,
         )}
       >

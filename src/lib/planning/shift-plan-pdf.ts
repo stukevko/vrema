@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { pdfAsciiSafe, payrollDocumentTitle } from "@/lib/exports/payroll-formats";
 import {
   dateForPlannerCycleDay,
   dayOrderMonFirst,
@@ -26,16 +27,7 @@ export type ShiftPlanPdfShift = {
   breakDuration?: number;
 };
 
-function pdfSafe(text: string): string {
-  return text
-    .replace(/ä/g, "ae")
-    .replace(/ö/g, "oe")
-    .replace(/ü/g, "ue")
-    .replace(/Ä/g, "Ae")
-    .replace(/Ö/g, "Oe")
-    .replace(/Ü/g, "Ue")
-    .replace(/ß/g, "ss");
-}
+const pdfSafe = pdfAsciiSafe;
 
 function formatTimeHm(value: string): string {
   const m = value.match(/^(\d{1,2}):(\d{2})/);
@@ -58,8 +50,7 @@ function dayColumnHeader(weekIndex: 1 | 2 | 3, dayOfWeek: number): string {
 }
 
 function pdfHeaderFirmenzeile(companyName: string): string {
-  const trimmed = companyName.trim();
-  return trimmed.length > 0 ? pdfSafe(trimmed) : "Schichtplan";
+  return pdfSafe(payrollDocumentTitle(companyName));
 }
 
 export function buildShiftPlanPdf(input: {
@@ -98,8 +89,12 @@ export function buildShiftPlanPdf(input: {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
-  doc.text("VREMA Schichtplan", marginL, marginT - 4);
+  doc.text("Schichtplan", marginL, marginT - 4);
   doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(100, 116, 139);
+  doc.text("· VREMA", marginL + 26, marginT - 4);
+  doc.setTextColor(0, 0, 0);
   doc.setFontSize(9);
   doc.text(pdfHeaderFirmenzeile(companyName), marginL, marginT);
   doc.text(`Woche ${weekIndex} von ${shiftCycleWeeks} · ${pdfSafe(weekRange)}`, contentRight, marginT - 4, {

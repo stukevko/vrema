@@ -274,8 +274,8 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ────────────────────────────────────────────────────────────── */}
-      <section className="relative w-full max-w-full border-b border-line bg-surface pb-16 pt-[calc(8rem+env(safe-area-inset-top))]">
-        <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
+      <section className="relative w-full max-w-full border-b border-line bg-surface pb-12 pt-[calc(7rem+env(safe-area-inset-top))] sm:pb-16 sm:pt-[calc(8rem+env(safe-area-inset-top))]">
+        <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:px-4">
           <div className="grid min-w-0 max-w-full items-center gap-12 lg:grid-cols-2">
 
             {/* Left: Text */}
@@ -285,7 +285,7 @@ export default function LandingPage() {
                 VREMA - Intelligente Zeiterfassung
               </div>
 
-              <h1 className="mb-6 max-w-full hyphens-auto break-words text-4xl font-bold leading-[1.1] tracking-tight text-foreground md:text-6xl">
+              <h1 className="mb-5 max-w-full hyphens-auto break-words text-[1.65rem] font-bold leading-[1.12] tracking-tight text-foreground sm:text-4xl md:text-6xl">
                 VREMA: Dein Zeitportal für Teams — planen, stempeln, verstehen.
               </h1>
 

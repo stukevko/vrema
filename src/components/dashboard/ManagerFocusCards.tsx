@@ -35,7 +35,7 @@ function FocusCard({
   return (
     <Link
       href={href}
-      className={`group flex min-h-[10.5rem] flex-col rounded-2xl border p-4 shadow-sm transition-[border-color,box-shadow,transform] active:scale-[0.99] sm:p-5 md:hover:shadow-md ${toneBorder}`}
+      className={`group flex min-h-[9.5rem] w-[min(82vw,17.5rem)] shrink-0 snap-start flex-col rounded-2xl border p-4 shadow-sm transition-[border-color,box-shadow,transform] active:scale-[0.99] sm:min-h-[10.5rem] sm:w-auto sm:shrink md:hover:shadow-md ${toneBorder}`}
     >
       <div className="flex items-start justify-between gap-2">
         <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-background text-brand shadow-sm">
@@ -83,7 +83,7 @@ export function ManagerFocusCards({ snapshot }: Props) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory max-md:-mx-1 max-md:px-1 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:pb-0">
         <FocusCard
           tone={todayTone}
           icon={Users}

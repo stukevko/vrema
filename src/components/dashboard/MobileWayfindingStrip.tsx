@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ChevronRight, MapPin } from "lucide-react";
+import { ChevronRight, MapPin, X } from "lucide-react";
 import type { CompanyModules } from "@/lib/company-modules";
 
 type Guide = {
@@ -20,90 +21,92 @@ function guideForPath(
     if (role === "EMPLOYEE") {
       return {
         title: "Mein Dienstplan",
-        hint: "Hier siehst du deine Schichten. Fragen? Kurz bei der Leitung nachfragen.",
-        cta: { href: "/dashboard/vacation", label: "Urlaub beantragen" },
+        hint: "Schichten & Tausch — Fragen an die Leitung.",
+        cta: { href: "/dashboard/vacation", label: "Urlaub" },
       };
     }
     return {
       title: "Schichtplan",
-      hint: "Team oben wählen · Schichtkarte antippen (+) · Person per X oder „Schicht leeren“ entfernen. Wischen = Tage.",
-      cta: { href: "/dashboard/settings", label: "Module & Vorlagen" },
+      hint: "Person wählen → Tag antippen (+). Wischen = andere Tage.",
+      cta: { href: "/dashboard/settings", label: "Vorlagen" },
     };
   }
   if (pathname.startsWith("/dashboard/team")) {
     return {
       title: "Team",
-      hint: "Mitarbeitende einladen, Rollen setzen, Verfügbarkeiten pflegen.",
-      cta: { href: "/dashboard/planning", label: "Zum Planer" },
+      hint: "Einladen, Rollen, Verfügbarkeiten.",
+      cta: { href: "/dashboard/planning", label: "Planer" },
     };
   }
   if (pathname.startsWith("/dashboard/vacation")) {
     return {
       title: "Abwesenheit",
-      hint: role === "EMPLOYEE" ? "Urlaub oder Krankmeldung — Status siehst du hier." : "Anträge prüfen und freigeben.",
+      hint: role === "EMPLOYEE" ? "Urlaub oder Krankmeldung." : "Anträge freigeben.",
     };
   }
   if (pathname.startsWith("/dashboard/reports")) {
     return {
       title: "Berichte",
-      hint: "Stunden, Korrekturen, Exporte — mit Vorher/Nachher bei Änderungen.",
+      hint: "Monat wählen · Stunden prüfen · PDF oder CSV.",
     };
   }
   if (pathname.startsWith("/dashboard/insights")) {
     return {
       title: "Auswertung",
-      hint: modules.peaks
-        ? "Plan-Hinweise, ArbZG und optional Stoßzeiten."
-        : "Stunden, ArbZG und Plan vs. Ist — ohne Umsatz-Extras.",
-      cta: modules.peaks ? { href: "/dashboard/peaks", label: "Stoß pflegen" } : undefined,
+      hint: modules.peaks ? "Plan-Hinweise & Stoßzeiten." : "Stunden & ArbZG.",
+      cta: modules.peaks ? { href: "/dashboard/peaks", label: "Stoß" } : undefined,
     };
   }
   if (pathname.startsWith("/dashboard/peaks")) {
     return {
       title: "Stoß & Umsatz",
-      hint: "Pro Wochentag: ruhig, normal oder Stoß — für bessere Plan-Hinweise.",
+      hint: "Pro Tag: ruhig, normal oder Stoß.",
     };
   }
   if (pathname.startsWith("/dashboard/settings") || pathname.startsWith("/dashboard/account")) {
     return {
       title: role === "EMPLOYEE" ? "Mein Konto" : "Einstellungen",
-      hint: role === "EMPLOYEE" ? "Profil, Passwort, Passkey." : "Terminal, Vorlagen, Module — Betrieb einrichten.",
+      hint: role === "EMPLOYEE" ? "Profil & Passkey." : "Terminal, Module, Branding.",
     };
   }
   if (pathname.startsWith("/dashboard/billing")) {
     return {
       title: "Abonnement",
-      hint: "Tarif und Zahlung — oder kostenfrei, wenn vom Admin freigeschaltet.",
+      hint: "Tarif & Zahlung.",
     };
   }
   if (pathname.startsWith("/dashboard/tasks")) {
     return {
       title: "Schicht-Tasks",
-      hint: "Checklisten pro Schicht — nur sichtbar, wenn das Modul in den Einstellungen aktiv ist.",
-      cta: { href: "/dashboard/planning", label: "Zum Planer" },
+      hint: "Checklisten pro Schicht.",
+      cta: { href: "/dashboard/planning", label: "Planer" },
     };
   }
   if (pathname.startsWith("/dashboard/support")) {
     return {
-      title: "Hilfe & Support",
-      hint: "Ticket erstellen oder Status prüfen — Antworten siehst du hier und per E-Mail.",
+      title: "Hilfe",
+      hint: "Ticket erstellen — Antwort hier & per Mail.",
     };
   }
   if (pathname === "/dashboard" || pathname === "/dashboard/") {
     if (role === "EMPLOYEE") {
       return {
         title: "Dein Tag",
-        hint: "1. Stempeln · 2. Schicht checken · 3. Urlaub bei Bedarf",
-        cta: { href: "/dashboard/planning", label: "Meine Schichten" },
+        hint: "Stempeln → Schicht → Urlaub bei Bedarf.",
+        cta: { href: "/dashboard/planning", label: "Schichten" },
       };
     }
     return {
       title: "Übersicht",
-      hint: "Oben: was heute wichtig ist. Unten: Team & Kennzahlen.",
-      cta: { href: "/dashboard/planning", label: "Planung öffnen" },
+      hint: "Kennzahlen oben · Aktionen in den Fokus-Karten.",
+      cta: { href: "/dashboard/planning", label: "Planer" },
     };
   }
   return null;
+}
+
+function dismissKey(pathname: string) {
+  return `vrema-wayfinding-dismiss:${pathname}`;
 }
 
 export function MobileWayfindingStrip({
@@ -115,27 +118,70 @@ export function MobileWayfindingStrip({
 }) {
   const pathname = usePathname();
   const guide = guideForPath(pathname, role, companyModules);
-  if (!guide) return null;
+  const [dismissed, setDismissed] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!guide) return;
+    try {
+      setDismissed(localStorage.getItem(dismissKey(pathname)) === "1");
+    } catch {
+      setDismissed(false);
+    }
+    setExpanded(false);
+  }, [pathname, guide]);
+
+  if (!guide || dismissed) return null;
+
+  const dismiss = () => {
+    try {
+      localStorage.setItem(dismissKey(pathname), "1");
+    } catch {
+      /* ignore */
+    }
+    setDismissed(true);
+  };
 
   return (
-    <div className="mb-4 rounded-2xl border border-brand/25 bg-gradient-to-r from-brand/10 via-card to-card px-4 py-3 shadow-sm dark:from-brand/15">
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand dark:bg-brand/25">
-          <MapPin className="h-4 w-4" aria-hidden />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-brand">Du bist hier</p>
-          <p className="text-sm font-bold text-foreground">{guide.title}</p>
-          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{guide.hint}</p>
-          {guide.cta ? (
-            <Link
-              href={guide.cta.href}
-              className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand"
+    <div className="mb-3 max-md:mb-2 md:mb-4">
+      <div className="rounded-xl border border-brand/20 bg-card/95 px-3 py-2.5 shadow-sm dark:border-brand/25 dark:bg-card/90 sm:rounded-2xl sm:px-4 sm:py-3">
+        <div className="flex items-start gap-2.5">
+          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand dark:bg-brand/25 sm:h-9 sm:w-9 sm:rounded-xl">
+            <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-brand">Du bist hier</p>
+              <button
+                type="button"
+                onClick={dismiss}
+                className="-mr-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors active:bg-muted/60"
+                aria-label="Hinweis ausblenden"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+            <button
+              type="button"
+              className="mt-0.5 w-full text-left"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
             >
-              {guide.cta.label}
-              <ChevronRight className="h-3.5 w-3.5" aria-hidden />
-            </Link>
-          ) : null}
+              <p className="text-sm font-bold text-foreground">{guide.title}</p>
+              {(expanded || !guide.cta) && (
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{guide.hint}</p>
+              )}
+            </button>
+            {guide.cta ? (
+              <Link
+                href={guide.cta.href}
+                className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-brand"
+              >
+                {guide.cta.label}
+                <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+              </Link>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>

@@ -368,7 +368,7 @@ export default async function DashboardPage({
     <div className="dashboard-page-root mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 overflow-x-hidden px-0 text-foreground sm:max-w-6xl sm:gap-6 sm:px-2 md:gap-8 md:px-0">
       {/* Header — für Mitarbeiter überspringen, weil das Cockpit selbst begrüßt */}
       {!isEmployee && (
-        <div className="order-1 min-w-0 max-w-full shrink-0">
+        <div className="order-1 min-w-0 max-w-full shrink-0 max-md:hidden">
           <DashboardPageHeader
             variant="hero"
             title={`Guten ${berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"}, ${session.user.name?.split(" ")[0] ?? "Nutzer"} 👋`}
@@ -382,9 +382,14 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {/* Hero-KPIs (Manager) — das "3-Sekunden-Prinzip" direkt unter dem Gruß. */}
+      {managerFocusSnapshot ? (
+        <div className="order-2 min-w-0 max-md:order-1">
+          <ManagerFocusCards snapshot={managerFocusSnapshot} />
+        </div>
+      ) : null}
+
       {teamStats && (
-        <div className="order-1 mt-1 min-w-0 sm:mt-2">
+        <div className="order-1 mt-1 min-w-0 max-md:order-2 sm:mt-2">
           <HeroStats
             presentNow={teamStats.activeToday}
             totalEmployees={teamStats.totalEmployees}
@@ -392,15 +397,20 @@ export default async function DashboardPage({
             attentionCount={heroAttentionCount}
             attentionBreakdown={{ absent: teamStats.absentToday, late: teamStats.lateToday }}
             pendingApprovalsCount={heroPendingApprovalsCount}
+            mobileGreeting={
+              !isEmployee
+                ? `Guten ${berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"}, ${session.user.name?.split(" ")[0] ?? "Nutzer"} 👋`
+                : undefined
+            }
+            mobileDateLine={formatBerlinDate(now, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
           />
         </div>
       )}
-
-      {managerFocusSnapshot ? (
-        <div className="order-2 min-w-0">
-          <ManagerFocusCards snapshot={managerFocusSnapshot} />
-        </div>
-      ) : null}
 
       {showOwnerWelcome && isOwner ? (
         <OwnerWelcomeStrip focusWeek={ownerWelcomeFocusWeek} showPeaksModule={companyModules.peaks} />
