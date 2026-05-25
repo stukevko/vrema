@@ -143,7 +143,7 @@ export function MobileWayfindingStrip({
   };
 
   return (
-    <div className="mb-3 max-md:mb-2 md:mb-4">
+    <div className="mb-3 md:hidden">
       <div className="rounded-xl border border-brand/20 bg-card/95 px-3 py-2.5 shadow-sm dark:border-brand/25 dark:bg-card/90 sm:rounded-2xl sm:px-4 sm:py-3">
         <div className="flex items-start gap-2.5">
           <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand dark:bg-brand/25 sm:h-9 sm:w-9 sm:rounded-xl">

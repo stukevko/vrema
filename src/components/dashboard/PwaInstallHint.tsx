@@ -52,7 +52,7 @@ export function PwaInstallHint() {
   if (!visible) return null;
 
   return (
-    <div className="mb-4 flex items-start gap-3 rounded-2xl border border-brand/25 bg-brand/5 px-4 py-3 text-sm">
+    <div className="mb-4 flex items-start gap-3 rounded-2xl border border-brand/25 bg-brand/5 px-4 py-3 text-sm md:hidden">
       <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-foreground">App-Feeling auf dem Handy</p>
