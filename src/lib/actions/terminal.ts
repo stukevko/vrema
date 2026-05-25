@@ -26,11 +26,13 @@ export async function validatePinAndClock(companySlug: string, pin: string) {
     },
   });
 
-  if (!company || !company.isActive) {
+  const { companyHasOperationalAccess } = await import("@/lib/trial/access");
+  const { isTrialExpired } = await import("@/lib/trial");
+
+  if (!company || !companyHasOperationalAccess(company)) {
     return { status: "error" as const, message: "Terminal ist nicht verfügbar." };
   }
 
-  const { isTrialExpired } = await import("@/lib/trial");
   if (isTrialExpired(company)) {
     return {
       status: "error" as const,

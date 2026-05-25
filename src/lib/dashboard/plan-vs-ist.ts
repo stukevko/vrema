@@ -3,6 +3,7 @@ import { tenantWhere } from "@/lib/tenant-guard";
 import { getDayBoundsUtc, getBerlinDateKey, berlinDateKeyToDayOfWeek } from "@/lib/time/timezone";
 import { getWeekCycleIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 import { shiftNetDurationMinutes } from "@/lib/planning/shift-duration";
+import { workedMinutesForCostEstimate } from "@/lib/time/payroll";
 
 export type PlanVsIstRow = {
   userName: string;
@@ -78,9 +79,10 @@ export async function getTodayPlanVsIst(companyId: string): Promise<PlanVsIstSum
   for (const l of logs) {
     const name = (l.user.name?.trim() || l.user.email).trim();
     const key = name.toLowerCase();
-    const endTs = l.clockOut ?? now;
-    const gross = Math.max(0, Math.round((endTs.getTime() - l.clockIn.getTime()) / 60_000));
-    const mins = Math.max(0, gross - (l.breakMins ?? 0));
+    const mins = workedMinutesForCostEstimate(
+      { clockIn: l.clockIn, clockOut: l.clockOut, breakMins: l.breakMins ?? 0 },
+      now,
+    );
     const prev = workedByUser.get(key);
     workedByUser.set(key, {
       name,

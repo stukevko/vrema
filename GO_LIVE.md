@@ -10,6 +10,7 @@ Dieses Runbook ist für den Moment gedacht, in dem du auf der VM den Schalter um
 | `AUTH_SECRET`, `AUTH_URL`, `AUTH_TRUST_HOST` | Login |
 | `NEXT_PUBLIC_APP_URL` | Links, SEO, E-Mails |
 | `STRIPE_*` (Live) | Abos |
+| Stripe Webhook-Events | `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, **`invoice.payment_failed`**, `charge.refunded` |
 | `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | Verify, Reset, Welcome |
 | `SUPER_ADMIN_USER_ID` | Backoffice |
 | `AUTH_WEBAUTHN_*` | Passkeys (Domain muss passen) |

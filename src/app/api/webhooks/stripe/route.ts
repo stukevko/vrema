@@ -4,6 +4,10 @@ import { db } from "@/lib/db";
 import type Stripe from "stripe";
 import { applyCheckoutSessionCompleted } from "@/lib/actions/billing";
 import {
+  reactivateTenantFromPaidInvoice,
+  suspendTenantFromFailedInvoice,
+} from "@/lib/billing/stripe-invoice-tenant";
+import {
   cancelAffiliateEarningsFromStripeCharge,
   createAffiliateEarningFromPaidInvoice,
 } from "@/lib/affiliate-earnings";
@@ -110,8 +114,15 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        await suspendTenantFromFailedInvoice(invoice);
+        break;
+      }
+
       case "invoice.paid": {
         const invoice = event.data.object as Stripe.Invoice;
+        await reactivateTenantFromPaidInvoice(invoice);
         const result = await createAffiliateEarningFromPaidInvoice(invoice);
         if (result.skipped && "reason" in result && result.reason === "no_company" && "retryable" in result && result.retryable) {
           throw new Error("[affiliate] retry requested: company missing during invoice.paid");

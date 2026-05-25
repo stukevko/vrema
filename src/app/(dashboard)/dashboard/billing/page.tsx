@@ -36,6 +36,7 @@ export default async function BillingPage({
       subEndsAt: true,
       trialEndsAt: true,
       billingExempt: true,
+      isActive: true,
     },
   });
 
@@ -54,6 +55,26 @@ export default async function BillingPage({
         title="Tarif & Zahlung"
         description="Plan wählen, Stripe-Portal öffnen oder Testphase verlängern."
       />
+
+      {!company.isActive && !company.billingExempt && company.stripeSubId && (
+        <div className="rounded-xl border border-danger/40 bg-danger-soft/40 px-4 py-4">
+          <p className="text-sm font-semibold text-danger-foreground">Zahlung ausstehend — Zugang gesperrt</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Die letzte Abbuchung ist fehlgeschlagen. Bitte Zahlungsmethode im Stripe-Kundenportal aktualisieren.
+            Nach erfolgreicher Zahlung wird der Zugang automatisch wieder freigeschaltet.
+          </p>
+          {company.stripeCustomerId && (
+            <form action={createBillingPortalSession} className="mt-3">
+              <button
+                type="submit"
+                className="inline-flex min-h-10 items-center rounded-xl bg-brand px-4 text-sm font-bold text-brand-foreground"
+              >
+                Zahlung im Portal beheben
+              </button>
+            </form>
+          )}
+        </div>
+      )}
 
       {company.billingExempt && (
         <div className="rounded-xl border border-emerald-300/50 bg-emerald-50 px-4 py-4 dark:border-emerald-500/30 dark:bg-emerald-950/40">

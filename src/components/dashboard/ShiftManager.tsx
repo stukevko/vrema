@@ -18,7 +18,8 @@ import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
 import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPanel";
 import { ShiftCentricBoard } from "@/components/planning/ShiftCentricBoard";
-import { buildMemberWeekMinutes, type BoardShiftSlot } from "@/lib/planning/shift-board-model";
+import { buildMemberWeekMinutes, slotKey, type BoardShiftSlot } from "@/lib/planning/shift-board-model";
+import { ToastContainer, useToast } from "@/components/ui/Toast";
 import { ShiftAddSheet } from "@/components/planning/ShiftAddSheet";
 import { ShiftPlanPdfExport } from "@/components/planning/ShiftPlanPdfExport";
 import { isOpenShiftPlaceholderEmail } from "@/lib/planning/open-shift-email";
@@ -454,13 +455,67 @@ export function ShiftManager({
   const shiftsRef = useRef(shifts);
   shiftsRef.current = shifts;
   const [hiddenShiftIds, setHiddenShiftIds] = useState<Set<string>>(() => new Set());
+  const [boardOptimisticShifts, setBoardOptimisticShifts] = useState<ShiftRow[]>([]);
+  const [busySlotKeys, setBusySlotKeys] = useState<Set<string>>(() => new Set());
+  const [gapFlashSlotKeys, setGapFlashSlotKeys] = useState<Set<string>>(() => new Set());
+  const boardRefreshTimerRef = useRef<number | null>(null);
+  const { toasts, show: showToast, remove: removeToast } = useToast();
+
   useEffect(() => {
     setHiddenShiftIds(new Set());
+    setBoardOptimisticShifts([]);
   }, [shifts]);
-  const displayShifts = useMemo(
-    () => shifts.filter((s) => !hiddenShiftIds.has(s.id)),
-    [shifts, hiddenShiftIds],
-  );
+
+  useEffect(() => {
+    setBoardOptimisticShifts((prev) =>
+      prev.filter(
+        (opt) =>
+          !shifts.some(
+            (s) =>
+              s.userId === opt.userId &&
+              s.weekIndex === opt.weekIndex &&
+              s.dayOfWeek === opt.dayOfWeek &&
+              s.startTime.slice(0, 5) === opt.startTime.slice(0, 5) &&
+              s.endTime.slice(0, 5) === opt.endTime.slice(0, 5),
+          ),
+      ),
+    );
+  }, [shifts]);
+
+  const displayShifts = useMemo(() => {
+    const base = shifts.filter((s) => !hiddenShiftIds.has(s.id));
+    const seen = new Set(base.map((s) => s.id));
+    const extra = boardOptimisticShifts.filter((s) => !hiddenShiftIds.has(s.id) && !seen.has(s.id));
+    return extra.length > 0 ? [...base, ...extra] : base;
+  }, [shifts, hiddenShiftIds, boardOptimisticShifts]);
+
+  const scheduleBoardRefresh = () => {
+    if (boardRefreshTimerRef.current) clearTimeout(boardRefreshTimerRef.current);
+    boardRefreshTimerRef.current = window.setTimeout(() => {
+      router.refresh();
+      boardRefreshTimerRef.current = null;
+    }, 1200);
+  };
+
+  const flashGapSlot = (key: string) => {
+    setGapFlashSlotKeys((prev) => new Set(prev).add(key));
+    window.setTimeout(() => {
+      setGapFlashSlotKeys((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }, 1400);
+  };
+
+  const setSlotBusy = (key: string, busy: boolean) => {
+    setBusySlotKeys((prev) => {
+      const next = new Set(prev);
+      if (busy) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+  };
 
   /** Server Action liefert { ok, error } — echte deutsche Meldung statt „Speichern fehlgeschlagen“. */
   const persistShiftForDay = async (
@@ -2252,6 +2307,13 @@ export function ShiftManager({
     setActiveTemplateId(t.id);
     setStartTime(t.startTime.slice(0, 5));
     setEndTime(t.endTime.slice(0, 5));
+    showToast(
+      `Vorlage „${t.name}“ (${t.startTime.slice(0, 5)}–${t.endTime.slice(0, 5)}) — Tag wählen und „+ Schicht“ oder Person zuweisen.`,
+      "info",
+    );
+    if (boardAddDay != null) {
+      setBoardAddSheetOpen(true);
+    }
   };
 
   useEffect(() => {
@@ -2282,24 +2344,59 @@ export function ShiftManager({
   const executeShiftAssignment = (userId: string, slot: BoardShiftSlot) => {
     const conflict = conflictTypeByCell.get(`${userId}-${slot.dayOfWeek}`);
     if (conflict) {
-      setMessage(conflict === "SICK" ? "Krank — keine Schicht möglich." : "Urlaub — keine Schicht möglich.");
+      const msg = conflict === "SICK" ? "Krank — keine Schicht möglich." : "Urlaub — keine Schicht möglich.";
+      setMessage(msg);
+      showToast(msg, "error");
       return;
     }
     setMessage(null);
+    const sk = slot.key;
+    const member = members.find((m) => m.id === userId);
+    const optimisticId = `opt-${userId}-${selectedWeekIndex}-${slot.dayOfWeek}-${slot.startTime}-${slot.endTime}-${Date.now()}`;
+    setSlotBusy(sk, true);
+    setBoardOptimisticShifts((prev) => [
+      ...prev,
+      {
+        id: optimisticId,
+        userId,
+        weekIndex: selectedWeekIndex,
+        dayOfWeek: slot.dayOfWeek,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+      },
+    ]);
     startTransition(async () => {
-      const ok = await persistShiftForDay(
-        {
-          userId,
-          weekIndex: selectedWeekIndex,
-          dayOfWeek: slot.dayOfWeek,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-        },
-        "Zugewiesen.",
+      const pre = validateShiftTimesForSave(slot.startTime, slot.endTime);
+      if (!pre.ok) {
+        setBoardOptimisticShifts((prev) => prev.filter((s) => s.id !== optimisticId));
+        setSlotBusy(sk, false);
+        setMessage(pre.error);
+        showToast(pre.error, "error");
+        return;
+      }
+      const result = await setShiftForDay({
+        userId,
+        weekIndex: selectedWeekIndex,
+        dayOfWeek: slot.dayOfWeek,
+        startTime: pre.startTime,
+        endTime: pre.endTime,
+      });
+      setSlotBusy(sk, false);
+      if (!result.ok) {
+        setBoardOptimisticShifts((prev) => prev.filter((s) => s.id !== optimisticId));
+        setMessage(result.error);
+        showToast(result.error, "error");
+        return;
+      }
+      setBoardOptimisticShifts((prev) =>
+        prev.map((s) => (s.id === optimisticId ? { ...s, id: result.shiftId } : s)),
       );
-      if (!ok) return;
       setSelectedUserId(userId);
-      router.refresh();
+      showToast(
+        `${member?.name ?? member?.email ?? "Mitarbeiter"} → ${slot.title} (${slot.rangeLabel}) zugewiesen.`,
+        "success",
+      );
+      scheduleBoardRefresh();
     });
   };
 
@@ -2382,7 +2479,8 @@ export function ShiftManager({
       if (!ok) return;
       setStartTime(slotStartNorm);
       setEndTime(slotEndNorm);
-      router.refresh();
+      showToast(`Schicht angelegt (${slotStartNorm}–${slotEndNorm}).`, "success");
+      scheduleBoardRefresh();
     });
   };
 
@@ -2403,12 +2501,21 @@ export function ShiftManager({
         memberSaldoById={memberSaldoById}
         overtimeFilterOnly={overtimeFilterOnly}
         isPending={isPending}
+        busySlotKeys={busySlotKeys}
+        gapFlashSlotKeys={gapFlashSlotKeys}
         onSelectTemplate={selectShiftTemplate}
         onNeededStaffChange={setNeededStaff}
         onSelectMember={setSelectedUserId}
         onOpenAddSlot={(dayOfWeek) => {
           setBoardAddDay(dayOfWeek);
           setBoardAddSheetOpen(true);
+          if (activeTemplateId) {
+            const t = shiftTemplates.find((x) => x.id === activeTemplateId);
+            if (t) {
+              setStartTime(t.startTime.slice(0, 5));
+              setEndTime(t.endTime.slice(0, 5));
+            }
+          }
         }}
         onAssignMemberToSlot={requestAssignMemberToSlot}
         onOvertimeWarningClick={(userId, el) => {
@@ -2429,18 +2536,35 @@ export function ShiftManager({
         }}
         onRemoveAssignment={(userId, dayOfWeek, shiftId, slotStart, slotEnd) => {
           if (!shiftId?.trim()) {
-            setMessage("Zuweisung konnte nicht identifiziert werden — bitte Seite neu laden.");
+            const msg = "Zuweisung konnte nicht identifiziert werden — bitte Seite neu laden.";
+            setMessage(msg);
+            showToast(msg, "error");
             return;
           }
+          const sk = slotKey(dayOfWeek, slotStart, slotEnd);
           setMessage(null);
+          setSlotBusy(sk, true);
+          setHiddenShiftIds((prev) => new Set(prev).add(shiftId));
+          setBoardOptimisticShifts((prev) => prev.filter((s) => s.id !== shiftId));
           startTransition(async () => {
             const result = await removeShiftViaApi(shiftId);
+            setSlotBusy(sk, false);
             if (!result.ok) {
+              setHiddenShiftIds((prev) => {
+                const next = new Set(prev);
+                next.delete(shiftId);
+                return next;
+              });
               setMessage(result.error);
+              showToast(result.error, "error");
               return;
             }
-            setHiddenShiftIds((prev) => new Set(prev).add(shiftId));
-            setMessage("Zuweisung entfernt.");
+            const member = members.find((m) => m.id === userId);
+            showToast(
+              `${member?.name ?? member?.email ?? "Mitarbeiter"} von der Schicht entfernt.`,
+              "success",
+            );
+            scheduleBoardRefresh();
           });
         }}
         onClearSlot={(slot) => {
@@ -2454,6 +2578,15 @@ export function ShiftManager({
             return;
           }
           setMessage(null);
+          const sk = slot.key;
+          const idsToHide = slot.assignments.map((a) => a.shiftId);
+          setSlotBusy(sk, true);
+          setHiddenShiftIds((prev) => {
+            const next = new Set(prev);
+            for (const id of idsToHide) next.add(id);
+            return next;
+          });
+          setBoardOptimisticShifts((prev) => prev.filter((s) => !idsToHide.includes(s.id)));
           startTransition(async () => {
             let result: Awaited<ReturnType<typeof clearPlannerShiftSlot>>;
             try {
@@ -2464,24 +2597,40 @@ export function ShiftManager({
                 endTime: slot.endTime,
               });
             } catch {
-              setMessage("Schichtkarte konnte nicht geleert werden.");
+              setSlotBusy(sk, false);
+              for (const id of idsToHide) {
+                setHiddenShiftIds((prev) => {
+                  const next = new Set(prev);
+                  next.delete(id);
+                  return next;
+                });
+              }
+              const msg = "Schichtkarte konnte nicht geleert werden.";
+              setMessage(msg);
+              showToast(msg, "error");
               return;
             }
+            setSlotBusy(sk, false);
             if (!result.ok) {
+              for (const id of idsToHide) {
+                setHiddenShiftIds((prev) => {
+                  const next = new Set(prev);
+                  next.delete(id);
+                  return next;
+                });
+              }
               setMessage(result.error);
+              showToast(result.error, "error");
               return;
             }
-            const idsToHide = slot.assignments.map((a) => a.shiftId);
-            setHiddenShiftIds((prev) => {
-              const next = new Set(prev);
-              for (const id of idsToHide) next.add(id);
-              return next;
-            });
-            setMessage(
+            flashGapSlot(sk);
+            const msg =
               result.removed > 0
-                ? `${result.removed} Zuweisung${result.removed === 1 ? "" : "en"} entfernt — offene Lücke im Board.`
-                : "Keine Zuweisungen mehr vorhanden.",
-            );
+                ? `${result.removed} Zuweisung${result.removed === 1 ? "" : "en"} entfernt — offene Lücke (${slot.assignments.length}/${neededStaff}).`
+                : "Schichtkarte ist leer.";
+            setMessage(msg);
+            showToast(msg, "success");
+            scheduleBoardRefresh();
           });
         }}
       />
@@ -2507,17 +2656,22 @@ export function ShiftManager({
         risk={assignmentGuard?.risk ?? null}
         alternative={assignmentGuard?.alternative ?? null}
         isPending={isPending}
-        onClose={() => setAssignmentGuard(null)}
-        onConfirm={() => {
-          if (!assignmentGuard) return;
-          executeShiftAssignment(assignmentGuard.userId, assignmentGuard.slot);
+        onClose={() => {
+          if (isPending) return;
           setAssignmentGuard(null);
         }}
-        onPickAlternative={() => {
-          if (!assignmentGuard?.alternative) return;
-          setSelectedUserId(assignmentGuard.alternative.userId);
-          executeShiftAssignment(assignmentGuard.alternative.userId, assignmentGuard.slot);
+        onConfirm={() => {
+          if (!assignmentGuard || isPending) return;
+          const { userId, slot } = assignmentGuard;
           setAssignmentGuard(null);
+          executeShiftAssignment(userId, slot);
+        }}
+        onPickAlternative={() => {
+          if (!assignmentGuard?.alternative || isPending) return;
+          const { alternative, slot } = assignmentGuard;
+          setAssignmentGuard(null);
+          setSelectedUserId(alternative.userId);
+          executeShiftAssignment(alternative.userId, slot);
         }}
       />
       <ShiftAddSheet
@@ -2525,6 +2679,9 @@ export function ShiftManager({
         dayOfWeek={boardAddDay}
         memberLabel={selectedMember?.name ?? selectedMember?.email ?? null}
         templates={shiftTemplates}
+        presetStart={startTime}
+        presetEnd={endTime}
+        activeTemplateId={activeTemplateId}
         isPending={isPending}
         onClose={() => {
           setBoardAddSheetOpen(false);
@@ -2842,6 +2999,7 @@ export function ShiftManager({
       )}
 
       {message && <p className="mt-3 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground">{message}</p>}
+      <ToastContainer toasts={toasts} remove={removeToast} />
 
       {shiftEdit ? (
         <div

@@ -243,6 +243,8 @@ model Company {
   stripePaymentMethodFingerprint String? @unique
   paymentMethodVerifiedAt DateTime?
   trialEndsAt       DateTime?
+  /// Flyer-/Kampagnen-Code bei Registrierung (z. B. speyer-altstadt).
+  referredBy        String?
   subEndsAt         DateTime?
   isActive          Boolean         @default(true)
   logoUrl           String?

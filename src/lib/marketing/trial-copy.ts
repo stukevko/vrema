@@ -1,4 +1,5 @@
 import { TRIAL_DAYS, TRIAL_MAX_EMPLOYEES } from "@/lib/trial/constants";
+import { FLYER_TRIAL_DAYS } from "@/lib/trial/referral";
 
 function cardRequiredOnSignup(): boolean {
   return (
@@ -9,6 +10,11 @@ function cardRequiredOnSignup(): boolean {
 
 const trialCore = () =>
   `${TRIAL_DAYS} Tage testen · bis ${TRIAL_MAX_EMPLOYEES} Mitarbeitende`;
+
+/** Untertitel auf /auth/register (Flyer-Aktion Speyer). */
+export function trialRegisterSubtitleForFlyer(): string {
+  return `${FLYER_TRIAL_DAYS} Tage kostenlos testen · Speyer-Aktion — keine Kreditkarte, Abrechnung erst danach.`;
+}
 
 /** Untertitel auf /auth/register */
 export function trialRegisterSubtitle(): string {

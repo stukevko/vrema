@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthBrandLogo } from "@/components/brand/AuthBrandLogo";
-import { trialRegisterSubtitle } from "@/lib/marketing/trial-copy";
+import { trialRegisterSubtitle, trialRegisterSubtitleForFlyer } from "@/lib/marketing/trial-copy";
 import { Loader2, Mail, Lock, Building2, User } from "lucide-react";
 
 const LS_REF = "vrema_affiliate_ref";
@@ -32,6 +32,7 @@ type Props = {
   initialPlan: string;
   refCode: string;
   affiliatePartnerName: string | null;
+  flyerReferralLabel: string | null;
   inviteContext: {
     code: string;
     orgId: string;
@@ -40,7 +41,13 @@ type Props = {
   } | null;
 };
 
-export function RegisterClient({ initialPlan, refCode, affiliatePartnerName, inviteContext }: Props) {
+export function RegisterClient({
+  initialPlan,
+  refCode,
+  affiliatePartnerName,
+  flyerReferralLabel,
+  inviteContext,
+}: Props) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -175,9 +182,17 @@ export function RegisterClient({ initialPlan, refCode, affiliatePartnerName, inv
           <p className="mt-1.5 text-sm text-fg-muted">
             {isInviteFlow
               ? `Du registrierst dich für ${inviteContext?.orgName}.`
-              : trialRegisterSubtitle()}
+              : flyerReferralLabel
+                ? trialRegisterSubtitleForFlyer()
+                : trialRegisterSubtitle()}
           </p>
-          {!isInviteFlow && resolvedCode ? (
+          {!isInviteFlow && flyerReferralLabel ? (
+            <p className="mt-3 rounded-xl border border-brand/20 bg-brand-soft/50 px-3 py-2 text-xs leading-relaxed text-fg-muted">
+              <span className="font-semibold text-brand">{flyerReferralLabel}</span>
+              <span className="mt-0.5 block font-mono text-[10px] text-fg-subtle">{resolvedCode}</span>
+            </p>
+          ) : null}
+          {!isInviteFlow && !flyerReferralLabel && resolvedCode ? (
             <p className="mt-3 text-xs leading-relaxed text-fg-muted">
               Empfohlen durch unseren Partner
               {resolvedName ? (

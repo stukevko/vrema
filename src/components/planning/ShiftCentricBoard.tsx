@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { StatusTone } from "@/components/ui/StatusBadge";
@@ -19,7 +19,7 @@ import {
 } from "@/lib/planning/shift-board-model";
 import { formatSaldoHours } from "@/lib/planning/board-assistant";
 import { shiftCardTone } from "@/lib/planning/shift-display";
-import { Cloud, CloudRain, CloudSun, Flame, Plus, Sun, UserPlus, X } from "lucide-react";
+import { Cloud, CloudRain, CloudSun, Flame, Loader2, Plus, Sun, X } from "lucide-react";
 
 function presetButtonLabel(t: ShiftTemplateRow): string {
   const start = t.startTime.slice(0, 5);
@@ -62,6 +62,8 @@ export type ShiftCentricBoardProps = {
   memberSaldoById: Record<string, MemberSaldoSnapshot>;
   overtimeFilterOnly: boolean;
   isPending: boolean;
+  busySlotKeys?: ReadonlySet<string>;
+  gapFlashSlotKeys?: ReadonlySet<string>;
   onSelectTemplate: (template: ShiftTemplateRow) => void;
   onNeededStaffChange: (n: number) => void;
   onSelectMember: (userId: string) => void;
@@ -79,11 +81,13 @@ export type ShiftCentricBoardProps = {
   onOvertimeWarningClick: (userId: string, anchor: HTMLElement) => void;
 };
 
-function ShiftSlotCard({
+const ShiftSlotCard = memo(function ShiftSlotCard({
   slot,
   neededStaff,
   isPending,
   dragOver,
+  slotBusy,
+  gapFlash,
   onDragOver,
   onDragLeave,
   onDrop,
@@ -95,6 +99,8 @@ function ShiftSlotCard({
   neededStaff: number;
   isPending: boolean;
   dragOver: boolean;
+  slotBusy: boolean;
+  gapFlash: boolean;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
@@ -117,10 +123,20 @@ function ShiftSlotCard({
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      className={`rounded-xl border p-2.5 shadow-sm transition-colors ${shiftCardTone(slot.startTime, slot.suspicious)} ${
+      className={`relative rounded-xl border p-2.5 shadow-sm transition-[border-color,box-shadow,background-color] ${shiftCardTone(slot.startTime, slot.suspicious)} ${
         dragOver ? "ring-2 ring-brand/50" : ""
-      } ${understaffed && staffed === 0 ? "border-dashed" : ""}`}
+      } ${understaffed && staffed === 0 ? "border-dashed" : ""} ${
+        gapFlash ? "animate-pulse border-warning/55 bg-warning-soft/25 ring-1 ring-warning/30" : ""
+      }`}
     >
+      {slotBusy ? (
+        <div
+          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/55 backdrop-blur-[1px] dark:bg-black/35"
+          aria-hidden
+        >
+          <Loader2 className="h-5 w-5 animate-spin text-brand" />
+        </div>
+      ) : null}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-[11px] font-bold leading-tight">{slot.title}</p>
@@ -133,7 +149,7 @@ function ShiftSlotCard({
           {staffed > 0 ? (
             <button
               type="button"
-              disabled={isPending}
+              disabled={isPending || slotBusy}
               onClick={(e) => {
                 e.stopPropagation();
                 onClearSlot(slot);
@@ -147,7 +163,9 @@ function ShiftSlotCard({
         </div>
       </div>
       {understaffed ? (
-        <p className="mt-1 text-[9px] font-medium text-muted-foreground">Offene Lücke</p>
+        <p className={`mt-1 text-[9px] font-medium ${gapFlash ? "text-warning-foreground" : "text-muted-foreground"}`}>
+          {staffed === 0 ? "Offene Lücke" : `Offene Lücke (${staffed}/${neededStaff})`}
+        </p>
       ) : null}
 
       <ul className="mt-2 space-y-1.5">
@@ -157,7 +175,7 @@ function ShiftSlotCard({
             <li key={a.shiftId} className="flex items-center gap-1.5 rounded-lg bg-background/55 px-1.5 py-1 dark:bg-black/15">
               <button
                 type="button"
-                disabled={isPending}
+                disabled={isPending || slotBusy}
                 onClick={() => onEditAssignment(slot, a.userId, a.shiftId)}
                 className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
               >
@@ -177,7 +195,7 @@ function ShiftSlotCard({
               </button>
               <button
                 type="button"
-                disabled={isPending}
+                disabled={isPending || slotBusy}
                 onClick={(e) => {
                   e.stopPropagation();
                   onRemoveAssignment(a.userId, slot.dayOfWeek, a.shiftId, slot.startTime, slot.endTime);
@@ -193,7 +211,7 @@ function ShiftSlotCard({
       </ul>
     </article>
   );
-}
+});
 
 export function ShiftCentricBoard({
   members,
@@ -210,6 +228,8 @@ export function ShiftCentricBoard({
   memberSaldoById,
   overtimeFilterOnly,
   isPending,
+  busySlotKeys,
+  gapFlashSlotKeys,
   onSelectTemplate,
   onNeededStaffChange,
   onSelectMember,
@@ -362,7 +382,7 @@ export function ShiftCentricBoard({
                 type="button"
                 onClick={() => onSelectTemplate(t)}
                 title={presetButtonLabel(t)}
-                className={`h-8 max-w-[10.5rem] truncate rounded-lg border px-2 text-[11px] font-medium ${
+                className={`h-8 max-w-[10.5rem] truncate rounded-lg border px-2 text-[11px] font-medium transition-colors ${
                   activeTemplateId === t.id
                     ? "border-brand/40 bg-brand-soft text-brand"
                     : "border-border bg-background text-foreground hover:bg-muted/50"
@@ -420,6 +440,8 @@ export function ShiftCentricBoard({
                           neededStaff={neededStaff}
                           isPending={isPending}
                           dragOver={dragOverSlotKey === slot.key}
+                          slotBusy={busySlotKeys?.has(slot.key) ?? false}
+                          gapFlash={gapFlashSlotKeys?.has(slot.key) ?? false}
                           onDragOver={(e) => {
                             e.preventDefault();
                             setDragOverSlotKey(slot.key);

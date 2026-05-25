@@ -26,12 +26,22 @@ export function hasPaidSubscription(company: CompanyTrialFields): boolean {
   return false;
 }
 
-/** Voller App-Zugang (Test, Abo oder kostenfrei freigeschaltet). */
-export function hasFullAppAccess(company: CompanyTrialFields): boolean {
+export type { CompanyAccessFields } from "@/lib/trial/access";
+export {
+  companyHasOperationalAccess,
+  shouldApplyStripeAccessFlag,
+} from "@/lib/trial/access";
+
+/** Voller App-Zugang (Test, Abo, aktiv oder kostenfrei freigeschaltet). */
+export function hasFullAppAccess(
+  company: CompanyTrialFields & { isActive?: boolean },
+): boolean {
   if (isBillingExempt(company)) return true;
   if (hasPaidSubscription(company)) return true;
+  if (company.trialEndsAt && company.trialEndsAt > new Date()) return true;
+  if (company.isActive === true) return true;
   if (!company.trialEndsAt) return true;
-  return company.trialEndsAt > new Date();
+  return false;
 }
 
 export function isInAppTrial(company: CompanyTrialFields): boolean {

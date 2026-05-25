@@ -9,6 +9,11 @@ import {
   nextNumericEmployeeNumber,
 } from "@/lib/team/allocate-employee-number";
 import { computeTrialEndsAt } from "@/lib/trial/constants";
+import {
+  computeFlyerTrialEndsAt,
+  isFlyerReferralCode,
+  normalizeReferralCode,
+} from "@/lib/trial/referral";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -151,15 +156,25 @@ export async function POST(req: NextRequest) {
       .slice(0, 50);
     const uniqueSlug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
 
+    const refRaw =
+      typeof affiliateCode === "string" && affiliateCode.trim()
+        ? normalizeReferralCode(affiliateCode)
+        : "";
+
     let resolvedAffiliateId: string | undefined;
-    if (typeof affiliateCode === "string" && affiliateCode.trim()) {
-      const code = affiliateCode.trim().toLowerCase();
+    let referredBy: string | undefined;
+    let trialEndsAt = computeTrialEndsAt();
+
+    if (refRaw) {
       const affiliate = await db.affiliate.findUnique({
-        where: { code },
+        where: { code: refRaw },
         select: { id: true },
       });
       if (affiliate) {
         resolvedAffiliateId = affiliate.id;
+      } else if (isFlyerReferralCode(refRaw)) {
+        referredBy = refRaw;
+        trialEndsAt = computeFlyerTrialEndsAt();
       }
     }
 
@@ -170,7 +185,9 @@ export async function POST(req: NextRequest) {
         plan: (["STARTER", "BUSINESS", "ENTERPRISE"] as const).includes(plan)
           ? plan
           : "STARTER",
-        trialEndsAt: computeTrialEndsAt(),
+        trialEndsAt,
+        referredBy,
+        isActive: true,
         affiliateId: resolvedAffiliateId,
         users: {
           create: {

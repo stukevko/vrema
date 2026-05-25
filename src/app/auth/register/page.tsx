@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { db } from "@/lib/db";
+import { isFlyerReferralCode, flyerReferralDisplayName } from "@/lib/trial/referral";
 import { RegisterClient } from "./RegisterClient";
 
 type PageProps = {
@@ -20,12 +21,17 @@ export default async function RegisterPage({ searchParams }: PageProps) {
     : "STARTER";
 
   let affiliatePartnerName: string | null = null;
+  let flyerReferralLabel: string | null = null;
   if (refCode) {
     const aff = await db.affiliate.findUnique({
       where: { code: refCode },
       select: { name: true },
     });
-    affiliatePartnerName = aff?.name ?? null;
+    if (aff) {
+      affiliatePartnerName = aff.name;
+    } else if (isFlyerReferralCode(refCode)) {
+      flyerReferralLabel = flyerReferralDisplayName(refCode);
+    }
   }
 
   let inviteContext: {
@@ -68,6 +74,7 @@ export default async function RegisterPage({ searchParams }: PageProps) {
         initialPlan={plan}
         refCode={refRaw}
         affiliatePartnerName={affiliatePartnerName}
+        flyerReferralLabel={flyerReferralLabel}
         inviteContext={inviteContext}
       />
     </Suspense>

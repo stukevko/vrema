@@ -17,6 +17,10 @@ type Props = {
   dayOfWeek: number | null;
   memberLabel: string | null;
   templates: ShiftTemplateRow[];
+  /** Aktive Vorlage aus dem Board-Header (sofortige Vorbefüllung). */
+  presetStart?: string;
+  presetEnd?: string;
+  activeTemplateId?: string | null;
   isPending: boolean;
   onClose: () => void;
   onConfirm: (dayOfWeek: number, startTime: string, endTime: string) => void;
@@ -27,6 +31,9 @@ export function ShiftAddSheet({
   dayOfWeek,
   memberLabel,
   templates,
+  presetStart,
+  presetEnd,
+  activeTemplateId,
   isPending,
   onClose,
   onConfirm,
@@ -40,12 +47,15 @@ export function ShiftAddSheet({
       setCustomMode(false);
       return;
     }
-    const first = templates[0];
-    if (first) {
-      setStartTime(first.startTime.slice(0, 5));
-      setEndTime(first.endTime.slice(0, 5));
-    }
-  }, [open, templates]);
+    const active = activeTemplateId
+      ? templates.find((t) => t.id === activeTemplateId)
+      : null;
+    const first = active ?? templates[0];
+    const start = presetStart ?? first?.startTime.slice(0, 5) ?? "09:00";
+    const end = presetEnd ?? first?.endTime.slice(0, 5) ?? "17:00";
+    setStartTime(start);
+    setEndTime(end);
+  }, [open, templates, presetStart, presetEnd, activeTemplateId]);
 
   const dayLabel = dayOfWeek != null ? WEEK_LABELS[dayOfWeek] : "—";
 

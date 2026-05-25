@@ -55,13 +55,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             isActive: true,
             companyId: true,
             emailVerified: true,
-            company: { select: { plan: true, isActive: true } },
+            company: {
+              select: {
+                plan: true,
+                isActive: true,
+                trialEndsAt: true,
+                stripeSubId: true,
+                subEndsAt: true,
+                billingExempt: true,
+              },
+            },
           },
         });
 
         if (user) {
           // Account deactivated
-          if (!user.isActive || !user.company?.isActive) throw new InvalidCredentialsError();
+          const { companyHasOperationalAccess } = await import("@/lib/trial/access");
+          if (!user.isActive || !user.company || !companyHasOperationalAccess(user.company)) {
+            throw new InvalidCredentialsError();
+          }
 
           // No password set (e.g. OAuth-only account)
           if (!user.password) throw new InvalidCredentialsError();

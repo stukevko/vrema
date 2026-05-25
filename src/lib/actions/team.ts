@@ -493,7 +493,7 @@ export async function applyStandardWeek(input: {
   revalidatePath("/dashboard/planning");
 }
 
-export type SetShiftForDayResult = { ok: true } | { ok: false; error: string };
+export type SetShiftForDayResult = { ok: true; shiftId: string } | { ok: false; error: string };
 
 export async function setShiftForDay(input: {
   userId: string;
@@ -542,15 +542,15 @@ export async function setShiftForDay(input: {
       return { ok: false, error: msg || "Schicht überschneidet sich mit einer bestehenden Schicht." };
     }
 
-    await db.$transaction([
-      db.shift.deleteMany({
+    const created = await db.$transaction(async (tx) => {
+      await tx.shift.deleteMany({
         where: tenantWhere(companyId, {
           userId: input.userId,
           weekIndex,
           dayOfWeek: input.dayOfWeek,
         }),
-      }),
-      db.shift.create({
+      });
+      return tx.shift.create({
         data: {
           companyId,
           userId: input.userId,
@@ -563,12 +563,13 @@ export async function setShiftForDay(input: {
           tradeStatus: ShiftTradeStatus.NONE,
           tradeRequestedBy: null,
         },
-      }),
-    ]);
+        select: { id: true },
+      });
+    });
 
     revalidatePath("/dashboard/team");
     revalidatePath("/dashboard/planning");
-    return { ok: true };
+    return { ok: true, shiftId: created.id };
   } catch (err) {
     const { logServerError } = await import("@/lib/server-logger");
     logServerError("team.setShiftForDay", err, input);

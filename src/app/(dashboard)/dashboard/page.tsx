@@ -46,6 +46,7 @@ import { buildForecastHorizon } from "@/lib/planning/forecast-horizon";
 import { queryActiveShiftTasks } from "@/lib/shift-tasks/active-shift-tasks-data";
 import { getTodayShiftTaskWall } from "@/lib/shift-tasks/wall";
 import { formatBerlinDate, formatBerlinTime, getBerlinNowHour, getDayBoundsUtc } from "@/lib/time/timezone";
+import { sumPersonnelCostEuro, workedMinutesForCostEstimate } from "@/lib/time/payroll";
 import { logServerError } from "@/lib/server-logger";
 import { resolveLucideIcon } from "@/lib/icons/safe-lucide";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
@@ -325,10 +326,10 @@ export default async function DashboardPage({
 
   const now = new Date();
   const berlinHour = getBerlinNowHour(now);
-  const todayWorkedMins = todayLogs.reduce((acc, log) => {
-    const end = log.clockOut ?? now;
-    return acc + (end.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins;
-  }, 0);
+  const todayWorkedMins = todayLogs.reduce(
+    (acc, log) => acc + workedMinutesForCostEstimate(log, now),
+    0,
+  );
 
   const focus = teamStats ? managerPrimaryFocus(teamStats, companyModules) : null;
 
@@ -343,21 +344,9 @@ export default async function DashboardPage({
         )
       : null;
 
-  // Hero-KPI: Personalkosten heute. Wir nutzen den effektiven Brutto-Stundenlohn,
-  // ziehen Pausen ab und beziehen offene Schichten bis "jetzt" mit ein.
-  const todayPersonnelCostsEuro = (() => {
-    if (!teamTodayLogs || teamTodayLogs.length === 0) return 0;
-    let totalCents = 0;
-    for (const log of teamTodayLogs) {
-      const wage = log.user.hourlyWage;
-      if (!wage || wage <= 0) continue;
-      const end = log.clockOut ?? now;
-      const minutes = Math.max(0, (end.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins);
-      const hours = minutes / 60;
-      totalCents += Math.round(hours * wage * 100);
-    }
-    return totalCents / 100;
-  })();
+  // Hero-KPI: Personalkosten heute (guarded: keine Epoch-Phantom-Minuten).
+  const todayPersonnelCostsEuro =
+    teamTodayLogs && teamTodayLogs.length > 0 ? sumPersonnelCostEuro(teamTodayLogs, now) : 0;
 
   const heroAttentionCount = teamStats ? teamStats.absentToday + teamStats.lateToday : 0;
   const heroPendingApprovalsCount = teamStats

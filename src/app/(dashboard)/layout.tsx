@@ -34,9 +34,10 @@ export default async function DashboardLayout({
   if (requireCard && session.user.role !== "SUPER_ADMIN") {
     const company = await db.company.findUnique({
       where: { id: session.user.companyId },
-      select: { paymentMethodVerifiedAt: true },
+      select: { paymentMethodVerifiedAt: true, referredBy: true },
     });
-    if (!company?.paymentMethodVerifiedAt) {
+    const skipCardForFlyer = Boolean(company?.referredBy);
+    if (!skipCardForFlyer && !company?.paymentMethodVerifiedAt) {
       redirect("/setup?payment=required");
     }
   }

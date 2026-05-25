@@ -149,7 +149,7 @@ export function ApiKeysSection({ apiKeys }: Props) {
                 onClick={() => setRevealed(null)}
                 className="text-xs font-semibold text-amber-900 underline-offset-2 hover:underline dark:text-amber-100"
               >
-                Bestätigen &amp; ausblenden
+                Bestätigen & ausblenden
               </button>
             </div>
           </div>

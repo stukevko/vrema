@@ -105,7 +105,7 @@ export function ManagerFocusCards({ snapshot }: Props) {
         <FocusCard
           tone={planningTone}
           icon={CalendarClock}
-          label="Planung"
+          label="Lücken"
           title={
             planning.gapSlots > 0
               ? `${planning.gapSlots} offene Zeitfenster`

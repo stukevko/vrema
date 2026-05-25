@@ -29,7 +29,7 @@ export default function PartnerPage() {
           <h1 className="text-2xl font-bold tracking-tight">Partner werden</h1>
 
           <div className="space-y-4 text-base leading-relaxed text-foreground">
-            <p>Empfiehl VREMA an Betriebe, die Zeiterfassung und Schichtplanung vereinfachen wollen.</p>
+            <p>Empfehle VREMA an Betriebe, die Zeiterfassung und Schichtplanung vereinfachen wollen.</p>
             <p>Du erhältst 5 € pro Starter-Abschluss und 15 € pro Business-Abschluss — nach der ersten bezahlten Rechnung.</p>
             <p>Die 7-Tage-Testphase zählt nicht; es zählt nur der echte Abschluss.</p>
           </div>

@@ -31,9 +31,20 @@ export function AssignmentGuardDialog({
 
   const saldoH = risk.saldoHours != null ? Math.round(Math.abs(risk.saldoHours)) : null;
 
+  const handleBackdrop = () => {
+    if (isPending) return;
+    onClose();
+  };
+
   return (
     <>
-      <button type="button" className="fixed inset-0 z-[210] bg-black/35" aria-label="Schließen" onClick={onClose} />
+      <button
+        type="button"
+        className="fixed inset-0 z-[210] bg-black/35"
+        aria-label="Abbrechen"
+        disabled={isPending}
+        onClick={handleBackdrop}
+      />
       <div
         className="fixed inset-x-4 top-[20%] z-[220] mx-auto max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2"
         role="alertdialog"
@@ -73,18 +84,22 @@ export function AssignmentGuardDialog({
           </div>
           <button
             type="button"
+            disabled={isPending}
             onClick={onClose}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-40"
             aria-label="Schließen"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+          <Button type="button" variant="outline" size="md" disabled={isPending} onClick={onClose}>
+            Abbrechen
+          </Button>
           {alternative ? (
             <Button type="button" variant="outline" size="md" disabled={isPending} onClick={onPickAlternative}>
-              {alternative.name} wählen
+              {alternative.name} stattdessen wählen
             </Button>
           ) : null}
           <Button type="button" variant="brand" size="md" disabled={isPending} loading={isPending} onClick={onConfirm}>

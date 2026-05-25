@@ -9,6 +9,7 @@ import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "@/lib/email/transactional";
 import { stripe } from "@/lib/stripe";
+import type { CompanyModuleKey } from "@/lib/company-modules";
 
 function assertSuperAdmin(session: { user?: { role?: string | null; id?: string | null } } | null) {
   const allowed =
@@ -53,7 +54,15 @@ export async function getSuperAdminOverview() {
         isActive: true,
         billingExempt: true,
         stripeSubId: true,
+        referredBy: true,
+        trialEndsAt: true,
         createdAt: true,
+        industry: true,
+        modulePeaks: true,
+        modulePlannerWeather: true,
+        moduleShiftTrade: true,
+        moduleShiftTasks: true,
+        moduleAutopilot: true,
       },
     }),
     db.user.groupBy({
@@ -164,6 +173,38 @@ export async function updateCompanyBySuperAdmin(params: {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/billing");
   revalidatePath("/dashboard/partners");
+}
+
+/** Erweiterungs-Module pro Betrieb (Super-Admin, ohne Stripe). */
+export async function updateCompanyModulesBySuperAdmin(params: {
+  companyId: string;
+  modules: Partial<Record<CompanyModuleKey, boolean>>;
+}) {
+  const session = await auth();
+  assertSuperAdmin(session);
+
+  const data: Record<string, boolean> = {};
+  if (params.modules.peaks !== undefined) data.modulePeaks = params.modules.peaks;
+  if (params.modules.plannerWeather !== undefined) data.modulePlannerWeather = params.modules.plannerWeather;
+  if (params.modules.shiftTrade !== undefined) data.moduleShiftTrade = params.modules.shiftTrade;
+  if (params.modules.shiftTasks !== undefined) data.moduleShiftTasks = params.modules.shiftTasks;
+  if (params.modules.autopilot !== undefined) data.moduleAutopilot = params.modules.autopilot;
+
+  if (Object.keys(data).length === 0) {
+    throw new Error("Keine Modul-Änderungen.");
+  }
+
+  await db.company.update({
+    where: { id: params.companyId },
+    data,
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard/planning");
+  revalidatePath("/dashboard/insights");
+  revalidatePath("/dashboard/peaks");
+  revalidatePath("/dashboard/tasks");
 }
 
 /** Eigenen Tenant oder Kunden: Plan setzen ohne Stripe (kostenfrei). */

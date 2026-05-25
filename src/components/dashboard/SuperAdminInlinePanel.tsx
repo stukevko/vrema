@@ -8,9 +8,15 @@ import {
   deleteCompanyBySuperAdmin,
   grantCompanyPlanWithoutBilling,
   updateCompanyBySuperAdmin,
+  updateCompanyModulesBySuperAdmin,
 } from "@/lib/actions/super-admin";
+import {
+  COMPANY_MODULE_LABELS,
+  companyModulesFromRow,
+  type CompanyModuleKey,
+} from "@/lib/company-modules";
 import { Shield, Building2 } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
@@ -23,10 +29,26 @@ type CompanyRow = {
   isActive: boolean;
   billingExempt: boolean;
   stripeSubId: string | null;
+  referredBy: string | null;
+  trialEndsAt: Date | null;
   createdAt: Date;
   userCount: number;
   activeUserCount: number;
+  industry: "RESTAURANT" | "CAFE" | "BAR" | "HOTEL" | "BAKERY" | "CANTEEN" | "CLUB" | "CATERING" | "OTHER" | null;
+  modulePeaks: boolean;
+  modulePlannerWeather: boolean;
+  moduleShiftTrade: boolean;
+  moduleShiftTasks: boolean;
+  moduleAutopilot: boolean;
 };
+
+const MODULE_KEYS: CompanyModuleKey[] = [
+  "peaks",
+  "plannerWeather",
+  "shiftTrade",
+  "shiftTasks",
+  "autopilot",
+];
 
 type MonitoringData = {
   totalCompanies: number;
@@ -174,6 +196,8 @@ export function SuperAdminInlinePanel({
               <th className="px-3 py-2 text-left">Plan</th>
               <th className="px-3 py-2 text-left">Intervall</th>
               <th className="px-3 py-2 text-left">Status</th>
+              <th className="px-3 py-2 text-left">Referral</th>
+              <th className="px-3 py-2 text-left">Test bis</th>
               <th className="px-3 py-2 text-left">Kostenfrei</th>
               <th className="px-3 py-2 text-left">User</th>
               <th className="px-3 py-2 text-left">Aktion</th>
@@ -182,13 +206,16 @@ export function SuperAdminInlinePanel({
           <tbody>
             {!hasCompanies && (
               <tr>
-                <td colSpan={7} className="px-3 py-4 text-center text-fg-muted">
+                <td colSpan={9} className="px-3 py-4 text-center text-fg-muted">
                   Keine Firmen vorhanden.
                 </td>
               </tr>
             )}
-            {companies.map((c) => (
-              <tr key={c.id} className="border-b border-line last:border-0 dark:border-white/8">
+            {companies.map((c) => {
+              const modules = companyModulesFromRow(c);
+              return (
+              <Fragment key={c.id}>
+              <tr className="border-b border-line dark:border-white/8">
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-3.5 w-3.5 text-fg-muted" />
@@ -245,6 +272,26 @@ export function SuperAdminInlinePanel({
                   <StatusBadge tone={c.isActive ? "brand" : "neutral"} size="sm" glass withDot={false}>
                     {c.isActive ? "Aktiv" : "Inaktiv"}
                   </StatusBadge>
+                </td>
+                <td className="px-3 py-2 text-fg-muted">
+                  {c.referredBy ? (
+                    <span className="font-mono text-[10px] text-brand">{c.referredBy}</span>
+                  ) : (
+                    <span className="text-fg-subtle">—</span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-fg-muted">
+                  {c.trialEndsAt ? (
+                    <span className="text-[10px]">
+                      {new Date(c.trialEndsAt).toLocaleDateString("de-DE", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })}
+                    </span>
+                  ) : (
+                    <span className="text-fg-subtle">—</span>
+                  )}
                 </td>
                 <td className="px-3 py-2">
                   <label className="flex items-center gap-2 text-[10px] font-medium text-fg">
@@ -339,7 +386,46 @@ export function SuperAdminInlinePanel({
                   </div>
                 </td>
               </tr>
-            ))}
+              <tr key={`${c.id}-modules`} className="border-b border-line last:border-0 bg-surface-muted/40 dark:border-white/8 dark:bg-surface-muted/20">
+                <td colSpan={7} className="px-3 py-2">
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-fg-muted">
+                    Erweiterungen (Kern ist immer aktiv)
+                  </p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-2">
+                    {MODULE_KEYS.map((key) => (
+                      <label
+                        key={key}
+                        className="flex min-w-[10rem] items-start gap-2 text-[10px] text-fg"
+                        title={COMPANY_MODULE_LABELS[key].description}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={modules[key]}
+                          disabled={isPending}
+                          onChange={(e) =>
+                            startTransition(async () => {
+                              await updateCompanyModulesBySuperAdmin({
+                                companyId: c.id,
+                                modules: { [key]: e.target.checked },
+                              });
+                              setResultMsg(
+                                `„${c.name}“: ${COMPANY_MODULE_LABELS[key].title} ${e.target.checked ? "an" : "aus"}.`,
+                              );
+                            })
+                          }
+                          className="mt-0.5 h-4 w-4 shrink-0 rounded border-line"
+                        />
+                        <span>
+                          <span className="font-semibold">{COMPANY_MODULE_LABELS[key].title}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </td>
+              </tr>
+              </Fragment>
+            );
+            })}
           </tbody>
         </table>
       </div>

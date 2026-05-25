@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import { getWeekCycleIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 import { getMonthBoundsUtc } from "@/lib/time/timezone";
+import { workedMinutesForCostEstimate } from "@/lib/time/payroll";
 import { AbsenceType, VacationStatus } from "@prisma/client";
 
 export type CockpitNextShift = {
@@ -238,11 +239,7 @@ export async function getEmployeeCockpitData(params: {
   ]);
 
   const sumWorkedMinutes = (logs: { clockIn: Date; clockOut: Date | null; breakMins: number }[]) =>
-    logs.reduce((acc, log) => {
-      const end = log.clockOut ?? now;
-      const minutes = (end.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins;
-      return acc + Math.max(0, minutes);
-    }, 0);
+    logs.reduce((acc, log) => acc + workedMinutesForCostEstimate(log, now), 0);
 
   return {
     isClockedIn: Boolean(activeLog),

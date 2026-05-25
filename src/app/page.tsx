@@ -3,33 +3,25 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import {
-  pricingTiersHint,
-  trialLandingCtaLine,
-  trialPricingIntroLine,
-} from "@/lib/marketing/trial-copy";
+import { trialPricingIntroLine } from "@/lib/marketing/trial-copy";
 import { VremaLockup, VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
 import { RoiCalculator } from "@/components/marketing/RoiCalculator";
 import {
   Clock,
   FileText,
-  Shield,
   ShieldCheck,
   Scale,
   Server,
-  Sparkles,
   ChevronRight,
   Check,
   ArrowRight,
-  QrCode,
-  BarChart3,
   Zap,
   Menu,
   ExternalLink,
   X,
-  MapPin,
-  Mail,
-  Quote,
+  Flame,
+  CalendarClock,
+  LayoutGrid,
 } from "lucide-react";
 import { Drawer } from "vaul";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -75,19 +67,35 @@ function AppWindow({
   );
 }
 
-// ─── Feature cards ───────────────────────────────────────────────────────────
-const FEATURES = [
-  { icon: Clock, tag: "Stempeluhr", title: "1-Klick Zeiterfassung", desc: "Start, Pause, Stop. Mehr nicht. Auf Smartphone oder Terminal." },
-  { icon: BarChart3, tag: "Auswertung", title: "Echtzeit-Berichte", desc: "Stundenübersicht, Wochenstatistik, Abweichungen. Sofort sichtbar." },
+// ─── Die 3 Kern-Versprechen (FINAL · Gastro/KMU) ─────────────────────────────
+const PILLARS = [
   {
-    icon: ShieldCheck,
-    tag: "Compliance",
-    title: "Privacy by Design",
-    desc: "Kein Standort-Tracking. 100 % DSGVO-konform – klarer Vorteil gegenüber US-Zeiterfassung mit GPS.",
+    icon: CalendarClock,
+    tag: "Planung",
+    title: "Zeit sparen am Sonntagabend",
+    desc: "Plane 20 Mitarbeiter in unter 10 Minuten. Mit dem Shift-Centric Board ziehst du dein Team per Drag & Drop in Sekunden in freie Slots.",
   },
-  { icon: FileText, tag: "Reports", title: "PDF-Stundenzettel", desc: "Stundenzettel für Lohnbüro, Abrechnung oder Archiv. Ein Klick." },
-  { icon: Shield, tag: "Sicherheit", title: "Verschlüsselt & Privat", desc: "Deine Daten bleiben bei dir. DSGVO-konform, ohne Drittanbieter." },
-  { icon: QrCode, tag: "Hardware", title: "QR-Terminal Support", desc: "Physisches Terminal mit QR-Code. Robuste Hardware trifft Cloud." },
+  {
+    icon: Flame,
+    tag: "Kosten",
+    title: "Überstunden killen, bevor sie entstehen",
+    desc: "VREMA denkt mit. Das System zeigt dir sofort ein Flammen-Icon, wenn ein Mitarbeiter heißläuft, und schlägt dir mit einem Klick den perfekten Tag für den Freizeitausgleich vor.",
+  },
+  {
+    icon: FileText,
+    tag: "Lohnbüro",
+    title: "Steuerberater-Konform in 1 Klick",
+    desc: "Keine Zettelwirtschaft beim Stempeln. Am Monatsende exportierst du die Stundenzettel als perfekte PDF (Hochformat) oder direkt als DATEV-CSV fürs Lohnbüro.",
+  },
+];
+
+const CORE_MODULES = ["Stempeln", "Planer", "Team", "Berichte"];
+const EXTENSION_MODULES = [
+  "Wetter-Prognosen",
+  "Umsatz-Stoß-Analysen",
+  "Automatischer Schicht-Tausch",
+  "Schicht-Checklisten",
+  "Planungs-Autopilot",
 ];
 
 const STATS = [
@@ -281,45 +289,36 @@ export default function LandingPage() {
             {/* Left: Text */}
             <div className="min-w-0 max-w-full transition-all duration-300">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface text-foreground text-xs mb-8">
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />
-                VREMA - Intelligente Zeiterfassung
+                <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
+                Geschlossene Beta · Gastronomie & KMU
               </div>
 
-              <h1 className="mb-5 max-w-full hyphens-auto break-words text-[1.65rem] font-bold leading-[1.12] tracking-tight text-foreground sm:text-4xl md:text-6xl">
-                VREMA: Dein Zeitportal für Teams — planen, stempeln, verstehen.
+              <h1 className="mb-5 max-w-full hyphens-auto break-words text-[1.65rem] font-bold leading-[1.12] tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-[3.25rem]">
+                Personalplanung & Zeiterfassung für die Gastronomie — In 10 Minuten statt 5 Stunden.
               </h1>
 
               <p className="mb-10 max-w-full hyphens-auto break-words text-lg leading-relaxed text-muted-foreground md:max-w-xl">
-                Schichten planen, Zeiten erfassen, Abwesenheit klären — und am Monatsende Export fürs Lohnbüro. Ohne GPS, mit klaren Hinweisen statt Score-Zahlen.
+                VREMA schreibt dein Team, warnt dich proaktiv vor teuren Überstunden und schickt die Abrechnung fehlerfrei ans Lohnbüro. Kein SAP-Chaos, keine Excel-Zettelwirtschaft.
               </p>
 
-              <div className="flex max-w-full flex-wrap items-center gap-4">
+              <div className="flex max-w-full flex-col items-stretch gap-3 sm:items-start">
                 <Link
                   href="/auth/register"
-                  className="btn-primary-solid group flex min-w-0 max-w-full items-center gap-2 px-7 py-3.5"
+                  className="btn-primary-solid group flex min-w-0 max-w-full items-center justify-center gap-2 px-7 py-3.5 text-center sm:justify-start"
                 >
-                  Jetzt starten
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  Jetzt exklusiven Beta-Zugang sichern (Limitiert auf 15 Betriebe)
+                  <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <Link
-                  href="/demo"
-                  className="flex min-w-0 max-w-full items-center gap-2 rounded-2xl border border-border px-7 py-3.5 font-medium text-foreground transition-all hover:border-brand/40 hover:bg-brand-soft/40"
-                >
-                  Live-Demo öffnen
-                </Link>
-                <Link
-                  href="/#pricing"
-                  className="flex min-w-0 max-w-full items-center gap-2 rounded-2xl border border-border px-7 py-3.5 font-medium text-muted-foreground transition-all hover:border-border hover:text-foreground"
-                >
-                  Pläne ansehen
-                </Link>
+                <p className="text-center text-xs text-muted-foreground sm:text-left">
+                  Start im Juni 2026 · Kostenlose Pilotphase
+                </p>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {[
-                  { label: "DATEV-Ready", text: "Lohnbüro-Export optimiert." },
-                  { label: "Revisionssicher", text: "Audit-Trail nach GoBD." },
-                  { label: "Hosted in Germany", text: "DSGVO-konform & sicher." },
+                  { label: "Shift-Centric", text: "Planen per Drag & Drop." },
+                  { label: "Überstunden-Warnung", text: "Flammen-Icon & Ausgleich." },
+                  { label: "Lohnbüro-Ready", text: "PDF Hochformat & DATEV." },
                 ].map((seal) => (
                   <div
                     key={seal.label}
@@ -469,40 +468,40 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── FEATURES ────────────────────────────────────────────────────────── */}
+      {/* ── KERN-VERSPRECHEN (3 Säulen) ─────────────────────────────────────── */}
       <section id="features" className="w-full max-w-full border-b border-line bg-surface py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="mb-16 min-w-0 transition-all duration-300">
-            <p className="text-xs text-muted-foreground uppercase tracking-widest mb-4">01 / Features</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-widest mb-4">01 / Warum VREMA</p>
             <h2 className="max-w-full hyphens-auto break-words text-4xl font-bold leading-tight text-foreground md:text-5xl">
-              Modulare Funktionen für
+              Drei Versprechen.
               <br />
-              <span className="text-muted-foreground">eine verlässliche Zeitwirtschaft.</span>
+              <span className="text-muted-foreground">Kein Feature-Wirrwarr.</span>
             </h2>
           </div>
 
           <div className="grid min-w-0 max-w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((feature, index) => (
+            {PILLARS.map((pillar, index) => (
               <div
-                key={feature.title}
+                key={pillar.title}
                 className="group relative max-w-full min-w-0 overflow-hidden rounded-2xl border border-line bg-surface p-7 shadow-sm transition-all duration-300 md:hover:border-brand/30 md:hover:bg-muted/40"
               >
                 <span className="pointer-events-none absolute right-5 top-5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <div className="flex min-w-0 max-w-full items-start gap-4">
+                <div className="flex min-w-0 max-w-full flex-col gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-surface text-brand">
-                    <feature.icon className="h-5 w-5" />
+                    <pillar.icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 max-w-full">
                     <p className="mb-2 inline-flex items-center rounded-full bg-muted/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      {feature.tag}
+                      {pillar.tag}
                     </p>
-                    <h3 className="mb-1.5 max-w-full hyphens-auto break-words text-sm font-semibold text-foreground">
-                      {feature.title}
+                    <h3 className="mb-2 max-w-full hyphens-auto break-words text-lg font-semibold text-foreground">
+                      {pillar.title}
                     </h3>
                     <p className="hyphens-auto break-words text-sm leading-relaxed text-muted-foreground">
-                      {feature.desc}
+                      {pillar.desc}
                     </p>
                   </div>
                 </div>
@@ -512,110 +511,63 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── AI TEASER ───────────────────────────────────────────────────────── */}
-      <section className="w-full max-w-full border-b border-line bg-surface-muted py-20">
-        <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
-          <div className="relative max-w-full rounded-2xl bg-gradient-to-r from-brand/35 via-brand/25 to-brand-hover/35 p-[1px]">
-            <div className="max-w-full rounded-2xl border border-line bg-surface p-6 shadow-sm sm:p-8">
-              <div className="flex min-w-0 max-w-full flex-col flex-wrap items-stretch justify-between gap-4 sm:flex-row sm:items-center">
-                <div className="min-w-0 max-w-full">
-                  <p className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">02 / Planung & Tipps</p>
-                  <h3 className="max-w-full hyphens-auto break-words text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-                    Tipps aus deinen echten Betriebsdaten — nicht aus einer Blackbox.
-                  </h3>
-                  <p className="mt-3 max-w-full hyphens-auto break-words text-sm text-muted-foreground md:max-w-3xl">
-                    Wetter, Feiertage und dein bisheriger Plan fließen in konkrete Personal-Hinweise — verständlich formuliert, mit einem Klick in den Planer.
-                  </p>
-                </div>
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/30 bg-brand-soft/90 text-brand backdrop-blur dark:border-white/10 dark:bg-brand/22">
-                  <Sparkles className="h-5 w-5" />
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── PHILOSOPHY ──────────────────────────────────────────────────────── */}
-      <section className="w-full max-w-full border-t border-line bg-surface py-24">
+      {/* ── LEGO, NICHT SAP (Module) ────────────────────────────────────────── */}
+      <section className="w-full max-w-full border-b border-line bg-surface-muted py-24">
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="grid min-w-0 max-w-full items-center gap-16 lg:grid-cols-2">
             <div className="min-w-0 max-w-full transition-all duration-300">
-            <p className="text-xs text-primary uppercase tracking-widest mb-4">03 / Philosophie</p>
+              <p className="text-xs text-primary uppercase tracking-widest mb-4">02 / Module</p>
               <h2 className="mb-6 max-w-full hyphens-auto break-words text-4xl font-black leading-tight md:text-5xl">
-                Kein Großkonzern.
+                Nur das bezahlen,
                 <br />
-                <span className="text-muted-foreground">Dafür 100% Verlässlichkeit.</span>
+                <span className="text-muted-foreground">was du wirklich nutzt.</span>
               </h2>
-              <p className="mb-8 hyphens-auto break-words leading-relaxed text-muted-foreground">
-                Vrema ist ein Produkt von KevkoStudio — inhaber-geführt, lokal verwurzelt, technisch exzellent.
-                Du erreichst direkt denjenigen, der deinen Code schreibt.
+              <p className="hyphens-auto break-words leading-relaxed text-muted-foreground">
+                Der Kern (Stempeln, Planer, Team, Berichte) steht für jeden Betrieb bereit. Zusatzmodule wie
+                Wetter-Prognosen, Umsatz-Stoß-Analysen oder automatischer Schicht-Tausch lassen sich einfach per
+                Klick im Admin-Bereich aktivieren oder ausschalten. Keine überladene UI.
               </p>
-
-              <div className="space-y-4">
-                {[
-                  { num: "01", title: "Direkte Kommunikation", desc: "Kein Ticket-System, kein Account-Manager. Direkt zum Entwickler." },
-                  { num: "02", title: "Transparent & Fair", desc: "Feste Tarife nach Teamgröße — Starter, Business, Enterprise. Keine versteckten Kosten." },
-                  { num: "03", title: "Lokale Verwurzelung", desc: "Speyer, Rhein-Neckar, Pfalz. Ein Handschlag zählt mehr als jedes SLA." },
-                ].map((item) => (
-                  <div key={item.num} className="flex max-w-full min-w-0 gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm">
-                    <span className="mt-0.5 shrink-0 text-sm font-bold text-primary">{item.num}</span>
-                    <div className="min-w-0 max-w-full">
-                      <p className="mb-1 hyphens-auto break-words text-sm font-semibold">{item.title}</p>
-                      <p className="hyphens-auto break-words text-sm text-muted-foreground">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="mt-4 text-sm font-medium text-foreground">Lego, nicht SAP — schlank bleiben, modular wachsen.</p>
             </div>
 
-            {/* Founder-Visitenkarte */}
             <div className="min-w-0 max-w-full overflow-x-hidden transition-all duration-300">
-              <AppWindow title="Über den Gründer" subtitle="KevkoStudio · Speyer">
-                <div className="flex items-start gap-4">
-                  <div
-                    aria-hidden
-                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-2xl font-bold tracking-tight text-brand"
-                  >
-                    KK
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-base font-semibold tracking-tight text-foreground">Kevin Konkin</p>
-                    <p className="text-xs text-muted-foreground">Gründer &amp; Entwickler · KevkoStudio</p>
-                  </div>
-                </div>
-
-                <dl className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
-                  <div className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2">
-                    <MapPin className="h-3.5 w-3.5 shrink-0 text-brand" />
-                    <span className="truncate text-muted-foreground">Kolbstr. 5 · 67346 Speyer</span>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2">
-                    <Mail className="h-3.5 w-3.5 shrink-0 text-brand" />
-                    <span className="truncate text-muted-foreground">kontakt@kevko.studio</span>
-                  </div>
-                </dl>
-
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { v: "10+", l: "Jahre" },
-                    { v: "Full", l: "Stack" },
-                    { v: "5★", l: "Feedback" },
-                  ].map((s) => (
-                    <div
-                      key={s.l}
-                      className="rounded-2xl border border-line bg-surface px-2 py-3 text-center shadow-sm"
-                    >
-                      <p className="text-lg font-bold tabular-nums text-foreground">{s.v}</p>
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{s.l}</p>
+              <AppWindow title="Einstellungen · Module" subtitle="Pro Betrieb ein-/ausschalten">
+                <div className="space-y-4">
+                  <div>
+                    <p className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      <LayoutGrid className="h-3.5 w-3.5 text-brand" aria-hidden />
+                      Kern — immer aktiv
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {CORE_MODULES.map((m) => (
+                        <span
+                          key={m}
+                          className="rounded-full border border-brand/30 bg-brand-soft/50 px-3 py-1 text-xs font-semibold text-brand"
+                        >
+                          {m}
+                        </span>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                  <div>
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Erweiterungen — optional
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {EXTENSION_MODULES.map((m) => (
+                        <span
+                          key={m}
+                          className="rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-muted-foreground"
+                        >
+                          {m}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="rounded-xl border border-dashed border-line bg-surface/80 px-3 py-2 text-xs text-muted-foreground">
+                    Ausgeschaltete Module verschwinden aus der Navigation — kein Menü-Chaos für dein Team.
+                  </p>
                 </div>
-
-                <blockquote className="relative rounded-2xl border border-brand/15 bg-brand-soft/40 px-4 py-3 text-sm leading-relaxed text-foreground dark:bg-brand/10">
-                  <Quote className="absolute -top-2 left-3 h-4 w-4 rotate-180 text-brand/60" aria-hidden />
-                  <p className="pl-1 italic">Problemlösung durch Handschlagqualität.</p>
-                </blockquote>
               </AppWindow>
             </div>
           </div>
@@ -785,26 +737,28 @@ export default function LandingPage() {
               />
               <div className="relative">
                 <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-brand">
-                  05 / Starten
+                  05 / Beta
                 </p>
                 <h2 className="mx-auto max-w-3xl hyphens-auto break-words text-3xl font-black tracking-tight text-foreground md:text-4xl">
-                  Modernste Zeiterfassung — heute in 5 Minuten startklar.
+                  Schluss mit der Excel-Hölle.
                 </h2>
-                <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">{trialLandingCtaLine()}</p>
-                <p className="mx-auto mt-1 max-w-xl text-xs text-muted-foreground">{pricingTiersHint()}</p>
+                <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                  Sichere dir jetzt einen der limitierten Plätze für die geschlossene Beta-Phase ab Juni. Begleite die
+                  Entwicklung und passe VREMA perfekt an deinen Betrieb an.
+                </p>
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                   <Link
                     href="/auth/register"
                     className="btn-primary-solid flex items-center gap-2 px-8 py-3.5"
                   >
                     <Zap className="h-4 w-4" />
-                    Jetzt registrieren
+                    Beta-Zugang kostenlos anfragen
                   </Link>
                   <Link
                     href="/#pricing"
                     className="flex items-center gap-2 rounded-2xl border border-border bg-surface/60 px-8 py-3.5 font-medium text-muted-foreground transition-all hover:border-border hover:text-foreground"
                   >
-                    Pläne &amp; Preise
+                    Preise für später
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -818,7 +772,7 @@ export default function LandingPage() {
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden rounded-2xl glass-panel p-8 px-4 sm:px-8">
           <h3 className="max-w-full hyphens-auto break-words text-2xl font-bold">Werde VREMA-Partner</h3>
           <p className="mt-2 hyphens-auto break-words text-muted-foreground">
-            Du kennst Betriebe, die eine moderne Zeiterfassung brauchen? Empfiehl VREMA und erhalte bis zu 15€ pro
+            Du kennst Betriebe, die eine moderne Zeiterfassung brauchen? Empfehle VREMA und erhalte bis zu 15 € pro
             Abschluss. Ohne Haken, direkt in dein Dashboard.
           </p>
           <div className="mt-5">
