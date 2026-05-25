@@ -5,7 +5,7 @@ import { requireTenant, requireTenantAction, tenantWhere } from "@/lib/tenant-gu
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "@/lib/email/transactional";
-import { getWeekCycleIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
+import { clampWeekIndex, getWeekCycleIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 import { randomBytes } from "crypto";
 import { ShiftTradeStatus, Prisma } from "@prisma/client";
 import { evaluateShiftTradeProposal } from "@/lib/planning/intelligence";
@@ -388,7 +388,8 @@ export async function upsertShift(input: {
     throw new Error("Keine Berechtigung.");
   }
 
-  const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
+  const cycleWeeks = await getShiftCycleWeeks();
+  const weekIndex = clampWeekIndex(input.weekIndex ?? 1, cycleWeeks);
   const startTime = input.startTime.trim();
   const endTime = input.endTime.trim();
   if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
@@ -445,7 +446,8 @@ export async function applyStandardWeek(input: {
     throw new Error("Keine Berechtigung.");
   }
 
-  const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
+  const cycleWeeks = await getShiftCycleWeeks();
+  const weekIndex = clampWeekIndex(input.weekIndex ?? 1, cycleWeeks);
   const startTime = input.startTime.trim();
   const endTime = input.endTime.trim();
   if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
@@ -511,7 +513,8 @@ export async function setShiftForDay(input: {
     }
     const { companyId } = tenant;
 
-    const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
+    const cycleWeeks = await getShiftCycleWeeks();
+  const weekIndex = clampWeekIndex(input.weekIndex ?? 1, cycleWeeks);
     const times = validateShiftTimesForSave(input.startTime, input.endTime);
     if (!times.ok) return times;
     const { startTime, endTime } = times;
@@ -596,7 +599,8 @@ export async function clearShiftForDay(input: {
     }
     const { companyId } = tenant;
 
-    const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
+    const cycleWeeks = await getShiftCycleWeeks();
+  const weekIndex = clampWeekIndex(input.weekIndex ?? 1, cycleWeeks);
     await db.shift.deleteMany({
       where: tenantWhere(companyId, {
         userId: input.userId,
@@ -627,7 +631,8 @@ export async function clearShiftSlot(input: {
     throw new Error("Keine Berechtigung.");
   }
 
-  const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
+  const cycleWeeks = await getShiftCycleWeeks();
+  const weekIndex = clampWeekIndex(input.weekIndex ?? 1, cycleWeeks);
   const { startTime, endTime } = normalizeShiftTimesForSave(input.startTime, input.endTime);
 
   const deleted = await db.shift.deleteMany({
@@ -1090,7 +1095,8 @@ export async function publishOpenShiftVacancy(input: {
     throw new Error("Keine Berechtigung.");
   }
 
-  const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex)));
+  const cycleWeeks = await getShiftCycleWeeks();
+  const weekIndex = clampWeekIndex(input.weekIndex, cycleWeeks);
   const dayOfWeek = Math.min(6, Math.max(0, Math.floor(input.dayOfWeek)));
   const placeholderId = await ensureOpenShiftPlaceholderUser(companyId);
 

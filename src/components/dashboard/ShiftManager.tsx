@@ -69,6 +69,7 @@ import {
   plannerCycleDateBounds,
   weekIndexForPlannerDate,
 } from "@/lib/planning/cycle-display-date";
+import { type ShiftCycleWeeks } from "@/lib/shift-cycle";
 import type { DailyWeatherForecast } from "@/lib/weather/shared";
 import { isRainLikeCondition } from "@/lib/weather/shared";
 import { Avatar } from "@/components/ui/avatar";
@@ -219,7 +220,7 @@ function weatherIconForDay(day: DailyWeatherForecast | null, className: string) 
 }
 
 function dateForCycleDay(weekIndex: number, dayOfWeek: number) {
-  return dateForPlannerCycleDay(weekIndex as 1 | 2 | 3, dayOfWeek);
+  return dateForPlannerCycleDay(weekIndex as ShiftCycleWeeks, dayOfWeek);
 }
 
 function getRoleTimelineSegmentTone(role?: string | null) {
@@ -310,14 +311,14 @@ export function ShiftManager({
   plan?: string;
   shiftTemplates?: ShiftTemplateRow[];
   companyModules?: CompanyModules;
-  shiftCycleWeeks?: 1 | 2 | 3;
+  shiftCycleWeeks?: ShiftCycleWeeks;
   vacationConflictDays?: Array<{ userId: string; dayOfWeek: number; type?: "VACATION" | "SICK" }>;
   /** userId → Wochentage (0–6), an denen die Person als nicht verfügbar markiert ist */
   unavailableDaysByUserId?: Record<string, number[]>;
   /** Manager: Schicht-Checkliste für den sichtbaren Tag im Timeline erzeugen */
   enableTaskListActions?: boolean;
   /** Aus URL `?focusWeek=` (Schichtzyklus 1–3), z. B. vom Sonntags-Wizard. */
-  initialFocusWeek?: 1 | 2 | 3 | null;
+  initialFocusWeek?: ShiftCycleWeeks | null;
   /** `?autopilot=1` scrollt zum Panel; `?autopilot=suggest` schlägt einmalig vor (Sonntags-Flow). */
   initialAutopilotAction?: "focus" | "suggest" | null;
 }) {
@@ -335,7 +336,7 @@ export function ShiftManager({
   );
   const [boardAddSheetOpen, setBoardAddSheetOpen] = useState(false);
   const [boardAddDay, setBoardAddDay] = useState<number | null>(null);
-  const [selectedWeekIndex, setSelectedWeekIndex] = useState<1 | 2 | 3>(
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState<ShiftCycleWeeks>(
     initialFocusWeek && initialFocusWeek <= shiftCycleWeeks ? initialFocusWeek : 1,
   );
   const [timelineDate, setTimelineDate] = useState(() =>
@@ -666,14 +667,14 @@ export function ShiftManager({
       focusWeekParam >= 1 &&
       focusWeekParam <= shiftCycleWeeks
     ) {
-      const w = focusWeekParam as 1 | 2 | 3;
+      const w = focusWeekParam as ShiftCycleWeeks;
       setSelectedWeekIndex(w);
       setMessage(`Planungsfokus: Schichtzyklus Woche ${w}.`);
     }
 
     if (params.get("focus") !== "cost-peak") return;
     const weekParam = Number(params.get("week"));
-    const targetWeek: 1 | 2 | 3 =
+    const targetWeek: ShiftCycleWeeks =
       weekParam === 2 ? 2 : weekParam === 3 ? 3 : 1;
     setSelectedWeekIndex(targetWeek);
     const dayParam = Number(params.get("day"));
@@ -2738,7 +2739,7 @@ export function ShiftManager({
           aria-label="Planungswoche"
         >
           {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
-            const week = (idx + 1) as 1 | 2 | 3;
+            const week = (idx + 1) as ShiftCycleWeeks;
             const active = selectedWeekIndex === week;
             return (
               <button
@@ -2771,7 +2772,7 @@ export function ShiftManager({
   ) : shiftCycleWeeks > 1 ? (
     <div className="mt-3 inline-flex max-w-full gap-1 rounded-2xl border border-line bg-surface-muted/80 p-1 dark:border-white/10">
       {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
-        const week = (idx + 1) as 1 | 2 | 3;
+        const week = (idx + 1) as ShiftCycleWeeks;
         return (
           <button
             key={week}

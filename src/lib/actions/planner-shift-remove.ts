@@ -5,6 +5,7 @@ import { normalizeShiftTimesForSave } from "@/lib/planning/shift-display";
 import { db } from "@/lib/db";
 import { requireTenantAction, tenantWhere } from "@/lib/tenant-guard";
 import { logServerError } from "@/lib/server-logger";
+import { clampWeekIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 
 const MANAGER_ROLES = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"] as const;
 
@@ -59,7 +60,11 @@ export async function clearPlannerShiftSlot(input: {
     if (!tenant.ok) return { ok: false, error: tenant.error };
     if (!canManagePlanner(tenant.role)) return { ok: false, error: "Keine Berechtigung." };
 
-    const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex ?? 1)));
+    const company = await db.company.findUnique({
+      where: { id: tenant.companyId },
+      select: { shiftCycleWeeks: true },
+    });
+    const weekIndex = clampWeekIndex(input.weekIndex ?? 1, normalizeCycleWeeks(company?.shiftCycleWeeks));
     const dayOfWeek = Math.min(6, Math.max(0, Math.floor(input.dayOfWeek)));
 
     let startTime: string;

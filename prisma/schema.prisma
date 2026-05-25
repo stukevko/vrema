@@ -248,7 +248,7 @@ model Company {
   subEndsAt         DateTime?
   isActive          Boolean         @default(true)
   logoUrl           String?
-  shiftCycleWeeks   Int             @default(1)
+  shiftCycleWeeks   Int             @default(4)
   /// PLZ für Wetter & lokaler Kontext (optional)
   locationZip       String?
   /// Ort für Wetter, falls keine PLZ (optional)

@@ -1,3 +1,5 @@
+import type { ShiftCycleWeeks } from "@/lib/shift-cycle";
+
 /** Mo=0 … So=6 → Offset ab Montag dieser Kalenderwoche (0 = Mo). */
 export function dayOrderMonFirst(dayOfWeek: number): number {
   return (dayOfWeek + 6) % 7;
@@ -19,31 +21,31 @@ export function isoFromPlannerDate(d: Date): string {
 }
 
 /**
- * Kalenderdatum für einen Plan-Tag innerhalb der sichtbaren Zyklus-Woche (Woche 1–3).
+ * Kalenderdatum für einen Plan-Tag innerhalb der sichtbaren Zyklus-Woche (Woche 1–4).
  * Entspricht der Logik im ShiftManager (`dateForCycleDay`).
  */
-export function dateForPlannerCycleDay(weekIndex: 1 | 2 | 3, dayOfWeek: number, fromDate: Date = new Date()): Date {
+export function dateForPlannerCycleDay(weekIndex: ShiftCycleWeeks, dayOfWeek: number, fromDate: Date = new Date()): Date {
   const monday = mondayOfWeekContaining(fromDate);
   const d = new Date(monday);
   d.setDate(monday.getDate() + (weekIndex - 1) * 7 + dayOrderMonFirst(dayOfWeek));
   return d;
 }
 
-/** Welche Zyklus-Woche (1–3) enthält dieses Datum — null wenn außerhalb des Zyklus. */
+/** Welche Zyklus-Woche (1–Zyklus) enthält dieses Datum — null wenn außerhalb. */
 export function weekIndexForPlannerDate(
   date: Date,
-  cycleWeeks: 1 | 2 | 3,
+  cycleWeeks: ShiftCycleWeeks,
   anchor: Date = new Date(),
-): 1 | 2 | 3 | null {
+): ShiftCycleWeeks | null {
   const cycleStart = mondayOfWeekContaining(anchor).getTime();
   const targetMonday = mondayOfWeekContaining(date).getTime();
   const diffDays = Math.round((targetMonday - cycleStart) / 86_400_000);
   const weekOffset = Math.floor(diffDays / 7);
   if (weekOffset < 0 || weekOffset >= cycleWeeks) return null;
-  return (weekOffset + 1) as 1 | 2 | 3;
+  return (weekOffset + 1) as ShiftCycleWeeks;
 }
 
-export function plannerCycleDateBounds(cycleWeeks: 1 | 2 | 3, anchor: Date = new Date()) {
+export function plannerCycleDateBounds(cycleWeeks: ShiftCycleWeeks, anchor: Date = new Date()) {
   const startMonday = mondayOfWeekContaining(anchor);
   const endSunday = new Date(startMonday);
   endSunday.setDate(startMonday.getDate() + cycleWeeks * 7 - 1);

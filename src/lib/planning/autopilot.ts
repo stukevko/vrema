@@ -3,6 +3,7 @@ import { tenantWhere } from "@/lib/tenant-guard";
 import type { ShiftPlanRow } from "@/lib/planning/compliance";
 import { userHasRestRiskInWeek } from "@/lib/planning/compliance";
 import { getBerlinDayBoundsUtc } from "@/lib/time/timezone";
+import { clampWeekIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 import { ShiftTradeStatus, type Prisma, type UserRole } from "@prisma/client";
 
 const MINUTES_PER_DAY = 24 * 60;
@@ -203,7 +204,11 @@ export async function generateOptimalSchedule(
   weekIndex: number,
   options: AutopilotOptions = {}
 ): Promise<AutopilotPlanResult> {
-  const wk = Math.min(3, Math.max(1, Math.floor(weekIndex)));
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+    select: { shiftCycleWeeks: true },
+  });
+  const wk = clampWeekIndex(weekIndex, normalizeCycleWeeks(company?.shiftCycleWeeks));
   const anchor = options.anchorDate ?? new Date();
   const templates =
     options.slotTemplates && options.slotTemplates.length > 0

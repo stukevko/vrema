@@ -7,6 +7,7 @@ import {
   formatPlannerWeekRange,
   mondayOfWeekContaining,
 } from "@/lib/planning/cycle-display-date";
+import type { ShiftCycleWeeks } from "@/lib/shift-cycle";
 
 /** Mo=1 … So=0 (JS getDay-Konvention im Planer). */
 const PLANNER_DAYS_MON_FIRST = [1, 2, 3, 4, 5, 6, 0] as const;
@@ -43,7 +44,7 @@ function formatShiftCell(shift: ShiftPlanPdfShift): string {
   return `${start}-${end}`;
 }
 
-function dayColumnHeader(weekIndex: 1 | 2 | 3, dayOfWeek: number): string {
+function dayColumnHeader(weekIndex: ShiftCycleWeeks, dayOfWeek: number): string {
   const d = dateForPlannerCycleDay(weekIndex, dayOfWeek);
   const dateLine = d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
   return `${DAY_SHORT[dayOfWeek]}\n${dateLine}`;
@@ -55,8 +56,8 @@ function pdfHeaderFirmenzeile(companyName: string): string {
 
 export function buildShiftPlanPdf(input: {
   companyName: string;
-  weekIndex: 1 | 2 | 3;
-  shiftCycleWeeks: 1 | 2 | 3;
+  weekIndex: ShiftCycleWeeks;
+  shiftCycleWeeks: ShiftCycleWeeks;
   members: ShiftPlanPdfMember[];
   shifts: ShiftPlanPdfShift[];
 }): { doc: jsPDF; fileName: string } {

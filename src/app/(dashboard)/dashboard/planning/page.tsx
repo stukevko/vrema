@@ -17,6 +17,7 @@ import { loadPlanningManagerPageData } from "@/lib/planning/planning-page-data";
 import { dateForPlannerCycleDay } from "@/lib/planning/cycle-display-date";
 import { sortPlannerShiftsChronologically } from "@/lib/planning/sort-shifts";
 import { parsePlannerWeekIndex } from "@/lib/planning/focus-week";
+import { clampWeekIndex } from "@/lib/shift-cycle";
 import Link from "next/link";
 import { CalendarClock, Handshake, Inbox, ListTodo } from "lucide-react";
 import { Suspense } from "react";
@@ -230,12 +231,12 @@ export default async function PlanningPage({
   todayStart.setHours(0, 0, 0, 0);
 
   const firstUpcomingId = sortedShifts.find((r) => {
-    const wk = Math.min(3, Math.max(1, Math.floor(r.weekIndex ?? 1))) as 1 | 2 | 3;
+    const wk = clampWeekIndex(r.weekIndex ?? 1, schedule.shiftCycleWeeks);
     return dateForPlannerCycleDay(wk, r.dayOfWeek).getTime() >= todayStart.getTime();
   })?.id;
 
   const listItems = sortedShifts.map((r) => {
-    const wk = Math.min(3, Math.max(1, Math.floor(r.weekIndex ?? 1))) as 1 | 2 | 3;
+    const wk = clampWeekIndex(r.weekIndex ?? 1, schedule.shiftCycleWeeks);
     const when = dateForPlannerCycleDay(wk, r.dayOfWeek);
     const isPast = when.getTime() < todayStart.getTime();
     return {

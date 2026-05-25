@@ -3,6 +3,7 @@
 import { UserRole } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
+import { clampWeekIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 
 export type PlannerQuickSuggestRow = {
   userId: string;
@@ -50,7 +51,11 @@ export async function getPlannerQuickSuggest(input: {
     throw new Error("Keine Berechtigung.");
   }
 
-  const weekIndex = Math.min(3, Math.max(1, Math.floor(input.weekIndex)));
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+    select: { shiftCycleWeeks: true },
+  });
+  const weekIndex = clampWeekIndex(input.weekIndex, normalizeCycleWeeks(company?.shiftCycleWeeks));
   const dayOfWeek = Math.min(6, Math.max(0, Math.floor(input.dayOfWeek)));
   const since = new Date(Date.now() - 180 * 86400000);
 

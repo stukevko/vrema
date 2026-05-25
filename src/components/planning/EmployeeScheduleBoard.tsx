@@ -7,7 +7,7 @@ import {
   formatPlannerWeekRange,
   mondayOfWeekContaining,
 } from "@/lib/planning/cycle-display-date";
-import { getWeekCycleIndex } from "@/lib/shift-cycle";
+import { clampWeekIndex, getWeekCycleIndex, type ShiftCycleWeeks } from "@/lib/shift-cycle";
 import { formatShiftRange, shiftCardTone, shiftSlotLabel } from "@/lib/planning/shift-display";
 import { Button } from "@/components/ui/Button";
 import { comparePlannerShifts } from "@/lib/planning/sort-shifts";
@@ -28,9 +28,9 @@ export type EmployeeShiftRow = {
 
 type Props = {
   shifts: EmployeeShiftRow[];
-  shiftCycleWeeks: 1 | 2 | 3;
+  shiftCycleWeeks: ShiftCycleWeeks;
   companyName?: string;
-  initialWeekIndex?: 1 | 2 | 3;
+  initialWeekIndex?: ShiftCycleWeeks;
 };
 
 function isSameCalendarDay(a: Date, b: Date): boolean {
@@ -49,7 +49,7 @@ export function EmployeeScheduleBoard({
   const todayStart = new Date(today);
   todayStart.setHours(0, 0, 0, 0);
   const defaultWeek = initialWeekIndex ?? getWeekCycleIndex(today, shiftCycleWeeks);
-  const [selectedWeek, setSelectedWeek] = useState<1 | 2 | 3>(defaultWeek);
+  const [selectedWeek, setSelectedWeek] = useState(defaultWeek);
 
   const weekRangeLabel = useMemo(() => {
     const monday = mondayOfWeekContaining(new Date());
@@ -76,7 +76,7 @@ export function EmployeeScheduleBoard({
   const nextShiftLabel = useMemo(() => {
     const upcoming = [...weekShifts]
       .filter((s) => {
-        const wk = Math.min(3, Math.max(1, s.weekIndex)) as 1 | 2 | 3;
+        const wk = clampWeekIndex(s.weekIndex, shiftCycleWeeks);
         const when = dateForPlannerCycleDay(wk, s.dayOfWeek);
         return when.getTime() >= todayStart.getTime();
       })
@@ -84,7 +84,7 @@ export function EmployeeScheduleBoard({
     const next = upcoming[0];
     if (!next) return null;
     const when = dateForPlannerCycleDay(
-      Math.min(3, Math.max(1, next.weekIndex)) as 1 | 2 | 3,
+      clampWeekIndex(next.weekIndex, shiftCycleWeeks),
       next.dayOfWeek,
     );
     const dayName = isSameCalendarDay(when, today)
@@ -155,7 +155,7 @@ export function EmployeeScheduleBoard({
           aria-label="Schichtzyklus-Woche"
         >
           {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
-            const week = (idx + 1) as 1 | 2 | 3;
+            const week = (idx + 1) as ShiftCycleWeeks;
             const isCurrent = week === getWeekCycleIndex(today, shiftCycleWeeks);
             const active = selectedWeek === week;
             return (

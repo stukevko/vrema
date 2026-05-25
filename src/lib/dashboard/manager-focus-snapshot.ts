@@ -12,7 +12,7 @@ const DEFAULT_NEEDED_STAFF = 2;
 const COVERAGE_SLOT_MINUTES = 60;
 
 export type ManagerFocusSnapshot = {
-  focusWeek: 1 | 2 | 3;
+  focusWeek: import("@/lib/shift-cycle").ShiftCycleWeeks;
   weekLabel: string;
   today: {
     scheduledCount: number;

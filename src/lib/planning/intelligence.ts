@@ -221,7 +221,7 @@ export async function evaluateShiftTradeProposal(companyId: string, shiftId: str
 
 export type FiscalHealthResult = {
   hasData: boolean;
-  weekIndex: 1 | 2 | 3 | null;
+  weekIndex: import("@/lib/shift-cycle").ShiftCycleWeeks | null;
   laborEuro: number;
   revenueEuro: number | null;
   laborShare: number | null;

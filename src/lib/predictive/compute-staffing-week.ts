@@ -13,6 +13,7 @@ import {
   type WeatherCondition,
 } from "@/lib/predictive/staffing";
 import { berlinDateKeyToDayOfWeek } from "@/lib/time/timezone";
+import { clampWeekIndex } from "@/lib/shift-cycle";
 import {
   getHolidayForDate,
   isBridgeDay,
@@ -171,7 +172,7 @@ export async function computeStaffingRecommendationsForWeek(
   const forecast = extractForecast(weather?.payload ?? null);
 
   const weekIndexFilter =
-    options?.weekIndex != null ? Math.min(3, Math.max(1, Math.floor(options.weekIndex))) : undefined;
+    options?.weekIndex != null ? clampWeekIndex(options.weekIndex) : undefined;
 
   const shifts = await db.shift.findMany({
     where: tenantWhere(companyId, {

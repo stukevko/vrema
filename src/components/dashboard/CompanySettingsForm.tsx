@@ -244,12 +244,13 @@ export function CompanySettingsForm({ company }: Props) {
             onChange={(e) => setShiftCycleWeeks(e.target.value)}
             className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
           >
-            <option value="1">1 Woche (Standard)</option>
+            <option value="1">1 Woche</option>
             <option value="2">2 Wochen</option>
             <option value="3">3 Wochen</option>
+            <option value="4">4 Wochen (empfohlen)</option>
           </select>
           <p className="text-[10px] text-muted-foreground mt-1 font-sans">
-            Legt fest, ob Planungsmuster wöchentlich, alle 2 Wochen oder alle 3 Wochen rotieren.
+            Wie viele Kalenderwochen du im Planer gleichzeitig belegen kannst (bis zu 4 Wochen voraus).
           </p>
         </div>
 

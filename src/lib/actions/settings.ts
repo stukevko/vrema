@@ -65,7 +65,7 @@ export async function updateCompanySettings(data: {
     data: {
       ...(data.name ? { name: data.name.trim() } : {}),
       ...(typeof data.shiftCycleWeeks === "number" && Number.isFinite(data.shiftCycleWeeks)
-        ? { shiftCycleWeeks: Math.min(3, Math.max(1, Math.floor(data.shiftCycleWeeks))) }
+        ? { shiftCycleWeeks: Math.min(4, Math.max(1, Math.floor(data.shiftCycleWeeks))) }
         : {}),
       ...(data.locationZip !== undefined
         ? { locationZip: data.locationZip?.trim() ? data.locationZip.trim() : null }

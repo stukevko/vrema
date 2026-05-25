@@ -1,12 +1,12 @@
 import { dayOrderMonFirst } from "@/lib/planning/cycle-display-date";
-import { getWeekCycleIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
+import { getWeekCycleIndex, normalizeCycleWeeks, type ShiftCycleWeeks } from "@/lib/shift-cycle";
 import { berlinDateKeyToDayOfWeek, getBerlinDateKey } from "@/lib/time/timezone";
 
 export type ForecastWeekSlot = {
   /** Montag der Kalenderwoche (YYYY-MM-DD, Berlin). */
   weekStart: string;
-  /** Planer-Woche im Schichtzyklus (1–3). */
-  weekIndex: 1 | 2 | 3;
+  /** Planer-Woche im Schichtzyklus (1–4). */
+  weekIndex: ShiftCycleWeeks;
   label: string;
   /** Erste Zeile = die Woche, die du jetzt typischerweise planst. */
   isPrimary: boolean;
@@ -52,7 +52,7 @@ export function formatWeekRangeLabel(weekStartIso: string): string {
 /**
  * Baut die vorwärts gerichteten Planungswochen für Personal-Vorhersage & Dashboard.
  * - 1-Wochen-Zyklus: nächste 2 Kalenderwochen (Blick voraus beim Sonntags-Planen).
- * - 2/3-Wochen-Zyklus: alle Zyklus-Wochen ab Planungsfokus.
+ * - 2–4-Wochen-Zyklus: alle Zyklus-Wochen ab Planungsfokus.
  */
 export function buildForecastHorizon(
   shiftCycleWeeks: number | null | undefined,

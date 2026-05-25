@@ -29,6 +29,7 @@ const INDUSTRIES = [
 ];
 
 const SHIFT_CYCLES = [
+  { id: 4, label: "4 Wochen im Voraus", hint: "Empfohlen — Gastronomie-Standard, voller Überblick" },
   { id: 1, label: "Jede Woche gleich", hint: "Stabile Crew, klare Routinen" },
   { id: 2, label: "Alle 2 Wochen rotierend", hint: "Z. B. Früh/Spät-Rotation" },
   { id: 3, label: "3-Wochen-Rhythmus", hint: "Komplexere Schichtmodelle" },
@@ -59,7 +60,9 @@ export function OnboardingWizard({ companyName, initial }: Props) {
   const [revenue, setRevenue] = useState<string>(
     initial.estimatedWeeklyRevenue ? String(Math.round(initial.estimatedWeeklyRevenue)) : "",
   );
-  const [cycleWeeks, setCycleWeeks] = useState(initial.shiftCycleWeeks);
+  const [cycleWeeks, setCycleWeeks] = useState(
+    [1, 2, 3, 4].includes(initial.shiftCycleWeeks) ? initial.shiftCycleWeeks : 4,
+  );
 
   const total = 4;
   const progress = Math.round(((step - 1) / total) * 100);

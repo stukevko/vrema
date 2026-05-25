@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache";
 import { learnFromFinalizedWeek } from "@/lib/ai/learn-on-finalize";
 import { logServerError } from "@/lib/server-logger";
 import { formatAutopilotUserReport } from "@/lib/planning/autopilot-report";
+import { clampWeekIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 
 const CAN_RUN = new Set(["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"]);
 
@@ -20,7 +21,11 @@ export async function runAutopilotDraft(weekIndex: number, options?: AutopilotOp
   const { companyId, role } = await requireTenant();
   if (!CAN_RUN.has(role ?? "")) throw new Error("Keine Berechtigung für den Autopilot.");
 
-  const wk = Math.min(3, Math.max(1, Math.floor(weekIndex)));
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+    select: { shiftCycleWeeks: true },
+  });
+  const wk = clampWeekIndex(weekIndex, normalizeCycleWeeks(company?.shiftCycleWeeks));
   const plan = await generateOptimalSchedule(companyId, wk, options);
 
   await db.$transaction(async (tx) => {
@@ -51,7 +56,11 @@ export async function confirmAutopilotDrafts(weekIndex: number) {
   const { companyId, role } = await requireTenant();
   if (!CAN_RUN.has(role ?? "")) throw new Error("Keine Berechtigung.");
 
-  const wk = Math.min(3, Math.max(1, Math.floor(weekIndex)));
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+    select: { shiftCycleWeeks: true },
+  });
+  const wk = clampWeekIndex(weekIndex, normalizeCycleWeeks(company?.shiftCycleWeeks));
 
   let affectedUserIds: string[] = [];
   await db.$transaction(async (tx) => {
@@ -126,7 +135,11 @@ export async function discardAutopilotDrafts(weekIndex: number) {
   const { companyId, role } = await requireTenant();
   if (!CAN_RUN.has(role ?? "")) throw new Error("Keine Berechtigung.");
 
-  const wk = Math.min(3, Math.max(1, Math.floor(weekIndex)));
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+    select: { shiftCycleWeeks: true },
+  });
+  const wk = clampWeekIndex(weekIndex, normalizeCycleWeeks(company?.shiftCycleWeeks));
 
   await db.$transaction(async (tx) => {
     await tx.shift.deleteMany({

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
 
 type Props = {
-  weekIndex: 1 | 2 | 3;
+  weekIndex: import("@/lib/shift-cycle").ShiftCycleWeeks;
   draftCount: number;
   busy: boolean;
   report: AutopilotUserReport | null;

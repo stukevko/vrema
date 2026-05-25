@@ -9,6 +9,7 @@ import {
 } from "@/lib/predictive/compute-staffing-week";
 import { staffingByDayForPlannerWeek } from "@/lib/ai/forward-insights";
 import { db } from "@/lib/db";
+import { clampWeekIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 
 export type StaffingForecastHorizon = {
   cycleWeeks: number;
@@ -70,7 +71,12 @@ export async function getPlannerStaffingHints(weekIndex: number): Promise<Planne
     return [];
   }
   const { companyId } = tenant;
-  const wk = Math.min(3, Math.max(1, Math.floor(weekIndex))) as 1 | 2 | 3;
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+    select: { shiftCycleWeeks: true },
+  });
+  const cycleWeeks = normalizeCycleWeeks(company?.shiftCycleWeeks);
+  const wk = clampWeekIndex(weekIndex, cycleWeeks);
   const weekStart = cycleWeekStartIso(wk);
   const map = await staffingByDayForPlannerWeek(companyId, wk, weekStart);
   return Array.from(map.entries()).map(([dayOfWeek, v]) => ({

@@ -10,7 +10,7 @@ import { getShiftTemplatesForCompany } from "@/lib/actions/shift-templates";
 import { assignMissingEmployeeNumbersForCompany } from "@/lib/team/allocate-employee-number";
 import { isOpenShiftPlaceholderEmail } from "@/lib/planning/open-shift-placeholder";
 import { tenantWhere } from "@/lib/tenant-guard";
-import { normalizeCycleWeeks } from "@/lib/shift-cycle";
+import { normalizeCycleWeeks, type ShiftCycleWeeks } from "@/lib/shift-cycle";
 import { logServerError } from "@/lib/server-logger";
 
 const MODULE_SELECT = {
@@ -65,7 +65,7 @@ export type PlanningManagerPageData = {
   members: Awaited<ReturnType<typeof loadPlanningTeamMembers>>;
   shifts: Awaited<ReturnType<typeof loadPlanningShifts>>;
   vacationConflictDays: Awaited<ReturnType<typeof getVacationConflictDaysForCompany>>;
-  shiftCycleWeeks: 1 | 2 | 3;
+  shiftCycleWeeks: ShiftCycleWeeks;
   pendingTrades: Awaited<ReturnType<typeof loadPlanningPendingTrades>>;
   shiftTemplates: Awaited<ReturnType<typeof getShiftTemplatesForCompany>>;
   companyModules: CompanyModules;
@@ -92,7 +92,7 @@ export async function loadPlanningShifts(companyId: string) {
   });
 }
 
-export async function loadPlanningShiftCycleWeeks(companyId: string): Promise<1 | 2 | 3> {
+export async function loadPlanningShiftCycleWeeks(companyId: string): Promise<ShiftCycleWeeks> {
   const company = await db.company.findUnique({
     where: { id: companyId },
     select: { shiftCycleWeeks: true },
@@ -242,7 +242,7 @@ export async function loadPlanningManagerPageData(
   const shifts = settled[1].status === "fulfilled" ? settled[1].value : [];
   const vacationConflictDays = settled[2].status === "fulfilled" ? settled[2].value : [];
   const shiftCycleWeeksRaw = settled[3].status === "fulfilled" ? settled[3].value : 1;
-  const shiftCycleWeeks = (shiftCycleWeeksRaw === 2 ? 2 : shiftCycleWeeksRaw === 3 ? 3 : 1) as 1 | 2 | 3;
+  const shiftCycleWeeks = normalizeCycleWeeks(shiftCycleWeeksRaw);
   const pendingTrades = settled[4].status === "fulfilled" ? settled[4].value : [];
   const shiftTemplates = settled[5].status === "fulfilled" ? settled[5].value : [];
   const companyName = settled[6].status === "fulfilled" ? settled[6].value : "";

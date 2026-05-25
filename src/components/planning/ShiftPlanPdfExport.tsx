@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/Button";
 type Props = {
   companyName: string;
   plan: string;
-  shiftCycleWeeks: 1 | 2 | 3;
-  weekIndex: 1 | 2 | 3;
+  shiftCycleWeeks: import("@/lib/shift-cycle").ShiftCycleWeeks;
+  weekIndex: import("@/lib/shift-cycle").ShiftCycleWeeks;
   members: ShiftPlanPdfMember[];
   shifts: ShiftPlanPdfShift[];
 };

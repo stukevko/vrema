@@ -176,7 +176,7 @@ async function calcWeekdayBaseline(companyId: string, weekday: WeekdayKey): Prom
     where: { id: companyId },
     select: { shiftCycleWeeks: true },
   });
-  const cycle = Math.max(1, Math.min(3, company?.shiftCycleWeeks ?? 1));
+  const cycle = Math.max(1, Math.min(4, company?.shiftCycleWeeks ?? 1));
 
   const counts = await db.shift.groupBy({
     by: ["weekIndex"],

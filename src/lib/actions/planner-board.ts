@@ -15,6 +15,7 @@ import { computeStaffingRecommendationsForWeek } from "@/lib/predictive/compute-
 import { cycleWeekStartIso } from "@/lib/planning/cycle-week-start";
 import { getPlannerStaffingHints } from "@/lib/actions/predictive";
 import { AbsenceRequestStatus, AbsenceType } from "@prisma/client";
+import { clampWeekIndex, normalizeCycleWeeks } from "@/lib/shift-cycle";
 
 export async function getPlannerBoardMemberSaldos(
   userIds: string[],
@@ -54,7 +55,11 @@ export async function getOvertimeRecoveryRecommendation(
     throw new Error("Keine Berechtigung.");
   }
 
-  const wk = Math.min(3, Math.max(1, Math.floor(weekIndex))) as 1 | 2 | 3;
+  const companyCycle = await db.company.findUnique({
+    where: { id: companyId },
+    select: { shiftCycleWeeks: true },
+  });
+  const wk = clampWeekIndex(weekIndex, normalizeCycleWeeks(companyCycle?.shiftCycleWeeks));
 
   const user = await db.user.findFirst({
     where: tenantWhere(companyId, { id: userId }),
@@ -106,7 +111,11 @@ export async function applyOvertimeRecovery(input: {
     throw new Error("Keine Berechtigung.");
   }
 
-  const wk = Math.min(3, Math.max(1, Math.floor(input.weekIndex))) as 1 | 2 | 3;
+  const companyCycle = await db.company.findUnique({
+    where: { id: companyId },
+    select: { shiftCycleWeeks: true },
+  });
+  const wk = clampWeekIndex(input.weekIndex, normalizeCycleWeeks(companyCycle?.shiftCycleWeeks));
   const days = [...new Set(input.dayOfWeeks.filter((d) => d >= 0 && d <= 6))];
   if (days.length === 0) {
     throw new Error("Bitte mindestens einen Tag wählen.");

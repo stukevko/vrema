@@ -1,4 +1,5 @@
 import { dateForPlannerCycleDay } from "@/lib/planning/cycle-display-date";
+import { clampWeekIndex } from "@/lib/shift-cycle";
 
 export type PlannerShiftSortable = {
   weekIndex: number;
@@ -11,7 +12,7 @@ export function plannerShiftTimestamp(
   shift: PlannerShiftSortable,
   anchor: Date = new Date(),
 ): number {
-  const wk = Math.min(3, Math.max(1, Math.floor(shift.weekIndex))) as 1 | 2 | 3;
+  const wk = clampWeekIndex(shift.weekIndex);
   return dateForPlannerCycleDay(wk, shift.dayOfWeek, anchor).getTime();
 }
 

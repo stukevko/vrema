@@ -109,7 +109,7 @@ function severityOrder(s: Insight["severity"]): number {
 /** Für Planer-Badges: Map dayOfWeek (0–6) → kompakte Empfehlung. */
 export async function staffingByDayForPlannerWeek(
   companyId: string,
-  weekIndex: 1 | 2 | 3,
+  weekIndex: import("@/lib/shift-cycle").ShiftCycleWeeks,
   weekStart: string,
 ): Promise<
   Map<
