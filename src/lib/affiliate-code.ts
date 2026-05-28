@@ -27,7 +27,8 @@ export async function generateUniqueAffiliateCode(displayName: string): Promise<
   throw new Error("Konnte keinen freien Partner-Code erzeugen. Bitte erneut versuchen.");
 }
 
+import { publicCampaignRefUrl } from "@/lib/trial/referral";
+
 export function publicRegisterRefUrl(code: string): string {
-  const base = (process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? "https://vrema.app").replace(/\/$/, "");
-  return `${base}/auth/register?ref=${encodeURIComponent(code)}`;
+  return publicCampaignRefUrl(code);
 }

@@ -15,8 +15,19 @@ export default auth((req) => {
   const rateLimited = applyAuthRelatedRateLimits(req);
   if (rateLimited) return rateLimited;
 
-  const role = req.auth?.user?.role;
   const pathname = req.nextUrl.pathname;
+
+  /** Flyer-Tippfehler: /ref=speyer → /auth/register?ref=speyer */
+  const malformedRef = pathname.match(/^\/ref=([a-zA-Z0-9][a-zA-Z0-9_-]{0,79})\/?$/i);
+  if (malformedRef) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/auth/register";
+    url.search = "";
+    url.searchParams.set("ref", malformedRef[1]!.toLowerCase());
+    return NextResponse.redirect(url, 308);
+  }
+
+  const role = req.auth?.user?.role;
 
   if (role === "ADVISOR") {
     const allowed =
@@ -62,6 +73,7 @@ export const config = {
   // Performance: Wir matchen NUR Pfade, die wir tatsächlich brauchen.
   //   - /dashboard/* für Rollen-Redirects
   //   - /api/auth/*, /api/public/affiliate-preview, /terminal/* für Rate-Limits
+  //   - /ref=code für Flyer-QR-Tippfehler
   // Statische Dateien (_next, favicon, manifest.json, sw.js, offline.html, Icons, Robots …)
   // werden gar nicht erst durch die Edge-Middleware geschickt → keine JWT-Decodes pro Asset.
   matcher: [
@@ -69,5 +81,6 @@ export const config = {
     "/api/auth/:path*",
     "/api/public/affiliate-preview",
     "/terminal/:path*",
+    "/ref=:code*",
   ],
 };

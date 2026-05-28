@@ -10,6 +10,17 @@ export function normalizeReferralCode(raw: string): string {
   return raw.trim().toLowerCase().slice(0, 80);
 }
 
+/** Öffentliche Kampagnen-URL für Flyer/QR (kurz: /ref/speyer). */
+export function publicCampaignRefUrl(code: string): string {
+  const ref = normalizeReferralCode(code);
+  const base = (process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? "https://vrema.app").replace(
+    /\/$/,
+    "",
+  );
+  if (!ref) return `${base}/auth/register`;
+  return `${base}/ref/${encodeURIComponent(ref)}`;
+}
+
 /**
  * Kampagnen-Refs aus Flyern/QR (z. B. ?ref=speyer, ?ref=speyer-altstadt).
  * Affiliate-Codes werden separat über die Affiliate-Tabelle aufgelöst.
