@@ -139,6 +139,8 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
 
   const handleRead = (n: NotificationDTO) => {
     if (!n.readAt) {
+      const prevItems = items;
+      const prevUnread = unread;
       setItems((rows) =>
         rows ? rows.map((r) => (r.id === n.id ? { ...r, readAt: new Date().toISOString() } : r)) : rows,
       );
@@ -146,10 +148,13 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
       startTransition(async () => {
         try {
           await markNotificationRead(n.id);
+          router.refresh();
         } catch {
+          // Optimistisches Update zurückrollen, damit Liste & Counter konsistent bleiben.
+          setItems(prevItems);
+          setUnread(prevUnread);
           await refreshUnread();
         }
-        router.refresh();
       });
     }
     if (n.href) {
@@ -160,17 +165,21 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
 
   const handleMarkAll = () => {
     if (unread === 0) return;
+    const prevItems = items;
+    const prevUnread = unread;
     setItems((rows) => (rows ? rows.map((r) => ({ ...r, readAt: r.readAt ?? new Date().toISOString() })) : rows));
     setUnread(0);
     startTransition(async () => {
       try {
         await markAllNotificationsRead();
         toast.success("Alle Benachrichtigungen gelesen.");
+        router.refresh();
       } catch {
+        setItems(prevItems);
+        setUnread(prevUnread);
         await refreshUnread();
         toast.error("Konnte nicht alle als gelesen markieren.");
       }
-      router.refresh();
     });
   };
 

@@ -18,26 +18,52 @@ import {
 const MIN_PASSWORD_LENGTH = 8;
 
 export async function POST(req: NextRequest) {
+  let payload: unknown;
   try {
-    const { name, email, password, companyName, plan, affiliateCode, inviteCode, inviteOrgId, inviteRole } = await req.json();
+    payload = await req.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Ungültige Anfrage." },
+      { status: 400 }
+    );
+  }
+
+  if (typeof payload !== "object" || payload === null) {
+    return NextResponse.json(
+      { error: "Ungültige Anfrage." },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const { name, email, password, companyName, plan, affiliateCode, inviteCode, inviteOrgId, inviteRole } =
+      payload as Record<string, unknown>;
     const isInviteFlow = typeof inviteCode === "string" && inviteCode.trim().length > 0;
 
     // ── Input validation ────────────────────────────────────────────────────
-    if (!name || !email || !password || (!isInviteFlow && !companyName)) {
+    // Alle Pflichtfelder müssen Strings sein – schützt vor .trim()-Crash bei
+    // fehlerhaften/böswilligen Payloads (z. B. { companyName: 123 }).
+    if (
+      typeof name !== "string" ||
+      !name.trim() ||
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      (!isInviteFlow && (typeof companyName !== "string" || !companyName.trim()))
+    ) {
       return NextResponse.json(
         { error: "Alle Felder sind erforderlich." },
         { status: 400 }
       );
     }
 
-    if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
         { error: "Ungültige E-Mail-Adresse." },
         { status: 400 }
       );
     }
 
-    if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
+    if (password.length < MIN_PASSWORD_LENGTH) {
       return NextResponse.json(
         { error: `Passwort muss mindestens ${MIN_PASSWORD_LENGTH} Zeichen lang sein.` },
         { status: 400 }
@@ -178,13 +204,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const safePlan: "STARTER" | "BUSINESS" | "ENTERPRISE" =
+      plan === "BUSINESS" || plan === "ENTERPRISE" ? plan : "STARTER";
+
     const company = await db.company.create({
       data: {
-        name: companyName.trim(),
+        name: String(companyName).trim(),
         slug: uniqueSlug,
-        plan: (["STARTER", "BUSINESS", "ENTERPRISE"] as const).includes(plan)
-          ? plan
-          : "STARTER",
+        plan: safePlan,
         trialEndsAt,
         referredBy,
         isActive: true,

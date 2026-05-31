@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { calculateSaldoForUser } from "@/lib/time/saldo-for-user";
+import { calculateSaldoForUser, calculateSaldosForUsers } from "@/lib/time/saldo-for-user";
 import { requireTenant, requireTenantAction, tenantWhere } from "@/lib/tenant-guard";
 import { revalidatePath } from "next/cache";
 import { dateForPlannerCycleDay } from "@/lib/planning/cycle-display-date";
@@ -28,18 +28,23 @@ export async function getPlannerBoardMemberSaldos(
   const { companyId } = tenant;
 
   const unique = [...new Set(userIds.filter(Boolean))];
-  const entries = await Promise.all(
-    unique.map(async (userId) => {
-      try {
-        const raw = await calculateSaldoForUser(companyId, userId);
-        return [userId, saldoSnapshotFromRaw(userId, raw)] as const;
-      } catch {
-        return [userId, saldoSnapshotFromRaw(userId, { workedMinutes: 0, expectedMinutes: 0, saldoMinutes: 0 })] as const;
-      }
-    }),
-  );
+  if (unique.length === 0) return {};
 
-  return Object.fromEntries(entries);
+  // Ein einziger Batch-Load (2 Queries) statt 2×N Einzelabfragen.
+  let saldoByUser: Record<string, { workedMinutes: number; expectedMinutes: number; saldoMinutes: number }>;
+  try {
+    saldoByUser = await calculateSaldosForUsers(companyId, unique);
+  } catch {
+    saldoByUser = {};
+  }
+
+  const result: Record<string, MemberSaldoSnapshot> = {};
+  for (const userId of unique) {
+    const raw = saldoByUser[userId] ?? { workedMinutes: 0, expectedMinutes: 0, saldoMinutes: 0 };
+    result[userId] = saldoSnapshotFromRaw(userId, raw);
+  }
+
+  return result;
 }
 
 export async function getOvertimeRecoveryRecommendation(

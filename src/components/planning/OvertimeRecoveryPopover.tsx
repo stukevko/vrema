@@ -39,21 +39,29 @@ export function OvertimeRecoveryPopover({
 
   useEffect(() => {
     if (!open || !userId) return;
+    let cancelled = false;
     setLoading(true);
     setError(null);
     setMessage(null);
     void getOvertimeRecoveryRecommendation(userId, weekIndex)
       .then((res) => {
+        if (cancelled) return;
         setMemberName(res.memberName);
         setSaldo(res.saldo);
         setDays(res.suggestedDays);
         setSelected(new Set(res.suggestedDays.map((d) => d.dayOfWeek)));
       })
       .catch((e: unknown) => {
+        if (cancelled) return;
         setError(userErrorMessage(e, "Empfehlung konnte nicht geladen werden."));
         setDays([]);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [open, userId, weekIndex]);
 
   if (!open || !userId) return null;

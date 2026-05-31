@@ -76,24 +76,15 @@ export default async function DashboardLayout({
   const showPasskeyNudge =
     role === "COMPANY_OWNER" && !isTrialExemptDashboardPath(pathname);
 
-  let supportUnreadCount = 0;
-  let superOpenTickets = 0;
-  let unreadNotifications = 0;
-  try {
-    supportUnreadCount = await getMyUnreadSupportRepliesCount();
-  } catch {
-    supportUnreadCount = 0;
-  }
-  try {
-    superOpenTickets = await countOpenSupportTicketsForSuperAdmin();
-  } catch {
-    superOpenTickets = 0;
-  }
-  try {
-    unreadNotifications = await countMyUnreadNotifications();
-  } catch {
-    unreadNotifications = 0;
-  }
+  // Drei unabhängige Counts parallel statt sequenziell (spart 2 Roundtrips pro Seitenwechsel).
+  const [supportUnreadRes, superOpenTicketsRes, unreadNotificationsRes] = await Promise.allSettled([
+    getMyUnreadSupportRepliesCount(),
+    countOpenSupportTicketsForSuperAdmin(),
+    countMyUnreadNotifications(),
+  ]);
+  const supportUnreadCount = supportUnreadRes.status === "fulfilled" ? supportUnreadRes.value : 0;
+  const superOpenTickets = superOpenTicketsRes.status === "fulfilled" ? superOpenTicketsRes.value : 0;
+  const unreadNotifications = unreadNotificationsRes.status === "fulfilled" ? unreadNotificationsRes.value : 0;
 
   // Custom-Branding: nur applizieren, wenn Firma eine eigene Hex hinterlegt hat.
   // Sonst bleibt VREMA-Petrol (Default-Branding) aktiv – kein Style-Injection,

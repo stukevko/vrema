@@ -568,6 +568,9 @@ export function ShiftManager({
     laneLeft: number;
     laneWidth: number;
     pointerId: number;
+    /** Tag/Woche werden beim Drag-Start eingefroren – schützt vor Stale-Closure beim Speichern. */
+    dayOfWeek: number;
+    weekIndex: ShiftCycleWeeks;
   } | null>(null);
   const [recentDayAction, setRecentDayAction] = useState<{ dayOfWeek: number; action: "saved" | "deleted" } | null>(null);
   const [contextMenu, setContextMenu] = useState<{
@@ -705,7 +708,10 @@ export function ShiftManager({
     let cancelled = false;
     setWeatherFetchErr(null);
     fetch(`/api/planning/weather?anchorDate=${encodeURIComponent(anchor)}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`weather_http_${r.status}`);
+        return r.json();
+      })
       .then((data: { week?: Array<DailyWeatherForecast | null>; mondayIso?: string; error?: string | null }) => {
         if (cancelled) return;
         if (data.error === "no_location") {
@@ -825,9 +831,14 @@ export function ShiftManager({
       return;
     }
     let cancelled = false;
-    void getPlannerBoardMemberSaldos(members.map((m) => m.id)).then((map) => {
-      if (!cancelled) setMemberSaldoById(map);
-    });
+    void getPlannerBoardMemberSaldos(members.map((m) => m.id))
+      .then((map) => {
+        if (!cancelled) setMemberSaldoById(map);
+      })
+      .catch(() => {
+        // Saldo-Overlays sind nur Zusatzinfo – Fehler darf das Board nicht blockieren.
+        if (!cancelled) setMemberSaldoById({});
+      });
     return () => {
       cancelled = true;
     };
@@ -1256,8 +1267,15 @@ export function ShiftManager({
     timelineDay,
   ]);
 
-  const saveTimelineShift = (userId: string, startMinute: number, endMinute: number) => {
-    const conflict = conflictTypeByCell.get(`${userId}-${timelineDay}`);
+  const saveTimelineShift = (
+    userId: string,
+    startMinute: number,
+    endMinute: number,
+    // Tag/Woche werden vom Drag-Start eingefroren übergeben; Default = aktueller Fokus.
+    dayOfWeek: number = timelineDay,
+    weekIndex: ShiftCycleWeeks = selectedWeekIndex,
+  ) => {
+    const conflict = conflictTypeByCell.get(`${userId}-${dayOfWeek}`);
     if (conflict) {
       setMessage(`Schicht blockiert: ${conflict === "SICK" ? "Krank" : "Urlaub"}.`);
       return;
@@ -1265,8 +1283,8 @@ export function ShiftManager({
     const existingShift = shiftsRef.current.find(
       (s) =>
         s.userId === userId &&
-        s.weekIndex === selectedWeekIndex &&
-        s.dayOfWeek === timelineDay &&
+        s.weekIndex === weekIndex &&
+        s.dayOfWeek === dayOfWeek &&
         !s.isDraft,
     );
     const breakDuration = existingShift?.breakDuration ?? 0;
@@ -1285,13 +1303,13 @@ export function ShiftManager({
       const ok = await persistShiftForDay(
         {
           userId,
-          weekIndex: selectedWeekIndex,
-          dayOfWeek: timelineDay,
+          weekIndex,
+          dayOfWeek,
           startTime: startTimeValue,
           endTime: endTimeValue,
           breakDuration,
         },
-        `Schicht gesetzt: ${DAY_LABELS[timelineDay]} (${startTimeValue}–${endTimeValue}).`,
+        `Schicht gesetzt: ${DAY_LABELS[dayOfWeek]} (${startTimeValue}–${endTimeValue}).`,
       );
       if (ok) router.refresh();
     });
@@ -1397,6 +1415,8 @@ export function ShiftManager({
       laneLeft: rect.left,
       laneWidth: rect.width,
       pointerId,
+      dayOfWeek: timelineDay,
+      weekIndex: selectedWeekIndex,
     });
     dragDraftRef.current = initialDraft;
     setDragDraft(initialDraft);
@@ -1478,13 +1498,19 @@ export function ShiftManager({
           const suggested = getSuggestedShiftForUser(activeDrag.userId);
           setShiftEdit({
             userId: activeDrag.userId,
-            dayOfWeek: timelineDay,
+            dayOfWeek: activeDrag.dayOfWeek,
             label: member?.name ?? member?.email ?? "Mitarbeiter",
             startTime: unchangedCreate ? suggested.startTime : minutesToHHMM(draft.startMinute),
             endTime: unchangedCreate ? suggested.endTime : minutesToHHMM(draft.endMinute),
           });
         } else if (!unchangedResize) {
-          saveTimelineShift(activeDrag.userId, draft.startMinute, draft.endMinute);
+          saveTimelineShift(
+            activeDrag.userId,
+            draft.startMinute,
+            draft.endMinute,
+            activeDrag.dayOfWeek,
+            activeDrag.weekIndex,
+          );
         }
       }
       dragSnapshotRef.current = null;

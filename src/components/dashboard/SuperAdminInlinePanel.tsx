@@ -3,6 +3,7 @@
 import { userErrorMessage } from "@/lib/errors/user-message";
 import { useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   createCompanyBySuperAdmin,
   deleteCompanyBySuperAdmin,
@@ -80,8 +81,30 @@ export function SuperAdminInlinePanel({
   monitoring: MonitoringData;
 }) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const hasCompanies = companies.length > 0;
   const [resultMsg, setResultMsg] = useState<string | null>(null);
+
+  /**
+   * Zentraler Wrapper für Inline-Mutationen: führt die Action aus, hält die
+   * (uncontrolled) Tabelle per router.refresh() mit der DB synchron und zeigt
+   * bei Fehlern eine verständliche Meldung statt stillem Scheitern.
+   */
+  const runCompanyAction = (
+    action: () => Promise<void>,
+    opts?: { successMsg?: string; errorMsg?: string },
+  ) => {
+    startTransition(async () => {
+      try {
+        await action();
+        if (opts?.successMsg) setResultMsg(opts.successMsg);
+        router.refresh();
+      } catch (err: unknown) {
+        setResultMsg(userErrorMessage(err, opts?.errorMsg ?? "Aktion fehlgeschlagen."));
+        router.refresh();
+      }
+    });
+  };
 
   return (
     <section id="super-admin" className="glass-card p-4 sm:p-6">
@@ -229,15 +252,17 @@ export function SuperAdminInlinePanel({
                   <select
                     defaultValue={c.plan}
                     onChange={(e) =>
-                      startTransition(async () => {
-                        await updateCompanyBySuperAdmin({
-                          companyId: c.id,
-                          plan: e.target.value as CompanyRow["plan"],
-                          billingInterval: c.billingInterval,
-                          isActive: c.isActive,
-                          billingExempt: c.billingExempt,
-                        });
-                      })
+                      runCompanyAction(
+                        () =>
+                          updateCompanyBySuperAdmin({
+                            companyId: c.id,
+                            plan: e.target.value as CompanyRow["plan"],
+                            billingInterval: c.billingInterval,
+                            isActive: c.isActive,
+                            billingExempt: c.billingExempt,
+                          }),
+                        { errorMsg: `Plan für „${c.name}“ konnte nicht geändert werden.` },
+                      )
                     }
                     className={selectClass}
                     disabled={isPending}
@@ -251,15 +276,17 @@ export function SuperAdminInlinePanel({
                   <select
                     defaultValue={c.billingInterval}
                     onChange={(e) =>
-                      startTransition(async () => {
-                        await updateCompanyBySuperAdmin({
-                          companyId: c.id,
-                          plan: c.plan,
-                          billingInterval: e.target.value as CompanyRow["billingInterval"],
-                          isActive: c.isActive,
-                          billingExempt: c.billingExempt,
-                        });
-                      })
+                      runCompanyAction(
+                        () =>
+                          updateCompanyBySuperAdmin({
+                            companyId: c.id,
+                            plan: c.plan,
+                            billingInterval: e.target.value as CompanyRow["billingInterval"],
+                            isActive: c.isActive,
+                            billingExempt: c.billingExempt,
+                          }),
+                        { errorMsg: `Intervall für „${c.name}“ konnte nicht geändert werden.` },
+                      )
                     }
                     className={selectClass}
                     disabled={isPending}
@@ -300,20 +327,22 @@ export function SuperAdminInlinePanel({
                       defaultChecked={c.billingExempt}
                       disabled={isPending}
                       onChange={(e) =>
-                        startTransition(async () => {
-                          await updateCompanyBySuperAdmin({
-                            companyId: c.id,
-                            plan: c.plan,
-                            billingInterval: c.billingInterval,
-                            isActive: c.isActive,
-                            billingExempt: e.target.checked,
-                          });
-                          setResultMsg(
-                            e.target.checked
+                        runCompanyAction(
+                          () =>
+                            updateCompanyBySuperAdmin({
+                              companyId: c.id,
+                              plan: c.plan,
+                              billingInterval: c.billingInterval,
+                              isActive: c.isActive,
+                              billingExempt: e.target.checked,
+                            }),
+                          {
+                            successMsg: e.target.checked
                               ? `„${c.name}“ ist kostenfrei — Stripe-Abo wurde beendet (falls vorhanden).`
                               : `„${c.name}“ nutzt wieder normale Abrechnung.`,
-                          );
-                        })
+                            errorMsg: `Abrechnungs-Status für „${c.name}“ konnte nicht geändert werden.`,
+                          },
+                        )
                       }
                       className="h-4 w-4 rounded border-line"
                     />
@@ -333,14 +362,18 @@ export function SuperAdminInlinePanel({
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        startTransition(async () => {
-                          await grantCompanyPlanWithoutBilling({
-                            companyId: c.id,
-                            plan: c.plan,
-                            billingInterval: c.billingInterval,
-                          });
-                          setResultMsg(`„${c.name}“: ${c.plan} kostenfrei freigeschaltet (ohne Stripe).`);
-                        })
+                        runCompanyAction(
+                          () =>
+                            grantCompanyPlanWithoutBilling({
+                              companyId: c.id,
+                              plan: c.plan,
+                              billingInterval: c.billingInterval,
+                            }),
+                          {
+                            successMsg: `„${c.name}“: ${c.plan} kostenfrei freigeschaltet (ohne Stripe).`,
+                            errorMsg: `„${c.name}“ konnte nicht freigeschaltet werden.`,
+                          },
+                        )
                       }
                       disabled={isPending}
                     >
@@ -352,15 +385,22 @@ export function SuperAdminInlinePanel({
                       size="sm"
                       className="border-danger/35 text-danger-foreground hover:border-danger/50 hover:bg-danger-soft/70 hover:text-danger"
                       onClick={() =>
-                        startTransition(async () => {
-                          await updateCompanyBySuperAdmin({
-                            companyId: c.id,
-                            plan: c.plan,
-                            billingInterval: c.billingInterval,
-                            isActive: !c.isActive,
-                            billingExempt: c.billingExempt,
-                          });
-                        })
+                        runCompanyAction(
+                          () =>
+                            updateCompanyBySuperAdmin({
+                              companyId: c.id,
+                              plan: c.plan,
+                              billingInterval: c.billingInterval,
+                              isActive: !c.isActive,
+                              billingExempt: c.billingExempt,
+                            }),
+                          {
+                            successMsg: !c.isActive
+                              ? `„${c.name}“ wurde aktiviert.`
+                              : `„${c.name}“ wurde deaktiviert.`,
+                            errorMsg: `Status für „${c.name}“ konnte nicht geändert werden.`,
+                          },
+                        )
                       }
                       disabled={isPending}
                     >
@@ -375,8 +415,9 @@ export function SuperAdminInlinePanel({
                           `Zum Löschen bitte die Firmen-Kennung eingeben: ${c.slug}`,
                         );
                         if (confirmation !== c.slug) return;
-                        startTransition(async () => {
-                          await deleteCompanyBySuperAdmin(c.id);
+                        runCompanyAction(() => deleteCompanyBySuperAdmin(c.id), {
+                          successMsg: `„${c.name}“ wurde gelöscht.`,
+                          errorMsg: `„${c.name}“ konnte nicht gelöscht werden.`,
                         });
                       }}
                       disabled={isPending}
@@ -387,7 +428,7 @@ export function SuperAdminInlinePanel({
                 </td>
               </tr>
               <tr key={`${c.id}-modules`} className="border-b border-line last:border-0 bg-surface-muted/40 dark:border-white/8 dark:bg-surface-muted/20">
-                <td colSpan={7} className="px-3 py-2">
+                <td colSpan={9} className="px-3 py-2">
                   <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-fg-muted">
                     Erweiterungen (Kern ist immer aktiv)
                   </p>
@@ -403,15 +444,17 @@ export function SuperAdminInlinePanel({
                           checked={modules[key]}
                           disabled={isPending}
                           onChange={(e) =>
-                            startTransition(async () => {
-                              await updateCompanyModulesBySuperAdmin({
-                                companyId: c.id,
-                                modules: { [key]: e.target.checked },
-                              });
-                              setResultMsg(
-                                `„${c.name}“: ${COMPANY_MODULE_LABELS[key].title} ${e.target.checked ? "an" : "aus"}.`,
-                              );
-                            })
+                            runCompanyAction(
+                              () =>
+                                updateCompanyModulesBySuperAdmin({
+                                  companyId: c.id,
+                                  modules: { [key]: e.target.checked },
+                                }),
+                              {
+                                successMsg: `„${c.name}“: ${COMPANY_MODULE_LABELS[key].title} ${e.target.checked ? "an" : "aus"}.`,
+                                errorMsg: `Modul „${COMPANY_MODULE_LABELS[key].title}“ für „${c.name}“ konnte nicht geändert werden.`,
+                              },
+                            )
                           }
                           className="mt-0.5 h-4 w-4 shrink-0 rounded border-line"
                         />

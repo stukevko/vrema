@@ -355,59 +355,75 @@ export async function getSuperAdminAffiliatePayoutData(): Promise<{
   const session = await auth();
   assertSuperAdmin(session);
 
-  const affiliates = await db.affiliate.findMany({
-    orderBy: { name: "asc" },
-  });
-
-  const summaries: SuperAdminAffiliateSummary[] = await Promise.all(
-    affiliates.map(async (a) => {
-      const [pendingAgg, availableAgg, paidAgg, referredCompanies, recentRaw] = await Promise.all([
-        db.affiliateEarning.aggregate({
-          where: { affiliateId: a.id, status: "PENDING" },
-          _sum: { commissionCents: true },
-        }),
-        db.affiliateEarning.aggregate({
-          where: { affiliateId: a.id, status: "AVAILABLE" },
-          _sum: { commissionCents: true },
-        }),
-        db.affiliateEarning.aggregate({
-          where: { affiliateId: a.id, status: "PAID" },
-          _sum: { commissionCents: true },
-        }),
-        db.company.count({
-          where: { affiliateId: a.id },
-        }),
-        db.affiliateEarning.findMany({
-          where: {
-            affiliateId: a.id,
-            status: { in: ["PENDING", "AVAILABLE", "PAID"] },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 5,
-          include: { company: { select: { name: true } } },
-        }),
-      ]);
-      return {
-        id: a.id,
-        code: a.code,
-        name: a.name,
-        email: a.email,
-        referredCompanies,
-        pendingCents: pendingAgg._sum.commissionCents ?? 0,
-        availableCents: availableAgg._sum.commissionCents ?? 0,
-        paidCents: paidAgg._sum.commissionCents ?? 0,
-        recentCommissions: recentRaw.map((r) => ({
-          id: r.id,
-          createdAt: r.createdAt.toISOString(),
-          commissionCents: r.commissionCents,
-          currency: r.currency,
-          status: r.status,
-          plan: r.plan,
-          companyName: r.company.name,
-        })),
-      };
+  // Performance: konstant 4 Queries statt 5×N (vorher pro Affiliate 3 Aggregates
+  // + 1 Count + 1 findMany). Aggregation/Top-5 erfolgt im Speicher.
+  const RECENT_STATUSES = ["PENDING", "AVAILABLE", "PAID"] as const;
+  const [affiliates, sumRows, companyCountRows, recentRows] = await Promise.all([
+    db.affiliate.findMany({ orderBy: { name: "asc" } }),
+    db.affiliateEarning.groupBy({
+      by: ["affiliateId", "status"],
+      where: { status: { in: [...RECENT_STATUSES] } },
+      _sum: { commissionCents: true },
     }),
-  );
+    db.company.groupBy({
+      by: ["affiliateId"],
+      where: { affiliateId: { not: null } },
+      _count: { _all: true },
+    }),
+    db.affiliateEarning.findMany({
+      where: { status: { in: [...RECENT_STATUSES] } },
+      orderBy: { createdAt: "desc" },
+      include: { company: { select: { name: true } } },
+    }),
+  ]);
+
+  const sumsByAffiliate = new Map<string, { pending: number; available: number; paid: number }>();
+  for (const row of sumRows) {
+    const bucket = sumsByAffiliate.get(row.affiliateId) ?? { pending: 0, available: 0, paid: 0 };
+    const cents = row._sum.commissionCents ?? 0;
+    if (row.status === "PENDING") bucket.pending = cents;
+    else if (row.status === "AVAILABLE") bucket.available = cents;
+    else if (row.status === "PAID") bucket.paid = cents;
+    sumsByAffiliate.set(row.affiliateId, bucket);
+  }
+
+  const companyCountByAffiliate = new Map<string, number>();
+  for (const row of companyCountRows) {
+    if (row.affiliateId) companyCountByAffiliate.set(row.affiliateId, row._count._all);
+  }
+
+  // recentRows sind bereits createdAt-absteigend; pro Affiliate die ersten 5 behalten.
+  const recentByAffiliate = new Map<string, SuperAdminAffiliateRecentEntry[]>();
+  for (const r of recentRows) {
+    const list = recentByAffiliate.get(r.affiliateId);
+    if (list && list.length >= 5) continue;
+    const entry: SuperAdminAffiliateRecentEntry = {
+      id: r.id,
+      createdAt: r.createdAt.toISOString(),
+      commissionCents: r.commissionCents,
+      currency: r.currency,
+      status: r.status,
+      plan: r.plan,
+      companyName: r.company.name,
+    };
+    if (list) list.push(entry);
+    else recentByAffiliate.set(r.affiliateId, [entry]);
+  }
+
+  const summaries: SuperAdminAffiliateSummary[] = affiliates.map((a) => {
+    const sums = sumsByAffiliate.get(a.id);
+    return {
+      id: a.id,
+      code: a.code,
+      name: a.name,
+      email: a.email,
+      referredCompanies: companyCountByAffiliate.get(a.id) ?? 0,
+      pendingCents: sums?.pending ?? 0,
+      availableCents: sums?.available ?? 0,
+      paidCents: sums?.paid ?? 0,
+      recentCommissions: recentByAffiliate.get(a.id) ?? [],
+    };
+  });
 
   const queueRaw = await db.affiliateEarning.findMany({
     where: { status: { in: ["PENDING", "AVAILABLE"] } },

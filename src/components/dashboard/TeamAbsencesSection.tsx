@@ -5,16 +5,15 @@ import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 export async function TeamAbsencesSection({ companyId }: { companyId: string }) {
-  const absences = await db.absence.findMany({
-    where: { orgId: companyId },
+  // Nur offene Meldungen laden – historische APPROVED/REJECTED werden hier nicht gerendert.
+  const pending = await db.absence.findMany({
+    where: { orgId: companyId, status: "REQUESTED" },
     include: {
       user: { select: { name: true, email: true } },
       reviewedBy: { select: { name: true } },
     },
     orderBy: [{ createdAt: "desc" }],
   });
-
-  const pending = absences.filter((a) => a.status === "REQUESTED");
 
   return (
     <section id="abwesenheiten" className="scroll-mt-24 space-y-4">

@@ -33,32 +33,36 @@ function LoginForm() {
     setError(null);
     setShowResend(false);
     startTransition(async () => {
-      const result = await signIn("credentials", {
-        email: emailInput,
-        password,
-        callbackUrl,
-        redirect: false,
-      });
+      try {
+        const result = await signIn("credentials", {
+          email: emailInput,
+          password,
+          callbackUrl,
+          redirect: false,
+        });
 
-      if (result?.error) {
-        if (
-          result.error.includes("unverified_email") ||
-          result.error.includes("Bitte verifizieren Sie zuerst Ihre E-Mail-Adresse")
-        ) {
-          setError("Bitte verifiziere zuerst deine E-Mail-Adresse.");
-          setShowResend(true);
-        } else {
-          setError("E-Mail oder Passwort ist falsch.");
+        if (result?.error) {
+          if (
+            result.error.includes("unverified_email") ||
+            result.error.includes("Bitte verifizieren Sie zuerst Ihre E-Mail-Adresse")
+          ) {
+            setError("Bitte verifiziere zuerst deine E-Mail-Adresse.");
+            setShowResend(true);
+          } else {
+            setError("E-Mail oder Passwort ist falsch.");
+          }
+          return;
         }
-        return;
-      }
 
-      if (!result?.ok) {
-        setError("Anmeldung fehlgeschlagen. Bitte erneut versuchen.");
-        return;
-      }
+        if (!result?.ok) {
+          setError("Anmeldung fehlgeschlagen. Bitte erneut versuchen.");
+          return;
+        }
 
-      window.location.assign(callbackUrl);
+        window.location.assign(callbackUrl);
+      } catch {
+        setError("Verbindung fehlgeschlagen. Bitte prüfe deine Internetverbindung und versuche es erneut.");
+      }
     });
   };
 

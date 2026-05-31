@@ -28,8 +28,13 @@ async function run(req: Request) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const report = await runMatureAffiliateEarnings(db);
-  return NextResponse.json({ ok: true, report });
+  try {
+    const report = await runMatureAffiliateEarnings(db);
+    return NextResponse.json({ ok: true, report });
+  } catch (err) {
+    console.error("[cron:affiliate-mature] failed:", err);
+    return NextResponse.json({ ok: false, error: "Job fehlgeschlagen." }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {

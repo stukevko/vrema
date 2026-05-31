@@ -127,13 +127,24 @@ export async function loadPlanningPendingTrades(companyId: string) {
     where: tenantWhere(companyId, { tradeStatus: ShiftTradeStatus.PENDING_APPROVAL, isDraft: false }),
     include: {
       user: { select: { name: true, email: true } },
-      company: { select: { users: { select: { id: true, name: true, email: true } } } },
     },
     orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
   });
 
+  // Statt der kompletten Firmen-User-Liste pro Trade: nur die tatsächlich
+  // referenzierten Antragsteller in EINER Query nachladen (kein N×Full-Fetch).
+  const requesterIds = [...new Set(rows.map((r) => r.tradeRequestedBy).filter((id): id is string => Boolean(id)))];
+  const requesters =
+    requesterIds.length > 0
+      ? await db.user.findMany({
+          where: tenantWhere(companyId, { id: { in: requesterIds } }),
+          select: { id: true, name: true, email: true },
+        })
+      : [];
+  const requesterById = new Map(requesters.map((u) => [u.id, u]));
+
   const base = rows.map((row) => {
-    const requester = row.company.users.find((u) => u.id === row.tradeRequestedBy);
+    const requester = row.tradeRequestedBy ? requesterById.get(row.tradeRequestedBy) : undefined;
     return {
       id: row.id,
       dayOfWeek: row.dayOfWeek,
