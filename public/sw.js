@@ -1,7 +1,7 @@
 /* VREMA Service Worker — minimal, damit Chrome/Edge die Install-Aufforderung anzeigt.
  * Kein aggressives Caching: wir bleiben „network-first", damit neue Deploys sofort sichtbar sind.
  */
-const CACHE_NAME = "vrema-shell-v1";
+const CACHE_NAME = "vrema-shell-v2";
 const OFFLINE_URL = "/offline.html";
 const PRECACHE_URLS = [OFFLINE_URL, "/vrema_logo.png", "/android-chrome-192x192.png"];
 
@@ -71,4 +71,77 @@ self.addEventListener("fetch", (event) => {
       })
     );
   }
+});
+
+/* ── Web Push ─────────────────────────────────────────────────────────────
+ * Payload (JSON): { title, body, url, unread }
+ * Zeigt die native Notification an und aktualisiert parallel das
+ * Homescreen-Icon-Badge (Badging API) anhand des mitgelieferten unread-Counts.
+ */
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (_) {
+    data = { title: "VREMA", body: event.data ? event.data.text() : "" };
+  }
+
+  const title = data.title || "VREMA";
+  const options = {
+    body: data.body || "",
+    icon: "/android-chrome-192x192.png",
+    badge: "/android-chrome-192x192.png",
+    data: { url: data.url || "/dashboard" },
+    // Gleiche tag → ersetzt statt stapelt (z. B. bei mehreren Updates).
+    tag: data.tag || undefined,
+  };
+
+  event.waitUntil(
+    (async () => {
+      await self.registration.showNotification(title, options);
+      try {
+        if (typeof data.unread === "number" && self.navigator) {
+          if (data.unread > 0 && self.navigator.setAppBadge) {
+            await self.navigator.setAppBadge(data.unread);
+          } else if (self.navigator.clearAppBadge) {
+            await self.navigator.clearAppBadge();
+          }
+        }
+      } catch (_) {
+        /* Badging API optional */
+      }
+    })()
+  );
+});
+
+/* Klick auf die Notification → bestehendes Fenster fokussieren & zur
+ * Ziel-URL navigieren, sonst ein neues Fenster öffnen. */
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/dashboard";
+
+  event.waitUntil(
+    (async () => {
+      const clientsList = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      for (const client of clientsList) {
+        if ("focus" in client) {
+          await client.focus();
+          if ("navigate" in client) {
+            try {
+              await client.navigate(targetUrl);
+            } catch (_) {
+              /* z. B. Cross-Origin – ignorieren */
+            }
+          }
+          return;
+        }
+      }
+      if (self.clients.openWindow) {
+        await self.clients.openWindow(targetUrl);
+      }
+    })()
+  );
 });

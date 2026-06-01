@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardLayoutClient } from "@/components/dashboard/DashboardLayoutClient";
+import { PushBootstrap } from "@/components/pwa/PushBootstrap";
 import { db } from "@/lib/db";
 import { getMyUnreadSupportRepliesCount, countOpenSupportTicketsForSuperAdmin } from "@/lib/actions/support";
 import { countMyUnreadNotifications } from "@/lib/actions/notifications";
@@ -110,6 +111,7 @@ export default async function DashboardLayout({
           dangerouslySetInnerHTML={{ __html: brandStyleCss }}
         />
       ) : null}
+      <PushBootstrap unreadCount={unreadNotifications} />
       <DashboardLayoutClient
         role={role}
         plan={session.user.plan ?? "STARTER"}

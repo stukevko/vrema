@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { NotificationType } from "@prisma/client";
+import { sendPushToUsers } from "@/lib/push/send";
 
 /**
  * Server-only Helper – darf NICHT in Client-Bundles landen.
@@ -14,7 +15,7 @@ export async function createNotification(params: {
   href?: string | null;
 }) {
   try {
-    return await db.notification.create({
+    const created = await db.notification.create({
       data: {
         companyId: params.companyId,
         userId: params.userId,
@@ -25,6 +26,12 @@ export async function createNotification(params: {
       },
       select: { id: true },
     });
+    void sendPushToUsers([params.userId], {
+      title: params.title,
+      body: params.body ?? undefined,
+      url: params.href ?? undefined,
+    });
+    return created;
   } catch {
     return null;
   }
@@ -49,6 +56,11 @@ export async function createNotificationsForUsers(params: {
         body: params.body ?? null,
         href: params.href ?? null,
       })),
+    });
+    void sendPushToUsers(params.userIds, {
+      title: params.title,
+      body: params.body ?? undefined,
+      url: params.href ?? undefined,
     });
     return { count: result.count };
   } catch {

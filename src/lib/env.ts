@@ -56,6 +56,12 @@ const envSchema = z.object({
   STRIPE_ENTERPRISE_MONTHLY: optionalString(),
   STRIPE_ENTERPRISE_YEARLY: optionalString(),
 
+  // ── Web Push / VAPID (optional; Push ist ein Add-on) ──
+  // Public-Key ist NEXT_PUBLIC_*, da ihn der Client zum Abonnieren braucht.
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: optionalString(),
+  VAPID_PRIVATE_KEY: optionalString(),
+  VAPID_SUBJECT: optionalString(),
+
   // ── Weitere Integrationen (optional) ──
   DATABASE_URL: optionalString(),
 });

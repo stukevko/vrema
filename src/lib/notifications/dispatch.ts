@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import type { NotificationType, UserRole } from "@prisma/client";
+import { sendPushToUsers } from "@/lib/push/send";
 
 const DAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
@@ -30,6 +31,11 @@ export async function createNotifications(
       body: payload.body ?? null,
       href: payload.href ?? null,
     })),
+  });
+  void sendPushToUsers(unique, {
+    title: payload.title,
+    body: payload.body,
+    url: payload.href,
   });
 }
 

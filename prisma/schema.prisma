@@ -412,10 +412,29 @@ model User {
   timesheetAcknowledgments TimesheetAcknowledgment[]
   shiftTaskItemsCompleted  ShiftTaskItem[] @relation("ShiftTaskCompletedBy")
   notifications            Notification[]
+  pushSubscriptions        PushSubscription[]
 
   @@index([companyId])
   @@index([email])
   @@unique([companyId, employeeNumber])
+}
+
+/// Web-Push-Abo eines einzelnen Geräts. Ein User kann mehrere Geräte haben
+/// (z. B. Gastro-Tablet im Laden + privates Handy) → 1:n.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  /// Endpoint-URL des Push-Services (eindeutig pro Gerät/Browser).
+  endpoint  String   @unique
+  /// Public-Key des Clients (Base64URL) für die Payload-Verschlüsselung.
+  p256dh    String
+  /// Auth-Secret des Clients (Base64URL).
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 /// Personal-Notification: gehört genau einem Empfänger (User), tenant-isoliert via companyId.
