@@ -1,12 +1,13 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Lock, Fingerprint, UserRound } from "lucide-react";
+import { Lock, Fingerprint, UserRound, Bell } from "lucide-react";
 import { PasswordChangeForm } from "@/components/dashboard/PasswordChangeForm";
 import { PasskeySecurityForm } from "@/components/dashboard/PasskeySecurityForm";
 import { ProfileAvatarForm } from "@/components/dashboard/ProfileAvatarForm";
 import { TerminalPinForm } from "@/components/dashboard/TerminalPinForm";
 import { AvailabilityEditor } from "@/components/dashboard/AvailabilityEditor";
+import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle";
 import { getMyWorkSchedule } from "@/lib/actions/work-schedule";
 import { CalendarOff } from "lucide-react";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
@@ -58,6 +59,14 @@ export default async function EmployeeAccountPage() {
 
       <DashboardSectionCard title="Sicherheit" icon={Fingerprint}>
         <PasskeySecurityForm />
+      </DashboardSectionCard>
+
+      <DashboardSectionCard
+        title="Benachrichtigungen"
+        icon={Bell}
+        description="Push auf dieses Gerät — pro Gerät einzeln steuerbar."
+      >
+        <PushNotificationToggle />
       </DashboardSectionCard>
 
       <DashboardSectionCard title="Verfügbarkeit" icon={CalendarOff}>

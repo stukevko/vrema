@@ -83,6 +83,9 @@ export async function subscribeToPush(interactive = true): Promise<boolean> {
   if (permission !== "granted") return false;
 
   try {
+    // getRegistration() zuerst: verhindert Hänger, wenn (z. B. im Dev) gar
+    // kein Service Worker registriert ist – `ready` würde sonst nie auflösen.
+    if (!(await navigator.serviceWorker.getRegistration())) return false;
     const registration = await navigator.serviceWorker.ready;
     const existing = await registration.pushManager.getSubscription();
     const subscription =
@@ -93,6 +96,19 @@ export async function subscribeToPush(interactive = true): Promise<boolean> {
       }));
     await postSubscription(subscription);
     return true;
+  } catch {
+    return false;
+  }
+}
+
+/** True, wenn auf DIESEM Gerät bereits ein aktives Push-Abo besteht. */
+export async function hasActivePushSubscription(): Promise<boolean> {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return false;
+  try {
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) return false;
+    const subscription = await registration.pushManager.getSubscription();
+    return Boolean(subscription);
   } catch {
     return false;
   }
