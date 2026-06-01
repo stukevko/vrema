@@ -11,6 +11,7 @@ import { assignMissingEmployeeNumbersForCompany } from "@/lib/team/allocate-empl
 import { isOpenShiftPlaceholderEmail } from "@/lib/planning/open-shift-placeholder";
 import { tenantWhere } from "@/lib/tenant-guard";
 import { normalizeCycleWeeks, type ShiftCycleWeeks } from "@/lib/shift-cycle";
+import { normalizeVocabulary, type ShiftVocabulary } from "@/lib/vocabulary";
 import { logServerError } from "@/lib/server-logger";
 
 const MODULE_SELECT = {
@@ -62,6 +63,7 @@ const SHIFT_SELECT = {
 
 export type PlanningManagerPageData = {
   companyName: string;
+  shiftVocabulary: ShiftVocabulary;
   members: Awaited<ReturnType<typeof loadPlanningTeamMembers>>;
   shifts: Awaited<ReturnType<typeof loadPlanningShifts>>;
   vacationConflictDays: Awaited<ReturnType<typeof getVacationConflictDaysForCompany>>;
@@ -100,12 +102,17 @@ export async function loadPlanningShiftCycleWeeks(companyId: string): Promise<Sh
   return normalizeCycleWeeks(company?.shiftCycleWeeks);
 }
 
-export async function loadPlanningCompanyName(companyId: string): Promise<string> {
+export async function loadPlanningCompanyMeta(
+  companyId: string,
+): Promise<{ name: string; shiftVocabulary: ShiftVocabulary }> {
   const company = await db.company.findUnique({
     where: { id: companyId },
-    select: { name: true },
+    select: { name: true, shiftVocabulary: true },
   });
-  return company?.name?.trim() ?? "";
+  return {
+    name: company?.name?.trim() ?? "",
+    shiftVocabulary: normalizeVocabulary(company?.shiftVocabulary),
+  };
 }
 
 export async function loadPlanningCompanyModules(companyId: string): Promise<CompanyModules> {
@@ -230,7 +237,7 @@ export async function loadPlanningManagerPageData(
     loadPlanningShiftCycleWeeks(companyId),
     loadPlanningPendingTrades(companyId),
     getShiftTemplatesForCompany(companyId, role),
-    loadPlanningCompanyName(companyId),
+    loadPlanningCompanyMeta(companyId),
   ]);
 
   const labels = [
@@ -256,7 +263,12 @@ export async function loadPlanningManagerPageData(
   const shiftCycleWeeks = normalizeCycleWeeks(shiftCycleWeeksRaw);
   const pendingTrades = settled[4].status === "fulfilled" ? settled[4].value : [];
   const shiftTemplates = settled[5].status === "fulfilled" ? settled[5].value : [];
-  const companyName = settled[6].status === "fulfilled" ? settled[6].value : "";
+  const companyMeta =
+    settled[6].status === "fulfilled"
+      ? settled[6].value
+      : { name: "", shiftVocabulary: "SHIFT" as ShiftVocabulary };
+  const companyName = companyMeta.name;
+  const shiftVocabulary = companyMeta.shiftVocabulary;
   const companyModules = await loadPlanningCompanyModules(companyId);
 
   let openShifts: Awaited<ReturnType<typeof loadPlanningOpenShifts>> = [];
@@ -285,6 +297,7 @@ export async function loadPlanningManagerPageData(
 
   return {
     companyName,
+    shiftVocabulary,
     members,
     shifts,
     vacationConflictDays,

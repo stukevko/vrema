@@ -249,6 +249,9 @@ model Company {
   isActive          Boolean         @default(true)
   logoUrl           String?
   shiftCycleWeeks   Int             @default(4)
+  /// Branchen-neutrales Vokabular für „Schicht": SHIFT | ASSIGNMENT (Einsatz) | DUTY (Dienst).
+  /// Nur ein UI-Label – die Datenstruktur (Shift) bleibt unverändert.
+  shiftVocabulary   String          @default("SHIFT")
   /// PLZ für Wetter & lokaler Kontext (optional)
   locationZip       String?
   /// Ort für Wetter, falls keine PLZ (optional)

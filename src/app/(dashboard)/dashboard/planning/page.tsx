@@ -27,6 +27,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ShiftTradeApprovalDiff } from "@/components/planning/ShiftTradeApprovalDiff";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { vocabularyLabels } from "@/lib/vocabulary";
 
 const DAY_LABELS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
@@ -51,6 +52,7 @@ export default async function PlanningPage({
 
   if (canManage && companyId) {
     const data = await loadPlanningManagerPageData(companyId, role);
+    const planLabels = vocabularyLabels(data.shiftVocabulary);
     const initialFocusWeek = parsePlannerWeekIndex(params.focusWeek, data.shiftCycleWeeks);
     const initialAutopilotAction =
       params.autopilot === "suggest" ? "suggest" : params.autopilot === "1" ? "focus" : null;
@@ -67,14 +69,14 @@ export default async function PlanningPage({
           variant="card"
           icon={CalendarClock}
           eyebrow="Planung"
-          title="Schichtplan"
+          title={planLabels.planTitle}
           description="Person wählen · Tag antippen · PDF teilen. Mitarbeitende sehen nur ihren Plan."
           className="hidden md:block"
         />
         <DashboardPageHeader
           variant="plain"
           eyebrow="Planung"
-          title="Schichtplan"
+          title={planLabels.planTitle}
           description="Person → Tag (+) · Wischen = andere Tage"
           className="md:hidden"
         />

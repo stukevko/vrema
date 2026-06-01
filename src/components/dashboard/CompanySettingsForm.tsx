@@ -4,6 +4,7 @@ import { userErrorMessage } from "@/lib/errors/user-message";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateCompanySettings } from "@/lib/actions/settings";
+import { VOCABULARY_OPTIONS } from "@/lib/vocabulary";
 import { RevenueCsvImport } from "@/components/dashboard/RevenueCsvImport";
 import { Loader2, Save, ShieldCheck } from "lucide-react";
 import { GERMAN_REGION_LABELS, type GermanRegion } from "@/lib/holidays/de";
@@ -40,6 +41,7 @@ interface Props {
     plan: string;
     logoUrl: string | null;
     shiftCycleWeeks: number;
+    shiftVocabulary: string;
     locationZip: string | null;
     locationCity: string | null;
     estimatedWeeklyRevenue: number | null;
@@ -54,6 +56,7 @@ export function CompanySettingsForm({ company }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [shiftCycleWeeks, setShiftCycleWeeks] = useState(String(company.shiftCycleWeeks ?? 1));
+  const [shiftVocabulary, setShiftVocabulary] = useState(company.shiftVocabulary ?? "SHIFT");
   const [industry, setIndustry] = useState<IndustryValue | "">(company.industry ?? "");
   const [region, setRegion] = useState<GermanRegion | "">(
     (company.region as GermanRegion | null) ?? "",
@@ -72,6 +75,7 @@ export function CompanySettingsForm({ company }: Props) {
         await updateCompanySettings({
           name: fd.get("name") as string,
           shiftCycleWeeks: Number(shiftCycleWeeks),
+          shiftVocabulary,
           locationZip: String(fd.get("locationZip") ?? "").trim() || null,
           locationCity: String(fd.get("locationCity") ?? "").trim() || null,
           estimatedWeeklyRevenue:
@@ -251,6 +255,27 @@ export function CompanySettingsForm({ company }: Props) {
           </select>
           <p className="text-[10px] text-muted-foreground mt-1 font-sans">
             Wie viele Kalenderwochen du im Planer gleichzeitig belegen kannst (bis zu 4 Wochen voraus).
+          </p>
+        </div>
+
+        <div>
+          <label className="text-[10px] text-muted-foreground font-sans uppercase tracking-widest mb-1.5 block">
+            Begriff im Plan
+          </label>
+          <select
+            value={shiftVocabulary}
+            onChange={(e) => setShiftVocabulary(e.target.value)}
+            className="w-full min-w-0 px-3 py-3 sm:py-2.5 rounded-xl bg-white border border-border text-foreground text-sm focus:outline-none focus:border-primary/40 transition-colors"
+          >
+            {VOCABULARY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label} ({opt.hint})
+              </option>
+            ))}
+          </select>
+          <p className="text-[10px] text-muted-foreground mt-1 font-sans">
+            Wie dein Team Arbeitszeiten nennt — z. B. „Schicht", „Einsatz" oder „Dienst". Wirkt im
+            ganzen Plan, ohne deine Daten zu verändern.
           </p>
         </div>
 

@@ -5,6 +5,7 @@ import { requireTenant, tenantWhere } from "@/lib/tenant-guard";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { industryModuleDefaults } from "@/lib/company-modules";
+import { normalizeVocabulary } from "@/lib/vocabulary";
 
 export async function getCompanySettings() {
   const { companyId } = await requireTenant();
@@ -18,6 +19,7 @@ export async function getCompanySettings() {
       plan: true,
       logoUrl: true,
       shiftCycleWeeks: true,
+      shiftVocabulary: true,
       locationZip: true,
       locationCity: true,
       estimatedWeeklyRevenue: true,
@@ -30,6 +32,7 @@ export async function getCompanySettings() {
 export async function updateCompanySettings(data: {
   name?: string;
   shiftCycleWeeks?: number;
+  shiftVocabulary?: string;
   locationZip?: string | null;
   locationCity?: string | null;
   estimatedWeeklyRevenue?: number | null;
@@ -66,6 +69,9 @@ export async function updateCompanySettings(data: {
       ...(data.name ? { name: data.name.trim() } : {}),
       ...(typeof data.shiftCycleWeeks === "number" && Number.isFinite(data.shiftCycleWeeks)
         ? { shiftCycleWeeks: Math.min(4, Math.max(1, Math.floor(data.shiftCycleWeeks))) }
+        : {}),
+      ...(data.shiftVocabulary !== undefined
+        ? { shiftVocabulary: normalizeVocabulary(data.shiftVocabulary) }
         : {}),
       ...(data.locationZip !== undefined
         ? { locationZip: data.locationZip?.trim() ? data.locationZip.trim() : null }
