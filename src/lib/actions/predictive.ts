@@ -30,7 +30,7 @@ export async function getStaffingForecastHorizon(): Promise<StaffingForecastHori
     where: { id: companyId },
     select: { shiftCycleWeeks: true },
   });
-  const cycleWeeks = company?.shiftCycleWeeks ?? 1;
+  const cycleWeeks = normalizeCycleWeeks(company?.shiftCycleWeeks);
   const slots = buildForecastHorizon(cycleWeeks);
 
   const weeks = await Promise.all(

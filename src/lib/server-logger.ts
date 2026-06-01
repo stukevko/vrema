@@ -27,41 +27,68 @@ export function logServerError(scope: string, err: unknown, extra?: Record<strin
   const dsn = process.env.SENTRY_DSN;
   if (!dsn) return;
   try {
-    const url = buildSentryStoreUrl(dsn);
-    if (!url) return;
+    const target = buildSentryEnvelopeUrl(dsn);
+    if (!target) return;
+
+    const eventId = randomEventId();
+    const sentAt = new Date().toISOString();
+    const event = {
+      event_id: eventId,
+      timestamp: Date.now() / 1000,
+      message: payload.message,
+      level: "error",
+      platform: "node",
+      environment: process.env.NODE_ENV,
+      release: process.env.SENTRY_RELEASE,
+      tags: { scope },
+      extra: extra ?? {},
+      exception: payload.stack
+        ? { values: [{ type: payload.name ?? "Error", value: payload.message, stacktrace: { frames: [{ filename: "<server>" }] } }] }
+        : undefined,
+    };
+
+    // Sentry-Envelope: Header-Zeile, Item-Header-Zeile, Item-Payload-Zeile (NDJSON).
+    const body =
+      JSON.stringify({ event_id: eventId, sent_at: sentAt, dsn }) +
+      "\n" +
+      JSON.stringify({ type: "event" }) +
+      "\n" +
+      JSON.stringify(event) +
+      "\n";
+
     // Fire-and-forget. Wir ignorieren Errors absichtlich.
-    void fetch(url.endpoint, {
+    void fetch(target.endpoint, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "X-Sentry-Auth": `Sentry sentry_version=7, sentry_key=${url.publicKey}, sentry_client=vrema/0.1`,
+        "Content-Type": "application/x-sentry-envelope",
+        "X-Sentry-Auth": `Sentry sentry_version=7, sentry_key=${target.publicKey}, sentry_client=vrema/0.1`,
       },
-      body: JSON.stringify({
-        message: payload.message,
-        level: "error",
-        platform: "node",
-        environment: process.env.NODE_ENV,
-        release: process.env.SENTRY_RELEASE,
-        tags: { scope },
-        extra: extra ?? {},
-        exception: payload.stack
-          ? { values: [{ type: payload.name ?? "Error", value: payload.message, stacktrace: { frames: [{ filename: "<server>" }] } }] }
-          : undefined,
-      }),
+      body,
     }).catch(() => {});
   } catch {
     /* ignore */
   }
 }
 
-function buildSentryStoreUrl(dsn: string): { endpoint: string; publicKey: string } | null {
+function randomEventId(): string {
+  // 32-stelliger Hex-String ohne Bindestriche (Sentry-Format).
+  try {
+    return globalThis.crypto.randomUUID().replace(/-/g, "");
+  } catch {
+    let s = "";
+    for (let i = 0; i < 32; i++) s += Math.floor(Math.random() * 16).toString(16);
+    return s;
+  }
+}
+
+function buildSentryEnvelopeUrl(dsn: string): { endpoint: string; publicKey: string } | null {
   // DSN-Form: https://<publicKey>@<host>/<projectId>
   try {
     const u = new URL(dsn);
     const publicKey = u.username;
     const projectId = u.pathname.replace(/^\//, "");
     if (!publicKey || !projectId) return null;
-    return { endpoint: `${u.protocol}//${u.host}/api/${projectId}/store/`, publicKey };
+    return { endpoint: `${u.protocol}//${u.host}/api/${projectId}/envelope/`, publicKey };
   } catch {
     return null;
   }

@@ -1,6 +1,7 @@
 "use server";
 
 import { stripe, PLANS } from "@/lib/stripe";
+import { env } from "@/lib/env";
 import { requireTenant } from "@/lib/tenant-guard";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -107,7 +108,7 @@ export async function createCheckoutSession(plan: PlanKey, interval: Interval) {
   }
 
   const priceId = PLANS[plan].priceIds[interval];
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL!;
+  const baseUrl = env.NEXT_PUBLIC_APP_URL;
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",

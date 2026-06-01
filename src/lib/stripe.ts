@@ -1,19 +1,10 @@
 import Stripe from "stripe";
+import { env } from "@/lib/env";
 
-// Hard-Fail in Production: ein fehlender Stripe-Secret darf nicht stillschweigend
-// in den Build/Boot rutschen. In Development/Test darf ein Test-Dummy laufen,
-// damit lokale Pre-Auth-Flows (Onboarding-Skip) ohne Stripe getestet werden können.
-const isProduction = process.env.NODE_ENV === "production";
-const stripeSecret = (() => {
-  const raw = process.env.STRIPE_SECRET_KEY?.trim();
-  if (raw) return raw;
-  if (isProduction) {
-    throw new Error(
-      "[VREMA] STRIPE_SECRET_KEY ist in Production zwingend erforderlich. Bitte env-Variable setzen.",
-    );
-  }
-  return "sk_test_dummy";
-})();
+// Production-Pflicht wird zentral in `@/lib/env` erzwungen (Boot-Fail-Fast).
+// In Development/Test darf ein Test-Dummy laufen, damit lokale Pre-Auth-Flows
+// (Onboarding-Skip) ohne Stripe getestet werden können.
+const stripeSecret = env.STRIPE_SECRET_KEY.trim() || "sk_test_dummy";
 
 export const stripe = new Stripe(stripeSecret, {
   apiVersion: "2026-04-22.dahlia",
@@ -26,8 +17,8 @@ export const PLANS = {
     monthlyPrice: 29,
     yearlyPrice: 24, // ~2 months free
     priceIds: {
-      monthly: process.env.STRIPE_STARTER_MONTHLY!,
-      yearly: process.env.STRIPE_STARTER_YEARLY!,
+      monthly: env.STRIPE_STARTER_MONTHLY ?? "",
+      yearly: env.STRIPE_STARTER_YEARLY ?? "",
     },
     limits: {
       employees: 10,
@@ -49,8 +40,8 @@ export const PLANS = {
     monthlyPrice: 79,
     yearlyPrice: 66,
     priceIds: {
-      monthly: process.env.STRIPE_BUSINESS_MONTHLY!,
-      yearly: process.env.STRIPE_BUSINESS_YEARLY!,
+      monthly: env.STRIPE_BUSINESS_MONTHLY ?? "",
+      yearly: env.STRIPE_BUSINESS_YEARLY ?? "",
     },
     limits: {
       employees: 100,
@@ -72,8 +63,8 @@ export const PLANS = {
     monthlyPrice: null,
     yearlyPrice: null,
     priceIds: {
-      monthly: process.env.STRIPE_ENTERPRISE_MONTHLY!,
-      yearly: process.env.STRIPE_ENTERPRISE_YEARLY!,
+      monthly: env.STRIPE_ENTERPRISE_MONTHLY ?? "",
+      yearly: env.STRIPE_ENTERPRISE_YEARLY ?? "",
     },
     limits: {
       employees: Infinity,

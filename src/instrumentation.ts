@@ -11,8 +11,12 @@
  * Doku: https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation
  */
 export async function register(): Promise<void> {
+  // Zentrale Env-Validierung ganz am Anfang des Lifecycles: fehlende kritische
+  // Variablen führen hier zu einem klar lesbaren Boot-Fehler statt zu einem
+  // späteren Kaltstart-Crash mit kryptischem `digest`.
+  await import("@/lib/env");
   // eslint-disable-next-line no-console
-  console.log("[vrema:instrumentation] registered – server-side error reporting active");
+  console.log("[vrema:instrumentation] registered – env validated, server-side error reporting active");
 }
 
 type ErrorContext = {
