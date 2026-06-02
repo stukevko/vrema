@@ -13,13 +13,7 @@ import { getEmployeeCockpitData } from "@/lib/dashboard/employee-cockpit-data";
 import { SaldoWidget } from "@/components/dashboard/SaldoWidget";
 import { calculateSaldo } from "@/lib/actions/worklogs";
 import {
-  Users,
   CalendarDays,
-  Clock,
-  ListChecks,
-  TriangleAlert,
-  ClipboardCheck,
-  ChevronDown,
   CalendarPlus,
   FileText,
   PartyPopper,
@@ -48,12 +42,8 @@ import { getTodayShiftTaskWall } from "@/lib/shift-tasks/wall";
 import { formatBerlinDate, formatBerlinTime, getBerlinNowHour, getDayBoundsUtc } from "@/lib/time/timezone";
 import { sumPersonnelCostEuro, workedMinutesForCostEstimate } from "@/lib/time/payroll";
 import { logServerError } from "@/lib/server-logger";
-import { resolveLucideIcon } from "@/lib/icons/safe-lucide";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 import type { CompanyModules } from "@/lib/company-modules";
-import { getVacationConflictDaysForPlanning } from "@/lib/actions/vacation";
-import { getManagerFocusSnapshot } from "@/lib/dashboard/manager-focus-snapshot";
-import { ManagerFocusCards } from "@/components/dashboard/ManagerFocusCards";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 /**
@@ -333,17 +323,6 @@ export default async function DashboardPage({
 
   const focus = teamStats ? managerPrimaryFocus(teamStats, companyModules) : null;
 
-  const managerFocusSnapshot =
-    isManager && teamStats
-      ? await safe(
-          getVacationConflictDaysForPlanning().then((conflicts) =>
-            getManagerFocusSnapshot(companyId, teamStats, companyModules, conflicts),
-          ),
-          "dashboard.managerFocus",
-          null,
-        )
-      : null;
-
   // Hero-KPI: Personalkosten heute (guarded: keine Epoch-Phantom-Minuten).
   const todayPersonnelCostsEuro =
     teamTodayLogs && teamTodayLogs.length > 0 ? sumPersonnelCostEuro(teamTodayLogs, now) : 0;
@@ -370,12 +349,6 @@ export default async function DashboardPage({
           />
         </div>
       )}
-
-      {managerFocusSnapshot ? (
-        <div className="order-2 min-w-0 max-md:order-1">
-          <ManagerFocusCards snapshot={managerFocusSnapshot} />
-        </div>
-      ) : null}
 
       {teamStats && (
         <div className="order-1 mt-1 min-w-0 max-md:order-2 sm:mt-2">
@@ -494,163 +467,25 @@ export default async function DashboardPage({
 
           <LiveOperationsWidget rows={liveOpsRows} />
 
-          {companyModules.shiftTrade &&
-            teamStats.pendingTradeApprovals > 0 &&
-            !focus.href.startsWith("/dashboard/planning") && (
-            <Link
-              href="/dashboard/planning#shift-trade-approvals"
-              className="block rounded-2xl border border-warning/30 bg-warning-soft px-5 py-4 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-warning/45 hover:shadow-[var(--shadow-card-hover)] active:brightness-95 dark:border-white/10 dark:bg-warning/18"
-            >
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-warning-foreground">Offene Aufgaben</p>
-              <p className="mt-1 text-base font-bold text-warning-foreground">
-                {teamStats.pendingTradeApprovals} Tauschanfragen warten auf deine Freigabe
-              </p>
-            </Link>
-          )}
-          {teamStats.pendingCorrections > 0 && !focus.href.includes("zeitkorrekturen") && (
-            <Link
-              href="/dashboard/reports#zeitkorrekturen"
-              className="block rounded-2xl border border-brand/28 bg-brand-soft px-5 py-4 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-brand/40 hover:shadow-[var(--shadow-card-hover)] active:brightness-95 dark:border-white/10 dark:bg-brand/22"
-            >
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">Compliance · Zeitkorrekturen</p>
-              <p className="mt-1 text-base font-bold text-brand dark:text-brand-foreground">
-                {teamStats.pendingCorrections} {teamStats.pendingCorrections === 1 ? "Antrag" : "Anträge"} mit Vorher/Nachher prüfen
-              </p>
-              <p className="mt-1 text-xs text-fg-muted">Direkt zu den Zeitkorrekturen in den Berichten.</p>
-            </Link>
-          )}
-
-          <details className="group rounded-2xl glass-panel">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-left marker:content-none [&::-webkit-details-marker]:hidden">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Details</p>
-                <p className="text-sm font-semibold text-foreground">Team & Kennzahlen anzeigen</p>
-              </div>
-              <ChevronDown
-                className="h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180"
-                aria-hidden
-              />
-            </summary>
-            <div className="space-y-4 border-t border-border px-5 pb-5 pt-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground">Kurzzugriff</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Häufig genutzte Bereiche</p>
-                </div>
-                <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:max-w-md sm:grid-cols-3">
-                  <Link
-                    href="/dashboard/planning"
-                    className="flex min-h-12 items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] md:hover:bg-card/70"
-                  >
-                    Wochenplan
-                  </Link>
-                  <Link
-                    href="/dashboard/reports"
-                    className="flex min-h-12 items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] md:hover:bg-card/70"
-                  >
-                    Zeiten
-                  </Link>
-                  <Link
-                    href="/dashboard/vacation"
-                    className="flex min-h-12 items-center justify-center rounded-2xl border border-border px-4 text-sm font-medium text-foreground transition-all active:scale-[0.99] md:hover:bg-card/70"
-                  >
-                    Urlaub
-                  </Link>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-2 text-xs md:grid-cols-2 xl:grid-cols-3">
-                <div className="rounded-2xl border border-line bg-surface px-3 py-2 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/85">
-                  <span className="text-muted-foreground">Fehlend heute</span>
-                  <p className={`mt-1 font-semibold ${teamStats.absentToday > 0 ? "text-danger" : "text-brand"}`}>
-                    {teamStats.absentToday > 0 ? `${teamStats.absentToday} kritisch` : "Keine offenen Ausfälle"}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-line bg-surface px-3 py-2 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/85">
-                  <span className="text-muted-foreground">Zu spät heute</span>
-                  <p className={`mt-1 font-semibold ${teamStats.lateToday > 0 ? "text-warning" : "text-brand"}`}>
-                    {teamStats.lateToday > 0 ? `${teamStats.lateToday} Hinweise` : "Alles pünktlich"}
-                  </p>
-                </div>
-                {teamStats.pendingCorrections > 0 ? (
-                  <Link
-                    href="/dashboard/reports#zeitkorrekturen"
-                    className="block rounded-2xl border border-line bg-surface px-3 py-2 shadow-[var(--shadow-card)] transition-colors duration-150 hover:border-brand/40 hover:bg-card/80 dark:border-white/10 dark:bg-surface/85"
-                  >
-                    <span className="text-muted-foreground">Unbestätigte Zeiten</span>
-                    <p className="mt-1 font-semibold text-warning">
-                      {teamStats.pendingCorrections} offen · Korrekturen prüfen →
-                    </p>
-                  </Link>
-                ) : (
-                  <div className="rounded-2xl border border-line bg-surface px-3 py-2 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/85">
-                    <span className="text-muted-foreground">Unbestätigte Zeiten</span>
-                    <p className="mt-1 font-semibold text-brand">Keine offenen Korrekturen</p>
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0 max-w-full overflow-x-hidden md:overflow-visible">
-                <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-visible pb-2 pt-1 scrollbar-hide md:grid md:snap-none md:grid-cols-2 md:gap-4 md:overflow-visible md:pb-0 md:pt-0 xl:grid-cols-3 2xl:grid-cols-6">
-                {(
-                  [
-                    { label: "Mitarbeiter gesamt", value: teamStats.totalEmployees, icon: Users, iconClass: "text-brand", valueClass: "text-brand", href: "/dashboard/team" },
-                    { label: "Heute aktiv", value: teamStats.activeToday, icon: Clock, iconClass: "text-brand", valueClass: "text-brand", href: "/dashboard/reports" },
-                    { label: "Urlaubsanträge", value: teamStats.pendingVacations, icon: CalendarDays, iconClass: "text-warning", valueClass: "text-warning", href: "/dashboard/vacation#team-vacation-requests", actionable: teamStats.pendingVacations > 0 ? "Mit Resturlaub & Konflikten prüfen" : undefined },
-                    { label: "Fehlend heute", value: teamStats.absentToday, icon: TriangleAlert, iconClass: "text-danger", valueClass: "text-danger", href: "/dashboard/reports" },
-                    { label: "Zu spät heute", value: teamStats.lateToday, icon: TriangleAlert, iconClass: "text-warning", valueClass: "text-warning", href: "/dashboard/planning" },
-                    { label: "Offene Zeitfreigaben", value: teamStats.pendingCorrections, icon: ClipboardCheck, iconClass: "text-brand", valueClass: "text-brand", href: "/dashboard/reports#zeitkorrekturen", actionable: teamStats.pendingCorrections > 0 ? "Korrekturen prüfen" : undefined },
-                  ] as Array<{
-                    label: string;
-                    value: number;
-                    icon: typeof Users;
-                    iconClass: string;
-                    valueClass: string;
-                    href?: string;
-                    actionable?: string;
-                  }>
-                ).map((stat) => {
-                  const StatIcon = resolveLucideIcon(stat.icon);
-                  const inner = (
-                    <>
-                      <div className="mb-3 flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground">{stat.label}</p>
-                        <StatIcon className={`h-4 w-4 ${stat.iconClass}`} aria-hidden />
-                      </div>
-                      <p className={`min-w-0 max-w-full text-[clamp(1.25rem,5vw,1.875rem)] font-bold leading-tight tabular-nums ${stat.valueClass}`}>
-                        {stat.value}
-                      </p>
-                      {stat.actionable ? (
-                        <p className="mt-1 text-[11px] font-semibold text-foreground/80">
-                          {stat.actionable} →
-                        </p>
-                      ) : null}
-                    </>
-                  );
-                  const baseClass =
-                    "w-[calc(100%-0.5rem)] max-w-[min(100%,20rem)] shrink-0 snap-center rounded-2xl glass-panel p-5 transition-all max-[380px]:w-full sm:p-6 md:w-auto md:max-w-none md:min-w-0";
-                  if (stat.href && stat.value > 0) {
-                    return (
-                      <Link
-                        key={stat.label}
-                        href={stat.href}
-                        className={`${baseClass} block hover:border-brand/35 hover:bg-card/80 active:brightness-95`}
-                      >
-                        {inner}
-                      </Link>
-                    );
-                  }
-                  return (
-                    <div
-                      key={stat.label}
-                      className={`${baseClass} md:hover:bg-card/80`}
-                    >
-                      {inner}
-                    </div>
-                  );
-                })}
-                </div>
-              </div>
-            </div>
-          </details>
+          {/* Schlanker Schnellzugriff statt redundantem Kennzahlen-Block —
+              die Detailzahlen leben in /team und /reports. */}
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                { href: "/dashboard/planning", label: "Wochenplan" },
+                { href: "/dashboard/reports", label: "Zeiten" },
+                { href: "/dashboard/vacation", label: "Urlaub" },
+              ] as const
+            ).map((q) => (
+              <Link
+                key={q.href}
+                href={q.href}
+                className="flex min-h-11 items-center justify-center rounded-2xl border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors active:scale-[0.99] md:hover:border-brand/35 md:hover:bg-card/80"
+              >
+                {q.label}
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 

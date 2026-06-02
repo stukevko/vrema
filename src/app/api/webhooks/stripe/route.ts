@@ -6,6 +6,7 @@ import type Stripe from "stripe";
 import { applyCheckoutSessionCompleted } from "@/lib/actions/billing";
 import {
   reactivateTenantFromPaidInvoice,
+  setTenantBillingAccess,
   suspendTenantFromFailedInvoice,
 } from "@/lib/billing/stripe-invoice-tenant";
 import {
@@ -88,14 +89,19 @@ export async function POST(req: NextRequest) {
         const { companyId, plan } = sub.metadata ?? {};
         if (!companyId) break;
 
+        // Plan & Laufzeit immer spiegeln …
         await db.company.update({
           where: { id: companyId },
           data: {
             plan: (plan as "STARTER" | "BUSINESS" | "ENTERPRISE") ?? undefined,
             subEndsAt: sub.cancel_at ? new Date(sub.cancel_at * 1000) : null,
-            isActive: sub.status === "active",
           },
         });
+        // … Zugang aber NUR über den zentralen Guard (respektiert billingExempt
+        // + laufende Testphase). `trialing` zählt als aktiv, sonst würden Kunden
+        // in der Stripe-Testphase ausgesperrt.
+        const isActiveStatus = sub.status === "active" || sub.status === "trialing";
+        await setTenantBillingAccess(companyId, isActiveStatus);
         break;
       }
 
@@ -109,9 +115,10 @@ export async function POST(req: NextRequest) {
           data: {
             plan: "STARTER",
             stripeSubId: null,
-            isActive: false,
           },
         });
+        // Deaktivieren nur über den Guard — billingExempt/Trial bleiben unberührt.
+        await setTenantBillingAccess(companyId, false);
         break;
       }
 

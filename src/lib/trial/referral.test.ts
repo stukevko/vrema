@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  FLYER_CAMPAIGN_CODES,
   FLYER_TRIAL_DAYS,
   addDays,
   computeFlyerTrialEndsAt,
@@ -33,6 +34,15 @@ describe("isFlyerReferralCode", () => {
     expect(isFlyerReferralCode("")).toBe(false);
     expect(isFlyerReferralCode("aff_partner123")).toBe(false);
   });
+
+  it("jede registrierte Kampagne wird inkl. Unter-Codes erkannt", () => {
+    for (const code of FLYER_CAMPAIGN_CODES) {
+      expect(isFlyerReferralCode(code)).toBe(true);
+      expect(isFlyerReferralCode(`${code}-altstadt`)).toBe(true);
+      expect(isFlyerReferralCode(`${code}_dom`)).toBe(true);
+      expect(isFlyerReferralCode(`${code.toUpperCase()}`)).toBe(true);
+    }
+  });
 });
 
 describe("addDays / computeFlyerTrialEndsAt", () => {
@@ -59,5 +69,13 @@ describe("flyerReferralDisplayName", () => {
 
   it("fremde Codes werden nur normalisiert zurückgegeben", () => {
     expect(flyerReferralDisplayName("Berlin-Mitte")).toBe("berlin-mitte");
+  });
+
+  it("registrierte Kampagnen erhalten einen kapitalisierten Anzeigenamen", () => {
+    for (const code of FLYER_CAMPAIGN_CODES) {
+      const expected = `${code.charAt(0).toUpperCase()}${code.slice(1)} Flyer-Aktion`;
+      expect(flyerReferralDisplayName(code)).toBe(expected);
+      expect(flyerReferralDisplayName(`${code}-altstadt`)).toBe(expected);
+    }
   });
 });

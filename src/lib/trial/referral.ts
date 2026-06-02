@@ -1,5 +1,24 @@
-/** Flyer-Aktion Speyer: 30 Tage kostenlos ohne Stripe-Zwang. */
+/** Flyer-/QR-Aktionen: 30 Tage kostenlos ohne Stripe-Zwang. */
 export const FLYER_TRIAL_DAYS = 30;
+
+/**
+ * Aktive Flyer-/QR-Kampagnen (Allowlist – schützt vor „Gratis-30-Tage" über
+ * beliebige `?ref=`-Links). Eine neue Stadt/Aktion freischalten = HIER EINE
+ * Zeile ergänzen. Pro Eintrag gelten der Code selbst sowie Unter-Codes mit
+ * `-` oder `_` (z. B. "speyer" deckt "speyer-altstadt" und "speyer_dom" ab).
+ */
+export const FLYER_CAMPAIGN_CODES = ["speyer"] as const;
+
+/** Liefert den Kampagnen-Basiscode, dem ein Ref-Code zugeordnet ist (oder null). */
+function matchedFlyerCampaign(code: string): string | null {
+  const normalized = normalizeReferralCode(code);
+  if (!normalized) return null;
+  return (
+    FLYER_CAMPAIGN_CODES.find(
+      (c) => normalized === c || normalized.startsWith(`${c}-`) || normalized.startsWith(`${c}_`),
+    ) ?? null
+  );
+}
 
 /** Entspricht date-fns `addDays` — bewusst ohne Extra-Dependency. */
 export function addDays(date: Date, days: number): Date {
@@ -26,13 +45,7 @@ export function publicCampaignRefUrl(code: string): string {
  * Affiliate-Codes werden separat über die Affiliate-Tabelle aufgelöst.
  */
 export function isFlyerReferralCode(code: string): boolean {
-  const normalized = normalizeReferralCode(code);
-  if (!normalized) return false;
-  return (
-    normalized === "speyer" ||
-    normalized.startsWith("speyer-") ||
-    normalized.startsWith("speyer_")
-  );
+  return matchedFlyerCampaign(code) !== null;
 }
 
 export function computeFlyerTrialEndsAt(from = new Date()): Date {
@@ -40,7 +53,9 @@ export function computeFlyerTrialEndsAt(from = new Date()): Date {
 }
 
 export function flyerReferralDisplayName(code: string): string {
-  const n = normalizeReferralCode(code);
-  if (n === "speyer" || n.startsWith("speyer")) return "Speyer Flyer-Aktion";
-  return n;
+  const campaign = matchedFlyerCampaign(code);
+  if (campaign) {
+    return `${campaign.charAt(0).toUpperCase()}${campaign.slice(1)} Flyer-Aktion`;
+  }
+  return normalizeReferralCode(code);
 }

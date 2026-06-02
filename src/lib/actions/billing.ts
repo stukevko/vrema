@@ -33,10 +33,7 @@ export async function applyCheckoutSessionCompleted(data: {
 
 export async function createCardSetupSession() {
   const { companyId, userId } = await requireTenant();
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL;
-  if (!baseUrl) {
-    redirect("/setup?payment=error");
-  }
+  const baseUrl = env.NEXT_PUBLIC_APP_URL;
 
   const company = await db.company.findUnique({
     where: { id: companyId },
@@ -149,7 +146,7 @@ export async function createBillingPortalSession() {
 
   const session = await stripe.billingPortal.sessions.create({
     customer: company.stripeCustomerId,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing`,
+    return_url: `${env.NEXT_PUBLIC_APP_URL}/dashboard/billing`,
   });
 
   redirect(session.url);
