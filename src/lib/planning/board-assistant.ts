@@ -73,7 +73,7 @@ export function evaluateMemberAssignmentRisk(input: {
   const plannedH = input.plannedWeekMinutes / 60;
 
   if (input.saldo?.isCriticalOvertime) {
-    reasons.push(`${Math.round(Math.abs(saldoHours))} Überstunden im Saldo`);
+    reasons.push(`${Math.round(Math.abs(saldoHours))} Überstunden diese Woche`);
     level = "warn";
   } else if (input.saldo && input.saldo.saldoMinutes > 8 * 60) {
     reasons.push(`${formatSaldoHours(input.saldo.saldoMinutes)} Überstunden`);

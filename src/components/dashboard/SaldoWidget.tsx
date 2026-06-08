@@ -8,6 +8,8 @@ interface SaldoWidgetProps {
   workedMinutes: number;
   expectedMinutes: number;
   saldoMinutes: number;
+  /** z. B. "KW 40" — macht klar, dass es die laufende Woche ist, kein Gesamt-Saldo. */
+  weekLabel?: string;
   hasWorkLogs?: boolean;
 }
 
@@ -22,6 +24,7 @@ export function SaldoWidget({
   workedMinutes,
   expectedMinutes,
   saldoMinutes,
+  weekLabel,
   hasWorkLogs = true,
 }: SaldoWidgetProps) {
   const isPositive = saldoMinutes > 0;
@@ -34,9 +37,11 @@ export function SaldoWidget({
   if (!hasWorkLogs) {
     return (
       <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
-        <h2 className="mb-3 text-lg font-semibold">Stunden-Saldo</h2>
+        <h2 className="mb-3 text-lg font-semibold">
+          Stunden-Saldo{weekLabel ? ` · ${weekLabel}` : ""}
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Noch keine erfassten Zeiten. Stempel einmal, damit hier Soll und Ist sichtbar werden.
+          Noch keine erfassten Zeiten. Stempel einmal, damit Soll und Ist dieser Woche sichtbar werden.
         </p>
         <Link
           href="#terminal-widget"
@@ -50,7 +55,9 @@ export function SaldoWidget({
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
-      <h2 className="mb-6 text-lg font-semibold">Stunden-Saldo</h2>
+      <h2 className="mb-6 text-lg font-semibold">
+        Stunden-Saldo{weekLabel ? ` · ${weekLabel}` : ""}
+      </h2>
 
       <div className="flex items-center gap-4 mb-6">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
@@ -71,7 +78,7 @@ export function SaldoWidget({
             {isPositive && "+"}{isZero ? "0h 00m" : formatMinutes(saldoMinutes)}
           </p>
           <p className="text-xs text-muted-foreground">
-            {isPositive ? "Überstunden" : isZero ? "Ausgeglichen" : "Minusstunden"}
+            {isPositive ? "Plus diese Woche" : isZero ? "Ausgeglichen diese Woche" : "Minus diese Woche"}
           </p>
         </div>
       </div>
@@ -79,8 +86,8 @@ export function SaldoWidget({
       {/* Progress bar */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Gearbeitet: {worked}h</span>
-          <span>Soll: {expected}h</span>
+          <span>Ist (Woche): {worked}h</span>
+          <span>Soll (Woche): {expected}h</span>
         </div>
         <div className="h-2 bg-card rounded-full overflow-hidden">
           <motion.div
@@ -90,7 +97,9 @@ export function SaldoWidget({
             className={`h-full rounded-full ${isPositive ? "bg-primary" : "bg-red-500"}`}
           />
         </div>
-        <p className="text-xs text-muted-foreground text-right">{percentage.toFixed(0)}% der Sollzeit</p>
+        <p className="text-xs text-muted-foreground text-right">
+          {percentage.toFixed(0)}% des Wochen-Solls{weekLabel ? ` (${weekLabel})` : ""}
+        </p>
       </div>
     </div>
   );

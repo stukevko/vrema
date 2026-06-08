@@ -214,3 +214,45 @@ export function berlinDateKeyToDayOfWeek(dateKey: string) {
   return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
 }
 
+function berlinDateKeyAddDays(dateKey: string, days: number): string {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const next = new Date(Date.UTC(y, m - 1, d + days));
+  const ny = next.getUTCFullYear();
+  const nm = String(next.getUTCMonth() + 1).padStart(2, "0");
+  const nd = String(next.getUTCDate()).padStart(2, "0");
+  return `${ny}-${nm}-${nd}`;
+}
+
+/** ISO-Kalenderwoche (1–53) für ein Datum in Europe/Berlin. */
+export function getBerlinIsoWeekNumber(reference = new Date()): number {
+  const key = getBerlinDateKey(reference);
+  const [y, m, d] = key.split("-").map(Number);
+  const target = new Date(Date.UTC(y, m - 1, d));
+  const dayNr = (target.getUTCDay() + 6) % 7;
+  target.setUTCDate(target.getUTCDate() - dayNr + 3);
+  const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
+  const diff = (target.getTime() - firstThursday.getTime()) / 86_400_000;
+  return 1 + Math.floor(diff / 7);
+}
+
+/** Montag 00:00 bis nächster Montag 00:00 (exclusive), Europe/Berlin. */
+export function getIsoWeekBoundsUtc(reference = new Date(), timeZone = BERLIN_TZ) {
+  const key = getBerlinDateKey(reference);
+  const dow = berlinDateKeyToDayOfWeek(key);
+  const daysFromMonday = dow === 0 ? 6 : dow - 1;
+  const mondayKey = berlinDateKeyAddDays(key, -daysFromMonday);
+  const nextMondayKey = berlinDateKeyAddDays(mondayKey, 7);
+
+  const [y1, m1, d1] = mondayKey.split("-").map(Number);
+  const [y2, m2, d2] = nextMondayKey.split("-").map(Number);
+  const start = zonedDateTimeToUtc(
+    { year: y1, month: m1, day: d1, hour: 0, minute: 0, second: 0 },
+    timeZone,
+  );
+  const endExclusive = zonedDateTimeToUtc(
+    { year: y2, month: m2, day: d2, hour: 0, minute: 0, second: 0 },
+    timeZone,
+  );
+  return { start, endExclusive, mondayKey, weekNumber: getBerlinIsoWeekNumber(reference) };
+}
+

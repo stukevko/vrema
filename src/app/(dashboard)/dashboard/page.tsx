@@ -290,7 +290,7 @@ export default async function DashboardPage({
     safe(
       calculateSaldo(userId),
       "dashboard.saldo",
-      { workedMinutes: 0, expectedMinutes: 0, saldoMinutes: 0 },
+      { workedMinutes: 0, expectedMinutes: 0, saldoMinutes: 0, weekLabel: "" },
     ),
     teamTodayLogsPromise,
   ]);
@@ -516,6 +516,7 @@ export default async function DashboardPage({
             workedMinutes={saldo.workedMinutes}
             expectedMinutes={saldo.expectedMinutes}
             saldoMinutes={saldo.saldoMinutes}
+            weekLabel={saldo.weekLabel}
             hasWorkLogs={Boolean(hasAnyWorkLog)}
           />
         </div>
