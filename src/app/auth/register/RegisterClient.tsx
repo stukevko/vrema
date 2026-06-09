@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthBrandLogo } from "@/components/brand/AuthBrandLogo";
 import { trialRegisterSubtitle, trialRegisterSubtitleForFlyer } from "@/lib/marketing/trial-copy";
+import { flyerReferralDisplayName, isFlyerReferralCode } from "@/lib/trial/referral";
 import { Loader2, Mail, Lock, Building2, User } from "lucide-react";
 
 const LS_REF = "vrema_affiliate_ref";
@@ -56,6 +57,7 @@ export function RegisterClient({
 
   const [resolvedCode, setResolvedCode] = useState(() => refCode.trim().toLowerCase());
   const [resolvedName, setResolvedName] = useState<string | null>(affiliatePartnerName);
+  const [resolvedFlyerLabel, setResolvedFlyerLabel] = useState<string | null>(flyerReferralLabel);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,6 +78,9 @@ export function RegisterClient({
       }
       setResolvedCode(urlCode);
       setResolvedName(urlName);
+      setResolvedFlyerLabel(
+        isFlyerReferralCode(urlCode) ? flyerReferralDisplayName(urlCode) : flyerReferralLabel,
+      );
       return;
     }
 
@@ -91,16 +96,35 @@ export function RegisterClient({
       if (!c) c = getRefCookie();
       if (!c || cancelled) return;
       setResolvedCode(c);
+      if (isFlyerReferralCode(c)) {
+        setResolvedFlyerLabel(flyerReferralDisplayName(c));
+        setResolvedName(null);
+        return;
+      }
       if (n) {
         setResolvedName(n);
+        setResolvedFlyerLabel(null);
         return;
       }
       try {
         const r = await fetch(`/api/public/affiliate-preview?code=${encodeURIComponent(c)}`);
-        const j = (await r.json()) as { name?: string | null };
-        if (!cancelled && j.name) setResolvedName(j.name);
+        const j = (await r.json()) as { name?: string | null; flyer?: boolean; label?: string | null };
+        if (cancelled) return;
+        if (j.flyer && j.label) {
+          setResolvedFlyerLabel(j.label);
+          setResolvedName(null);
+        } else if (j.name) {
+          setResolvedName(j.name);
+          setResolvedFlyerLabel(null);
+        } else if (isFlyerReferralCode(c)) {
+          setResolvedFlyerLabel(flyerReferralDisplayName(c));
+          setResolvedName(null);
+        }
       } catch {
-        /* ignore */
+        if (!cancelled && isFlyerReferralCode(c)) {
+          setResolvedFlyerLabel(flyerReferralDisplayName(c));
+          setResolvedName(null);
+        }
       }
     }
 
@@ -108,7 +132,7 @@ export function RegisterClient({
     return () => {
       cancelled = true;
     };
-  }, [refCode, affiliatePartnerName]);
+  }, [refCode, affiliatePartnerName, flyerReferralLabel]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -182,17 +206,17 @@ export function RegisterClient({
           <p className="mt-1.5 text-sm text-fg-muted">
             {isInviteFlow
               ? `Du registrierst dich für ${inviteContext?.orgName}.`
-              : flyerReferralLabel
+              : resolvedFlyerLabel
                 ? trialRegisterSubtitleForFlyer()
                 : trialRegisterSubtitle()}
           </p>
-          {!isInviteFlow && flyerReferralLabel ? (
+          {!isInviteFlow && resolvedFlyerLabel ? (
             <p className="mt-3 rounded-xl border border-brand/20 bg-brand-soft/50 px-3 py-2 text-xs leading-relaxed text-fg-muted">
-              <span className="font-semibold text-brand">{flyerReferralLabel}</span>
+              <span className="font-semibold text-brand">{resolvedFlyerLabel}</span>
               <span className="mt-0.5 block font-mono text-[10px] text-fg-subtle">{resolvedCode}</span>
             </p>
           ) : null}
-          {!isInviteFlow && !flyerReferralLabel && resolvedCode ? (
+          {!isInviteFlow && !resolvedFlyerLabel && resolvedCode ? (
             <p className="mt-3 text-xs leading-relaxed text-fg-muted">
               Empfohlen durch unseren Partner
               {resolvedName ? (

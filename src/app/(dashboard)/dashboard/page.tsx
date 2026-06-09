@@ -45,6 +45,7 @@ import { logServerError } from "@/lib/server-logger";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 import type { CompanyModules } from "@/lib/company-modules";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { vocabularyLabels } from "@/lib/vocabulary";
 
 /**
  * Defensive: optionale Sektionen dürfen niemals die ganze Seite zerschießen.
@@ -69,7 +70,11 @@ type TeamStatsSnapshot = {
 };
 
 /** Eine klare Leitlinie für Owner/Manager/Super-Admin — weniger „Command Center“, mehr Führung. */
-function managerPrimaryFocus(stats: TeamStatsSnapshot, modules: CompanyModules) {
+function managerPrimaryFocus(
+  stats: TeamStatsSnapshot,
+  modules: CompanyModules,
+  vocab: { singular: string; planTitle: string },
+) {
   if (stats.absentToday > 0) {
     return {
       title: `${stats.absentToday} fehlende Anwesenheit${stats.absentToday === 1 ? "" : "en"} heute`,
@@ -88,8 +93,8 @@ function managerPrimaryFocus(stats: TeamStatsSnapshot, modules: CompanyModules) 
   }
   if (modules.shiftTrade && stats.pendingTradeApprovals > 0) {
     return {
-      title: `${stats.pendingTradeApprovals} Schicht-Tausch${stats.pendingTradeApprovals === 1 ? "" : "e"} warten auf Freigabe`,
-      description: "Prüfe offene Übernahme-Anfragen, bevor die Schicht startet.",
+      title: `${stats.pendingTradeApprovals} Tauschantrag${stats.pendingTradeApprovals === 1 ? "" : "e"} warten auf Freigabe`,
+      description: `Prüfe offene Übernahme-Anfragen, bevor der ${vocab.singular} startet.`,
       href: "/dashboard/planning",
       cta: "Tausch prüfen",
     };
@@ -97,7 +102,7 @@ function managerPrimaryFocus(stats: TeamStatsSnapshot, modules: CompanyModules) 
   if (stats.lateToday > 0) {
     return {
       title: `${stats.lateToday} verspätete Ankunft${stats.lateToday === 1 ? "" : "en"} heute`,
-      description: "Kurz im Schichtplan oder in den Zeiten gegenprüfen.",
+      description: `Kurz im ${vocab.planTitle} oder in den Zeiten gegenprüfen.`,
       href: "/dashboard/planning",
       cta: "Zur Planung",
     };
@@ -227,6 +232,7 @@ export default async function DashboardPage({
     superAdminPayload,
     saldo,
     teamTodayLogs,
+    planVocabulary,
   ] = await Promise.all([
     safe(
       db.user.count({
@@ -293,6 +299,13 @@ export default async function DashboardPage({
       { workedMinutes: 0, expectedMinutes: 0, saldoMinutes: 0, weekLabel: "" },
     ),
     teamTodayLogsPromise,
+    safe(
+      db.company
+        .findUnique({ where: { id: companyId }, select: { shiftVocabulary: true } })
+        .then((row) => vocabularyLabels(row?.shiftVocabulary)),
+      "dashboard.vocabulary",
+      vocabularyLabels("SHIFT"),
+    ),
   ]);
 
   // shiftTasksPayload braucht activeLog → eigene zweite Welle (extrem leichtgewichtig).
@@ -321,7 +334,7 @@ export default async function DashboardPage({
     0,
   );
 
-  const focus = teamStats ? managerPrimaryFocus(teamStats, companyModules) : null;
+  const focus = teamStats ? managerPrimaryFocus(teamStats, companyModules, planVocabulary) : null;
 
   // Hero-KPI: Personalkosten heute (guarded: keine Epoch-Phantom-Minuten).
   const todayPersonnelCostsEuro =
@@ -421,7 +434,11 @@ export default async function DashboardPage({
           beim Mitarbeiter direkt auf den großen Stempel-Button springen. */}
       {isEmployee && cockpitData && (
         <div id="terminal-widget" className="order-1 scroll-mt-20">
-          <EmployeeCockpit data={cockpitData} firstName={session.user.name?.split(" ")[0] ?? "Hallo"} />
+          <EmployeeCockpit
+            data={cockpitData}
+            firstName={session.user.name?.split(" ")[0] ?? "Hallo"}
+            labels={planVocabulary}
+          />
         </div>
       )}
       {/* Defensive Fallback: Cockpit-Daten konnten nicht geladen werden.
@@ -555,8 +572,8 @@ export default async function DashboardPage({
             description={
               isEmployee
                 ? cockpitData
-                  ? "Tippe auf den großen Stempel-Button oben, um deine Schicht zu starten."
-                  : "Nutze den Stempel-Bereich weiter oben, um deine Schicht zu starten."
+                  ? `Tippe auf den großen Stempel-Button oben, um deinen ${planVocabulary.singular} zu starten.`
+                  : `Nutze den Stempel-Bereich weiter oben, um deinen ${planVocabulary.singular} zu starten.`
                 : "Stemple dich ein oder prüfe die Team-Zeiten in den Berichten."
             }
             action={

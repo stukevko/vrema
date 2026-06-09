@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react";
 import clsx from "clsx";
 import { getDashboardNavItems, getMobileBottomNavItems } from "./dashboard-nav-config";
 import type { CompanyModules } from "@/lib/company-modules";
+import type { VocabularyLabels } from "@/lib/vocabulary";
 import { useEffect, useState } from "react";
 import { countOpenSupportTicketsForSuperAdmin } from "@/lib/actions/support";
 import { countPendingShiftTradeApprovals } from "@/lib/actions/team";
@@ -205,14 +206,16 @@ export function DashboardSidebar({
 export function DashboardMobileBottomNav({
   role,
   companyModules,
+  planVocabulary,
   className,
 }: {
   role: string;
   companyModules: CompanyModules;
+  planVocabulary?: Pick<VocabularyLabels, "plural" | "planTitle">;
   className?: string;
 }) {
   const pathname = usePathname();
-  const items = getMobileBottomNavItems(role, companyModules);
+  const items = getMobileBottomNavItems(role, companyModules, planVocabulary);
 
   return (
     <nav

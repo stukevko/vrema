@@ -12,6 +12,8 @@ import {
   getCompanyTrialState,
   isTrialExemptDashboardPath,
 } from "@/lib/trial";
+import { flyerReferralDisplayName } from "@/lib/trial/referral";
+import { vocabularyLabels } from "@/lib/vocabulary";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 
 export default async function DashboardLayout({
@@ -68,10 +70,26 @@ export default async function DashboardLayout({
     redirect("/dashboard/trial-ended");
   }
 
-  let trialBanner: { daysRemaining: number; activeEmployees: number } | null = null;
+  let trialBanner: {
+    daysRemaining: number;
+    activeEmployees: number;
+    flyerCampaignLabel?: string | null;
+  } | null = null;
   if (trialState?.isInAppTrial && !isTrialExemptDashboardPath(pathname)) {
-    const activeEmployees = await countActiveEmployees(session.user.companyId);
-    trialBanner = { daysRemaining: trialState.daysRemaining, activeEmployees };
+    const [activeEmployees, companyRef] = await Promise.all([
+      countActiveEmployees(session.user.companyId),
+      db.company.findUnique({
+        where: { id: session.user.companyId },
+        select: { referredBy: true },
+      }),
+    ]);
+    trialBanner = {
+      daysRemaining: trialState.daysRemaining,
+      activeEmployees,
+      flyerCampaignLabel: companyRef?.referredBy
+        ? flyerReferralDisplayName(companyRef.referredBy)
+        : null,
+    };
   }
 
   const showPasskeyNudge =
@@ -90,6 +108,14 @@ export default async function DashboardLayout({
   // Custom-Branding: nur applizieren, wenn Firma eine eigene Hex hinterlegt hat.
   // Sonst bleibt VREMA-Petrol (Default-Branding) aktiv – kein Style-Injection,
   // kein Flackern, keine zusätzliche CSS.
+  const companyRow = await db.company
+    .findUnique({
+      where: { id: session.user.companyId },
+      select: { shiftVocabulary: true },
+    })
+    .catch(() => null);
+  const planVocabulary = vocabularyLabels(companyRow?.shiftVocabulary);
+
   const companyModules = await getCompanyModulesForTenant().catch(() => ({
     peaks: false,
     plannerWeather: false,
@@ -115,6 +141,7 @@ export default async function DashboardLayout({
       <DashboardLayoutClient
         role={role}
         plan={session.user.plan ?? "STARTER"}
+        planVocabulary={planVocabulary}
         companyModules={companyModules}
         user={session.user}
         supportUnreadCount={supportUnreadCount}

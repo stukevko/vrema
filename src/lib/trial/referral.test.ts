@@ -4,9 +4,11 @@ import {
   FLYER_TRIAL_DAYS,
   addDays,
   computeFlyerTrialEndsAt,
+  flyerReferralCompanyFilters,
   flyerReferralDisplayName,
   isFlyerReferralCode,
   normalizeReferralCode,
+  publicCampaignRefUrl,
 } from "@/lib/trial/referral";
 
 describe("normalizeReferralCode", () => {
@@ -77,5 +79,25 @@ describe("flyerReferralDisplayName", () => {
       expect(flyerReferralDisplayName(code)).toBe(expected);
       expect(flyerReferralDisplayName(`${code}-altstadt`)).toBe(expected);
     }
+  });
+});
+
+describe("flyerReferralCompanyFilters", () => {
+  it("deckt Basis- und Unter-Codes für aktive Kampagnen ab", () => {
+    const filters = flyerReferralCompanyFilters();
+    expect(filters).toEqual(
+      expect.arrayContaining([
+        { referredBy: "speyer" },
+        { referredBy: { startsWith: "speyer-" } },
+        { referredBy: { startsWith: "speyer_" } },
+      ]),
+    );
+  });
+});
+
+describe("publicCampaignRefUrl", () => {
+  it("baut Kurz-URL /ref/speyer für Flyer und QR", () => {
+    expect(publicCampaignRefUrl("speyer")).toMatch(/\/ref\/speyer$/);
+    expect(publicCampaignRefUrl("SPEYER-ALTSTADT")).toMatch(/\/ref\/speyer-altstadt$/);
   });
 });

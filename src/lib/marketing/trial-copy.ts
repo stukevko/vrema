@@ -11,9 +11,9 @@ function cardRequiredOnSignup(): boolean {
 const trialCore = () =>
   `${TRIAL_DAYS} Tage testen · bis ${TRIAL_MAX_EMPLOYEES} Mitarbeitende`;
 
-/** Untertitel auf /auth/register (Flyer-Aktion Speyer). */
+/** Untertitel auf /auth/register (Flyer-/QR-Aktion, z. B. /ref/speyer). */
 export function trialRegisterSubtitleForFlyer(): string {
-  return `${FLYER_TRIAL_DAYS} Tage kostenlos testen · Speyer-Aktion — keine Kreditkarte, Abrechnung erst danach.`;
+  return `${FLYER_TRIAL_DAYS} Tage kostenlos testen — keine Kreditkarte, Abrechnung erst danach.`;
 }
 
 /** Untertitel auf /auth/register */

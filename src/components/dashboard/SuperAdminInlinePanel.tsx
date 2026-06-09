@@ -62,6 +62,8 @@ type MonitoringData = {
   verificationTokensOpen: number;
   staleVerificationTokens: number;
   expiredSessions: number;
+  flyerSignups: number;
+  flyerSignupsLast7d: number;
   retentionCronConfigured: boolean;
   generatedAt: string;
 };
@@ -151,7 +153,9 @@ export function SuperAdminInlinePanel({
       </div>
 
       <div className="mb-4 rounded-2xl border border-line bg-surface-muted/80 px-3 py-2 text-[11px] text-fg dark:border-white/10 dark:bg-surface-muted/45">
-        Übersicht: neue Nutzer (7 Tage) <span className="font-semibold">{monitoring.newUsersLast7d}</span> · offene
+        Übersicht: Flyer-Signups gesamt <span className="font-semibold">{monitoring.flyerSignups}</span> (
+        <span className="font-semibold">{monitoring.flyerSignupsLast7d}</span> in 7 Tagen) · neue Nutzer (7 Tage){" "}
+        <span className="font-semibold">{monitoring.newUsersLast7d}</span> · offene
         Bestätigungslinks <span className="font-semibold">{monitoring.verificationTokensOpen}</span> · abgelaufene
         Links{" "}
         <span className={monitoring.staleVerificationTokens > 0 ? "font-semibold text-warning" : "font-semibold text-brand"}>

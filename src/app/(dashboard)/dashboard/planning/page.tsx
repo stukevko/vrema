@@ -140,6 +140,7 @@ export default async function PlanningPage({
             initialAutopilotAction={initialAutopilotAction}
             shiftTemplates={data.shiftTemplates}
             companyModules={data.companyModules}
+            planTitle={planLabels.planTitle}
           />
         </Suspense>
         {data.companyModules.shiftTrade ? <OpenShiftsBoard open={data.openShifts} /> : null}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarClock, Clock3, Coffee, Palmtree, Sparkles } from "lucide-react";
 import type { EmployeeCockpitData } from "@/lib/dashboard/employee-cockpit-data";
 import { BigClockButton } from "@/components/dashboard/BigClockButton";
+import { vocabularyLabels, type VocabularyLabels } from "@/lib/vocabulary";
 
 function formatHours(mins: number): string {
   const h = Math.floor(mins / 60);
@@ -30,19 +31,28 @@ function getGreeting(now = new Date()): string {
   return "Guten Abend";
 }
 
-export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData; firstName: string }) {
+export function EmployeeCockpit({
+  data,
+  firstName,
+  labels = vocabularyLabels("SHIFT"),
+}: {
+  data: EmployeeCockpitData;
+  firstName: string;
+  labels?: Pick<VocabularyLabels, "singular" | "plural" | "planTitle">;
+}) {
   const greeting = getGreeting();
+  const slot = labels.singular;
 
   const heroPrimary = data.isClockedIn
     ? data.isOnBreak
       ? "Du bist gerade in der Pause"
       : `Eingestempelt seit ${data.clockInAtIso ? formatBerlinTimeShort(data.clockInAtIso) : "—"} Uhr`
-    : "Bereit, in deine Schicht zu starten?";
+    : `Bereit, in deinen ${slot} zu starten?`;
   const heroSecondary = data.isClockedIn
     ? `Heute schon ${formatHours(data.workedTodayMins)} im Einsatz.`
     : data.nextShift
-      ? `Nächste Schicht: ${data.nextShift.whenLabel}.`
-      : "Heute ist keine Schicht für dich eingeplant — nutz die Zeit oder sprich kurz mit der Führung.";
+      ? `Nächster ${slot}: ${data.nextShift.whenLabel}.`
+      : `Heute ist kein ${slot} für dich eingeplant — nutz die Zeit oder sprich kurz mit der Führung.`;
 
   return (
     <section
@@ -63,7 +73,7 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
       <ol className="relative mb-4 flex gap-2 md:hidden" aria-label="Dein Ablauf heute">
         {[
           { n: "1", t: "Stempeln", active: true },
-          { n: "2", t: "Schicht", active: Boolean(data.nextShift) },
+          { n: "2", t: slot, active: Boolean(data.nextShift) },
           { n: "3", t: "Urlaub", active: data.vacation.pendingRequests > 0 },
         ].map((step) => (
           <li
@@ -106,7 +116,7 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
           <p className="flex items-start gap-2 font-medium">
             <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
             <span>
-              Kein Schicht-Slot im Plan? Das ist normal bei Ruhetagen oder wenn der Chef noch plant — der große Button oben
+              Kein {slot}-Slot im Plan? Das ist normal bei Ruhetagen oder wenn der Chef noch plant — der große Button oben
               stempelt trotzdem (mit Hinweis im System).
             </span>
           </p>
@@ -134,7 +144,9 @@ export function EmployeeCockpit({ data, firstName }: { data: EmployeeCockpitData
             <CalendarClock className="h-4 w-4" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Nächste Schicht</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Nächster {slot}
+            </p>
             {data.nextShift ? (
               <>
                 <p className="mt-0.5 text-sm font-bold text-foreground">

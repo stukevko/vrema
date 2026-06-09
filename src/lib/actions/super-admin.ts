@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "@/lib/email/transactional";
 import { stripe } from "@/lib/stripe";
 import type { CompanyModuleKey } from "@/lib/company-modules";
+import { flyerReferralCompanyFilters } from "@/lib/trial/referral";
 
 function assertSuperAdmin(session: { user?: { role?: string | null; id?: string | null } } | null) {
   const allowed =
@@ -105,6 +106,8 @@ export async function getSuperAdminMonitoring() {
     verificationTokensOpen,
     staleVerificationTokens,
     expiredSessions,
+    flyerSignups,
+    flyerSignupsLast7d,
   ] = await Promise.all([
     db.company.count(),
     db.company.count({ where: { isActive: true } }),
@@ -116,6 +119,10 @@ export async function getSuperAdminMonitoring() {
     db.verificationToken.count(),
     db.verificationToken.count({ where: { expires: { lt: now } } }),
     db.session.count({ where: { expires: { lt: now } } }),
+    db.company.count({ where: { OR: flyerReferralCompanyFilters() } }),
+    db.company.count({
+      where: { OR: flyerReferralCompanyFilters(), createdAt: { gte: weekAgo } },
+    }),
   ]);
 
   return {
@@ -129,6 +136,8 @@ export async function getSuperAdminMonitoring() {
     verificationTokensOpen,
     staleVerificationTokens,
     expiredSessions,
+    flyerSignups,
+    flyerSignupsLast7d,
     retentionCronConfigured: Boolean(process.env.DATA_RETENTION_CRON_SECRET),
     generatedAt: now.toISOString(),
   };

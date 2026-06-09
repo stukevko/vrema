@@ -2,6 +2,15 @@ import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
 import type { NotificationType, UserRole } from "@prisma/client";
 import { sendPushToUsers } from "@/lib/push/send";
+import { vocabularyLabels, type VocabularyLabels } from "@/lib/vocabulary";
+
+async function labelsForCompany(companyId: string): Promise<VocabularyLabels> {
+  const row = await db.company.findUnique({
+    where: { id: companyId },
+    select: { shiftVocabulary: true },
+  });
+  return vocabularyLabels(row?.shiftVocabulary);
+}
 
 const DAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
@@ -56,13 +65,16 @@ export async function notifyOpenShiftPublished(params: {
     }),
     select: { id: true },
   });
-  const when = shiftTimeLabel(params.dayOfWeek, params.startTime, params.endTime);
+  const [when, vocab] = await Promise.all([
+    Promise.resolve(shiftTimeLabel(params.dayOfWeek, params.startTime, params.endTime)),
+    labelsForCompany(params.companyId),
+  ]);
   await createNotifications(
     params.companyId,
     peers.map((p) => p.id),
     {
       type: "GENERIC",
-      title: "Offene Schicht",
+      title: `Offener ${vocab.singular}`,
       body: `${when} — im Planer übernehmen.`,
       href: "/dashboard/planning",
     },
@@ -91,7 +103,7 @@ export async function notifyManagersTradeRequest(params: {
     managers.map((m) => m.id),
     {
       type: "GENERIC",
-      title: "Schicht-Übernahme prüfen",
+      title: "Übernahme prüfen",
       body: `${params.requesterName} möchte ${when} von ${params.ownerName} übernehmen.`,
       href: "/dashboard/planning#shift-trade-approvals",
     },
@@ -106,13 +118,16 @@ export async function notifyTradeDecision(params: {
   startTime: string;
   endTime: string;
 }): Promise<void> {
-  const when = shiftTimeLabel(params.dayOfWeek, params.startTime, params.endTime);
+  const [when, vocab] = await Promise.all([
+    Promise.resolve(shiftTimeLabel(params.dayOfWeek, params.startTime, params.endTime)),
+    labelsForCompany(params.companyId),
+  ]);
   await createNotifications(params.companyId, [params.userId], {
     type: params.approved ? "SHIFT_TRADE_APPROVED" : "SHIFT_TRADE_REJECTED",
     title: params.approved ? "Übernahme bestätigt" : "Übernahme abgelehnt",
     body: params.approved
       ? `Deine Übernahme für ${when} ist freigegeben.`
-      : `Die Übernahme für ${when} wurde abgelehnt — Schicht bleibt offen oder beim Kollegen.`,
+      : `Die Übernahme für ${when} wurde abgelehnt — ${vocab.singular} bleibt offen oder beim Kollegen.`,
     href: "/dashboard/planning",
   });
 }

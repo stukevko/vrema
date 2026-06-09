@@ -13,6 +13,8 @@ import { PasskeySecurityNudge } from "@/components/dashboard/PasskeySecurityNudg
 import { MobileWayfindingStrip } from "@/components/dashboard/MobileWayfindingStrip";
 import { getMyUnreadSupportRepliesCount } from "@/lib/actions/support";
 import type { CompanyModules } from "@/lib/company-modules";
+import type { VocabularyLabels } from "@/lib/vocabulary";
+import { VocabularyProvider } from "@/components/VocabularyContext";
 
 type SessionUser = {
   name?: string | null;
@@ -26,6 +28,7 @@ export function DashboardLayoutClient({
   role,
   plan,
   companyModules,
+  planVocabulary,
   user,
   supportUnreadCount = 0,
   initialSuperOpenTickets = 0,
@@ -37,11 +40,12 @@ export function DashboardLayoutClient({
   role: string;
   plan: string;
   companyModules: CompanyModules;
+  planVocabulary: VocabularyLabels;
   user: SessionUser;
   supportUnreadCount?: number;
   initialSuperOpenTickets?: number;
   initialUnreadNotifications?: number;
-  trialBanner?: { daysRemaining: number; activeEmployees: number } | null;
+  trialBanner?: { daysRemaining: number; activeEmployees: number; flyerCampaignLabel?: string | null } | null;
   showPasskeyNudge?: boolean;
 }) {
   const [supportOverlayOpen, setSupportOverlayOpen] = useState(false);
@@ -73,6 +77,7 @@ export function DashboardLayoutClient({
   const mainScrollRef = useRef<HTMLElement | null>(null);
 
   return (
+    <VocabularyProvider labels={planVocabulary}>
     <div className="flex h-screen min-h-0 w-full min-w-0 overflow-hidden overflow-x-hidden bg-background text-foreground">
       <Toaster richColors position="top-center" closeButton duration={2200} />
       <DashboardSidebar
@@ -115,6 +120,7 @@ export function DashboardLayoutClient({
             <TrialStatusBanner
               daysRemaining={trialBanner.daysRemaining}
               activeEmployees={trialBanner.activeEmployees}
+              flyerCampaignLabel={trialBanner.flyerCampaignLabel}
             />
           ) : null}
           {showPasskeyNudge && !trialBanner ? <PasskeySecurityNudge /> : null}
@@ -138,7 +144,12 @@ export function DashboardLayoutClient({
           </div>
         </main>
       </div>
-      <DashboardMobileBottomNav className="no-print" role={role} companyModules={companyModules} />
+      <DashboardMobileBottomNav
+        className="no-print"
+        role={role}
+        companyModules={companyModules}
+        planVocabulary={planVocabulary}
+      />
       <SupportTicketOverlay
         open={supportOverlayOpen}
         initialFocusUnread={supportInitialUnread}
@@ -150,5 +161,6 @@ export function DashboardLayoutClient({
         }}
       />
     </div>
+    </VocabularyProvider>
   );
 }

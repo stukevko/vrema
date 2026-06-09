@@ -16,6 +16,7 @@ import {
   ListTodo,
 } from "lucide-react";
 import type { CompanyModuleKey, CompanyModules } from "@/lib/company-modules";
+import type { VocabularyLabels } from "@/lib/vocabulary";
 
 export type MobileBottomNavItem = {
   href: string;
@@ -39,7 +40,12 @@ const ALL_PLANS = ["STARTER", "BUSINESS", "ENTERPRISE"] as const;
 /**
  * Mobil-Bottom-Nav (< md): feste 5 Tabs (App-Store-Niveau).
  */
-export function getMobileBottomNavItems(role: string, modules: CompanyModules): MobileBottomNavItem[] {
+export function getMobileBottomNavItems(
+  role: string,
+  modules: CompanyModules,
+  vocab?: Pick<VocabularyLabels, "plural" | "planTitle">,
+): MobileBottomNavItem[] {
+  const planSlots = vocab?.plural ?? "Schichten";
   if (role === "ADVISOR") {
     return [
       { href: "/dashboard/peaks", label: "Stoß", subtitle: "Umsatz", icon: TrendingUp },
@@ -61,7 +67,7 @@ export function getMobileBottomNavItems(role: string, modules: CompanyModules): 
     {
       href: "/dashboard/planning",
       label: "Planer",
-      subtitle: role === "EMPLOYEE" ? "Schichten" : "Woche",
+      subtitle: role === "EMPLOYEE" ? planSlots : "Woche",
       icon: CalendarDays,
     },
     {

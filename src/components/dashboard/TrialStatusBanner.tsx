@@ -5,9 +5,12 @@ import { TRIAL_MAX_EMPLOYEES } from "@/lib/trial/constants";
 export function TrialStatusBanner({
   daysRemaining,
   activeEmployees,
+  flyerCampaignLabel,
 }: {
   daysRemaining: number;
   activeEmployees: number;
+  /** z. B. „Speyer Flyer-Aktion“ — 30-Tage-Kampagne statt Standard-7-Tage-Trial. */
+  flyerCampaignLabel?: string | null;
 }) {
   const urgent = daysRemaining <= 2;
   const soonEnding = daysRemaining <= 3 && daysRemaining > 2;
@@ -29,15 +32,20 @@ export function TrialStatusBanner({
           )}
           <div className="min-w-0">
             <p className="font-semibold">
-              {urgent
-                ? `Testphase endet in ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tagen"} — Tarif sichern`
-                : soonEnding
-                  ? `Noch ${daysRemaining} Tage Testphase — rechtzeitig Tarif wählen`
-                  : `Testphase: noch ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tage"}`}
+              {flyerCampaignLabel
+                ? urgent
+                  ? `${flyerCampaignLabel}: noch ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tage"}`
+                  : `Aktions-Zugang (${flyerCampaignLabel}): noch ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tage"}`
+                : urgent
+                  ? `Testphase endet in ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tagen"} — Tarif sichern`
+                  : soonEnding
+                    ? `Noch ${daysRemaining} Tage Testphase — rechtzeitig Tarif wählen`
+                    : `Testphase: noch ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tage"}`}
             </p>
             <p className="mt-0.5 text-xs opacity-90">
-              Bis zu {TRIAL_MAX_EMPLOYEES} Mitarbeitende ({activeEmployees}/{TRIAL_MAX_EMPLOYEES} aktiv). PDF & Lohnbüro
-              ab Business — danach ohne Unterbrechung weiterplanen.
+              {flyerCampaignLabel
+                ? `30 Tage kostenlos · bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitende (${activeEmployees}/${TRIAL_MAX_EMPLOYEES} aktiv). Keine Kreditkarte nötig — Tarif erst nach der Aktion.`
+                : `Bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitende (${activeEmployees}/${TRIAL_MAX_EMPLOYEES} aktiv). PDF & Lohnbüro ab Business — danach ohne Unterbrechung weiterplanen.`}
             </p>
           </div>
         </div>

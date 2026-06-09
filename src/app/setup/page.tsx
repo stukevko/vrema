@@ -18,9 +18,10 @@ async function finishSetup(formData: FormData) {
     if (requireCard) {
       const companyForPayment = await db.company.findUnique({
         where: { id: session.user.companyId },
-        select: { paymentMethodVerifiedAt: true },
+        select: { paymentMethodVerifiedAt: true, referredBy: true },
       });
-      if (!companyForPayment?.paymentMethodVerifiedAt) {
+      const skipCardForFlyer = Boolean(companyForPayment?.referredBy);
+      if (!skipCardForFlyer && !companyForPayment?.paymentMethodVerifiedAt) {
         redirect("/setup?payment=required");
       }
     }
@@ -47,10 +48,11 @@ export default async function SetupPage({
   const company = session.user.companyId
     ? await db.company.findUnique({
         where: { id: session.user.companyId },
-        select: { name: true, paymentMethodVerifiedAt: true },
+        select: { name: true, paymentMethodVerifiedAt: true, referredBy: true },
       })
     : null;
-  const requireCard = process.env.REQUIRE_CARD_ON_SIGNUP === "true";
+  const requireCard =
+    process.env.REQUIRE_CARD_ON_SIGNUP === "true" && !company?.referredBy;
   const params = await searchParams;
   const paymentState = (params.payment as "required" | "ok" | "cancel" | "error" | undefined) ?? null;
 

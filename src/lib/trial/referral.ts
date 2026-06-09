@@ -52,6 +52,17 @@ export function computeFlyerTrialEndsAt(from = new Date()): Date {
   return addDays(from, FLYER_TRIAL_DAYS);
 }
 
+/** Prisma-`where`-Fragment: alle Firmen aus aktiven Flyer-/QR-Kampagnen. */
+export function flyerReferralCompanyFilters(): Array<
+  { referredBy: string } | { referredBy: { startsWith: string } }
+> {
+  return FLYER_CAMPAIGN_CODES.flatMap((code) => [
+    { referredBy: code },
+    { referredBy: { startsWith: `${code}-` } },
+    { referredBy: { startsWith: `${code}_` } },
+  ]);
+}
+
 export function flyerReferralDisplayName(code: string): string {
   const campaign = matchedFlyerCampaign(code);
   if (campaign) {

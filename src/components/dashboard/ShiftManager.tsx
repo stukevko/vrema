@@ -304,6 +304,7 @@ export function ShiftManager({
   enableTaskListActions = false,
   initialFocusWeek = null,
   initialAutopilotAction = null,
+  planTitle = "Schichtplan",
 }: {
   members: Member[];
   shifts: ShiftRow[];
@@ -321,6 +322,8 @@ export function ShiftManager({
   initialFocusWeek?: ShiftCycleWeeks | null;
   /** `?autopilot=1` scrollt zum Panel; `?autopilot=suggest` schlägt einmalig vor (Sonntags-Flow). */
   initialAutopilotAction?: "focus" | "suggest" | null;
+  /** Firmen-Vokabular, z. B. „Einsatzplan“ / „Dienstplan“. */
+  planTitle?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -2998,7 +3001,7 @@ export function ShiftManager({
         <div className="block">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight">Schichtplan</h2>
+              <h2 className="text-lg font-semibold tracking-tight">{planTitle}</h2>
               <p className="mt-1 text-xs text-muted-foreground">
                 {renderDesktopTree
                   ? "Team links · Schichtkarten in der Woche · Zuweisen per Drag oder Antippen."
