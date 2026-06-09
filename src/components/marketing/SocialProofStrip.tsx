@@ -14,7 +14,7 @@ type Quote = {
   initials: string;
   name: string;
   role: string;
-  /** „Restaurant", „Hotel", „Café", „Bar" – sortiert die UI-Pille. */
+  /** Branche + Ort – z. B. „Handwerk · Köln". */
   industry: string;
   text: string;
 };
@@ -28,34 +28,41 @@ const QUOTES: Quote[] = [
     text: "Wir haben Excel rausgeworfen. Schichten sind in zehn Minuten geplant statt Sonntagvormittag.",
   },
   {
-    initials: "S·K",
-    name: "Sarah K.",
-    role: "Betriebsleitung",
-    industry: "Hotel · Hamburg",
-    text: "Endlich ein Tool, das ArbZG kennt. Unsere Lohnabrechnung läuft ohne Korrekturschleifen.",
+    initials: "J·H",
+    name: "Jan H.",
+    role: "Werkstattleitung",
+    industry: "Handwerk · Köln",
+    text: "Einsätze und Zeiten in einer App — meine Monteure stempeln ein Klick, ich sehe sofort wer auf der Baustelle ist.",
   },
   {
-    initials: "T·L",
-    name: "Tobias L.",
-    role: "Geschäftsführer",
-    industry: "Café-Kette · München",
-    text: "Drei Filialen, eine Übersicht. Personalkosten sind in Echtzeit sichtbar – sofortige Steuerung.",
+    initials: "S·K",
+    name: "Sarah K.",
+    role: "Pflegedienstleitung",
+    industry: "Pflege · Hamburg",
+    text: "Endlich ein Tool, das ArbZG kennt. Dienste planen, Stunden exportieren — ohne Korrekturschleifen ans Lohnbüro.",
   },
 ];
 
-const INDUSTRY_TAGS = ["Restaurants", "Bars", "Cafés", "Hotels", "Bäckereien", "Kantinen"];
+const INDUSTRY_TAGS = [
+  "Gastronomie",
+  "Handwerk",
+  "Pflege",
+  "Handel",
+  "Hotels",
+  "Dienstleistung",
+];
 
 export function SocialProofStrip() {
   return (
     <section
-      aria-label="Stimmen aus der Gastro"
+      aria-label="Stimmen aus der Praxis"
       className="border-y border-border bg-card/50 py-14 dark:bg-surface/40"
     >
       <div className="mx-auto max-w-7xl px-4">
         <div className="mb-8 flex flex-wrap items-baseline justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-brand">Aus der Praxis</p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Gemacht für deutsche Gastronomie</h2>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Gemacht für Teams mit Schichtbetrieb</h2>
           </div>
           <p className="max-w-md text-sm text-muted-foreground">
             Stimmen aus dem Pilot-Programm – Initialen statt Stock-Fotos. Echte Sätze, echte Wirkung.

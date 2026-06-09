@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { PLANS } from "@/lib/stripe";
 import {
   companyHasOperationalAccess,
   hasFullAppAccess,
@@ -78,8 +79,12 @@ describe("trialDaysRemaining", () => {
 describe("hasFullAppAccess", () => {
   it("erlaubt bei laufendem Trial, Abo oder exempt", () => {
     expect(hasFullAppAccess({ ...base, trialEndsAt: future(2) })).toBe(true);
-    expect(hasFullAppAccess({ ...base, stripeSubId: "sub_1" })).toBe(true);
+    expect(hasFullAppAccess({ ...base, isActive: true, stripeSubId: "sub_1" })).toBe(true);
     expect(hasFullAppAccess({ ...base, billingExempt: true })).toBe(true);
+  });
+
+  it("isActive=false sperrt auch mit stripeSubId", () => {
+    expect(hasFullAppAccess({ ...base, isActive: false, stripeSubId: "sub_1" })).toBe(false);
   });
 
   it("Legacy-Firma ohne Trial-Info bekommt Zugang", () => {
@@ -99,12 +104,23 @@ describe("companyHasOperationalAccess", () => {
   it("aktiv ODER Trial ODER Abo ODER exempt → Zugang", () => {
     expect(companyHasOperationalAccess({ ...base, isActive: true })).toBe(true);
     expect(companyHasOperationalAccess({ ...base, isActive: false, trialEndsAt: future(1) })).toBe(true);
-    expect(companyHasOperationalAccess({ ...base, isActive: false, stripeSubId: "sub_1" })).toBe(true);
+    expect(companyHasOperationalAccess({ ...base, isActive: true, stripeSubId: "sub_1" })).toBe(true);
     expect(companyHasOperationalAccess({ ...base, isActive: false, billingExempt: true })).toBe(true);
+  });
+
+  it("isActive=false sperrt auch mit stripeSubId (Zahlungsausfall)", () => {
+    expect(companyHasOperationalAccess({ ...base, isActive: false, stripeSubId: "sub_1" })).toBe(false);
   });
 
   it("inaktiv, kein Trial, kein Abo → kein Zugang (kein Legacy-Fallback)", () => {
     expect(companyHasOperationalAccess({ ...base, isActive: false })).toBe(false);
+  });
+});
+
+describe("plan limits (stripe PLANS)", () => {
+  it("Starter/Business MA-Limits", () => {
+    expect(PLANS.STARTER.limits.employees).toBe(10);
+    expect(PLANS.BUSINESS.limits.employees).toBe(100);
   });
 });
 

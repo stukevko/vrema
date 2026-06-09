@@ -5,10 +5,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { inviteEmployee } from "@/lib/actions/team";
-import { UserPlus, Loader2, Copy, CheckCheck, Terminal } from "lucide-react";
+import { UserPlus, Loader2, Copy, CheckCheck } from "lucide-react";
 import { TrialInviteHint } from "@/components/dashboard/TrialInviteHint";
 import { TRIAL_MAX_EMPLOYEES } from "@/lib/trial/constants";
-import Link from "next/link";
+import { useUpgrade } from "@/components/dashboard/UpgradeContext";
+import { upgradeReasonFromErrorMessage } from "@/lib/plan-upgrade-messages";
 
 export function InviteForm({
   trialActive = false,
@@ -18,6 +19,7 @@ export function InviteForm({
   activeEmployees?: number;
 }) {
   const atTrialLimit = trialActive && activeEmployees >= TRIAL_MAX_EMPLOYEES;
+  const { openUpgrade } = useUpgrade();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -38,9 +40,7 @@ export function InviteForm({
     const fd = new FormData(form);
 
     if (atTrialLimit) {
-      setError(
-        `Testphase: maximal ${TRIAL_MAX_EMPLOYEES} aktive Mitarbeitende. Tarif unter Abonnement wählen, um mehr Plätze zu nutzen.`,
-      );
+      openUpgrade({ kind: "trial_employee_limit" });
       return;
     }
 
@@ -56,7 +56,13 @@ export function InviteForm({
         form.reset();
         router.refresh();
       } catch (err: unknown) {
-        setError(userErrorMessage(err, "Fehler beim Einladen."));
+        const msg = userErrorMessage(err, "Fehler beim Einladen.");
+        const upgrade = upgradeReasonFromErrorMessage(msg);
+        if (upgrade) {
+          openUpgrade(upgrade);
+          return;
+        }
+        setError(msg);
       }
     });
   };
@@ -185,23 +191,19 @@ export function InviteForm({
               </div>
 
               {error && (
-                <div className="space-y-2 rounded-lg border border-red-500/10 bg-red-500/5 px-3 py-2 text-xs font-sans text-red-400">
+                <div className="rounded-lg border border-red-500/10 bg-red-500/5 px-3 py-2 text-xs font-sans text-red-400">
                   <p>✗ {error}</p>
-                  {error.includes("Testphase") ? (
-                    <Link href="/dashboard/billing" className="inline-flex font-semibold text-brand underline-offset-2 hover:underline">
-                      Tarif wählen
-                    </Link>
-                  ) : null}
                 </div>
               )}
 
               <button
-                type="submit"
-                disabled={isPending || atTrialLimit}
+                type={atTrialLimit ? "button" : "submit"}
+                disabled={isPending}
+                onClick={atTrialLimit ? () => openUpgrade({ kind: "trial_employee_limit" }) : undefined}
                 className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-sans text-sm font-bold text-foreground transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(150,255,180,0.3)] disabled:opacity-60 sm:py-3"
               >
-                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Terminal className="w-4 h-4" />}
-                {isPending ? "Wird angelegt..." : "$ invite --send"}
+                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                {isPending ? "Wird angelegt…" : atTrialLimit ? "Tarif wählen — ein Klick" : "Einladen"}
               </button>
             </motion.form>
           )}

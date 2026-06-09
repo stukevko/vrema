@@ -25,7 +25,7 @@ const base = getSiteUrl();
 export const metadata: Metadata = {
   title: "Live-Demo · VREMA",
   description:
-    "Klick dich durch das VREMA-Dashboard – ohne Anmeldung. So sieht ein Restaurant-Setup aus, das mit VREMA plant und stempelt.",
+    "Klick dich durch das VREMA-Dashboard – ohne Anmeldung. So sieht Planung und Zeiterfassung in einem typischen Schichtbetrieb aus.",
   alternates: { canonical: `${base}/demo` },
   openGraph: {
     title: "VREMA Live-Demo",
@@ -37,19 +37,19 @@ export const metadata: Metadata = {
 };
 
 const SAMPLE_TEAM = [
-  { name: "Anna K.", role: "Service", status: "Eingestempelt seit 10:02", state: "active" },
-  { name: "Mehmet Ö.", role: "Küche", status: "Eingestempelt seit 09:47", state: "active" },
-  { name: "Sofia R.", role: "Service", status: "Pause seit 12:30", state: "break" },
-  { name: "Jonas H.", role: "Bar", status: "Schicht 17:00 – 23:00", state: "planned" },
-  { name: "Lisa W.", role: "Service", status: "Urlaub bis Freitag", state: "vacation" },
-  { name: "Tarek A.", role: "Küche", status: "Krankgemeldet", state: "absent" },
+  { name: "Anna K.", role: "Fachkraft", status: "Eingestempelt seit 10:02", state: "active" },
+  { name: "Mehmet Ö.", role: "Vor-Ort", status: "Eingestempelt seit 09:47", state: "active" },
+  { name: "Sofia R.", role: "Schichtleitung", status: "Pause seit 12:30", state: "break" },
+  { name: "Jonas H.", role: "Außendienst", status: "Schicht 17:00 – 23:00", state: "planned" },
+  { name: "Lisa W.", role: "Fachkraft", status: "Urlaub bis Freitag", state: "vacation" },
+  { name: "Tarek A.", role: "Vor-Ort", status: "Krankgemeldet", state: "absent" },
 ] as const;
 
 const SAMPLE_SHIFT_TODAY = [
-  { start: "09:00", end: "15:00", role: "Küche", name: "Mehmet" },
-  { start: "10:00", end: "16:00", role: "Service", name: "Anna" },
-  { start: "11:00", end: "17:00", role: "Service", name: "Sofia" },
-  { start: "17:00", end: "23:00", role: "Bar", name: "Jonas" },
+  { start: "09:00", end: "15:00", role: "Frühdienst", name: "Mehmet" },
+  { start: "10:00", end: "16:00", role: "Tagdienst", name: "Anna" },
+  { start: "11:00", end: "17:00", role: "Tagdienst", name: "Sofia" },
+  { start: "17:00", end: "23:00", role: "Spätdienst", name: "Jonas" },
 ];
 
 const PENDING_VACATIONS = [
@@ -114,7 +114,7 @@ function HeaderGreeting() {
   return (
     <header className="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">Café Roma · Mitte</p>
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">Musterbetrieb Schmidt · Berlin</p>
         <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Guten Tag, Demo-Inhaber:in!</h1>
         <p className="mt-1 text-sm text-muted-foreground">Mittwoch · 13.05.2026 · 6 aktive Mitarbeitende</p>
       </div>
@@ -360,7 +360,7 @@ function NotificationsPreview() {
       <ul className="mt-4 space-y-2 text-xs">
         <li className="rounded-xl border border-border/70 bg-surface-muted/40 px-3 py-2 dark:border-white/[0.05] dark:bg-surface/40">
           <p className="font-semibold text-foreground">Mehmet Ö. hat eingestempelt</p>
-          <p className="text-[11px] text-muted-foreground">vor 47 Min · Schicht „Küche 09:00 – 15:00"</p>
+          <p className="text-[11px] text-muted-foreground">vor 47 Min · Frühdienst 09:00 – 15:00</p>
         </li>
         <li className="rounded-xl border border-border/70 bg-surface-muted/40 px-3 py-2 dark:border-white/[0.05] dark:bg-surface/40">
           <p className="font-semibold text-foreground">Lohnreport KW 18 bereit</p>

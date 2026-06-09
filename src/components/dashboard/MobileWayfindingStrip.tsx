@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronRight, MapPin, X } from "lucide-react";
 import type { CompanyModules } from "@/lib/company-modules";
+import { useVocabulary } from "@/components/VocabularyContext";
 
 type Guide = {
   title: string;
@@ -16,17 +17,20 @@ function guideForPath(
   pathname: string,
   role: string,
   modules: CompanyModules,
+  planTitle: string,
+  slot: string,
+  slots: string,
 ): Guide | null {
   if (pathname.startsWith("/dashboard/planning")) {
     if (role === "EMPLOYEE") {
       return {
-        title: "Mein Dienstplan",
-        hint: "Schichten & Tausch — Fragen an die Leitung.",
+        title: `Mein ${planTitle}`,
+        hint: `${slots} & Tausch — Fragen an die Leitung.`,
         cta: { href: "/dashboard/vacation", label: "Urlaub" },
       };
     }
     return {
-      title: "Schichtplan",
+      title: planTitle,
       hint: "Person wählen → Tag antippen (+). Wischen = andere Tage.",
       cta: { href: "/dashboard/settings", label: "Vorlagen" },
     };
@@ -77,8 +81,8 @@ function guideForPath(
   }
   if (pathname.startsWith("/dashboard/tasks")) {
     return {
-      title: "Schicht-Tasks",
-      hint: "Checklisten pro Schicht.",
+      title: `${slot}-Checklisten`,
+      hint: `Checklisten pro ${slot}.`,
       cta: { href: "/dashboard/planning", label: "Planer" },
     };
   }
@@ -117,7 +121,8 @@ export function MobileWayfindingStrip({
   companyModules: CompanyModules;
 }) {
   const pathname = usePathname();
-  const guide = guideForPath(pathname, role, companyModules);
+  const vocab = useVocabulary();
+  const guide = guideForPath(pathname, role, companyModules, vocab.planTitle, vocab.singular, vocab.plural);
   const [dismissed, setDismissed] = useState(true);
   const [expanded, setExpanded] = useState(false);
 

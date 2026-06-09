@@ -111,6 +111,12 @@ export function EmployeeCockpit({
         isOnBreak={data.isOnBreak}
       />
 
+      {!data.isClockedIn ? (
+        <p className="mt-2 text-center text-[11px] text-muted-foreground">
+          Kein Formular, kein Taschenrechner — nur tippen.
+        </p>
+      ) : null}
+
       {!data.isClockedIn && !data.nextShift ? (
         <div className="mt-4 rounded-2xl border border-dashed border-brand/30 bg-brand-soft/70 px-4 py-3 text-sm text-foreground dark:border-white/10 dark:bg-brand/15">
           <p className="flex items-start gap-2 font-medium">

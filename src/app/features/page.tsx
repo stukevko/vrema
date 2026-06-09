@@ -19,13 +19,13 @@ const base = getSiteUrl();
 export const metadata: Metadata = {
   title: "Features",
   description:
-    "VREMA Features für die Gastronomie: 1-Klick-Stempeluhr, Echtzeit-Auswertungen, Schichtplanung, PDF-Reports, DATEV-Export und Privacy by Design – ohne GPS-Tracking.",
-  keywords: [...SEO_KEYWORDS, "Schichtplanung", "PDF-Reports", "DATEV Export"],
+    "VREMA Features für Teams und Betriebe: 1-Klick-Stempeluhr, Echtzeit-Auswertungen, Einsatzplanung, PDF-Reports, DATEV-Export und Privacy by Design – ohne GPS-Tracking.",
+  keywords: [...SEO_KEYWORDS, "Einsatzplanung", "PDF-Reports", "DATEV Export"],
   alternates: { canonical: `${base}/features` },
   openGraph: {
-    title: "VREMA Features – Gastro-Planung & Zeiterfassung",
+    title: "VREMA Features – Planung & Zeiterfassung",
     description:
-      "Alle Funktionen für Restaurants und Teams: Stempeluhr, Live-Reports, DSGVO-konforme Zeiterfassung und mehr.",
+      "Alle Funktionen für Teams in Gastro, Handwerk, Pflege und Handel: Stempeluhr, Live-Reports, DSGVO-konforme Zeiterfassung.",
     url: `${base}/features`,
     locale: "de_DE",
     type: "website",
@@ -50,13 +50,13 @@ const FEATURES: Feature[] = [
     icon: Timer,
     tag: "Stempeluhr",
     title: "1-Klick Stempeluhr",
-    body: "Einstempeln, Pause, Ausstempeln – mobil oder am festen Terminal. Genau eine Geste pro Aktion, auch unter Stress in Service & Küche.",
+    body: "Einstempeln, Pause, Ausstempeln – mobil oder am festen Terminal. Genau eine Geste pro Aktion, auch unter Stress im Betrieb.",
   },
   {
     icon: LineChart,
     tag: "Live-Insights",
     title: "Echtzeit-Auswertungen",
-    body: "Stunden, Wochen und Abweichungen sofort sichtbar – live für Inhaber, kompakt für Schichtleitung, transparent für das Team.",
+    body: "Stunden, Wochen und Abweichungen sofort sichtbar – live für Inhaber, kompakt für die Führung, transparent für das Team.",
   },
   {
     icon: ShieldCheck,
@@ -79,8 +79,8 @@ const FEATURES: Feature[] = [
   {
     icon: Sparkles,
     tag: "Planning",
-    title: "Schicht-Autopilot",
-    body: "Wetter, Feiertage und deine Historie — schlägt Schichtbelegung vor. Du bestätigst Entwürfe, nichts geht blind live.",
+    title: "Planungs-Autopilot",
+    body: "Wetter, Feiertage und deine Historie — schlägt Belegung vor. Du bestätigst Entwürfe, nichts geht blind live.",
   },
 ];
 
@@ -100,14 +100,14 @@ export default function FeaturesPage() {
           className="pointer-events-none absolute inset-x-0 -top-32 -z-10 h-72 bg-gradient-to-b from-brand/15 via-transparent to-transparent"
         />
         <div className="mx-auto max-w-7xl px-4 pb-20 pt-16 sm:pt-24">
-          <p className="text-xs font-semibold uppercase tracking-widest text-brand">VREMA · Gastro-Planung</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-brand">VREMA · Teams & Betriebe</p>
           <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-            Features, die im Service-Stress halten – nicht nur in der Demo.
+            Features, die im Betriebsstress halten – nicht nur in der Demo.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             VREMA bündelt <strong className="text-foreground">Zeiterfassung</strong>,{" "}
-            <strong className="text-foreground">Schichtplanung</strong> und Reporting in einer ruhigen Oberfläche – speziell
-            gedacht für Restaurants, Bars und Hotellerie.
+            <strong className="text-foreground">Einsatzplanung</strong> und Reporting in einer ruhigen Oberfläche – für
+            Gastro, Handwerk, Pflege, Handel und Dienstleistung.
           </p>
           <p className="mt-3 max-w-2xl text-xs text-muted-foreground">{pricingTiersHint()}</p>
 

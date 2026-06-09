@@ -33,7 +33,7 @@ function layout(title: string, body: string): string {
             <table cellpadding="0" cellspacing="0">
               <tr>
                 <td style="vertical-align:middle;">
-                  <img src="${APP_URL}/vrema_logo_icon.png" alt="VREMA – Gastro-Planung und Zeiterfassung für Restaurants" width="40" height="40" style="display:block;" />
+                  <img src="${APP_URL}/vrema_logo_icon.png" alt="VREMA – Schichtplanung und Zeiterfassung für Teams" width="40" height="40" style="display:block;" />
                 </td>
                 <td style="padding-left:10px;vertical-align:middle;">
                   <span style="color:${BASE.textPrimary};font-size:16px;font-weight:700;">Vrema</span>
@@ -304,4 +304,70 @@ export function noShowReminderEmailHtml(data: {
     </table>`;
 
   return layout("Erinnerung: Bitte einstempeln – Vrema", body);
+}
+
+// ── Trial-Ende-Erinnerungen ───────────────────────────────────────────────────
+export function trialReminderEmailHtml(data: {
+  recipientName: string;
+  companyName: string;
+  kind: "3d" | "1d" | "expired";
+  daysRemaining: number;
+  trialEndsAtLabel: string;
+  billingUrl: string;
+  flyerCampaignLabel?: string | null;
+}): string {
+  const headline =
+    data.kind === "expired"
+      ? "Die Testphase ist vorbei"
+      : data.kind === "1d"
+        ? "Morgen endet deine Testphase"
+        : "Noch 3 Tage Testphase";
+
+  const intro =
+    data.kind === "expired"
+      ? `für <strong style="color:${BASE.textPrimary};">${data.companyName}</strong> ist die kostenlose Phase abgelaufen. Dein Team kann nicht mehr stempeln oder planen, bis du einen Tarif wählst.`
+      : data.kind === "1d"
+        ? `für <strong style="color:${BASE.textPrimary};">${data.companyName}</strong> läuft die Testphase <strong style="color:${BASE.textPrimary};">morgen</strong> aus. Wähle rechtzeitig einen Tarif — dann arbeitet dein Team ohne Unterbrechung weiter.`
+        : `für <strong style="color:${BASE.textPrimary};">${data.companyName}</strong> bleiben noch <strong style="color:${BASE.textPrimary};">3 Tage</strong> in der Testphase. Ein Tarif jetzt sichern heißt: kein Stress am letzten Tag.`;
+
+  const flyerNote = data.flyerCampaignLabel
+    ? `<p style="color:${BASE.textMuted};font-size:12px;margin:0 0 20px;line-height:1.6;">Aktions-Zugang (${data.flyerCampaignLabel}) — danach normaler Tarif über Stripe, jederzeit kündbar.</p>`
+    : "";
+
+  const body = /* html */ `
+    <h1 style="color:${BASE.textPrimary};font-size:22px;font-weight:700;margin:0 0 8px;">
+      ${headline}
+    </h1>
+    <p style="color:${BASE.textMuted};font-size:14px;margin:0 0 20px;line-height:1.6;">
+      Hi <strong style="color:${BASE.textPrimary};">${data.recipientName}</strong>,<br/>
+      ${intro}
+    </p>
+    ${flyerNote}
+    <div style="background:${BASE.bg};border:1px solid ${BASE.border};border-radius:12px;padding:20px 24px;margin-bottom:28px;">
+      <div style="color:${BASE.accent};font-size:11px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">
+        # trial.status
+      </div>
+      <table cellpadding="0" cellspacing="0" width="100%">
+        ${kv("firma", data.companyName)}
+        ${kv("ende", data.trialEndsAtLabel)}
+        ${data.kind !== "expired" ? kv("verbleibend", `${data.daysRemaining} ${data.daysRemaining === 1 ? "Tag" : "Tage"}`) : kv("status", "abgelaufen")}
+      </table>
+    </div>
+
+    <table cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="background:${BASE.accent};border-radius:10px;">
+          <a href="${data.billingUrl}"
+             style="display:inline-block;padding:12px 28px;color:#000;font-weight:700;font-size:14px;text-decoration:none;">
+            $ tarif wählen →
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color:${BASE.textMuted};font-size:12px;margin:24px 0 0;line-height:1.6;">
+      Fragen? <a href="mailto:kontakt@kevko.studio" style="color:${BASE.accent};text-decoration:none;">kontakt@kevko.studio</a>
+    </p>`;
+
+  return layout(headline, body);
 }

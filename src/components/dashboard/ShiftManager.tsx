@@ -20,6 +20,7 @@ import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPan
 import { ShiftCentricBoard } from "@/components/planning/ShiftCentricBoard";
 import { buildMemberWeekMinutes, slotKey, type BoardShiftSlot } from "@/lib/planning/shift-board-model";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
+import { useVocabulary } from "@/components/VocabularyContext";
 import { ShiftAddSheet } from "@/components/planning/ShiftAddSheet";
 import { ShiftPlanPdfExport } from "@/components/planning/ShiftPlanPdfExport";
 import { isOpenShiftPlaceholderEmail } from "@/lib/planning/open-shift-email";
@@ -240,8 +241,9 @@ function simplePlannerDayState(params: {
   usedDays: Set<number>;
   vacationDays: Set<number>;
   sickDays: Set<number>;
+  slotLabel?: string;
 }): { tone: StatusTone; label: string; cellClass: string } {
-  const { dayIdx, usedDays, vacationDays, sickDays } = params;
+  const { dayIdx, usedDays, vacationDays, sickDays, slotLabel = "Schicht" } = params;
   if (sickDays.has(dayIdx)) {
     return {
       tone: "danger",
@@ -261,7 +263,7 @@ function simplePlannerDayState(params: {
   if (usedDays.has(dayIdx)) {
     return {
       tone: "brand",
-      label: "Schicht",
+      label: slotLabel,
       cellClass:
         "border-brand/40 bg-gradient-to-b from-brand/30 to-brand/18 text-brand shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18)] hover:from-brand/38 hover:to-brand/22 dark:border-white/12 dark:from-brand/38 dark:to-brand/22 dark:text-brand-foreground",
     };
@@ -325,6 +327,10 @@ export function ShiftManager({
   /** Firmen-Vokabular, z. B. „Einsatzplan“ / „Dienstplan“. */
   planTitle?: string;
 }) {
+  const vocab = useVocabulary();
+  const slot = vocab.singular;
+  const slots = vocab.plural;
+  const resolvedPlanTitle = planTitle === "Schichtplan" ? vocab.planTitle : planTitle;
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -1994,10 +2000,10 @@ export function ShiftManager({
               className="fixed left-3 right-3 z-[52] max-h-[min(52vh,420px)] overflow-y-auto rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-pop)]"
               style={{ bottom: "max(5.75rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem))" }}
               role="dialog"
-              aria-label="Schichtvorschläge"
+              aria-label={`${slots}-Vorschläge`}
             >
               <div className="mb-3 flex items-center justify-between gap-2">
-                <p className="text-sm font-bold text-fg">Schichtvorschläge</p>
+                <p className="text-sm font-bold text-fg">{slots}-Vorschläge</p>
                 <button
                   type="button"
                   className="rounded-lg border border-line px-2 py-1 text-xs font-semibold text-fg-muted"
@@ -2073,7 +2079,7 @@ export function ShiftManager({
           type="button"
           onClick={() => openMobileQuickAdd(mobileSelectedDay)}
           className="fixed bottom-[max(6.25rem,calc(env(safe-area-inset-bottom,0px)+5.25rem))] right-5 z-[52] inline-flex h-14 w-14 items-center justify-center rounded-full bg-brand text-brand-foreground shadow-[var(--shadow-card-hover)] active:scale-[0.98] md:bottom-5"
-          aria-label="Neue Schicht hinzufügen"
+          aria-label={`Neuen ${slot} hinzufügen`}
         >
           <Plus className="h-6 w-6" />
         </button>
@@ -2224,7 +2230,7 @@ export function ShiftManager({
           <Drawer.Overlay className="fixed inset-0 z-[100] bg-black/50" />
           <Drawer.Content className="fixed inset-x-0 bottom-0 z-[100] flex h-[92dvh] max-h-[92dvh] flex-col rounded-t-[28px] border border-border bg-card shadow-[0_-12px_40px_rgba(0,0,0,0.18)] outline-none">
             <Drawer.Handle className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/35" />
-            <Drawer.Title className="px-4 pt-1 text-xl font-bold text-foreground">Schicht setzen</Drawer.Title>
+            <Drawer.Title className="px-4 pt-1 text-xl font-bold text-foreground">{slot} setzen</Drawer.Title>
             <Drawer.Description className="px-4 text-sm text-muted-foreground">
               Mitarbeiter, Tag und Zeit - Aktionen unten in der Daumen-Zone.
             </Drawer.Description>
@@ -3001,7 +3007,7 @@ export function ShiftManager({
         <div className="block">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight">{planTitle}</h2>
+              <h2 className="text-lg font-semibold tracking-tight">{resolvedPlanTitle}</h2>
               <p className="mt-1 text-xs text-muted-foreground">
                 {renderDesktopTree
                   ? "Team links · Schichtkarten in der Woche · Zuweisen per Drag oder Antippen."
@@ -3080,7 +3086,7 @@ export function ShiftManager({
                 : "h-[100dvh] rounded-none border-0"
             }`}
           >
-            <h3 className="text-base font-semibold text-foreground md:text-sm">Schicht bearbeiten</h3>
+            <h3 className="text-base font-semibold text-foreground md:text-sm">{slot} bearbeiten</h3>
             <p className="mt-1 text-xs text-muted-foreground">{DAY_LABELS[shiftEdit.dayOfWeek]} · {shiftEdit.label}</p>
             <div className="mt-4 grid gap-3">
               <div>

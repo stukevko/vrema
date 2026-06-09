@@ -1,5 +1,8 @@
 /** Onboarding-Branche ↔ Prisma `CompanyIndustry` */
 
+import type { ShiftVocabulary } from "@/lib/vocabulary";
+import { defaultVocabularyForIndustry } from "@/lib/vocabulary";
+
 export const ONBOARDING_INDUSTRY_IDS = [
   "restaurant",
   "cafe",
@@ -7,6 +10,11 @@ export const ONBOARDING_INDUSTRY_IDS = [
   "hotel",
   "bakery",
   "canteen",
+  "craft",
+  "care",
+  "retail",
+  "logistics",
+  "field_service",
   "other",
 ] as const;
 
@@ -30,8 +38,36 @@ const TO_DB: Record<OnboardingIndustryId, CompanyIndustryValue> = {
   hotel: "HOTEL",
   bakery: "BAKERY",
   canteen: "CANTEEN",
+  craft: "OTHER",
+  care: "OTHER",
+  retail: "OTHER",
+  logistics: "OTHER",
+  field_service: "OTHER",
   other: "OTHER",
 };
+
+/** Vokabular-Preset je Onboarding-Branche (nicht-Gastro → OTHER in DB). */
+export function defaultVocabularyForOnboardingIndustry(id: OnboardingIndustryId): ShiftVocabulary {
+  switch (id) {
+    case "craft":
+      return "ASSIGNMENT";
+    case "care":
+      return "DUTY";
+    case "logistics":
+    case "field_service":
+      return "ASSIGNMENT";
+    case "retail":
+    case "restaurant":
+    case "cafe":
+    case "bar":
+    case "hotel":
+    case "bakery":
+    case "canteen":
+      return "SHIFT";
+    default:
+      return defaultVocabularyForIndustry("OTHER");
+  }
+}
 
 export function onboardingIndustryToDb(id: string): CompanyIndustryValue {
   if (id in TO_DB) return TO_DB[id as OnboardingIndustryId];
@@ -39,7 +75,7 @@ export function onboardingIndustryToDb(id: string): CompanyIndustryValue {
 }
 
 export function dbIndustryToOnboarding(industry: string | null | undefined): OnboardingIndustryId {
-  if (!industry) return "restaurant";
+  if (!industry) return "other";
   const key = industry.toLowerCase() as OnboardingIndustryId;
   return key in TO_DB ? key : "other";
 }

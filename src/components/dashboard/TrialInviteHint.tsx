@@ -1,6 +1,8 @@
-import Link from "next/link";
+"use client";
+
 import { Users } from "lucide-react";
 import { TRIAL_MAX_EMPLOYEES } from "@/lib/trial/constants";
+import { useUpgrade } from "@/components/dashboard/UpgradeContext";
 
 export function TrialInviteHint({
   activeEmployees,
@@ -9,6 +11,7 @@ export function TrialInviteHint({
   activeEmployees: number;
   atLimit?: boolean;
 }) {
+  const { openUpgrade } = useUpgrade();
   const remaining = Math.max(0, TRIAL_MAX_EMPLOYEES - activeEmployees);
   const showWarning = atLimit || remaining <= 1;
 
@@ -34,16 +37,17 @@ export function TrialInviteHint({
           )}
           <p className="leading-relaxed opacity-90">
             {atLimit
-              ? "Wähle einen Tarif, um weitere Teammitglieder einzuladen — Starter erlaubt bis zu 10."
+              ? "Ein Klick — Tarif wählen — bis zu 10 Mitarbeitende mit Starter."
               : "In der Testphase sind maximal 3 aktive Mitarbeitende möglich."}
           </p>
           {atLimit ? (
-            <Link
-              href="/dashboard/billing"
-              className="inline-flex min-h-9 items-center rounded-lg bg-brand px-3 text-[11px] font-semibold text-brand-foreground"
+            <button
+              type="button"
+              onClick={() => openUpgrade({ kind: "trial_employee_limit" })}
+              className="inline-flex min-h-10 items-center rounded-xl bg-brand px-4 text-[11px] font-semibold text-brand-foreground"
             >
-              Tarif wählen
-            </Link>
+              Tarif wählen — ein Klick
+            </button>
           ) : null}
         </div>
       </div>

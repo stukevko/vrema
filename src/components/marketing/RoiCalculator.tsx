@@ -101,7 +101,7 @@ export function RoiCalculator() {
                 min={1}
                 max={20}
                 step={1}
-                hint="Restaurants, Cafés, Hotels"
+                hint="Filialen, Standorte, Teams"
               />
               <Slider
                 label="Stunden Excel & WhatsApp / Woche"

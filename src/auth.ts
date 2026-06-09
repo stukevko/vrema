@@ -176,15 +176,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account?.provider === "credentials") return true;
       if (account?.provider === "passkey") return true;
 
-      const dbUser = await db.user.findUnique({
-        where: { email: user.email?.toLowerCase().trim() ?? "" },
-        select: { emailVerified: true },
-      });
+      const email = user.email?.toLowerCase().trim() ?? "";
+      if (!email) return false;
 
-      if (!user?.email) return false;
+      const dbUser = await db.user.findUnique({
+        where: { email },
+        select: {
+          emailVerified: true,
+          isActive: true,
+          company: {
+            select: {
+              trialEndsAt: true,
+              stripeSubId: true,
+              subEndsAt: true,
+              billingExempt: true,
+              isActive: true,
+            },
+          },
+        },
+      });
 
       if (!dbUser?.emailVerified) {
         throw new Error("Bitte verifiziere zuerst deine E-Mail-Adresse.");
+      }
+
+      const { companyHasOperationalAccess } = await import("@/lib/trial/access");
+      if (!dbUser.isActive || !dbUser.company || !companyHasOperationalAccess(dbUser.company)) {
+        throw new Error("Dein Zugang ist derzeit nicht aktiv. Bitte wende dich an die Geschäftsführung.");
       }
 
       return true;

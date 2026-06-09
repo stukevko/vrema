@@ -14,6 +14,7 @@ import {
 } from "@/lib/trial";
 import { flyerReferralDisplayName } from "@/lib/trial/referral";
 import { vocabularyLabels } from "@/lib/vocabulary";
+import { isBillingSuspendedExemptPath } from "@/lib/trial";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 
 export default async function DashboardLayout({
@@ -70,10 +71,36 @@ export default async function DashboardLayout({
     redirect("/dashboard/trial-ended");
   }
 
+  if (
+    role !== "SUPER_ADMIN" &&
+    role !== "SUPPORT" &&
+    session.user.companyId &&
+    !isBillingSuspendedExemptPath(pathname)
+  ) {
+    const billingGate = await db.company.findUnique({
+      where: { id: session.user.companyId },
+      select: { isActive: true, billingExempt: true, stripeSubId: true },
+    });
+    if (
+      billingGate &&
+      !billingGate.billingExempt &&
+      billingGate.isActive === false &&
+      billingGate.stripeSubId
+    ) {
+      const canManageBilling =
+        role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN";
+      if (canManageBilling) {
+        redirect("/dashboard/billing?payment_failed=1");
+      }
+      redirect("/dashboard/trial-ended");
+    }
+  }
+
   let trialBanner: {
     daysRemaining: number;
     activeEmployees: number;
     flyerCampaignLabel?: string | null;
+    trialEndsAtIso?: string | null;
   } | null = null;
   if (trialState?.isInAppTrial && !isTrialExemptDashboardPath(pathname)) {
     const [activeEmployees, companyRef] = await Promise.all([
@@ -89,6 +116,7 @@ export default async function DashboardLayout({
       flyerCampaignLabel: companyRef?.referredBy
         ? flyerReferralDisplayName(companyRef.referredBy)
         : null,
+      trialEndsAtIso: trialState.trialEndsAt?.toISOString() ?? null,
     };
   }
 

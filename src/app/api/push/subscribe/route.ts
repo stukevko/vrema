@@ -37,9 +37,20 @@ export async function POST(req: Request) {
       );
     }
 
+    const existing = await db.pushSubscription.findUnique({
+      where: { endpoint },
+      select: { userId: true },
+    });
+    if (existing && existing.userId !== userId) {
+      return NextResponse.json(
+        { ok: false, error: "Dieses Gerät ist einem anderen Konto zugeordnet." },
+        { status: 409 },
+      );
+    }
+
     await db.pushSubscription.upsert({
       where: { endpoint },
-      update: { userId, p256dh, auth: authKey },
+      update: { p256dh, auth: authKey },
       create: { userId, endpoint, p256dh, auth: authKey },
     });
 

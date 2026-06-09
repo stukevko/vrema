@@ -67,7 +67,7 @@ function AppWindow({
   );
 }
 
-// ─── Die 3 Kern-Versprechen (FINAL · Gastro/KMU) ─────────────────────────────
+// ─── Die 3 Kern-Versprechen (FINAL · Teams/KMU) ─────────────────────────────
 const PILLARS = [
   {
     icon: CalendarClock,
@@ -290,15 +290,15 @@ export default function LandingPage() {
             <div className="min-w-0 max-w-full transition-all duration-300">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface text-foreground text-xs mb-8">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
-                Geschlossene Beta · Gastronomie & KMU
+                Geschlossene Beta · Gastro, Handwerk, Pflege & Handel
               </div>
 
               <h1 className="mb-5 max-w-full hyphens-auto break-words text-[1.65rem] font-bold leading-[1.12] tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-[3.25rem]">
-                Personalplanung & Zeiterfassung für die Gastronomie — In 10 Minuten statt 5 Stunden.
+                Schichtplanung & Zeiterfassung für Teams — In 10 Minuten statt 5 Stunden.
               </h1>
 
               <p className="mb-10 max-w-full hyphens-auto break-words text-lg leading-relaxed text-muted-foreground md:max-w-xl">
-                VREMA schreibt dein Team, warnt dich proaktiv vor teuren Überstunden und schickt die Abrechnung fehlerfrei ans Lohnbüro. Kein SAP-Chaos, keine Excel-Zettelwirtschaft.
+                Ob Gastro, Handwerk, Pflege oder Handel: VREMA plant dein Team, warnt vor teuren Überstunden und schickt die Abrechnung fehlerfrei ans Lohnbüro. Kein SAP-Chaos, keine Excel-Zettelwirtschaft.
               </p>
 
               <div className="flex max-w-full flex-col items-stretch gap-3 sm:items-start">

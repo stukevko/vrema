@@ -243,6 +243,12 @@ model Company {
   stripePaymentMethodFingerprint String? @unique
   paymentMethodVerifiedAt DateTime?
   trialEndsAt       DateTime?
+  /// E-Mail „noch 3 Tage“ (Cron, idempotent).
+  trialRemind3dSentAt DateTime?
+  /// E-Mail „letzter Tag“ (Cron, idempotent).
+  trialRemind1dSentAt DateTime?
+  /// E-Mail „Testphase vorbei“ (Cron, idempotent).
+  trialExpiredNotifiedAt DateTime?
   /// Flyer-/Kampagnen-Code bei Registrierung (z. B. speyer-altstadt).
   referredBy        String?
   subEndsAt         DateTime?
@@ -424,6 +430,15 @@ model User {
 
 /// Web-Push-Abo eines einzelnen Geräts. Ein User kann mehrere Geräte haben
 /// (z. B. Gastro-Tablet im Laden + privates Handy) → 1:n.
+/// Stripe-Webhook-Idempotenz (event.id als PK).
+model ProcessedStripeEvent {
+  id          String   @id
+  type        String
+  processedAt DateTime @default(now())
+
+  @@index([processedAt])
+}
+
 model PushSubscription {
   id        String   @id @default(cuid())
   userId    String

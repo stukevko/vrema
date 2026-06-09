@@ -10,13 +10,13 @@ export function resolveMetadataBase(): URL {
   return new URL(`${getSiteUrl()}/`);
 }
 
-/** Einheitliche SEO-Keywords (Gastro + Zeiterfassung). */
+/** Einheitliche SEO-Keywords (branchenneutral + Zeiterfassung). */
 export const SEO_KEYWORDS = [
-  "Gastro-Planung",
-  "Schichtplanung Gastronomie",
-  "Zeiterfassung Restaurant",
+  "Schichtplanung Software",
+  "Zeiterfassung Teams",
   "Digitale Zeiterfassung",
   "Stempeluhr",
   "DSGVO Zeiterfassung",
+  "Personalplanung KMU",
   "VREMA",
 ] as const;

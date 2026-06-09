@@ -2,7 +2,8 @@
 
 import { FileDown, Lock, Share2 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { businessUpgradeToast, BUSINESS_UPGRADE_PATH } from "@/lib/plan-upgrade-messages";
+import { useUpgrade } from "@/components/dashboard/UpgradeContext";
+import { BUSINESS_UPGRADE_PATH } from "@/lib/plan-upgrade-messages";
 import { buildShiftPlanPdf, type ShiftPlanPdfMember, type ShiftPlanPdfShift } from "@/lib/planning/shift-plan-pdf";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
@@ -25,13 +26,14 @@ export function ShiftPlanPdfExport({
   shifts,
 }: Props) {
   const { show } = useToast();
+  const { openUpgrade } = useUpgrade();
   const hasPdf = plan === "BUSINESS" || plan === "ENTERPRISE";
   const shiftsInWeek = shifts.filter((s) => s.weekIndex === weekIndex && !Number.isNaN(s.dayOfWeek)).length;
   const metaLine = `Woche ${weekIndex}${shiftCycleWeeks > 1 ? `/${shiftCycleWeeks}` : ""} · ${members.length} Pers. · ${shiftsInWeek} Schichten`;
 
   const exportPdf = () => {
     if (!hasPdf) {
-      show(businessUpgradeToast("pdf"), "info");
+      openUpgrade({ kind: "business_feature", feature: "pdf" });
       return;
     }
     const { doc, fileName } = buildShiftPlanPdf({

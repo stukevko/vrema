@@ -37,8 +37,9 @@ export function hasFullAppAccess(
   company: CompanyTrialFields & { isActive?: boolean },
 ): boolean {
   if (isBillingExempt(company)) return true;
-  if (hasPaidSubscription(company)) return true;
   if (company.trialEndsAt && company.trialEndsAt > new Date()) return true;
+  if (company.isActive === false) return false;
+  if (hasPaidSubscription(company)) return true;
   if (company.isActive === true) return true;
   if (!company.trialEndsAt) return true;
   return false;
@@ -89,6 +90,17 @@ export function isTrialExemptDashboardPath(pathname: string): boolean {
     pathname.startsWith("/dashboard/billing") ||
     pathname.startsWith("/dashboard/trial-ended") ||
     pathname.startsWith("/dashboard/account") ||
-    pathname.startsWith("/dashboard/peaks")
+    pathname.startsWith("/dashboard/peaks") ||
+    pathname.startsWith("/dashboard/reports") ||
+    pathname.startsWith("/dashboard/settings")
+  );
+}
+
+/** Zahlungsausfall: Billing + Konto bleiben erreichbar. */
+export function isBillingSuspendedExemptPath(pathname: string): boolean {
+  return (
+    pathname.startsWith("/dashboard/billing") ||
+    pathname.startsWith("/dashboard/account") ||
+    pathname.startsWith("/dashboard/trial-ended")
   );
 }

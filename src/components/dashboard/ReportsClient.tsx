@@ -37,9 +37,9 @@ import { exportDatevCsvAction } from "@/lib/actions/reports";
 import { confirmTimesheetMonth } from "@/lib/actions/timesheet";
 import {
   BUSINESS_UPGRADE_PATH,
-  businessUpgradeToast,
   type GatedBusinessFeature,
 } from "@/lib/plan-upgrade-messages";
+import { useUpgrade } from "@/components/dashboard/UpgradeContext";
 import { minutesToDecimalHours, workedMinutes } from "@/lib/time/payroll";
 import { payrollDocumentTitle, payrollFileSlug, pdfAsciiSafe } from "@/lib/exports/payroll-formats";
 import {
@@ -379,6 +379,7 @@ export function ReportsClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { toasts, show, remove } = useToast();
+  const { openUpgrade } = useUpgrade();
   const [isSaving, startTransition] = useTransition();
   const [isRoutePending, startRouteTransition] = useTransition();
   const [isAckPending, startAckTransition] = useTransition();
@@ -414,8 +415,7 @@ export function ReportsClient({
   const [correctionDecisionError, setCorrectionDecisionError] = useState<string | null>(null);
 
   const showBusinessUpgrade = (feature: GatedBusinessFeature) => {
-    show(businessUpgradeToast(feature), "info");
-    router.push(BUSINESS_UPGRADE_PATH);
+    openUpgrade({ kind: "business_feature", feature });
   };
 
   const [isDatevDownloading, setIsDatevDownloading] = useState(false);

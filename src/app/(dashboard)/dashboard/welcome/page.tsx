@@ -21,21 +21,21 @@ export default async function DashboardWelcomePage() {
         variant="hero"
         eyebrow="Willkommen"
         title={`Hallo im Team von ${company?.name ?? "deinem Betrieb"}!`}
-        description="In drei Schritten startklar — Stempeln dauert unter 10 Sekunden."
+        description="Ein Klick stempeln — Planung und Team inklusive. Kein Aufschreiben, kein Formular-Chaos."
       />
       <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-6">
         <ol className="space-y-3 text-sm">
           <li className="flex gap-3 rounded-xl border border-border/60 bg-background/50 px-4 py-3">
             <Timer className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
             <span>
-              <strong className="text-foreground">1. Einstempeln</strong> — auf der Übersicht den großen Button
-              nutzen oder am Terminal deine PIN eingeben.
+              <strong className="text-foreground">1. Einstempeln</strong> — ein Klick auf den großen Button
+              (oder PIN am Terminal). Nicht aufschreiben — tippen.
             </span>
           </li>
           <li className="flex gap-3 rounded-xl border border-border/60 bg-background/50 px-4 py-3">
             <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
             <span>
-              <strong className="text-foreground">2. Schichten ansehen</strong> — im Planer sieh du, wann du
+              <strong className="text-foreground">2. Schichten ansehen</strong> — im Planer siehst du, wann du
               eingeplant bist.
             </span>
           </li>

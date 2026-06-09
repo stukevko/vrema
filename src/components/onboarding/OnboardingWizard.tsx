@@ -7,14 +7,16 @@ import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import { updateCompanySettings } from "@/lib/actions/settings";
 import {
   dbIndustryToOnboarding,
+  defaultVocabularyForOnboardingIndustry,
   onboardingIndustryToDb,
   type OnboardingIndustryId,
 } from "@/lib/onboarding/industry";
+import { VOCABULARY_OPTIONS, type ShiftVocabulary } from "@/lib/vocabulary";
 import { useToast } from "@/components/ui/Toast";
 
 /**
  * Smart-Onboarding-Wizard
- * 4 Schritte, eine Frage pro Karte. Speichert nach jedem „Weiter".
+ * 5 Schritte, eine Frage pro Karte. Speichert nach jedem „Weiter".
  * Bricht der User ab: Daten sind bereits persistiert, Re-Open lädt aktuellen Stand.
  */
 
@@ -25,11 +27,16 @@ const INDUSTRIES = [
   { id: "hotel", label: "Hotel" },
   { id: "bakery", label: "Bäckerei" },
   { id: "canteen", label: "Kantine" },
+  { id: "craft", label: "Handwerk" },
+  { id: "care", label: "Pflege & Sicherheit" },
+  { id: "retail", label: "Handel" },
+  { id: "logistics", label: "Logistik" },
+  { id: "field_service", label: "Außendienst" },
   { id: "other", label: "Sonstige" },
 ];
 
 const SHIFT_CYCLES = [
-  { id: 4, label: "4 Wochen im Voraus", hint: "Empfohlen — Gastronomie-Standard, voller Überblick" },
+  { id: 4, label: "4 Wochen im Voraus", hint: "Empfohlen — voller Überblick für die Planung" },
   { id: 1, label: "Jede Woche gleich", hint: "Stabile Crew, klare Routinen" },
   { id: 2, label: "Alle 2 Wochen rotierend", hint: "Z. B. Früh/Spät-Rotation" },
   { id: 3, label: "3-Wochen-Rhythmus", hint: "Komplexere Schichtmodelle" },
@@ -63,8 +70,11 @@ export function OnboardingWizard({ companyName, initial }: Props) {
   const [cycleWeeks, setCycleWeeks] = useState(
     [1, 2, 3, 4].includes(initial.shiftCycleWeeks) ? initial.shiftCycleWeeks : 4,
   );
+  const [shiftVocabulary, setShiftVocabulary] = useState<ShiftVocabulary>(
+    defaultVocabularyForOnboardingIndustry(dbIndustryToOnboarding(initial.industry)),
+  );
 
-  const total = 4;
+  const total = 5;
   const progress = Math.round(((step - 1) / total) * 100);
 
   function next() {
@@ -81,7 +91,12 @@ export function OnboardingWizard({ companyName, initial }: Props) {
         // Wir speichern bei Schritt 2 (Ort) und Schritt 3 (Umsatz) – pro Schritt
         // nur die relevanten Felder, damit Vor-/Zurück-Sprünge nichts überschreiben.
         if (step === 1) {
-          await updateCompanySettings({ industry: onboardingIndustryToDb(industry) });
+          const vocab = defaultVocabularyForOnboardingIndustry(industry);
+          setShiftVocabulary(vocab);
+          await updateCompanySettings({
+            industry: onboardingIndustryToDb(industry),
+            shiftVocabulary: vocab,
+          });
         }
         if (step === 2) {
           await updateCompanySettings({
@@ -97,6 +112,9 @@ export function OnboardingWizard({ companyName, initial }: Props) {
         }
         if (step === 4) {
           await updateCompanySettings({ shiftCycleWeeks: cycleWeeks });
+        }
+        if (step === 5) {
+          await updateCompanySettings({ shiftVocabulary });
         }
 
         if (step === total) {
@@ -120,7 +138,7 @@ export function OnboardingWizard({ companyName, initial }: Props) {
           Lass uns {companyName} startklar machen
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Vier kurze Fragen – danach ist dein Dashboard fertig konfiguriert.
+          Fünf kurze Fragen – danach ist dein Dashboard fertig konfiguriert.
         </p>
       </div>
 
@@ -141,14 +159,18 @@ export function OnboardingWizard({ companyName, initial }: Props) {
         {step === 1 && (
           <Step
             heading="Was für ein Betrieb bist du?"
-            sub="Wir nutzen das, um Beispiel-Schichtmodelle und Pausen-Defaults zu wählen."
+            sub="Wir passen Planer-Defaults und Terminologie an deinen Betrieb an."
           >
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {INDUSTRIES.map((i) => (
                 <button
                   key={i.id}
                   type="button"
-                  onClick={() => setIndustry(i.id as OnboardingIndustryId)}
+                  onClick={() => {
+                    const id = i.id as OnboardingIndustryId;
+                    setIndustry(id);
+                    setShiftVocabulary(defaultVocabularyForOnboardingIndustry(id));
+                  }}
                   className={`flex items-center justify-center rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${
                     industry === i.id
                       ? "border-brand bg-brand-soft text-brand dark:bg-brand/15"
@@ -216,7 +238,7 @@ export function OnboardingWizard({ companyName, initial }: Props) {
 
         {step === 4 && (
           <Step
-            heading="Wie wiederholt sich dein Schichtplan?"
+            heading="Wie wiederholt sich dein Planungsrhythmus?"
             sub="Wir richten den Planer auf diesen Rhythmus aus."
           >
             <div className="space-y-2">
@@ -236,6 +258,36 @@ export function OnboardingWizard({ companyName, initial }: Props) {
                     <p className="text-xs text-muted-foreground">{c.hint}</p>
                   </div>
                   {cycleWeeks === c.id && <CheckCircle2 className="h-5 w-5 text-brand" aria-hidden />}
+                </button>
+              ))}
+            </div>
+          </Step>
+        )}
+
+        {step === 5 && (
+          <Step
+            heading="Wie nennt ihr geplante Arbeitszeiten?"
+            sub="Das sieht dein Team überall gleich — Schicht, Einsatz oder Dienst."
+          >
+            <div className="space-y-2">
+              {VOCABULARY_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setShiftVocabulary(opt.value)}
+                  className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${
+                    shiftVocabulary === opt.value
+                      ? "border-brand bg-brand-soft dark:bg-brand/15"
+                      : "border-border bg-surface-muted/50 hover:bg-surface-muted dark:bg-surface/40"
+                  }`}
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground">{opt.hint}</p>
+                  </div>
+                  {shiftVocabulary === opt.value && (
+                    <CheckCircle2 className="h-5 w-5 text-brand" aria-hidden />
+                  )}
                 </button>
               ))}
             </div>
@@ -262,7 +314,7 @@ export function OnboardingWizard({ companyName, initial }: Props) {
             disabled={pending}
             className="inline-flex h-11 items-center gap-2 rounded-xl bg-brand px-5 text-sm font-semibold text-brand-foreground shadow-sm transition-[transform,box-shadow] hover:shadow-md active:scale-[0.98] disabled:opacity-50"
           >
-            {step === 4 ? (
+            {step === 5 ? (
               <>
                 <Sparkles className="h-4 w-4" />
                 Fertigstellen

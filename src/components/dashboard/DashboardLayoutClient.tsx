@@ -15,6 +15,7 @@ import { getMyUnreadSupportRepliesCount } from "@/lib/actions/support";
 import type { CompanyModules } from "@/lib/company-modules";
 import type { VocabularyLabels } from "@/lib/vocabulary";
 import { VocabularyProvider } from "@/components/VocabularyContext";
+import { UpgradeProvider } from "@/components/dashboard/UpgradeContext";
 
 type SessionUser = {
   name?: string | null;
@@ -45,7 +46,12 @@ export function DashboardLayoutClient({
   supportUnreadCount?: number;
   initialSuperOpenTickets?: number;
   initialUnreadNotifications?: number;
-  trialBanner?: { daysRemaining: number; activeEmployees: number; flyerCampaignLabel?: string | null } | null;
+  trialBanner?: {
+    daysRemaining: number;
+    activeEmployees: number;
+    flyerCampaignLabel?: string | null;
+    trialEndsAtIso?: string | null;
+  } | null;
   showPasskeyNudge?: boolean;
 }) {
   const [supportOverlayOpen, setSupportOverlayOpen] = useState(false);
@@ -78,6 +84,7 @@ export function DashboardLayoutClient({
 
   return (
     <VocabularyProvider labels={planVocabulary}>
+    <UpgradeProvider>
     <div className="flex h-screen min-h-0 w-full min-w-0 overflow-hidden overflow-x-hidden bg-background text-foreground">
       <Toaster richColors position="top-center" closeButton duration={2200} />
       <DashboardSidebar
@@ -121,6 +128,8 @@ export function DashboardLayoutClient({
               daysRemaining={trialBanner.daysRemaining}
               activeEmployees={trialBanner.activeEmployees}
               flyerCampaignLabel={trialBanner.flyerCampaignLabel}
+              trialEndsAtIso={trialBanner.trialEndsAtIso}
+              role={role}
             />
           ) : null}
           {showPasskeyNudge && !trialBanner ? <PasskeySecurityNudge /> : null}
@@ -161,6 +170,7 @@ export function DashboardLayoutClient({
         }}
       />
     </div>
+    </UpgradeProvider>
     </VocabularyProvider>
   );
 }

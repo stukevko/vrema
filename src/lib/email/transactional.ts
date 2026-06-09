@@ -16,7 +16,10 @@ import {
   vacationStatusEmailHtml,
   verificationEmailHtml,
   noShowReminderEmailHtml,
+  trialReminderEmailHtml,
 } from "@/lib/email/templates";
+import type { TrialReminderKind } from "@/lib/trial/reminders";
+import { trialReminderSubject } from "@/lib/trial/reminders";
 
 const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM = process.env.RESEND_FROM_EMAIL ?? "noreply@vrema.app";
@@ -181,6 +184,45 @@ export async function sendNoShowReminderEmail(data: {
     console.error("[Resend] No-Show-Erinnerung fehlgeschlagen:", error);
     throw new Error("E-Mail konnte nicht gesendet werden.");
   }
+}
+
+// ─── Trial-Ende-Erinnerungen (Cron) ───────────────────────────────────────────
+export async function sendTrialReminderEmail(data: {
+  kind: TrialReminderKind;
+  recipientName: string;
+  recipientEmail: string;
+  companyName: string;
+  daysRemaining: number;
+  trialEndsAt: Date;
+  flyerCampaignLabel?: string | null;
+}) {
+  const billingUrl =
+    data.kind === "expired"
+      ? `${APP_URL}/dashboard/billing?trial_expired=1`
+      : `${APP_URL}/dashboard/billing`;
+  const trialEndsAtLabel = data.trialEndsAt.toLocaleDateString("de-DE", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Berlin",
+  });
+
+  await sendInternal(
+    data.recipientEmail,
+    trialReminderSubject(data.kind, data.companyName),
+    trialReminderEmailHtml({
+      recipientName: data.recipientName,
+      companyName: data.companyName,
+      kind: data.kind,
+      daysRemaining: data.daysRemaining,
+      trialEndsAtLabel,
+      billingUrl,
+      flyerCampaignLabel: data.flyerCampaignLabel,
+    }),
+  );
 }
 
 // ─── E-Mail-Verifizierung ─────────────────────────────────────────────────────

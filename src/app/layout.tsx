@@ -34,7 +34,8 @@ export async function generateMetadata(): Promise<Metadata> {
     description: SITE_DESCRIPTION,
     keywords: [
       ...SEO_KEYWORDS,
-      "Restaurant Zeiterfassung",
+      "Zeiterfassung Handwerk",
+      "Schichtplanung Pflege",
       "Schichtplanung Teams",
       "Schichtplanung Software",
       "DATEV Export",

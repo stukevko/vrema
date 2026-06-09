@@ -14,8 +14,11 @@ export type CompanyAccessFields = CompanyTrialFields & {
  */
 export function companyHasOperationalAccess(company: CompanyAccessFields): boolean {
   if (isBillingExempt(company)) return true;
-  if (hasPaidSubscription(company)) return true;
+  // Laufende Testphase hat Vorrang (Stripe-Sperre greift hier nicht).
   if (company.trialEndsAt && company.trialEndsAt > new Date()) return true;
+  // Explizite Sperre (Zahlungsausfall) schlägt auch bei hinterlegter stripeSubId durch.
+  if (company.isActive === false) return false;
+  if (hasPaidSubscription(company)) return true;
   if (company.isActive) return true;
   return false;
 }

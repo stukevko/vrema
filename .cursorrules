@@ -6,7 +6,7 @@ Deine oberste Priorität ist nicht nur funktionierender Code, sondern eine fehle
 
 ## Grundregeln für jedes Frontend-Feature:
 
-1. **"Don't make me think":** Die UI muss für einen gestressten Gastronomen oder einen ungeschulten Kellner sofort verständlich sein. Keine versteckten Klicks, keine unlogischen Formulare.
+1. **"Don't make me think":** Die UI muss für einen gestressten Betriebsleiter oder einen ungeschulten Mitarbeiter (Gastro, Handwerk, Pflege, Handel) sofort verständlich sein. Keine versteckten Klicks, keine unlogischen Formulare.
 2. **Kontext vor Aktion:** Zeige dem User immer an, *warum* er etwas tut. Bei Genehmigungen, Korrekturen oder Änderungen MUSS immer eine Vorher/Nachher-Ansicht (Diff) oder eine Historie gezeigt werden. Lass den User (besonders den Chef) niemals blind entscheiden.
 3. **Keine "Dead Ends":** Wenn eine Liste leer ist (z.B. keine Tickets, keine Schichten), zeige einen sauberen "Empty State" mit einem Call-to-Action (z.B. "Keine offenen Tickets. Hier neues erstellen.").
 4. **Intelligente Navigation:** Nutze Modals (Popouts) nur für schnelle Aktionen. Für Lesevorgänge (Chats, Historien, Details) nutze Side-Drawers oder saubere Listen-Ansichten, damit der Kontext der Hauptseite nicht verloren geht.

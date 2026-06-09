@@ -6,6 +6,7 @@ import { createCheckoutSession, createBillingPortalSession } from "@/lib/actions
 import { Check, Zap, CreditCard, Clock } from "lucide-react";
 import Link from "next/link";
 import { getCompanyTrialState, TRIAL_DAYS, TRIAL_MAX_EMPLOYEES } from "@/lib/trial";
+import { FLYER_TRIAL_DAYS, flyerReferralDisplayName, isFlyerReferralCode } from "@/lib/trial/referral";
 import { grantCompanyPlanWithoutBilling } from "@/lib/actions/super-admin";
 import { Shield } from "lucide-react";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
@@ -14,7 +15,13 @@ import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader"
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ success?: string; canceled?: string; trial_expired?: string; upgrade?: string }>;
+  searchParams: Promise<{
+    success?: string;
+    canceled?: string;
+    trial_expired?: string;
+    upgrade?: string;
+    payment_failed?: string;
+  }>;
 }) {
   const session = await auth();
   if (!session?.user?.companyId) redirect("/auth/login");
@@ -37,6 +44,7 @@ export default async function BillingPage({
       trialEndsAt: true,
       billingExempt: true,
       isActive: true,
+      referredBy: true,
     },
   });
 
@@ -46,6 +54,11 @@ export default async function BillingPage({
   const currentPlan = company.plan;
   const showTrialExpired = params.trial_expired === "1" || trial?.isTrialExpired;
   const highlightBusiness = params.upgrade === "business";
+  const flyerLabel =
+    company.referredBy && isFlyerReferralCode(company.referredBy)
+      ? flyerReferralDisplayName(company.referredBy)
+      : null;
+  const trialDaysLabel = flyerLabel ? FLYER_TRIAL_DAYS : TRIAL_DAYS;
 
   return (
     <DashboardPageShell maxWidth="5xl" animateEnter className="sm:space-y-8">
@@ -56,7 +69,7 @@ export default async function BillingPage({
         description="Plan wählen, Stripe-Portal öffnen oder Testphase verlängern."
       />
 
-      {!company.isActive && !company.billingExempt && company.stripeSubId && (
+      {(params.payment_failed === "1" || (!company.isActive && !company.billingExempt && company.stripeSubId)) && (
         <div className="rounded-xl border border-danger/40 bg-danger-soft/40 px-4 py-4">
           <p className="text-sm font-semibold text-danger-foreground">Zahlung ausstehend — Zugang gesperrt</p>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -121,10 +134,14 @@ export default async function BillingPage({
           <div className="flex gap-3">
             <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden />
             <div>
-              <p className="text-sm font-semibold text-amber-950 dark:text-amber-100">Testphase beendet</p>
+              <p className="text-sm font-semibold text-amber-950 dark:text-amber-100">
+                {flyerLabel ? `${flyerLabel} beendet` : "Testphase beendet"}
+              </p>
               <p className="mt-1 text-sm text-amber-900/90 dark:text-amber-100/90">
-                Dein Team kann nicht weiter stempeln oder planen, bis du einen Tarif abschließt. Keine zweite Testphase
-                — einmal {TRIAL_DAYS} Tage mit bis zu {TRIAL_MAX_EMPLOYEES} Mitarbeitenden.
+                Dein Team kann nicht weiter stempeln oder planen, bis du einen Tarif abschließt.
+                {flyerLabel
+                  ? ` Die Aktion (${trialDaysLabel} Tage) war einmalig — danach normaler Tarif über Stripe.`
+                  : ` Keine zweite Testphase — einmal ${trialDaysLabel} Tage mit bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitenden.`}
               </p>
             </div>
           </div>
@@ -148,6 +165,15 @@ export default async function BillingPage({
           <p className="mt-1 text-xs text-muted-foreground">
             Bis zu {TRIAL_MAX_EMPLOYEES} Mitarbeitende in der Testphase. Wähle rechtzeitig einen Tarif, damit nichts
             unterbrochen wird.
+          </p>
+        </div>
+      )}
+
+      {params.canceled === "1" && (
+        <div className="rounded-xl border border-line bg-surface-muted/80 px-4 py-4 dark:border-white/10">
+          <p className="text-sm font-semibold text-foreground">Checkout abgebrochen</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Keine Sorge — es wurde nichts abgebucht. Du kannst jederzeit einen Tarif wählen.
           </p>
         </div>
       )}

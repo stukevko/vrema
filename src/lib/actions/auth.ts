@@ -4,12 +4,17 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/email/transactional";
 import { generatePasswordResetToken, generateVerificationToken } from "@/lib/auth/tokens";
+import { checkServerActionRateLimit } from "@/lib/server-action-rate-limit";
 
 const MIN_PASSWORD_LENGTH = 8;
 
 export async function requestPasswordReset(email: string) {
   const normalizedEmail = email.toLowerCase().trim();
   if (!normalizedEmail) return;
+
+  if (!checkServerActionRateLimit(`pwd-reset:${normalizedEmail}`, 3, 60 * 60 * 1000)) {
+    return;
+  }
 
   const user = await db.user.findUnique({
     where: { email: normalizedEmail },
@@ -59,6 +64,10 @@ export async function resetPassword(token: string, newPassword: string) {
 export async function resendVerificationLink(email: string) {
   const normalizedEmail = email.toLowerCase().trim();
   if (!normalizedEmail) return;
+
+  if (!checkServerActionRateLimit(`verify-resend:${normalizedEmail}`, 5, 60 * 60 * 1000)) {
+    return;
+  }
 
   const user = await db.user.findUnique({
     where: { email: normalizedEmail },

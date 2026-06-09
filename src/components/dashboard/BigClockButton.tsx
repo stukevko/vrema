@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { LogIn, LogOut, Loader2, Pause, Play, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { clockIn, clockOut, toggleBreak } from "@/lib/actions/worklogs";
+import { useVocabulary } from "@/components/VocabularyContext";
 
 function formatHHMMSS(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -55,6 +56,7 @@ export function BigClockButton({
   clockInAtIso: string | null;
   isOnBreak: boolean;
 }) {
+  const vocab = useVocabulary();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [now, setNow] = useState<number>(() => Date.now());
@@ -224,7 +226,7 @@ export function BigClockButton({
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-3 dark:border-white/10 dark:bg-surface/85">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              {state.isOnBreak ? "Pause aktiv" : "Aktive Schicht"}
+              {state.isOnBreak ? "Pause aktiv" : `Aktiver ${vocab.singular}`}
             </p>
             <p className="font-mono text-base font-bold tabular-nums text-foreground sm:text-lg">
               {formatHHMMSS(elapsedMs)}

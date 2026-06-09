@@ -10,13 +10,16 @@ Dieses Runbook ist für den Moment gedacht, in dem du auf der VM den Schalter um
 | `AUTH_SECRET`, `AUTH_URL`, `AUTH_TRUST_HOST` | Login |
 | `NEXT_PUBLIC_APP_URL` | Links, SEO, E-Mails |
 | `STRIPE_*` (Live) | Abos |
-| Stripe Webhook-Events | `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, **`invoice.payment_failed`**, `charge.refunded` |
+| Stripe Webhook-Events | `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, **`invoice.payment_failed`**, `invoice.payment_action_required`, `charge.refunded` |
 | `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | Verify, Reset, Welcome |
 | `SUPER_ADMIN_USER_ID` | Backoffice |
 | `AUTH_WEBAUTHN_*` | Passkeys (Domain muss passen) |
 | `OPENWEATHER_API_KEY` | Wetter im Planer + Personal-Empfehlung |
-| `DATA_RETENTION_CRON_SECRET` | Nightly Cleanup |
+| `DATA_RETENTION_CRON_SECRET` | Nightly Cleanup + Trial-Reminder (Fallback) |
+| `TRIAL_REMINDER_CRON_SECRET` | Optional: eigener Secret für Trial-E-Mails |
+| `RESEND_API_KEY` | Verify, Reset, Welcome, **Trial-Ende-E-Mails** |
 | `REQUIRE_CARD_ON_SIGNUP=false` | Trial ohne Karte (Standard) |
+| Flyer `/ref/speyer` | 30 Tage Trial ohne Karte (`FLYER_CAMPAIGN_CODES`) |
 | `NEXT_PUBLIC_REQUIRE_CARD_ON_SIGNUP=false` | Marketing-Copy ohne Karten-Zwang — **nach Änderung neu bauen** |
 | `npm run build` grün | Kein kaputter Deploy |
 | `npm run prod:cleanup` einmalig | Keine Test-Altlasten |
@@ -51,17 +54,16 @@ Ohne `OPENWEATHER_API_KEY` läuft VREMA – aber **ohne Wetterzeile im Planer** 
 
 ## 2) Datenbank & Build
 
-1. **Schema synchronisieren**
-   - Erster Wurf:
-     - `npx prisma db push`
-   - Oder sauber ueber Migrationen:
-     - `npx prisma migrate deploy`
+1. **Schema synchronisieren** (Production: **immer** Migrationen)
+   - `npx prisma migrate deploy`
+   - Neu u. a.: `trial_reminder_emails`, `stripe_processed_events`, `company_shift_vocabulary`
 
 2. **Build**
    - `npm run build`
 
 3. **Start mit PM2**
    - `pm2 start npm --name "vrema" -- start`
+   - Nach Deploy: `pm2 restart vrema --update-env`
 
 ---
 
@@ -165,3 +167,24 @@ npm run retention:run
 ```bash
 10 4 * * * curl -fsS -H "x-absent-secret: <DEIN_SECRET>" https://vrema.app/api/internal/mark-absent >> /var/log/vrema-absent.log 2>&1
 ```
+
+5. **Trial-Reminder-Cron (E-Mails 3d / 1d / abgelaufen) z. B. taeglich 08:00**
+
+```bash
+0 8 * * * curl -fsS -H "x-trial-reminder-secret: <DEIN_SECRET>" https://vrema.app/api/internal/trial-reminders >> /var/log/vrema-trial-reminders.log 2>&1
+```
+
+`TRIAL_REMINDER_CRON_SECRET` oder Fallback `DATA_RETENTION_CRON_SECRET`.
+
+### Speyer-Flyer Quick-Deploy
+
+```bash
+cd /var/www/vrema
+git pull origin main
+npm ci
+npx prisma migrate deploy
+npm run build
+pm2 restart vrema --update-env
+```
+
+Smoke: `https://vrema.app/ref/speyer` → Register → 30-Tage-Banner → kein Stripe-Zwang.

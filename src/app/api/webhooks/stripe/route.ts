@@ -13,6 +13,7 @@ import {
   cancelAffiliateEarningsFromStripeCharge,
   createAffiliateEarningFromPaidInvoice,
 } from "@/lib/affiliate-earnings";
+import { claimStripeWebhookEvent } from "@/lib/billing/stripe-webhook-idempotency";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -24,6 +25,11 @@ export async function POST(req: NextRequest) {
   } catch {
     console.error("Webhook signature verification failed");
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
+
+  const isNew = await claimStripeWebhookEvent(event.id, event.type);
+  if (!isNew) {
+    return NextResponse.json({ received: true, duplicate: true });
   }
 
   try {
@@ -100,8 +106,15 @@ export async function POST(req: NextRequest) {
         // … Zugang aber NUR über den zentralen Guard (respektiert billingExempt
         // + laufende Testphase). `trialing` zählt als aktiv, sonst würden Kunden
         // in der Stripe-Testphase ausgesperrt.
-        const isActiveStatus = sub.status === "active" || sub.status === "trialing";
+        const isActiveStatus =
+          sub.status === "active" ||
+          sub.status === "trialing";
         await setTenantBillingAccess(companyId, isActiveStatus);
+        break;
+      }
+
+      case "invoice.payment_action_required": {
+        // 3D-Secure / SCA — nicht sperren; Kunde soll im Portal bestätigen.
         break;
       }
 

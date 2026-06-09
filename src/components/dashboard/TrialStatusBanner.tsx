@@ -1,19 +1,43 @@
+"use client";
+
 import Link from "next/link";
 import { Clock, Sparkles } from "lucide-react";
 import { TRIAL_MAX_EMPLOYEES } from "@/lib/trial/constants";
+import { useUpgrade } from "@/components/dashboard/UpgradeContext";
+
+function formatTrialEnd(iso: string): string {
+  return new Intl.DateTimeFormat("de-DE", {
+    timeZone: "Europe/Berlin",
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(iso));
+}
 
 export function TrialStatusBanner({
   daysRemaining,
   activeEmployees,
   flyerCampaignLabel,
+  trialEndsAtIso,
+  role = "EMPLOYEE",
 }: {
   daysRemaining: number;
   activeEmployees: number;
   /** z. B. „Speyer Flyer-Aktion“ — 30-Tage-Kampagne statt Standard-7-Tage-Trial. */
   flyerCampaignLabel?: string | null;
+  /** ISO-Ende der Testphase — für klare Deadline-Anzeige. */
+  trialEndsAtIso?: string | null;
+  role?: string;
 }) {
-  const urgent = daysRemaining <= 2;
-  const soonEnding = daysRemaining <= 3 && daysRemaining > 2;
+  const { openUpgrade } = useUpgrade();
+  const isManager =
+    role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN";
+  const urgent = daysRemaining <= 1;
+  const soonEnding = daysRemaining <= 3 && daysRemaining > 1;
+  const endLabel = trialEndsAtIso ? formatTrialEnd(trialEndsAtIso) : null;
 
   return (
     <div
@@ -46,15 +70,37 @@ export function TrialStatusBanner({
               {flyerCampaignLabel
                 ? `30 Tage kostenlos · bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitende (${activeEmployees}/${TRIAL_MAX_EMPLOYEES} aktiv). Keine Kreditkarte nötig — Tarif erst nach der Aktion.`
                 : `Bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitende (${activeEmployees}/${TRIAL_MAX_EMPLOYEES} aktiv). PDF & Lohnbüro ab Business — danach ohne Unterbrechung weiterplanen.`}
+              {endLabel ? (
+                <>
+                  {" "}
+                  Endet am <span className="font-semibold">{endLabel}</span> Uhr.
+                </>
+              ) : null}
             </p>
           </div>
         </div>
-        <Link
-          href="/dashboard/billing"
-          className="inline-flex min-h-9 shrink-0 items-center rounded-xl bg-brand px-3 text-xs font-semibold text-brand-foreground"
-        >
-          {urgent ? "Jetzt Tarif wählen" : "Tarif wählen"}
-        </Link>
+        {isManager ? (
+          urgent || soonEnding ? (
+            <button
+              type="button"
+              onClick={() => openUpgrade({ kind: "trial_ending", daysRemaining })}
+              className="inline-flex min-h-9 shrink-0 items-center rounded-xl bg-brand px-3 text-xs font-semibold text-brand-foreground"
+            >
+              {urgent ? "Heute Tarif sichern" : "Tarif sichern — ein Klick"}
+            </button>
+          ) : (
+            <Link
+              href="/dashboard/billing"
+              className="inline-flex min-h-9 shrink-0 items-center rounded-xl bg-brand px-3 text-xs font-semibold text-brand-foreground"
+            >
+              Tarif wählen
+            </Link>
+          )
+        ) : (
+          <p className="shrink-0 rounded-xl border border-line bg-surface px-3 py-2 text-xs text-muted-foreground dark:border-white/10">
+            Tarif wählt deine Leitung
+          </p>
+        )}
       </div>
     </div>
   );
