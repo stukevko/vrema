@@ -17,6 +17,7 @@ Manuelle Checkliste **vor jedem Production-Push** (ca. 15–20 Min.). Bei einem 
 - [ ] **Einstempeln** (Dashboard oder Terminal) → Status „aktiv“ / Uhr sichtbar
 - [ ] **Ausstempeln** → Nettozeit erscheint in Berichten **ohne F5** (ggf. `router.refresh` / kurz warten)
 - [ ] **Terminal-PIN** (falls aktiv): Stempeln mit PIN klappt
+- [ ] **Offline-Stempeln** (App): Flugmodus → einstempeln → „Offline gespeichert“ → online → Sync-Toast + Eintrag in Berichten
 
 ## Schichtplan
 
@@ -26,6 +27,7 @@ Manuelle Checkliste **vor jedem Production-Push** (ca. 15–20 Min.). Bei einem 
 - [ ] **Schicht-Vorlage** anlegen/löschen (Einstellungen) → Liste aktualisiert ohne Hard-Reload
 - [ ] **Schichtplan PDF** (Business): Button im Planer → PDF mit Team × Mo–So, lesbar auf dem Handy
 - [ ] **Mitarbeiter „Mein Dienstplan“**: Wochen-Raster + Liste chronologisch, Drucken/PDF speichern möglich
+- [ ] **Chef Mobil Planer**: Einfach-Planer (Mitarbeiter-Chip + Tages-Pills), keine horizontale Desktop-Board-Scroll-Hölle
 
 ## Team & Einstellungen
 
@@ -44,7 +46,10 @@ Manuelle Checkliste **vor jedem Production-Push** (ca. 15–20 Min.). Bei einem 
 ## Module & Grenzfälle
 
 - [ ] **Navigation**: deaktiviertes Modul (z. B. Stoß) **nicht** in Sidebar sichtbar
-- [ ] **Mobile** (375px): Bottom-Nav erreichbar, kein abgeschnittenes Modal
+- [ ] **Mobile MA** (375px): Bottom-Nav Heute · Planer · Team · Urlaub · Profil
+- [ ] **Mobile Chef** (375px): Bottom-Nav Start · Planer · Team · **Auswertung** · Profil; Berichte im Cockpit-Schnellzugriff
+- [ ] **Mobile Chef Start**: Fokus-Cockpit sichtbar, „Mehr auf der Startseite“ klappt auf
+- [ ] **Mobile**: max. ein Banner-Hinweis (Trial/Passkey/PWA/Wayfinding), kein abgeschnittenes Modal
 - [ ] **Health** `GET /api/health` → 200 OK
 
 ## Nach Deploy (Production)

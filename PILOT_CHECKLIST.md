@@ -39,7 +39,7 @@ Für **einen echten Gastronomie-Betrieb** (7 Tage Trial, bis 3 Mitarbeitende). T
 | ✓ | Was | Erwartung |
 |---|-----|-----------|
 | ☐ | MA-Login (Handy) | Übersicht, großer Stempel-Button |
-| ☐ | Bottom-Nav | Kein „Einblicke“, kein Abo |
+| ☐ | Bottom-Nav | Heute · Planer · Team · Urlaub · Profil (kein Auswertung/Abo) |
 | ☐ | **Planung** | Nur „Mein Dienstplan“ |
 | ☐ | Urlaub beantragen (optional) | Owner sieht unter Abwesenheit |
 
@@ -52,7 +52,9 @@ Für **einen echten Gastronomie-Betrieb** (7 Tage Trial, bis 3 Mitarbeitende). T
 | ☐ | Timeline: Woche blättern | Schichten passen zur Planwoche |
 | ☐ | Planer-Badge „Stoß · +1 prüfen“ an Stoß-Tagen | Nur wenn Stoß-Profil + Unterbesetzung |
 | ☐ | Berater einladen (Rolle Berater) | Landet nur auf Stoß & Umsatz |
-| ☐ | Einblicke öffnen | Hinweise ohne Score-Wand |
+| ☐ | **Auswertung** (Bottom-Nav Tab oder Desktop-Sidebar) | Hinweise ohne Score-Wand |
+| ☐ | Owner-Handy: Cockpit + „Mehr anzeigen“ | Fokus oben, Rest eingeklappt |
+| ☐ | Owner-Handy: Planer = Einfach-Planer | Mitarbeiter wählen → Tag antippen |
 | ☐ | Support-Ticket (optional) | Antwort innerhalb 24h |
 
 ---
@@ -61,7 +63,7 @@ Für **einen echten Gastronomie-Betrieb** (7 Tage Trial, bis 3 Mitarbeitende). T
 
 - Kassen-Import / Umsatz pro Stunde  
 - Lohnbüro-Portal  
-- Offline-Terminal  
+- **Offline-PIN-Terminal** (Tablet ohne Netz — App-Stempeln offline mit Sync ist ok)  
 - ML-Blackbox  
 
 ---

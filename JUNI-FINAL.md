@@ -17,7 +17,9 @@
 ## Definition of Done (Juni-Release)
 
 - [x] **Übersicht:** 3 Fokus-Karten aktiv (Heute, Lücken, Freigaben) — `ManagerFocusCards`  
-- [ ] **Planer:** Shift-Centric Board fehlerfrei — Code-Audit Zuweisen/Leeren/Vorlagen (optimistisch + Slot-Overlay); manuell: `RELEASE-SMOKE.md`  
+- [ ] **Planer:** Shift-Centric Board (Desktop) + Einfach-Planer (Chef-Mobil) fehlerfrei — manuell: `docs/RELEASE-SMOKE.md`  
+- [x] **Mobil Chef:** Cockpit, Bottom-Nav Auswertung, Banner-Stack reduziert — `ManagerMobileCockpit`, `DashboardMobileHints`  
+- [x] **Offline-Stempeln:** IndexedDB-Queue + Sync bei `online` — `lib/offline/`, `OfflineClockSync`  
 - [x] **Berichte:** Stunden-Korrektur via Modal (kein `window.prompt` in Berichten), PDF Hochkant A4 — `KorrekturModal`, `jsPDF portrait`  
 - [x] **Billing:** Webhook `invoice.payment_failed` sperrt Tenant; `invoice.paid` schaltet frei — `src/lib/billing/stripe-invoice-tenant.ts` (+ Stripe Dashboard: Event aktivieren)  
 - [x] **Super-Admin:** Modul-Toggles (Kern vs. Erweiterungen) pro Betrieb — Zeile unter jeder Firma im Super-Admin-Panel  

@@ -10,10 +10,14 @@ type BeforeInstallPromptEvent = Event & {
 
 const DISMISS_KEY = "vrema-pwa-hint-dismissed";
 
-export function PwaInstallHint() {
+export function PwaInstallHint({ onVisibleChange }: { onVisibleChange?: (visible: boolean) => void } = {}) {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [isIos, setIsIos] = useState(false);
+
+  useEffect(() => {
+    onVisibleChange?.(visible);
+  }, [visible, onVisibleChange]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

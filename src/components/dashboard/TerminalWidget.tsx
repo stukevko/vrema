@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Clock, LogIn, LogOut, Loader2, Pause, WifiOff, Check } from "lucide-react";
 import { toast } from "sonner";
 import { clockIn, clockOut, toggleBreak } from "@/lib/actions/worklogs";
+import { performClockAction } from "@/lib/offline/perform-clock-action";
+import { getQueuedClockCount } from "@/lib/offline/clock-queue";
 
 export interface TerminalActiveLog {
   id: string;
@@ -62,7 +64,22 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
   const [onLine, setOnLine] = useState(true);
+  const [queuedCount, setQueuedCount] = useState(0);
   const [displayLog, addOptimistic] = useOptimistic(activeLog, mergeOptimistic);
+
+  const clockExec = {
+    clockIn: () => clockIn(),
+    clockOut: () => clockOut(),
+    toggleBreak: () => toggleBreak(),
+  };
+
+  const refreshQueueCount = async () => {
+    try {
+      setQueuedCount(await getQueuedClockCount());
+    } catch {
+      setQueuedCount(0);
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
@@ -70,7 +87,10 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
   }, []);
 
   useEffect(() => {
-    const sync = () => setOnLine(typeof navigator !== "undefined" ? navigator.onLine : true);
+    const sync = () => {
+      setOnLine(typeof navigator !== "undefined" ? navigator.onLine : true);
+      void refreshQueueCount();
+    };
     sync();
     window.addEventListener("online", sync);
     window.addEventListener("offline", sync);
@@ -93,17 +113,18 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
   };
 
   const handleClockIn = () => {
-    if (!onLine) {
-      setError("Keine Netzwerkverbindung. Bitte prüfe deine Verbindung und versuche es erneut.");
-      return;
-    }
     setError(null);
     startTransition(async () => {
       addOptimistic({ type: "clock_in" });
       try {
-        const res = await clockIn();
-        if (res.warning) {
-          toast.warning(res.warning, { duration: 6000 });
+        const outcome = await performClockAction("clockIn", clockExec);
+        if (outcome.mode === "queued") {
+          await refreshQueueCount();
+          await runAfterSuccess("Offline gespeichert – Sync folgt automatisch.");
+          return;
+        }
+        if (outcome.action === "clockIn" && outcome.result.warning) {
+          toast.warning(outcome.result.warning, { duration: 6000 });
           await runAfterSuccess("Eingestempelt – siehe Hinweis.");
         } else {
           await runAfterSuccess("Eingestempelt.");
@@ -115,15 +136,16 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
   };
 
   const handleClockOut = () => {
-    if (!onLine) {
-      setError("Keine Netzwerkverbindung. Bitte prüfe deine Verbindung und versuche es erneut.");
-      return;
-    }
     setError(null);
     startTransition(async () => {
       addOptimistic({ type: "clock_out" });
       try {
-        await clockOut();
+        const outcome = await performClockAction("clockOut", clockExec);
+        if (outcome.mode === "queued") {
+          await refreshQueueCount();
+          await runAfterSuccess("Offline gespeichert – Sync folgt automatisch.");
+          return;
+        }
         await runAfterSuccess("Ausgestempelt.");
       } catch (e: unknown) {
         setError(userErrorMessage(e, "Fehler beim Ausstempeln"));
@@ -133,16 +155,17 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
 
   const handleBreakToggle = () => {
     if (!displayLog) return;
-    if (!onLine) {
-      setError("Keine Netzwerkverbindung. Bitte prüfe deine Verbindung und versuche es erneut.");
-      return;
-    }
     setError(null);
     const next = !displayLog.isOnBreak;
     startTransition(async () => {
       addOptimistic({ type: "break_toggle", nextIsOnBreak: next });
       try {
-        await toggleBreak();
+        const outcome = await performClockAction("toggleBreak", clockExec);
+        if (outcome.mode === "queued") {
+          await refreshQueueCount();
+          await runAfterSuccess("Pause offline gespeichert.");
+          return;
+        }
         await runAfterSuccess(next ? "Pause gestartet." : "Pause beendet.");
       } catch (e: unknown) {
         setError(userErrorMessage(e, "Fehler beim Pausenwechsel"));
@@ -168,10 +191,10 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
     <div className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90 sm:p-6">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Terminal</h2>
-        {!onLine && (
+        {(!onLine || queuedCount > 0) && (
           <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
             <WifiOff className="h-3 w-3" aria-hidden />
-            Offline
+            {!onLine ? (queuedCount > 0 ? `Offline · ${queuedCount} warten` : "Offline-Sync") : `${queuedCount} Sync`}
           </span>
         )}
       </div>

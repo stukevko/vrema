@@ -68,10 +68,7 @@ export default async function SettingsPage() {
   const companyModules = isOwner ? await getCompanyModulesForTenant().catch(() => null) : null;
 
   const mobileMoreLinks: { href: string; label: string; icon: LucideIcon }[] = [
-    { href: "/dashboard/planning", label: "Planung", icon: CalendarDays },
-    { href: "/dashboard/team", label: "Team", icon: Users },
     { href: "/dashboard/reports", label: "Berichte", icon: FileText },
-    { href: "/dashboard/insights", label: "Auswertung", icon: Brain },
     { href: "/dashboard/vacation", label: "Abwesenheit", icon: CalendarDays },
     { href: "/dashboard/support", label: "Hilfe", icon: LifeBuoy },
     { href: "/dashboard#terminal-widget", label: "Terminal", icon: Timer },

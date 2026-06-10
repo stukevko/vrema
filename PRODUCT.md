@@ -17,7 +17,7 @@ Stempeln · Schichtplan · Team · Abwesenheit · Berichte · Einstellungen
 2. **Nach jeder Mutation** in Client-UI: `router.refresh()` (siehe `useDashboardMutation`).
 3. **Modul aus** → UI weg + kurzer Hinweis mit Link zu Einstellungen → Module.
 4. **Empty State** = Text + ein CTA (kein Dead End).
-5. **Mobil-Bottom-Nav (Chef):** Start · Planer · Team · Berichte · Profil.
+5. **Mobil-Bottom-Nav (Chef):** Start · Planer · Team · Auswertung · Profil. Berichte über Cockpit-Schnellzugriff.
 
 ## Checkliste vor neuem Feature
 - Welcher Stein? Kern oder Erweiterung?

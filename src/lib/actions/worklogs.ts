@@ -26,25 +26,67 @@ function parseClockInstant(value: string | null | undefined): Date | null | unde
 }
 import { assertClockIpAllowed } from "@/lib/security/ip-allowlist-server";
 
-export async function clockIn() {
+export async function clockIn(clientTimestamp?: string) {
   const { userId, companyId } = await requireTenant();
   // Enterprise: IP-Geofencing greift, falls die Firma "Stempeln nur am Standort" aktiv hat.
   await assertClockIpAllowed(companyId);
-  const result = await createClockInEntry({ companyId, userId, actorUserId: userId });
+  const clockInAt = clientTimestamp ? parseClockInstant(clientTimestamp) ?? undefined : undefined;
+  const result = await createClockInEntry({
+    companyId,
+    userId,
+    actorUserId: userId,
+    ...(clockInAt ? { clockInAt, source: "offline-sync" } : {}),
+  });
   revalidatePath("/dashboard");
   return result;
 }
 
-export async function clockOut(logId?: string) {
+export async function clockOut(logId?: string, clientTimestamp?: string) {
   const { userId, companyId } = await requireTenant();
-  const updated = await closeClockForUser({ companyId, userId, actorUserId: userId, logId });
+  const clockOutAt = clientTimestamp ? parseClockInstant(clientTimestamp) ?? undefined : undefined;
+  const updated = await closeClockForUser({
+    companyId,
+    userId,
+    actorUserId: userId,
+    logId,
+    ...(clockOutAt ? { clockOutAt, source: "offline-sync" } : {}),
+  });
   revalidatePath("/dashboard");
   return updated;
 }
 
-export async function toggleBreak(logId?: string) {
+export async function syncOfflineClockActions(
+  actions: Array<{ id: string; type: "clockIn" | "clockOut" | "toggleBreak"; clientTimestamp: string }>,
+) {
+  const { userId, companyId } = await requireTenant();
+  await assertClockIpAllowed(companyId);
+
+  const syncedIds: string[] = [];
+  for (const action of actions) {
+    const at = parseClockInstant(action.clientTimestamp);
+    if (!at) throw new Error("Ungültiger Offline-Zeitstempel.");
+
+    if (action.type === "clockIn") {
+      await createClockInEntry({ companyId, userId, actorUserId: userId, clockInAt: at, source: "offline-sync" });
+    } else if (action.type === "clockOut") {
+      await closeClockForUser({ companyId, userId, actorUserId: userId, clockOutAt: at, source: "offline-sync" });
+    } else {
+      await toggleBreak(undefined, action.clientTimestamp);
+    }
+    syncedIds.push(action.id);
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/reports");
+  return { syncedIds };
+}
+
+export async function toggleBreak(logId?: string, clientTimestamp?: string) {
   const { userId, companyId } = await requireTenant();
   await ensureWorkLogAuditTable();
+  const at = clientTimestamp ? parseClockInstant(clientTimestamp) : null;
+  const now = at ?? new Date();
+  const auditSource = clientTimestamp ? "offline-sync" : "app";
   const { updated, status } = await db.$transaction(async (tx) => {
     const active = logId
       ? await tx.workLog.findFirst({
@@ -53,8 +95,6 @@ export async function toggleBreak(logId?: string) {
       : await tx.workLog.findFirst({ where: tenantWhere(companyId, { userId, clockOut: null }) });
 
     if (!active) throw new Error("Kein aktiver Stempel gefunden");
-
-    const now = new Date();
     const isStartingBreak = !active.isOnBreak;
 
     let nextBreakMins = active.breakMins;
@@ -87,7 +127,7 @@ export async function toggleBreak(logId?: string) {
       active.id,
       userId,
       isStartingBreak ? "BREAK_START" : "BREAK_END",
-      "app",
+      auditSource,
       JSON.stringify(active),
       JSON.stringify(updatedLog)
     );

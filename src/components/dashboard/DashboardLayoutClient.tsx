@@ -7,10 +7,8 @@ import { DashboardSidebar, DashboardMobileBottomNav } from "@/components/dashboa
 import { DashboardTopbar } from "@/components/dashboard/Topbar";
 import { SupportTicketOverlay } from "@/components/dashboard/SupportTicketOverlay";
 import { DashboardPullToRefresh } from "@/components/dashboard/DashboardPullToRefresh";
-import { PwaInstallHint } from "@/components/dashboard/PwaInstallHint";
-import { TrialStatusBanner } from "@/components/dashboard/TrialStatusBanner";
-import { PasskeySecurityNudge } from "@/components/dashboard/PasskeySecurityNudge";
-import { MobileWayfindingStrip } from "@/components/dashboard/MobileWayfindingStrip";
+import { DashboardMobileHints } from "@/components/dashboard/DashboardMobileHints";
+import { OfflineClockSync } from "@/components/pwa/OfflineClockSync";
 import { getMyUnreadSupportRepliesCount } from "@/lib/actions/support";
 import type { CompanyModules } from "@/lib/company-modules";
 import type { VocabularyLabels } from "@/lib/vocabulary";
@@ -87,6 +85,7 @@ export function DashboardLayoutClient({
     <UpgradeProvider>
     <div className="flex h-screen min-h-0 w-full min-w-0 overflow-hidden overflow-x-hidden bg-background text-foreground">
       <Toaster richColors position="top-center" closeButton duration={2200} />
+      <OfflineClockSync />
       <DashboardSidebar
         className="no-print"
         role={role}
@@ -121,18 +120,12 @@ export function DashboardLayoutClient({
         >
           <DashboardPullToRefresh scrollRef={mainScrollRef} />
           <div className="dashboard-shell w-full min-w-0 max-w-full overflow-x-hidden">
-            <MobileWayfindingStrip role={role} companyModules={companyModules} />
-            <PwaInstallHint />
-          {trialBanner ? (
-            <TrialStatusBanner
-              daysRemaining={trialBanner.daysRemaining}
-              activeEmployees={trialBanner.activeEmployees}
-              flyerCampaignLabel={trialBanner.flyerCampaignLabel}
-              trialEndsAtIso={trialBanner.trialEndsAtIso}
+            <DashboardMobileHints
               role={role}
+              companyModules={companyModules}
+              trialBanner={trialBanner ? { ...trialBanner, role } : null}
+              showPasskeyNudge={showPasskeyNudge && !trialBanner}
             />
-          ) : null}
-          {showPasskeyNudge && !trialBanner ? <PasskeySecurityNudge /> : null}
           {unreadReplies > 0 ? (
             <div className="no-print mb-4 min-w-0 max-w-full rounded-2xl border border-brand/25 bg-brand-soft/80 px-4 py-3 text-sm text-foreground dark:border-white/10 dark:bg-brand/18 md:mb-5">
               <p className="font-medium">Du hast eine Antwort auf dein Support-Ticket erhalten.</p>

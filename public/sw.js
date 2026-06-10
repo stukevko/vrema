@@ -1,7 +1,9 @@
-/* VREMA Service Worker — minimal, damit Chrome/Edge die Install-Aufforderung anzeigt.
- * Kein aggressives Caching: wir bleiben „network-first", damit neue Deploys sofort sichtbar sind.
+/* VREMA Service Worker — Install-PWA + Offline-Shell für besuchte Seiten.
+ * Navigation: network-first, Fallback auf Cache, dann offline.html.
+ * Statische Assets: stale-while-revalidate.
  */
-const CACHE_NAME = "vrema-shell-v2";
+const CACHE_NAME = "vrema-shell-v3";
+const RUNTIME_CACHE = "vrema-runtime-v3";
 const OFFLINE_URL = "/offline.html";
 const PRECACHE_URLS = [OFFLINE_URL, "/vrema_logo.png", "/android-chrome-192x192.png"];
 
@@ -12,7 +14,7 @@ self.addEventListener("install", (event) => {
       try {
         await cache.addAll(PRECACHE_URLS);
       } catch (_) {
-        /* offline.html optional, ignorieren falls fehlt */
+        /* offline.html optional */
       }
       await self.skipWaiting();
     })()
@@ -23,7 +25,9 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
+      await Promise.all(
+        keys.filter((k) => k !== CACHE_NAME && k !== RUNTIME_CACHE).map((k) => caches.delete(k))
+      );
       await self.clients.claim();
     })()
   );
@@ -36,17 +40,23 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // Kein SW-Caching für API/Auth/Server-Action-Pfade
   if (url.pathname.startsWith("/api") || url.pathname.startsWith("/auth")) return;
 
   if (req.mode === "navigate") {
     event.respondWith(
       (async () => {
+        const runtime = await caches.open(RUNTIME_CACHE);
         try {
-          return await fetch(req);
+          const fresh = await fetch(req);
+          if (fresh.ok) {
+            runtime.put(req, fresh.clone());
+          }
+          return fresh;
         } catch {
-          const cache = await caches.open(CACHE_NAME);
-          const offline = await cache.match(OFFLINE_URL);
+          const cached = await runtime.match(req);
+          if (cached) return cached;
+          const shell = await caches.open(CACHE_NAME);
+          const offline = await shell.match(OFFLINE_URL);
           return (
             offline ||
             new Response("Offline – bitte Verbindung prüfen.", {
@@ -54,6 +64,31 @@ self.addEventListener("fetch", (event) => {
               headers: { "Content-Type": "text/plain; charset=utf-8" },
             })
           );
+        }
+      })()
+    );
+    return;
+  }
+
+  if (url.pathname.startsWith("/_next/static/")) {
+    event.respondWith(
+      (async () => {
+        const runtime = await caches.open(RUNTIME_CACHE);
+        const cached = await runtime.match(req);
+        if (cached) {
+          void fetch(req)
+            .then((fresh) => {
+              if (fresh.ok) runtime.put(req, fresh.clone());
+            })
+            .catch(() => {});
+          return cached;
+        }
+        try {
+          const fresh = await fetch(req);
+          if (fresh.ok) runtime.put(req, fresh.clone());
+          return fresh;
+        } catch {
+          return cached || Response.error();
         }
       })()
     );
@@ -73,11 +108,6 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
-/* ── Web Push ─────────────────────────────────────────────────────────────
- * Payload (JSON): { title, body, url, unread }
- * Zeigt die native Notification an und aktualisiert parallel das
- * Homescreen-Icon-Badge (Badging API) anhand des mitgelieferten unread-Counts.
- */
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -92,7 +122,6 @@ self.addEventListener("push", (event) => {
     icon: "/android-chrome-192x192.png",
     badge: "/android-chrome-192x192.png",
     data: { url: data.url || "/dashboard" },
-    // Gleiche tag → ersetzt statt stapelt (z. B. bei mehreren Updates).
     tag: data.tag || undefined,
   };
 
@@ -114,8 +143,6 @@ self.addEventListener("push", (event) => {
   );
 });
 
-/* Klick auf die Notification → bestehendes Fenster fokussieren & zur
- * Ziel-URL navigieren, sonst ein neues Fenster öffnen. */
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const targetUrl = (event.notification.data && event.notification.data.url) || "/dashboard";
@@ -133,7 +160,7 @@ self.addEventListener("notificationclick", (event) => {
             try {
               await client.navigate(targetUrl);
             } catch (_) {
-              /* z. B. Cross-Origin – ignorieren */
+              /* ignore */
             }
           }
           return;

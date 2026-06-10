@@ -45,6 +45,8 @@ import { logServerError } from "@/lib/server-logger";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 import type { CompanyModules } from "@/lib/company-modules";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { ManagerMobileCockpit } from "@/components/dashboard/ManagerMobileCockpit";
+import { CollapsibleMobileSection } from "@/components/dashboard/CollapsibleMobileSection";
 import { vocabularyLabels } from "@/lib/vocabulary";
 
 /**
@@ -345,6 +347,87 @@ export default async function DashboardPage({
     ? teamStats.pendingVacations + teamStats.pendingCorrections + teamStats.pendingTradeApprovals
     : 0;
 
+  const todayPanel = (
+    <div className="rounded-2xl glass-panel p-5 transition-all sm:p-8 md:hover:bg-card/80">
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3">
+          <h2 className="font-semibold">Heute</h2>
+          <span className="text-sm font-bold tabular-nums text-brand">
+            {Math.floor(todayWorkedMins / 60)}h {Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m
+          </span>
+        </div>
+        <IconMenu label="Heute-Optionen">
+          <IconMenu.Label>Schnellzugriff</IconMenu.Label>
+          <IconMenu.Item asChild icon={<FileText className="h-4 w-4" />}>
+            <Link href="/dashboard/reports" className="w-full">Detailbericht öffnen</Link>
+          </IconMenu.Item>
+          <IconMenu.Item asChild icon={<CalendarPlus className="h-4 w-4" />}>
+            <Link href="/dashboard/vacation" className="w-full">Urlaub erfassen</Link>
+          </IconMenu.Item>
+          <IconMenu.Separator />
+          <IconMenu.Item asChild icon={<CalendarDays className="h-4 w-4" />}>
+            <Link href="/dashboard/planning" className="w-full">Wochenplan öffnen</Link>
+          </IconMenu.Item>
+        </IconMenu>
+      </div>
+
+      {todayLogs.length === 0 ? (
+        <EmptyState
+          tone="celebrate"
+          icon={PartyPopper}
+          title="Noch kein Zeiteintrag für heute"
+          description={
+            isEmployee
+              ? cockpitData
+                ? `Tippe auf den großen Stempel-Button oben, um deinen ${planVocabulary.singular} zu starten.`
+                : `Nutze den Stempel-Bereich weiter oben, um deinen ${planVocabulary.singular} zu starten.`
+              : "Stemple dich ein oder prüfe die Team-Zeiten in den Berichten."
+          }
+          action={
+            <Link
+              href="#terminal-widget"
+              className="btn-brand inline-flex min-h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold active:scale-[0.99]"
+            >
+              Jetzt einstempeln
+            </Link>
+          }
+        />
+      ) : (
+        <div className="space-y-2">
+          {todayLogs.map((log) => {
+            const durationMins = log.clockOut
+              ? (log.clockOut.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins
+              : null;
+            return (
+              <div
+                key={log.id}
+                className="flex min-h-[3.25rem] items-center justify-between gap-3 rounded-2xl bg-background px-3 py-3 sm:py-2.5"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`h-2 w-2 rounded-full ${log.clockOut ? "bg-muted-foreground/30" : "animate-pulse bg-brand"}`}
+                  />
+                  <span className="text-sm text-foreground">
+                    {formatBerlinTime(new Date(log.clockIn), { hour: "2-digit", minute: "2-digit" })}
+                    {" — "}
+                    {log.clockOut
+                      ? formatBerlinTime(new Date(log.clockOut), { hour: "2-digit", minute: "2-digit" })
+                      : "läuft..."}
+                  </span>
+                </div>
+                {durationMins !== null && (
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {Math.floor(durationMins / 60)}h {Math.floor(durationMins % 60).toString().padStart(2, "0")}m
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="dashboard-page-root mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 overflow-x-hidden px-0 text-foreground sm:max-w-6xl sm:gap-6 sm:px-2 md:gap-8 md:px-0">
       {/* Header — für Mitarbeiter überspringen, weil das Cockpit selbst begrüßt */}
@@ -387,30 +470,23 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {showOwnerWelcome && isOwner ? (
-        <OwnerWelcomeStrip focusWeek={ownerWelcomeFocusWeek} showPeaksModule={companyModules.peaks} />
-      ) : null}
-
-      {/* Empty-State Banner (Owner ohne Team) — niemals „toter" leerer Bildschirm. */}
-      {isManager && teamStats && teamStats.totalEmployees <= 1 && (
-        <div className="order-1">
-          <EmptyTeamBanner teamSize={teamStats.totalEmployees} />
-        </div>
-      )}
-
-      {/* No-Show-Alarm (Manager) — höchste Priorität, ganz oben sichtbar. */}
+      {/* No-Show-Alarm (Manager) — höchste Priorität, immer sichtbar. */}
       {isManager && (
         <div className="order-1">
           <NoShowCard />
         </div>
       )}
 
-      {isManager && <SundayWeekPlannerBanner companyId={companyId} />}
+      {isManager && teamStats && focus ? (
+        <div className="order-2">
+          <ManagerMobileCockpit focus={focus} planTitle={planVocabulary.planTitle} />
+        </div>
+      ) : null}
 
       {isManager ? (
         <Link
           href="/dashboard/insights"
-          className="order-1 flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:border-brand/35 hover:bg-card/90 active:scale-[0.99] sm:px-5"
+          className="order-1 hidden min-h-12 items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:border-brand/35 hover:bg-card/90 active:scale-[0.99] sm:px-5 md:flex"
         >
           <span className="flex items-center gap-3">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-soft text-brand dark:bg-brand/20">
@@ -469,11 +545,11 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {/* Team stats (for owners/managers) — Fokus-Karte + Details für Kennzahlen */}
+      {/* Team stats (for owners/managers) — Desktop: Fokus + Live-Ops; Mobil: im Cockpit + „Mehr“. */}
       {teamStats && focus && (
         <div className="order-5 min-w-0 space-y-4 md:order-4">
           {focus.title !== "Heute keine kritischen Hinweise" ? (
-            <div className="rounded-2xl border border-warning/30 bg-warning-soft/40 px-4 py-3 text-sm text-foreground">
+            <div className="hidden rounded-2xl border border-warning/30 bg-warning-soft/40 px-4 py-3 text-sm text-foreground md:block">
               <p className="font-semibold">{focus.title}</p>
               <p className="mt-0.5 text-muted-foreground">{focus.description}</p>
               <Link href={focus.href} className="mt-2 inline-flex text-sm font-bold text-brand underline-offset-2">
@@ -482,27 +558,37 @@ export default async function DashboardPage({
             </div>
           ) : null}
 
-          <LiveOperationsWidget rows={liveOpsRows} />
+          <CollapsibleMobileSection label="Mehr auf der Startseite" className="space-y-4">
+            {showOwnerWelcome && isOwner ? (
+              <OwnerWelcomeStrip focusWeek={ownerWelcomeFocusWeek} showPeaksModule={companyModules.peaks} />
+            ) : null}
 
-          {/* Schlanker Schnellzugriff statt redundantem Kennzahlen-Block —
-              die Detailzahlen leben in /team und /reports. */}
-          <div className="grid grid-cols-3 gap-2">
-            {(
-              [
-                { href: "/dashboard/planning", label: "Wochenplan" },
-                { href: "/dashboard/reports", label: "Zeiten" },
-                { href: "/dashboard/vacation", label: "Urlaub" },
-              ] as const
-            ).map((q) => (
-              <Link
-                key={q.href}
-                href={q.href}
-                className="flex min-h-11 items-center justify-center rounded-2xl border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors active:scale-[0.99] md:hover:border-brand/35 md:hover:bg-card/80"
-              >
-                {q.label}
-              </Link>
-            ))}
-          </div>
+            {isManager && teamStats.totalEmployees <= 1 ? (
+              <EmptyTeamBanner teamSize={teamStats.totalEmployees} />
+            ) : null}
+
+            {isManager ? <SundayWeekPlannerBanner companyId={companyId} /> : null}
+
+            <LiveOperationsWidget rows={liveOpsRows} />
+
+            <div className="hidden grid-cols-3 gap-2 md:grid">
+              {(
+                [
+                  { href: "/dashboard/planning", label: "Wochenplan" },
+                  { href: "/dashboard/reports", label: "Zeiten" },
+                  { href: "/dashboard/vacation", label: "Urlaub" },
+                ] as const
+              ).map((q) => (
+                <Link
+                  key={q.href}
+                  href={q.href}
+                  className="flex min-h-11 items-center justify-center rounded-2xl border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors active:scale-[0.99] md:hover:border-brand/35 md:hover:bg-card/80"
+                >
+                  {q.label}
+                </Link>
+              ))}
+            </div>
+          </CollapsibleMobileSection>
         </div>
       )}
 
@@ -510,114 +596,79 @@ export default async function DashboardPage({
           Für Mitarbeiter NORMALERWEISE keine TerminalWidget – sie haben oben den BigClockButton.
           Ausnahme: wenn das Cockpit fehlschlägt, brauchen sie irgendeinen Stempel-Weg → wir
           fallback-zeigen das TerminalWidget. */}
-      <div className="order-6 flex flex-col gap-5 md:order-5 md:grid md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-        {!isEmployee || !cockpitData ? (
-          <div className="order-1 md:order-1">
-            <TerminalWidget
-              activeLog={
-                activeLog
-                  ? {
-                      id: activeLog.id,
-                      clockIn: activeLog.clockIn,
-                      breakMins: activeLog.breakMins,
-                      isOnBreak: activeLog.isOnBreak,
-                      breakStartedAt: activeLog.breakStartedAt,
-                    }
-                  : null
-              }
+      {isManager ? (
+        <CollapsibleMobileSection label="Terminal & Saldo" className="order-6 md:order-5">
+          <div className="flex flex-col gap-5 md:grid md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+            {!isEmployee || !cockpitData ? (
+              <div className="order-1 md:order-1">
+                <TerminalWidget
+                  activeLog={
+                    activeLog
+                      ? {
+                          id: activeLog.id,
+                          clockIn: activeLog.clockIn,
+                          breakMins: activeLog.breakMins,
+                          isOnBreak: activeLog.isOnBreak,
+                          breakStartedAt: activeLog.breakStartedAt,
+                        }
+                      : null
+                  }
+                />
+              </div>
+            ) : null}
+            <div className="order-2 md:order-2">
+              <SaldoWidget
+                workedMinutes={saldo.workedMinutes}
+                expectedMinutes={saldo.expectedMinutes}
+                saldoMinutes={saldo.saldoMinutes}
+                weekLabel={saldo.weekLabel}
+                hasWorkLogs={Boolean(hasAnyWorkLog)}
+              />
+            </div>
+          </div>
+        </CollapsibleMobileSection>
+      ) : (
+        <div className="order-6 flex flex-col gap-5 md:order-5 md:grid md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+          {!isEmployee || !cockpitData ? (
+            <div className="order-1 md:order-1">
+              <TerminalWidget
+                activeLog={
+                  activeLog
+                    ? {
+                        id: activeLog.id,
+                        clockIn: activeLog.clockIn,
+                        breakMins: activeLog.breakMins,
+                        isOnBreak: activeLog.isOnBreak,
+                        breakStartedAt: activeLog.breakStartedAt,
+                      }
+                    : null
+                }
+              />
+            </div>
+          ) : null}
+          <div className="order-2 md:order-2">
+            <SaldoWidget
+              workedMinutes={saldo.workedMinutes}
+              expectedMinutes={saldo.expectedMinutes}
+              saldoMinutes={saldo.saldoMinutes}
+              weekLabel={saldo.weekLabel}
+              hasWorkLogs={Boolean(hasAnyWorkLog)}
             />
           </div>
-        ) : null}
-        <div className="order-2 md:order-2">
-          <SaldoWidget
-            workedMinutes={saldo.workedMinutes}
-            expectedMinutes={saldo.expectedMinutes}
-            saldoMinutes={saldo.saldoMinutes}
-            weekLabel={saldo.weekLabel}
-            hasWorkLogs={Boolean(hasAnyWorkLog)}
-          />
         </div>
-      </div>
+      )}
 
-      {/* Today summary */}
-      <div className="order-7 rounded-2xl glass-panel p-5 transition-all sm:p-8 md:hover:bg-card/80">
-        <div className="mb-4 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <h2 className="font-semibold">Heute</h2>
-            <span className="text-sm text-brand tabular-nums font-bold">
-              {Math.floor(todayWorkedMins / 60)}h {Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m
-            </span>
-          </div>
-          {/* Sekundäre Aktionen kompakt im Drei-Punkte-Menü statt im Header-Lärm. */}
-          <IconMenu label="Heute-Optionen">
-            <IconMenu.Label>Schnellzugriff</IconMenu.Label>
-            <IconMenu.Item asChild icon={<FileText className="h-4 w-4" />}>
-              <Link href="/dashboard/reports" className="w-full">Detailbericht öffnen</Link>
-            </IconMenu.Item>
-            <IconMenu.Item asChild icon={<CalendarPlus className="h-4 w-4" />}>
-              <Link href="/dashboard/vacation" className="w-full">Urlaub erfassen</Link>
-            </IconMenu.Item>
-            <IconMenu.Separator />
-            <IconMenu.Item asChild icon={<CalendarDays className="h-4 w-4" />}>
-              <Link href="/dashboard/planning" className="w-full">Wochenplan öffnen</Link>
-            </IconMenu.Item>
-          </IconMenu>
-        </div>
-
-        {todayLogs.length === 0 ? (
-          <EmptyState
-            tone="celebrate"
-            icon={PartyPopper}
-            title="Noch kein Zeiteintrag für heute"
-            description={
-              isEmployee
-                ? cockpitData
-                  ? `Tippe auf den großen Stempel-Button oben, um deinen ${planVocabulary.singular} zu starten.`
-                  : `Nutze den Stempel-Bereich weiter oben, um deinen ${planVocabulary.singular} zu starten.`
-                : "Stemple dich ein oder prüfe die Team-Zeiten in den Berichten."
-            }
-            action={
-              <Link
-                href="#terminal-widget"
-                className="btn-brand inline-flex min-h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold active:scale-[0.99]"
-              >
-                Jetzt einstempeln
-              </Link>
-            }
-          />
-        ) : (
-          <div className="space-y-2">
-            {todayLogs.map((log) => {
-              const durationMins = log.clockOut
-                ? (log.clockOut.getTime() - log.clockIn.getTime()) / 60000 - log.breakMins
-                : null;
-              return (
-                <div key={log.id} className="flex min-h-[3.25rem] items-center justify-between gap-3 rounded-2xl bg-background px-3 py-3 sm:py-2.5">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${log.clockOut ? "bg-muted-foreground/30" : "bg-brand animate-pulse"}`} />
-                    <span className="text-sm text-foreground">
-                      {formatBerlinTime(new Date(log.clockIn), { hour: "2-digit", minute: "2-digit" })}
-                      {" — "}
-                      {log.clockOut
-                        ? formatBerlinTime(new Date(log.clockOut), { hour: "2-digit", minute: "2-digit" })
-                        : "läuft..."}
-                    </span>
-                  </div>
-                  {durationMins !== null && (
-                    <span className="text-xs text-muted-foreground tabular-nums">
-                      {Math.floor(durationMins / 60)}h {Math.floor(durationMins % 60).toString().padStart(2, "0")}m
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      {isManager ? (
+        <CollapsibleMobileSection label="Heutige Zeiten" className="order-7">
+          {todayPanel}
+        </CollapsibleMobileSection>
+      ) : (
+        <div className="order-7">{todayPanel}</div>
+      )}
 
       {/* Business plan CTA */}
       {plan === "STARTER" && (
-        <div className="order-8 flex flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/85 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div className="order-8 hidden flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/85 sm:flex-row sm:items-center sm:justify-between sm:p-8 md:flex">
           <div className="min-w-0">
             <p className="text-sm font-semibold">PDF-Export & Lohnbüro-Versand freischalten</p>
             <p className="mt-1 text-xs text-muted-foreground">Upgrade auf Business für vollständige Berichte.</p>

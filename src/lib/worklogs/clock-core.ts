@@ -80,8 +80,11 @@ export async function createClockInEntry(params: {
   companyId: string;
   userId: string;
   actorUserId?: string;
+  /** Offline-Sync: ursprünglicher Client-Zeitstempel */
+  clockInAt?: Date;
+  source?: string;
 }) {
-  const { companyId, userId, actorUserId } = params;
+  const { companyId, userId, actorUserId, clockInAt, source = "app" } = params;
   await ensureWorkLogOpenUniqueConstraint();
   await ensureWorkLogAuditTable();
 
@@ -91,7 +94,7 @@ export async function createClockInEntry(params: {
   });
   if (!company) throw new Error("Firma nicht gefunden");
 
-  const now = new Date();
+  const now = clockInAt ?? new Date();
   const weekIndex = getWeekCycleIndex(now, company.shiftCycleWeeks);
   // dayOfWeek strikt aus dem Berliner Wandkalender ableiten, damit der
   // Schicht-Lookup nicht von der Server-TZ abhängt (siehe Audit Task 16).
@@ -146,7 +149,7 @@ export async function createClockInEntry(params: {
       created.id,
       actorUserId ?? userId,
       "CLOCK_IN",
-      "app",
+      source,
       JSON.stringify(created)
     );
     return created;
@@ -176,8 +179,10 @@ export async function closeClockForUser(params: {
   userId: string;
   actorUserId?: string;
   logId?: string;
+  clockOutAt?: Date;
+  source?: string;
 }) {
-  const { companyId, userId, logId, actorUserId } = params;
+  const { companyId, userId, logId, actorUserId, clockOutAt, source = "app" } = params;
   await ensureWorkLogAuditTable();
   return db.$transaction(async (tx) => {
     const active = logId
@@ -186,7 +191,7 @@ export async function closeClockForUser(params: {
 
     if (!active) throw new Error("Kein aktiver Stempel gefunden");
 
-    const now = new Date();
+    const now = clockOutAt ?? new Date();
     let nextBreakMins = active.breakMins;
     if (active.isOnBreak && active.breakStartedAt) {
       const extraBreak = Math.max(0, Math.round((now.getTime() - active.breakStartedAt.getTime()) / 60000));
@@ -214,7 +219,7 @@ export async function closeClockForUser(params: {
       active.id,
       actorUserId ?? userId,
       "CLOCK_OUT",
-      "app",
+      source,
       JSON.stringify(active),
       JSON.stringify(updated)
     );

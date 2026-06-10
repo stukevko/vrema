@@ -150,16 +150,12 @@ export function DashboardTopbar({
                   onClick={() => setOpen(false)}
                   className="flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm text-fg transition-all active:scale-95 md:hover:bg-surface-muted"
                 >
-                  <UserCircle2 className="h-4 w-4 shrink-0" />
-                  Profil
-                </Link>
-                <Link
-                  href={accountHref}
-                  onClick={() => setOpen(false)}
-                  className="flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm text-fg transition-all active:scale-95 md:hover:bg-surface-muted"
-                >
-                  <Settings className="h-4 w-4 shrink-0" />
-                  {user.role === "EMPLOYEE" ? "Mein Konto" : "Einstellungen"}
+                  {user.role === "EMPLOYEE" ? (
+                    <UserCircle2 className="h-4 w-4 shrink-0" />
+                  ) : (
+                    <Settings className="h-4 w-4 shrink-0" />
+                  )}
+                  {user.role === "EMPLOYEE" ? "Mein Konto" : "Profil & Einstellungen"}
                 </Link>
                 <button
                   type="button"

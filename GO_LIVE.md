@@ -104,7 +104,9 @@ npm run prod:cleanup
 | # | Test | Erwartung |
 |---|------|-----------|
 | 1 | Owner: Team 2 MA + Terminal | MA kann stempeln |
-| 2 | MA-Handy: Bottom-Nav (kein Einblicke-Tab) | Urlaub + Planer erreichbar |
+| 2 | MA-Handy: Bottom-Nav (Heute · Planer · Team · Urlaub · Profil) | Kein Auswertung/Abo |
+| 2b | Owner-Handy: Bottom-Nav (Start · Planer · Team · **Auswertung** · Profil) | Berichte über Cockpit-Schnellzugriff |
+| 2c | Offline-Stempeln (App): Flugmodus → einstempeln → online → Sync-Toast | IndexedDB-Queue |
 | 3 | Planer: Autopilot → Entwurf → veröffentlichen | MA sieht Schicht |
 | 4 | Business: Berichte → DATEV-Export | CSV lädt (wenn Plan Business) |
 | 5 | Support: Ticket an VREMA | Antwort im Postfach |

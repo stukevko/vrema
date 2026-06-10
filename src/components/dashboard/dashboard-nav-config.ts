@@ -38,7 +38,8 @@ export type DashboardNavItem = {
 const ALL_PLANS = ["STARTER", "BUSINESS", "ENTERPRISE"] as const;
 
 /**
- * Mobil-Bottom-Nav (< md): feste 5 Tabs (App-Store-Niveau).
+ * Mobil-Bottom-Nav (< md): feste 5 Tabs.
+ * Chef: Start · Planer · Team · Auswertung · Profil — Berichte im Cockpit-Schnellzugriff.
  */
 export function getMobileBottomNavItems(
   role: string,
@@ -84,15 +85,6 @@ export function getMobileBottomNavItems(
       icon: UserCircle2,
     },
   ];
-  if (role !== "EMPLOYEE") {
-    return [
-      items[0]!,
-      items[1]!,
-      items[2]!,
-      { href: "/dashboard/reports", label: "Berichte", subtitle: "Stunden", icon: FileText },
-      items[4]!,
-    ];
-  }
   return items;
 }
 

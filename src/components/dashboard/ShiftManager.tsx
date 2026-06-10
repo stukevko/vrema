@@ -3005,24 +3005,30 @@ export function ShiftManager({
 
       {enableTaskListActions ? (
         <div className="block">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div>
+          {renderDesktopTree ? (
+            <>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold tracking-tight">{resolvedPlanTitle}</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Team links · Schichtkarten in der Woche · Zuweisen per Drag oder Antippen.
+                  </p>
+                </div>
+              </div>
+              {weekPicker}
+              {DesktopView}
+            </>
+          ) : (
+            <>
               <h2 className="text-lg font-semibold tracking-tight">{resolvedPlanTitle}</h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                {renderDesktopTree
-                  ? "Team links · Schichtkarten in der Woche · Zuweisen per Drag oder Antippen."
-                  : "Gleicher Plan wie am Desktop: Team wählen, Karten horizontal wischen, + für neue Schicht."}
+                Mitarbeiter wählen, Tag antippen, Schicht pflegen — optimiert fürs Handy.
               </p>
-            </div>
-          </div>
-          {!renderDesktopTree ? (
-            <p className="mt-2 rounded-xl border border-brand/25 bg-brand-soft/40 px-3 py-2 text-[11px] text-foreground">
-              <strong className="font-semibold">Tipp:</strong> Wische über die Tages-Spalten. X entfernt eine Person, „Schicht leeren“
-              die ganze Karte.
-            </p>
-          ) : null}
-          {weekPicker}
-          {DesktopView}
+              {weekPicker}
+              {selectedMemberChip}
+              {MobileView}
+            </>
+          )}
         </div>
       ) : (
         <div className="block">

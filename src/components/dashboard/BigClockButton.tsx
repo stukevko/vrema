@@ -3,10 +3,12 @@ import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { LogIn, LogOut, Loader2, Pause, Play, AlertTriangle } from "lucide-react";
+import { LogIn, LogOut, Loader2, Pause, Play, AlertTriangle, CloudOff } from "lucide-react";
 import { toast } from "sonner";
 import { clockIn, clockOut, toggleBreak } from "@/lib/actions/worklogs";
 import { useVocabulary } from "@/components/VocabularyContext";
+import { getQueuedClockCount } from "@/lib/offline/clock-queue";
+import { performClockAction } from "@/lib/offline/perform-clock-action";
 
 function formatHHMMSS(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -40,13 +42,6 @@ function reducer(state: OptimisticState, action: OptimisticAction): OptimisticSt
   return state;
 }
 
-/**
- * Initiative VREMA: ein Stempel-Button mit Soforterlebnis statt „Loader und beten".
- * - Optimistic: Status springt sofort, Loader nur ganz kurz dezent overlay.
- * - Kontextuelle Bestätigung: bei Verspätung / Extra-Schicht klares Feedback statt nur „Eingestempelt".
- * - Undo beim Ausstempeln: 5 Sekunden lang ein Klick zurück, falls der Daumen verrutscht ist.
- * - Haptic Feedback (Mobile): kurzer Vibrate – fühlt sich wie ein echter Stempel an.
- */
 export function BigClockButton({
   isClockedIn,
   clockInAtIso,
@@ -61,9 +56,18 @@ export function BigClockButton({
   const [isPending, startTransition] = useTransition();
   const [now, setNow] = useState<number>(() => Date.now());
   const [isOnline, setIsOnline] = useState(true);
+  const [queuedCount, setQueuedCount] = useState(0);
   const initialState: OptimisticState = { isClockedIn, clockInAtIso, isOnBreak };
   const [state, applyOptimistic] = useOptimistic(initialState, reducer);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const refreshQueueCount = async () => {
+    try {
+      setQueuedCount(await getQueuedClockCount());
+    } catch {
+      setQueuedCount(0);
+    }
+  };
 
   useEffect(() => {
     if (!state.isClockedIn) return;
@@ -72,7 +76,10 @@ export function BigClockButton({
   }, [state.isClockedIn]);
 
   useEffect(() => {
-    const sync = () => setIsOnline(typeof navigator !== "undefined" ? navigator.onLine : true);
+    const sync = () => {
+      setIsOnline(typeof navigator !== "undefined" ? navigator.onLine : true);
+      void refreshQueueCount();
+    };
     sync();
     window.addEventListener("online", sync);
     window.addEventListener("offline", sync);
@@ -81,6 +88,10 @@ export function BigClockButton({
       window.removeEventListener("offline", sync);
     };
   }, []);
+
+  useEffect(() => {
+    void refreshQueueCount();
+  }, [isClockedIn, clockInAtIso, isOnBreak]);
 
   useEffect(() => {
     return () => {
@@ -98,23 +109,31 @@ export function BigClockButton({
       try {
         navigator.vibrate(ms);
       } catch {
-        /* ignore – Browser ohne Vibrate-API */
+        /* ignore */
       }
     }
   };
 
+  const clockExec = {
+    clockIn: () => clockIn(),
+    clockOut: () => clockOut(),
+    toggleBreak: () => toggleBreak(),
+  };
+
   const handleClock = () => {
-    if (!isOnline) {
-      toast.error("Keine Internetverbindung. Bitte kurz warten und erneut versuchen.");
-      return;
-    }
     haptic(18);
     if (state.isClockedIn) {
-      // Ausstempeln mit 5-Sek-Undo
       startTransition(async () => {
         applyOptimistic({ type: "clockOut" });
         try {
-          await clockOut();
+          const outcome = await performClockAction("clockOut", clockExec);
+          if (outcome.mode === "queued") {
+            await refreshQueueCount();
+            toast.success("Offline gespeichert – wird synchronisiert, sobald Internet da ist.", {
+              icon: <CloudOff className="h-4 w-4" aria-hidden />,
+            });
+            return;
+          }
           toast.success("Ausgestempelt – schönen Feierabend!", {
             duration: 5000,
             icon: <LogOut className="h-4 w-4" aria-hidden />,
@@ -142,13 +161,20 @@ export function BigClockButton({
       });
       return;
     }
-    // Einstempeln
+
     startTransition(async () => {
       applyOptimistic({ type: "clockIn" });
       try {
-        const res = await clockIn();
-        if (res.warning) {
-          toast.warning(res.warning, {
+        const outcome = await performClockAction("clockIn", clockExec);
+        if (outcome.mode === "queued") {
+          await refreshQueueCount();
+          toast.success("Offline gespeichert – wird synchronisiert, sobald Internet da ist.", {
+            icon: <CloudOff className="h-4 w-4" aria-hidden />,
+          });
+          return;
+        }
+        if (outcome.action === "clockIn" && outcome.result.warning) {
+          toast.warning(outcome.result.warning, {
             icon: <AlertTriangle className="h-4 w-4" aria-hidden />,
             duration: 6000,
           });
@@ -167,16 +193,19 @@ export function BigClockButton({
 
   const handleBreak = () => {
     if (!state.isClockedIn) return;
-    if (!isOnline) {
-      toast.error("Keine Internetverbindung. Pause-Wechsel kommt gleich.");
-      return;
-    }
     haptic(12);
     startTransition(async () => {
       applyOptimistic({ type: "breakToggle" });
       const goingOnBreak = !state.isOnBreak;
       try {
-        await toggleBreak();
+        const outcome = await performClockAction("toggleBreak", clockExec);
+        if (outcome.mode === "queued") {
+          await refreshQueueCount();
+          toast.success("Pause offline gespeichert – Sync folgt automatisch.", {
+            icon: <CloudOff className="h-4 w-4" aria-hidden />,
+          });
+          return;
+        }
         toast.success(goingOnBreak ? "Pause gestartet." : "Pause beendet.", {
           icon: goingOnBreak ? <Pause className="h-4 w-4" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />,
         });
@@ -188,22 +217,29 @@ export function BigClockButton({
     });
   };
 
+  const offlineBanner =
+    !isOnline || queuedCount > 0 ? (
+      <div
+        role="status"
+        aria-live="polite"
+        className="flex items-center gap-2 rounded-2xl border border-warning/35 bg-warning-soft px-3 py-2 text-xs font-semibold text-warning-foreground"
+      >
+        <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        {!isOnline
+          ? queuedCount > 0
+            ? `Offline – ${queuedCount} Stempel warten auf Sync.`
+            : "Offline – Stempel werden lokal gespeichert und später synchronisiert."
+          : `${queuedCount} Stempel werden gerade synchronisiert…`}
+      </div>
+    ) : null;
+
   return (
     <div className="flex flex-col gap-3">
-      {!isOnline ? (
-        <div
-          role="status"
-          aria-live="polite"
-          className="flex items-center gap-2 rounded-2xl border border-warning/35 bg-warning-soft px-3 py-2 text-xs font-semibold text-warning-foreground"
-        >
-          <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
-          Offline – Stempeln pausiert, sobald Internet zurück ist.
-        </div>
-      ) : null}
+      {offlineBanner}
       <button
         type="button"
         onClick={handleClock}
-        disabled={isPending || !isOnline}
+        disabled={isPending}
         aria-label={state.isClockedIn ? "Ausstempeln" : "Einstempeln"}
         aria-busy={isPending}
         className={`relative flex w-full items-center justify-center gap-3 rounded-3xl border border-white/20 px-6 py-6 text-lg font-extrabold tracking-tight transition-[filter,box-shadow] duration-200 ease-out active:brightness-95 active:scale-[0.99] disabled:opacity-90 sm:py-7 sm:text-xl dark:border-white/10 ${
