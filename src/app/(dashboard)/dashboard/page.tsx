@@ -64,6 +64,7 @@ type TeamStatsSnapshot = {
   totalEmployees: number;
   activeToday: number;
   pendingVacations: number;
+  pendingAbsenceRequests: number;
   absentToday: number;
   lateToday: number;
   pendingCorrections: number;
@@ -106,6 +107,14 @@ function managerPrimaryFocus(
       description: `Kurz im ${vocab.planTitle} oder in den Zeiten gegenprüfen.`,
       href: "/dashboard/planning",
       cta: "Zur Planung",
+    };
+  }
+  if (stats.pendingAbsenceRequests > 0) {
+    return {
+      title: `${stats.pendingAbsenceRequests} Abwesenheitsantrag${stats.pendingAbsenceRequests === 1 ? "" : "e"} offen`,
+      description: "Krankmeldungen und Sonderfälle direkt am Antrag prüfen.",
+      href: "/dashboard/vacation#abwesenheiten",
+      cta: "Abwesenheiten prüfen",
     };
   }
   if (stats.pendingVacations > 0) {
@@ -320,7 +329,8 @@ export default async function DashboardPage({
     ? {
         totalEmployees: teamStatsRaw.totalEmployees,
         activeToday: teamStatsRaw.activeToday,
-        pendingVacations: teamStatsRaw.pendingVacations + teamStatsRaw.pendingAbsenceRequests,
+        pendingVacations: teamStatsRaw.pendingVacations,
+        pendingAbsenceRequests: teamStatsRaw.pendingAbsenceRequests,
         absentToday: teamStatsRaw.absentToday,
         lateToday: teamStatsRaw.lateToday,
         pendingCorrections: teamStatsRaw.pendingCorrections,
@@ -343,7 +353,10 @@ export default async function DashboardPage({
 
   const heroAttentionCount = teamStats ? teamStats.absentToday + teamStats.lateToday : 0;
   const heroPendingApprovalsCount = teamStats
-    ? teamStats.pendingVacations + teamStats.pendingCorrections + teamStats.pendingTradeApprovals
+    ? teamStats.pendingVacations +
+      teamStats.pendingAbsenceRequests +
+      teamStats.pendingCorrections +
+      teamStats.pendingTradeApprovals
     : 0;
   const showChefKpiGrid = heroAttentionCount > 0 || heroPendingApprovalsCount > 0;
 

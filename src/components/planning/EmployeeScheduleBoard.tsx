@@ -109,7 +109,7 @@ export function EmployeeScheduleBoard({
           {companyName?.trim() ? (
             <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">{companyName.trim()}</p>
           ) : null}
-          <h2 className="mt-1 flex items-center gap-2 text-lg font-extrabold tracking-tight text-foreground sm:text-xl">
+          <h2 className="mt-1 flex max-md:sr-only items-center gap-2 text-lg font-extrabold tracking-tight text-foreground sm:text-xl">
             <CalendarDays className="h-5 w-5 shrink-0 text-brand" aria-hidden />
             Dein Wochenplan
           </h2>

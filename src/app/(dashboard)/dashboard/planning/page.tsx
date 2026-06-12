@@ -243,6 +243,7 @@ export default async function PlanningPage({
         eyebrow="Planung"
         title="Mein Dienstplan"
         description="Woche, Uhrzeit und Tausch — ohne den Chef-Planer. Oben die Woche, unten alle Termine mit Aktionen."
+        hideOnMobile
       />
 
       {employeeModules.shiftTrade ? <TradePushHint /> : null}

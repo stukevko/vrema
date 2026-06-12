@@ -66,12 +66,13 @@ const NAV_GROUP_SPECS: { label: string; hrefs: string[] }[] = [
 
 const PRIMARY_SIDEBAR_ORDER: Record<"employee" | "default", string[]> = {
   employee: ["/dashboard", "/dashboard/planning", "/dashboard/team", "/dashboard/vacation"],
-  default: ["/dashboard", "/dashboard/planning", "/dashboard/team", "/dashboard/insights"],
+  default: ["/dashboard", "/dashboard/planning", "/dashboard/team", "/dashboard/reports"],
 };
 
 function primarySidebarLabel(role: string, item: DashboardNavItem): string {
   if (item.href === "/dashboard") return role === "EMPLOYEE" ? "Heute" : "Start";
   if (item.href === "/dashboard/planning") return "Planer";
+  if (item.href === "/dashboard/reports") return "Berichte";
   if (item.href === "/dashboard/insights") return "Auswertung";
   return item.label;
 }

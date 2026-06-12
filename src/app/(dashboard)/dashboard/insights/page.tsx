@@ -47,6 +47,7 @@ export default async function InsightsPage() {
         eyebrow="Betrieb"
         title="Auswertung"
         description="Rückblick und Hinweise aus Stempelzeiten und Schichtplan — klar und ohne Score-Dashboards."
+        hideOnMobile
       />
 
       {!modules.peaks ? (

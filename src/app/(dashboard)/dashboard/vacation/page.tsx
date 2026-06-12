@@ -26,12 +26,18 @@ export default async function VacationPage() {
 
   return (
     <DashboardPageShell maxWidth="5xl" className="sm:space-y-8">
+      {isManager && pendingTeamCount > 0 ? (
+        <p className="inline-flex items-center gap-2 rounded-full bg-warning-soft px-3 py-1 text-xs font-semibold text-warning-foreground md:hidden">
+          {pendingTeamCount} {pendingTeamCount === 1 ? "Antrag" : "Anträge"} warten auf Entscheidung
+        </p>
+      ) : null}
       <DashboardPageHeader
         variant="card"
         icon={CalendarDays}
         eyebrow="Abwesenheit"
         title="Urlaub & Abwesenheit"
         description="Anträge stellen, verwalten und als Führungskraft freigeben."
+        hideOnMobile
         badge={
           isManager && pendingTeamCount > 0 ? (
             <p className="inline-flex items-center gap-2 rounded-full bg-warning-soft px-3 py-1 text-xs font-semibold text-warning-foreground">
@@ -51,7 +57,7 @@ export default async function VacationPage() {
         </div>
       </div>
 
-      {isManager && teamRequests.length > 0 ? (
+      {isManager ? (
         <TeamVacationSection
           rows={teamRequests.map((r) => ({
             id: r.id,

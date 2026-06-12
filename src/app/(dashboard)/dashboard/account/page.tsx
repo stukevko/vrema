@@ -35,6 +35,7 @@ export default async function EmployeeAccountPage() {
         eyebrow="Profil"
         title="Mein Konto"
         description="Profil, Passwort und Terminal-PIN — ohne Zugriff auf Firmeneinstellungen."
+        hideOnMobile
         actions={
           <Link
             href="/dashboard"

@@ -71,6 +71,7 @@ export default async function TeamPage() {
           eyebrow="Personal"
           title="Team"
           description={`${active} aktiv${inactive > 0 ? ` · ${inactive} deaktiviert` : ""} — einladen, Rollen und Stundenlohn.`}
+          hideOnMobile
         />
 
         {/* Stats-Pills */}

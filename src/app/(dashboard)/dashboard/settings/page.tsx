@@ -71,7 +71,7 @@ export default async function SettingsPage() {
     { href: "/dashboard/reports", label: "Berichte", icon: FileText },
     { href: "/dashboard/vacation", label: "Abwesenheit", icon: CalendarDays },
     { href: "/dashboard/support", label: "Hilfe", icon: LifeBuoy },
-    { href: "/dashboard#terminal-widget", label: "Terminal", icon: Timer },
+    { href: "/dashboard/settings#terminal-setup", label: "Terminal", icon: Timer },
   ];
   if (showBilling) {
     mobileMoreLinks.push({ href: "/dashboard/billing", label: "Abonnement", icon: CreditCard });
@@ -89,9 +89,11 @@ export default async function SettingsPage() {
         eyebrow="Verwaltung"
         title="Einstellungen"
         description="Zuerst Terminal & Team — erweiterte Optionen findest du unten unter „Erweitert“."
+        hideOnMobile
       />
 
       <DashboardSectionCard
+        id="terminal-setup"
         tone="brand"
         title="Täglicher Betrieb"
         icon={Timer}
@@ -116,7 +118,7 @@ export default async function SettingsPage() {
       </DashboardSectionCard>
 
       <nav
-        className="md:hidden rounded-2xl border border-border bg-card p-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
+        className="hidden rounded-2xl border border-border bg-card p-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
         aria-label="Weitere Bereiche"
       >
         <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">

@@ -114,7 +114,10 @@ export function DashboardTopbar({
             </span>
           )}
           {!minimalMobile ? <ThemeToggle /> : null}
-          {!minimalMobile ? <NotificationBell initialUnread={unreadNotifications} /> : null}
+          {!minimalMobile ||
+          ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(user.role ?? "") ? (
+            <NotificationBell initialUnread={unreadNotifications} />
+          ) : null}
           <div className="relative" ref={dropdownRef}>
             <button
               ref={profileTriggerRef}

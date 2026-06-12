@@ -33,8 +33,12 @@ export function TeamVacationSection({ rows }: { rows: Row[] }) {
           : "border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
       }`}
     >
-      <h2 className="font-semibold tracking-tight mb-4">Team-Anträge</h2>
-      <VacationList requests={rows} canApprove={true} />
+      <h2 className="mb-4 font-semibold tracking-tight">Team-Anträge</h2>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Keine offenen Urlaubsanträge — alles erledigt.</p>
+      ) : (
+        <VacationList requests={rows} canApprove={true} />
+      )}
     </div>
   );
 }

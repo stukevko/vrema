@@ -132,25 +132,15 @@ export function DashboardLayoutClient({
               trialBanner={trialBanner ? { ...trialBanner, role } : null}
               showPasskeyNudge={showPasskeyNudge && !trialBanner}
               pathname={pathname}
+              supportUnreadCount={unreadReplies}
+              onOpenSupport={(mode) => {
+                setSupportInitialUnread(mode === "unread");
+                setSupportOverlayOpen(true);
+              }}
             />
-          {unreadReplies > 0 ? (
-            <div className="no-print mb-4 min-w-0 max-w-full rounded-2xl border border-brand/25 bg-brand-soft/80 px-4 py-3 text-sm text-foreground dark:border-white/10 dark:bg-brand/18 md:mb-5">
-              <p className="font-medium">Du hast eine Antwort auf dein Support-Ticket erhalten.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSupportInitialUnread(true);
-                  setSupportOverlayOpen(true);
-                }}
-                className="mt-2 inline-flex text-sm font-semibold text-brand underline-offset-4 hover:underline"
-              >
-                Antwort im Support-Postfach öffnen
-              </button>
-            </div>
-          ) : null}
           {children}
           {role !== "EMPLOYEE" ? (
-            <footer className="no-print mb-2 mt-8 text-center text-xs text-muted-foreground">
+            <footer className="no-print mb-2 mt-8 hidden text-center text-xs text-muted-foreground md:block">
               VREMA – Intelligente Zeiterfassung
             </footer>
           ) : null}
