@@ -48,7 +48,11 @@ export function DashboardSectionCard({
     padding === "none" ? "" : padding === "comfortable" ? "p-5 sm:p-8" : "p-4 sm:p-5";
 
   return (
-    <section id={id} aria-label={ariaLabel} className={clsx(surface, paddingClass, className)}>
+    <section
+      id={id}
+      aria-label={ariaLabel}
+      className={clsx(surface, paddingClass, "dashboard-surface-mobile max-md:shadow-none", className)}
+    >
       {!bare && (title || description || Icon) ? (
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0">

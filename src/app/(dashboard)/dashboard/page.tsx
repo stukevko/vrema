@@ -428,11 +428,7 @@ export default async function DashboardPage({
   );
 
   return (
-    <div
-      className={`dashboard-page-root mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 overflow-x-hidden px-0 text-foreground sm:max-w-6xl sm:gap-6 sm:px-2 md:gap-8 md:px-0${
-        isEmployee && cockpitData ? " max-md:h-full max-md:min-h-0 max-md:flex-1 max-md:gap-0" : ""
-      }`}
-    >
+    <div className="dashboard-page-root mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 overflow-x-hidden px-0 text-foreground sm:max-w-6xl sm:gap-6 sm:px-2 md:gap-8 md:px-0">
       {/* Header — für Mitarbeiter überspringen, weil das Cockpit selbst begrüßt */}
       {!isEmployee && (
         <div className="order-1 min-w-0 max-w-full shrink-0 max-md:hidden">
@@ -498,7 +494,7 @@ export default async function DashboardPage({
           ID `terminal-widget` migriert hierhin, damit alle Deeplinks („Jetzt einstempeln")
           beim Mitarbeiter direkt auf den großen Stempel-Button springen. */}
       {isEmployee && cockpitData && (
-        <div className="order-1 max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col sm:mx-0">
+        <div className="order-1 sm:mx-0">
           <EmployeeCockpit
             data={cockpitData}
             firstName={session.user.name?.split(" ")[0] ?? "Hallo"}

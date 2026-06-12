@@ -30,9 +30,7 @@ function getGreeting(now = new Date()): string {
   return "Guten Abend";
 }
 
-/**
- * Mitarbeiter-Start: ein Screen, ein Button — passt zwischen Topbar und Bottom-Nav.
- */
+/** Mitarbeiter-Start: viel Luft um den Stempel — kein Vollbild-Zwang. */
 export function EmployeeCockpit({
   data,
   firstName,
@@ -54,38 +52,34 @@ export function EmployeeCockpit({
       : `Heute kein ${slot} im Plan`;
 
   return (
-    <section
-      id="terminal-widget"
-      aria-label="Stempeln"
-      className="scroll-mt-20 max-md:flex max-md:h-full max-md:min-h-0 max-md:flex-1 max-md:flex-col max-md:justify-center"
-    >
-      <div className="text-center">
-        <p className="text-sm text-muted-foreground">
-          {greeting}, {firstName}
-        </p>
-        <p className="mt-0.5 text-sm font-medium text-foreground">{statusLine}</p>
-      </div>
+    <section id="terminal-widget" aria-label="Stempeln" className="scroll-mt-20">
+      <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-8 py-6 max-md:py-8 sm:gap-10 sm:py-10">
+        <div className="space-y-1 text-center">
+          <p className="text-sm text-muted-foreground">
+            {greeting}, {firstName}
+          </p>
+          <p className="text-sm text-foreground/90">{statusLine}</p>
+        </div>
 
-      <div className="my-4 max-md:my-3 sm:my-6">
         <BigClockButton
           isClockedIn={data.isClockedIn}
           clockInAtIso={data.clockInAtIso}
           isOnBreak={data.isOnBreak}
           stampHero
         />
-      </div>
 
-      <nav
-        aria-label="Schnellzugriff"
-        className="flex items-center justify-center gap-4 text-sm text-muted-foreground"
-      >
-        <Link href="/dashboard/planning" className="min-h-10 min-w-[5.5rem] font-medium text-brand active:opacity-70">
-          Plan
-        </Link>
-        <Link href="/dashboard/vacation" className="min-h-10 min-w-[5.5rem] font-medium text-brand active:opacity-70">
-          Urlaub
-        </Link>
-      </nav>
+        <nav
+          aria-label="Schnellzugriff"
+          className="flex items-center gap-6 text-sm text-muted-foreground"
+        >
+          <Link href="/dashboard/planning" className="font-medium text-brand/90 active:opacity-70">
+            Plan
+          </Link>
+          <Link href="/dashboard/vacation" className="font-medium text-brand/90 active:opacity-70">
+            Urlaub
+          </Link>
+        </nav>
+      </div>
     </section>
   );
 }

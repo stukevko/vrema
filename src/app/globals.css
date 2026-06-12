@@ -757,6 +757,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
    Dashboard Mobile – kein horizontaler Overflow auf schmalen Viewports
    (Galaxy S23 etc.): Grid-Tracks mit minmax(0,1fr), kein Blur-Bleed.
    ========================================================================= */
+/* Mobil: luftig statt „gequetscht“ — flache Flächen, weniger Schatten-Rahmen. */
+@media (max-width: 767px) {
+  .dashboard-mobile-breathe .dashboard-page-root {
+    gap: 0.75rem;
+  }
+
+  .dashboard-mobile-breathe .dashboard-surface-mobile {
+    border-color: hsl(var(--border) / 0.45);
+    box-shadow: none;
+    border-radius: 1.25rem;
+  }
+}
+
 @media (max-width: 480px) {
   .dashboard-shell,
   .dashboard-page-root {

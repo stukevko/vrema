@@ -63,14 +63,14 @@ export function DashboardTopbar({
   return (
     <header
       className={clsx(
-        "fixed inset-x-0 top-0 z-[80] w-full max-w-full overflow-visible border-b border-white/40 bg-background/85 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md dark:border-white/8 dark:bg-background/75 md:relative md:inset-auto md:z-30 md:overflow-visible md:border-b-0 md:bg-transparent md:pt-0 md:backdrop-blur-0",
+        "fixed inset-x-0 top-0 z-[80] w-full max-w-full overflow-visible pt-[env(safe-area-inset-top,0px)] max-md:border-b max-md:border-border/30 max-md:bg-background md:relative md:inset-auto md:z-30 md:overflow-visible md:border-b-0 md:bg-transparent md:pt-0",
         className,
       )}
     >
       <div
         className={clsx(
           "relative flex min-w-0 items-center justify-between gap-2 px-3 sm:px-4 md:h-16 md:px-6",
-          minimalMobile ? "h-12" : "h-16",
+          minimalMobile ? "h-11" : "max-md:h-14 md:h-16",
         )}
       >
         <div className="relative z-10 flex w-10 shrink-0 items-center md:hidden">
@@ -127,9 +127,17 @@ export function DashboardTopbar({
               aria-haspopup="menu"
               aria-controls="dashboard-user-menu"
               onClick={() => setOpen((prev) => !prev)}
-              className="flex min-h-12 items-center gap-2 rounded-2xl border border-line bg-surface px-2 py-1.5 transition-all active:scale-95 md:hover:bg-surface-muted md:min-h-0"
+              className={clsx(
+                "flex items-center gap-2 rounded-full transition-all active:scale-95 md:min-h-12 md:rounded-2xl md:border md:border-line md:bg-surface md:px-2 md:py-1.5 md:hover:bg-surface-muted",
+                minimalMobile ? "min-h-9 px-0.5" : "min-h-12 rounded-2xl border border-line bg-surface px-2 py-1.5",
+              )}
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-soft text-xs font-bold text-brand">
+              <div
+                className={clsx(
+                  "flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-soft text-xs font-bold text-brand md:rounded-xl",
+                  minimalMobile ? "h-8 w-8" : "h-9 w-9",
+                )}
+              >
                 {user.image ? (
                   // eslint-disable-next-line @next/next/no-img-element -- OAuth-URLs & /api/user-avatar
                   <img src={user.image} alt="" className="h-full w-full object-cover" width={36} height={36} />

@@ -179,11 +179,11 @@ function MobileNavTab({
   onMore?: () => void;
 }) {
   const tabClass = clsx(
-    "flex min-h-[3.25rem] flex-col items-center justify-center gap-0 rounded-xl px-0.5 py-1 transition-transform duration-100 active:scale-95 min-[400px]:min-h-[3.5rem] min-[400px]:rounded-2xl",
-    isActive ? "bg-brand/15 text-brand ring-1 ring-inset ring-brand/25" : "text-muted-foreground",
+    "flex min-h-[3rem] flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 transition-colors active:opacity-80",
+    isActive ? "text-brand" : "text-muted-foreground",
   );
-  const iconClass = clsx("h-6 w-6 shrink-0 stroke-[1.75]", isActive && "text-brand");
-  const labelClass = clsx("mt-0.5 text-[10px] font-bold leading-tight", isActive && "text-brand");
+  const iconClass = clsx("h-5 w-5 shrink-0 stroke-[1.75]", isActive && "text-brand");
+  const labelClass = clsx("text-[11px] font-medium leading-none", isActive && "font-semibold text-brand");
 
   if (item.kind === "more") {
     return (
@@ -195,9 +195,6 @@ function MobileNavTab({
       >
         <SafeLucideIcon icon={item.icon} className={iconClass} />
         <span className={labelClass}>{item.label}</span>
-        <span className="mt-0.5 hidden text-[8px] font-medium leading-none opacity-80 min-[400px]:block">
-          {item.subtitle}
-        </span>
       </button>
     );
   }
@@ -206,9 +203,6 @@ function MobileNavTab({
     <Link key={item.href} href={item.href} className={tabClass} aria-current={isActive ? "page" : undefined}>
       <SafeLucideIcon icon={item.icon} className={iconClass} />
       <span className={labelClass}>{item.label}</span>
-      <span className="mt-0.5 hidden text-[8px] font-medium leading-none opacity-80 min-[400px]:block">
-        {item.subtitle}
-      </span>
     </Link>
   );
 }
@@ -235,7 +229,7 @@ export function DashboardMobileBottomNav({
     <>
       <nav
         className={clsx(
-          "fixed bottom-0 left-0 right-0 z-50 w-full max-w-full overflow-x-hidden border-t border-white/40 bg-white/80 px-1 pt-1 shadow-[0_-8px_28px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-white/10 dark:bg-background/80 md:hidden pb-safe",
+          "fixed bottom-0 left-0 right-0 z-50 w-full max-w-full overflow-x-hidden border-t border-border/35 bg-background px-2 pt-1.5 md:hidden pb-safe",
           className,
         )}
         aria-label="Hauptnavigation"

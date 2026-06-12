@@ -27,7 +27,7 @@ export function ManagerMobileCockpit({
       bare
       padding="default"
       tone={hasUrgentFocus ? "alert" : "brand"}
-      className="md:hidden"
+      className="dashboard-surface-mobile border-border/40 md:hidden max-md:shadow-none"
       ariaLabel="Führungs-Cockpit"
     >
       {firstName && !hasUrgentFocus ? (

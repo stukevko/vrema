@@ -252,33 +252,51 @@ export function BigClockButton({
         aria-label={state.isClockedIn ? "Ausstempeln" : "Einstempeln"}
         aria-busy={isPending}
         className={clsx(
-          "relative flex w-full flex-col items-center justify-center border border-white/20 transition-[filter,box-shadow] duration-200 ease-out active:brightness-95 active:scale-[0.99] disabled:opacity-90 dark:border-white/10",
-          stampHero ? "min-h-[min(42dvh,17.5rem)] gap-2 rounded-[1.75rem] px-6 py-8" : "gap-3 rounded-3xl px-6 py-6 sm:py-7",
-          state.isClockedIn
-            ? "bg-gradient-to-b from-danger to-danger text-white shadow-[var(--shadow-button)] hover:brightness-[1.06]"
-            : "bg-gradient-to-b from-brand to-brand-hover text-brand-foreground shadow-[var(--shadow-button)] hover:brightness-[1.05]",
+          "relative flex flex-col items-center justify-center transition-[filter,transform] duration-200 ease-out active:scale-[0.97] disabled:opacity-90",
+          stampHero
+            ? "mx-auto aspect-square h-[9.25rem] w-[9.25rem] gap-1 rounded-full border-0 px-4 py-4 sm:h-[10rem] sm:w-[10rem]"
+            : "w-full gap-3 rounded-3xl border border-white/20 px-6 py-6 dark:border-white/10 sm:py-7",
+          stampHero
+            ? state.isClockedIn
+              ? "bg-danger text-white shadow-[0_12px_40px_-12px_hsl(var(--danger)/0.55)]"
+              : "bg-brand text-brand-foreground shadow-[0_12px_40px_-12px_hsl(var(--brand)/0.5)]"
+            : state.isClockedIn
+              ? "bg-gradient-to-b from-danger to-danger text-white shadow-[var(--shadow-button)] hover:brightness-[1.06]"
+              : "bg-gradient-to-b from-brand to-brand-hover text-brand-foreground shadow-[var(--shadow-button)] hover:brightness-[1.05]",
         )}
       >
         {isPending ? (
           <Loader2 className="h-7 w-7 animate-spin" aria-hidden />
         ) : (
           <>
-            <span className="flex items-center gap-2.5 text-lg font-extrabold tracking-tight sm:text-xl">
-              {state.isClockedIn ? (
-                <LogOut className="h-6 w-6 shrink-0" aria-hidden />
-              ) : (
-                <LogIn className="h-6 w-6 shrink-0" aria-hidden />
-              )}
-              {clockLabel}
-            </span>
-            {stampHero && state.isClockedIn ? (
-              <span className="font-mono text-3xl font-bold tabular-nums tracking-tight sm:text-4xl">
-                {formatHHMMSS(elapsedMs)}
-              </span>
-            ) : null}
-            {stampHero && state.isOnBreak ? (
-              <span className="text-sm font-semibold opacity-90">Pause aktiv</span>
-            ) : null}
+            {stampHero ? (
+              <>
+                {state.isClockedIn ? (
+                  <span className="font-mono text-2xl font-bold tabular-nums tracking-tight sm:text-3xl">
+                    {formatHHMMSS(elapsedMs)}
+                  </span>
+                ) : (
+                  <LogIn className="h-9 w-9 shrink-0 opacity-95" aria-hidden />
+                )}
+                <span className="text-center text-[13px] font-semibold leading-tight">
+                  {clockLabel}
+                </span>
+                {state.isOnBreak ? (
+                  <span className="text-[11px] font-medium opacity-85">Pause</span>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <span className="flex items-center gap-2.5 text-lg font-bold tracking-tight sm:text-xl">
+                  {state.isClockedIn ? (
+                    <LogOut className="h-6 w-6 shrink-0" aria-hidden />
+                  ) : (
+                    <LogIn className="h-6 w-6 shrink-0" aria-hidden />
+                  )}
+                  {clockLabel}
+                </span>
+              </>
+            )}
           </>
         )}
       </button>
