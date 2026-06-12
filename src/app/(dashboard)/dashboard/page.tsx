@@ -17,8 +17,6 @@ import {
   CalendarPlus,
   FileText,
   PartyPopper,
-  Brain,
-  ChevronRight,
 } from "lucide-react";
 import { IconMenu } from "@/components/ui/IconMenu";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -47,6 +45,7 @@ import type { CompanyModules } from "@/lib/company-modules";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { ManagerMobileCockpit } from "@/components/dashboard/ManagerMobileCockpit";
 import { CollapsibleMobileSection } from "@/components/dashboard/CollapsibleMobileSection";
+import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
 import { vocabularyLabels } from "@/lib/vocabulary";
 
 /**
@@ -346,16 +345,16 @@ export default async function DashboardPage({
   const heroPendingApprovalsCount = teamStats
     ? teamStats.pendingVacations + teamStats.pendingCorrections + teamStats.pendingTradeApprovals
     : 0;
+  const showChefKpiGrid = heroAttentionCount > 0 || heroPendingApprovalsCount > 0;
+
+  const todayWorkedLabel = `${Math.floor(todayWorkedMins / 60)}h ${Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m`;
 
   const todayPanel = (
-    <div className="rounded-2xl glass-panel p-5 transition-all sm:p-8 md:hover:bg-card/80">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <h2 className="font-semibold">Heute</h2>
-          <span className="text-sm font-bold tabular-nums text-brand">
-            {Math.floor(todayWorkedMins / 60)}h {Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m
-          </span>
-        </div>
+    <DashboardSectionCard
+      title="Heute"
+      description={`${todayWorkedLabel} erfasst`}
+      padding="comfortable"
+      headerAction={
         <IconMenu label="Heute-Optionen">
           <IconMenu.Label>Schnellzugriff</IconMenu.Label>
           <IconMenu.Item asChild icon={<FileText className="h-4 w-4" />}>
@@ -369,8 +368,8 @@ export default async function DashboardPage({
             <Link href="/dashboard/planning" className="w-full">Wochenplan öffnen</Link>
           </IconMenu.Item>
         </IconMenu>
-      </div>
-
+      }
+    >
       {todayLogs.length === 0 ? (
         <EmptyState
           tone="celebrate"
@@ -425,7 +424,7 @@ export default async function DashboardPage({
           })}
         </div>
       )}
-    </div>
+    </DashboardSectionCard>
   );
 
   return (
@@ -455,6 +454,8 @@ export default async function DashboardPage({
             attentionCount={heroAttentionCount}
             attentionBreakdown={{ absent: teamStats.absentToday, late: teamStats.lateToday }}
             pendingApprovalsCount={heroPendingApprovalsCount}
+            showKpiGrid={showChefKpiGrid}
+            desktopCalm={!showChefKpiGrid}
             mobileGreeting={
               !isEmployee
                 ? `Guten ${berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"}, ${session.user.name?.split(" ")[0] ?? "Nutzer"} 👋`
@@ -483,33 +484,11 @@ export default async function DashboardPage({
         </div>
       ) : null}
 
-      {isManager ? (
-        <Link
-          href="/dashboard/insights"
-          className="order-1 hidden min-h-12 items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-sm transition-colors hover:border-brand/35 hover:bg-card/90 active:scale-[0.99] sm:px-5 md:flex"
-        >
-          <span className="flex items-center gap-3">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-soft text-brand dark:bg-brand/20">
-              <Brain className="h-4 w-4" aria-hidden />
-            </span>
-            <span>
-              <span className="font-semibold text-foreground">Auswertung & Hinweise</span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">
-                {companyModules.peaks
-                  ? "ArbZG, Plan vs. Ist, Personal-Tipps"
-                  : "ArbZG, Plan vs. Ist, Stunden im Blick"}
-              </span>
-            </span>
-          </span>
-          <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
-        </Link>
-      ) : null}
-
       {/* Mitarbeiter: Personal Cockpit – Hero + Stempel + Quick-Stats.
           ID `terminal-widget` migriert hierhin, damit alle Deeplinks („Jetzt einstempeln")
           beim Mitarbeiter direkt auf den großen Stempel-Button springen. */}
       {isEmployee && cockpitData && (
-        <div id="terminal-widget" className="order-1 scroll-mt-20">
+        <div className="order-1 -mx-1 max-md:mt-1 sm:mx-0">
           <EmployeeCockpit
             data={cockpitData}
             firstName={session.user.name?.split(" ")[0] ?? "Hallo"}
@@ -549,13 +528,13 @@ export default async function DashboardPage({
       {teamStats && focus && (
         <div className="order-5 min-w-0 space-y-4 md:order-4">
           {focus.title !== "Heute keine kritischen Hinweise" ? (
-            <div className="hidden rounded-2xl border border-warning/30 bg-warning-soft/40 px-4 py-3 text-sm text-foreground md:block">
-              <p className="font-semibold">{focus.title}</p>
-              <p className="mt-0.5 text-muted-foreground">{focus.description}</p>
-              <Link href={focus.href} className="mt-2 inline-flex text-sm font-bold text-brand underline-offset-2">
+            <DashboardSectionCard tone="alert" bare padding="default" className="hidden md:block">
+              <p className="font-semibold text-foreground">{focus.title}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{focus.description}</p>
+              <Link href={focus.href} className="mt-2 inline-flex text-sm font-semibold text-brand underline-offset-2 hover:underline">
                 {focus.cta} →
               </Link>
-            </div>
+            </DashboardSectionCard>
           ) : null}
 
           <CollapsibleMobileSection label="Mehr auf der Startseite" className="space-y-4">
@@ -627,7 +606,7 @@ export default async function DashboardPage({
             </div>
           </div>
         </CollapsibleMobileSection>
-      ) : (
+      ) : isEmployee && cockpitData ? null : (
         <div className="order-6 flex flex-col gap-5 md:order-5 md:grid md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
           {!isEmployee || !cockpitData ? (
             <div className="order-1 md:order-1">
@@ -662,9 +641,9 @@ export default async function DashboardPage({
         <CollapsibleMobileSection label="Heutige Zeiten" className="order-7">
           {todayPanel}
         </CollapsibleMobileSection>
-      ) : (
+      ) : !(isEmployee && cockpitData) ? (
         <div className="order-7">{todayPanel}</div>
-      )}
+      ) : null}
 
       {/* Business plan CTA */}
       {plan === "STARTER" && (

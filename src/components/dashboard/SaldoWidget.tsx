@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { dashboardSurfaceClass } from "@/components/dashboard/DashboardSectionCard";
 
 interface SaldoWidgetProps {
   workedMinutes: number;
@@ -36,8 +37,8 @@ export function SaldoWidget({
 
   if (!hasWorkLogs) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
-        <h2 className="mb-3 text-lg font-semibold">
+      <div className={`${dashboardSurfaceClass} p-5 sm:p-6`}>
+        <h2 className="mb-3 text-base font-semibold tracking-tight">
           Stunden-Saldo{weekLabel ? ` · ${weekLabel}` : ""}
         </h2>
         <p className="text-sm text-muted-foreground">
@@ -54,8 +55,8 @@ export function SaldoWidget({
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-6">
-      <h2 className="mb-6 text-lg font-semibold">
+    <div className={`${dashboardSurfaceClass} p-5 sm:p-6`}>
+      <h2 className="mb-6 text-base font-semibold tracking-tight">
         Stunden-Saldo{weekLabel ? ` · ${weekLabel}` : ""}
       </h2>
 

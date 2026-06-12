@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CalendarDays, FileText, CalendarClock } from "lucide-react";
+import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
 
 type Focus = {
   title: string;
@@ -10,60 +11,33 @@ type Focus = {
   cta: string;
 };
 
-/**
- * Mobil-Cockpit für Chefs: 3-Schritte-Flow + Fokus + Schnellzugriff.
- * Desktop nutzt weiterhin HeroStats + Sidebar.
- */
+/** Mobil-Cockpit für Chefs: Fokus + drei Schnelllinks. */
 export function ManagerMobileCockpit({
   focus,
-  planTitle,
 }: {
   focus: Focus;
-  planTitle: string;
+  planTitle?: string;
 }) {
   const hasUrgentFocus = focus.title !== "Heute keine kritischen Hinweise";
 
   return (
-    <section
-      aria-label="Führungs-Cockpit"
-      className="glass-card min-w-0 max-w-full overflow-hidden rounded-2xl border border-border p-4 md:hidden"
+    <DashboardSectionCard
+      bare
+      padding="default"
+      tone={hasUrgentFocus ? "alert" : "brand"}
+      className="md:hidden"
+      ariaLabel="Führungs-Cockpit"
     >
-      <ol className="mb-4 flex gap-2" aria-label="Dein Ablauf heute">
-        {[
-          { n: "1", t: "Fokus", active: hasUrgentFocus },
-          { n: "2", t: planTitle, active: true },
-          { n: "3", t: "Team", active: true },
-        ].map((step) => (
-          <li
-            key={step.n}
-            className={`flex flex-1 flex-col items-center rounded-xl border px-2 py-2 text-center ${
-              step.active ? "border-brand/35 bg-brand-soft/80" : "border-border/70 bg-muted/30"
-            }`}
-          >
-            <span className="text-[10px] font-bold text-brand">{step.n}</span>
-            <span className="text-[10px] font-semibold text-foreground">{step.t}</span>
-          </li>
-        ))}
-      </ol>
-
-      <div
-        className={`rounded-2xl px-4 py-3 text-sm ${
-          hasUrgentFocus
-            ? "border border-warning/30 bg-warning-soft/40 text-foreground"
-            : "border border-border/70 bg-muted/20 text-foreground"
-        }`}
+      <p className="font-semibold text-foreground">{focus.title}</p>
+      <p className="mt-0.5 text-sm text-muted-foreground">{focus.description}</p>
+      <Link
+        href={focus.href}
+        className="mt-2 inline-flex min-h-10 items-center text-sm font-semibold text-brand underline-offset-2 hover:underline"
       >
-        <p className="font-semibold">{focus.title}</p>
-        <p className="mt-0.5 text-muted-foreground">{focus.description}</p>
-        <Link
-          href={focus.href}
-          className="mt-2 inline-flex min-h-10 items-center text-sm font-bold text-brand underline-offset-2"
-        >
-          {focus.cta} →
-        </Link>
-      </div>
+        {focus.cta} →
+      </Link>
 
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border/60 pt-4">
         {(
           [
             { href: "/dashboard/reports", label: "Berichte", icon: FileText },
@@ -74,13 +48,13 @@ export function ManagerMobileCockpit({
           <Link
             key={q.href}
             href={q.href}
-            className="flex min-h-11 flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-background px-2 py-2 text-center text-xs font-semibold text-foreground transition-colors active:scale-[0.99] active:bg-muted/40"
+            className="flex min-h-11 flex-col items-center justify-center gap-1 rounded-2xl bg-background/80 px-2 py-2 text-center text-xs font-medium text-foreground transition-colors active:bg-muted/50"
           >
             <q.icon className="h-4 w-4 text-brand" aria-hidden />
             {q.label}
           </Link>
         ))}
       </div>
-    </section>
+    </DashboardSectionCard>
   );
 }

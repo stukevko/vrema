@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Users, Wallet, TriangleAlert } from "lucide-react";
+import { Users, Wallet, TriangleAlert, CircleCheck } from "lucide-react";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { dashboardSurfaceClass } from "@/components/dashboard/DashboardSectionCard";
 
 /**
  * Hero-Stats für das Dashboard – das "3-Sekunden-Prinzip":
@@ -23,6 +24,10 @@ type HeroStatsProps = {
   /** Nur Mobil: Grußzeile über den KPIs (kein zweites Hero-Card). */
   mobileGreeting?: string;
   mobileDateLine?: string;
+  /** KPI-Grid nur bei Handlungsbedarf — sonst ruhige Startseite. */
+  showKpiGrid?: boolean;
+  /** Desktop: ruhiger „Alles im Plan“-Zustand wenn keine KPIs nötig. */
+  desktopCalm?: boolean;
 };
 
 function formatEuroCents(value: number) {
@@ -42,9 +47,13 @@ export function HeroStats({
   pendingApprovalsCount,
   mobileGreeting,
   mobileDateLine,
+  showKpiGrid = true,
+  desktopCalm = false,
 }: HeroStatsProps) {
   const presentTone = presentNow > 0 ? "brand" : "muted";
   const attentionTone = attentionCount === 0 ? "brand" : attentionCount <= 2 ? "warning" : "danger";
+
+  if (!showKpiGrid && !mobileGreeting && !desktopCalm) return null;
 
   return (
     <section aria-label="Heutige Kennzahlen" className="w-full min-w-0 max-w-full space-y-2 sm:space-y-0">
@@ -54,6 +63,20 @@ export function HeroStats({
           {mobileDateLine ? <p className="mt-0.5 text-xs text-muted-foreground">{mobileDateLine}</p> : null}
         </div>
       ) : null}
+      {!showKpiGrid && desktopCalm ? (
+        <div className={`hidden min-w-0 items-center gap-3 px-5 py-4 md:flex ${dashboardSurfaceClass} bg-brand-soft/20 dark:bg-brand/10`}>
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/15 text-brand">
+            <CircleCheck className="h-5 w-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <p className="font-semibold text-foreground">Alles im Plan</p>
+            <p className="text-sm text-muted-foreground">
+              Keine Auffälligkeiten oder offenen Genehmigungen — du musst nichts tun.
+            </p>
+          </div>
+        </div>
+      ) : null}
+      {showKpiGrid ? (
       <div className="dashboard-kpi-grid grid w-full min-w-0 max-w-full grid-cols-2 gap-2 max-md:[&>*:nth-child(3)]:col-span-2 sm:grid-cols-3 sm:gap-4">
       {/* KPI 1 – Anwesend jetzt (Petrol, ruhig) */}
       <Link
@@ -173,6 +196,7 @@ export function HeroStats({
         </div>
       </Link>
       </div>
+      ) : null}
     </section>
   );
 }

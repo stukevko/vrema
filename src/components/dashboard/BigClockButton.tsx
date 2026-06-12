@@ -134,8 +134,8 @@ export function BigClockButton({
             });
             return;
           }
-          toast.success("Ausgestempelt – schönen Feierabend!", {
-            duration: 5000,
+          toast.success("Ausgestempelt.", {
+            duration: 3000,
             icon: <LogOut className="h-4 w-4" aria-hidden />,
             action: {
               label: "Rückgängig",
@@ -174,13 +174,15 @@ export function BigClockButton({
           return;
         }
         if (outcome.action === "clockIn" && outcome.result.warning) {
-          toast.warning(outcome.result.warning, {
-            icon: <AlertTriangle className="h-4 w-4" aria-hidden />,
-            duration: 6000,
+          toast.success("Eingestempelt.", {
+            description: outcome.result.warning,
+            icon: <LogIn className="h-4 w-4" aria-hidden />,
+            duration: 4500,
           });
         } else {
-          toast.success("Eingestempelt. Los geht's!", {
+          toast.success("Eingestempelt.", {
             icon: <LogIn className="h-4 w-4" aria-hidden />,
+            duration: 2200,
           });
         }
         router.refresh();

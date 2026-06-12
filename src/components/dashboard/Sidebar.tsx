@@ -5,7 +5,15 @@ import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import clsx from "clsx";
-import { getDashboardNavItems, getMobileBottomNavItems } from "./dashboard-nav-config";
+import {
+  getEmployeeMobileMoreNavItems,
+  getMobileBottomNavItems,
+  splitDashboardSidebarNav,
+  type DashboardNavItem,
+  type MobileBottomNavItem,
+} from "./dashboard-nav-config";
+import { Drawer } from "vaul";
+import { DashboardMoreNavDrawer } from "./DashboardMoreNavDrawer";
 import type { CompanyModules } from "@/lib/company-modules";
 import type { VocabularyLabels } from "@/lib/vocabulary";
 import { useEffect, useState } from "react";
@@ -13,8 +21,6 @@ import { countOpenSupportTicketsForSuperAdmin } from "@/lib/actions/support";
 import { countPendingShiftTradeApprovals } from "@/lib/actions/team";
 import { VremaLockup } from "@/components/brand/VremaMarkLogo";
 import { SafeLucideIcon } from "@/lib/icons/safe-lucide";
-
-/** Nur Mobil (< md): Daumen-Zone — Items aus `getMobileBottomNavItems(role)`. */
 
 interface SidebarProps {
   role: string;
@@ -38,7 +44,7 @@ export function DashboardSidebar({
   supportOverlayOpen = false,
 }: SidebarProps) {
   const pathname = usePathname();
-  const visibleItems = getDashboardNavItems(role, plan, companyModules);
+  const { primary, secondary } = splitDashboardSidebarNav(role, plan, companyModules);
   const [pendingTradeApprovals, setPendingTradeApprovals] = useState(0);
   const [openSuperTickets, setOpenSuperTickets] = useState(initialSuperOpenTickets);
   const canManageTrades =
@@ -80,6 +86,33 @@ export function DashboardSidebar({
     };
   }, [canManageTrades]);
 
+  function renderPrimaryItem(item: DashboardNavItem) {
+    const isActive =
+      pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={clsx(
+          "flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all active:scale-95",
+          isActive
+            ? "bg-muted text-foreground"
+            : "text-muted-foreground md:hover:bg-card/70 md:hover:text-foreground",
+        )}
+      >
+        <SafeLucideIcon icon={item.icon} className="h-4 w-4 shrink-0" />
+        {item.label}
+        {item.href === "/dashboard/planning" && canManageTrades && pendingTradeApprovals > 0 ? (
+          <span
+            className="ml-auto inline-flex h-2.5 w-2.5 rounded-full bg-amber-500"
+            title={`${pendingTradeApprovals} Tauschanfragen warten`}
+          />
+        ) : null}
+      </Link>
+    );
+  }
+
   return (
     <aside
       className={clsx(
@@ -93,100 +126,33 @@ export function DashboardSidebar({
         aria-label="VREMA Dashboard"
       >
         <VremaLockup size={36} className="text-foreground" />
-        <p className="mt-2.5 max-w-[16rem] text-center text-[10px] font-semibold uppercase leading-snug tracking-[0.14em] text-muted-foreground">
-          Intelligente Zeiterfassung
+        <p className="mt-2.5 max-w-[16rem] text-center text-xs text-muted-foreground">
+          Zeiterfassung & Planung
         </p>
       </Link>
 
       <div className="px-5 pt-5">
-        <div className="rounded-2xl border border-border bg-muted/40 px-4 py-1.5 text-xs font-semibold capitalize text-foreground">
+        <div className="rounded-2xl border border-border bg-muted/40 px-4 py-1.5 text-xs font-medium capitalize text-foreground">
           {plan} Plan
         </div>
       </div>
 
-      <nav className="flex-1 space-y-2 px-4 py-5">
-        {visibleItems.map((item) => {
-          const isActive =
-            pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
-          if (item.href === "/dashboard/support") {
-            const supportActive = supportOverlayOpen || isActive;
-            const supportRowClass = clsx(
-              "flex min-h-11 w-full items-stretch gap-0.5 rounded-2xl px-1 py-0.5 transition-all active:scale-[0.99]",
-              supportActive
-                ? "bg-muted text-foreground"
-                : "text-muted-foreground md:hover:bg-card/70 md:hover:text-foreground",
-            );
-            const unreadBadge =
-              unreadReplies > 0 ? (
-                <span className="ml-auto inline-flex min-h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-foreground">
-                  {unreadReplies > 9 ? "9+" : unreadReplies}
-                </span>
-              ) : null;
-
-            return (
-              <div key={item.href}>
-                <Link
-                  href="/dashboard/support"
-                  className={clsx(supportRowClass, "hidden md:flex md:items-center")}
-                >
-                  <span className="flex min-h-11 flex-1 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium">
-                    <SafeLucideIcon icon={item.icon} className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{item.label}</span>
-                    {unreadBadge}
-                  </span>
-                </Link>
-                <div className={clsx(supportRowClass, "md:hidden")}>
-                  <button
-                    type="button"
-                    onClick={() => onOpenSupport?.("default")}
-                    className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium"
-                  >
-                    <SafeLucideIcon icon={item.icon} className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{item.label}</span>
-                  </button>
-                  {unreadReplies > 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => onOpenSupport?.("unread")}
-                      className="inline-flex min-h-11 min-w-[2.75rem] shrink-0 items-center justify-center self-center rounded-xl bg-primary px-2 text-xs font-bold text-foreground shadow-sm"
-                      aria-label={`${unreadReplies} ungelesene Support-Antworten anzeigen`}
-                    >
-                      {unreadReplies > 9 ? "9+" : unreadReplies}
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-            );
-          }
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={clsx(
-                "flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all active:scale-95",
-                isActive
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground md:hover:bg-card/70 md:hover:text-foreground"
-              )}
-            >
-              <SafeLucideIcon icon={item.icon} className="h-4 w-4 shrink-0" />
-              {item.label}
-              {item.href === "/dashboard/planning" && canManageTrades && pendingTradeApprovals > 0 ? (
-                <span
-                  className="ml-auto inline-flex h-2.5 w-2.5 rounded-full bg-amber-500"
-                  title={`${pendingTradeApprovals} Tauschanfragen warten`}
-                />
-              ) : null}
-              {item.href === "/dashboard/super-admin/tickets" && openSuperTickets > 0 ? (
-                <span
-                  className="ml-auto inline-flex h-2.5 w-2.5 rounded-full bg-red-500"
-                  title={`${openSuperTickets} offene Tickets`}
-                />
-              ) : null}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 space-y-1 px-4 py-5" aria-label="Hauptnavigation">
+        {primary.map((item) => renderPrimaryItem(item))}
+        {secondary.length > 0 ? (
+          <>
+            <div className="my-3 border-t border-border" />
+            <DashboardMoreNavDrawer
+              items={secondary}
+              onOpenSupport={onOpenSupport}
+              supportOverlayOpen={supportOverlayOpen}
+              unreadReplies={unreadReplies}
+              openSuperTickets={openSuperTickets}
+              pendingTradeApprovals={pendingTradeApprovals}
+              canManageTrades={canManageTrades}
+            />
+          </>
+        ) : null}
       </nav>
 
       <div className="border-t border-border p-4">
@@ -203,6 +169,50 @@ export function DashboardSidebar({
   );
 }
 
+function MobileNavTab({
+  item,
+  isActive,
+  onMore,
+}: {
+  item: MobileBottomNavItem;
+  isActive: boolean;
+  onMore?: () => void;
+}) {
+  const tabClass = clsx(
+    "flex min-h-[3.5rem] flex-col items-center justify-center gap-0 rounded-xl px-0.5 py-1 transition-transform duration-100 active:scale-95 min-[400px]:min-h-[3.75rem] min-[400px]:rounded-2xl",
+    isActive ? "bg-brand/15 text-brand ring-1 ring-inset ring-brand/25" : "text-muted-foreground",
+  );
+  const iconClass = clsx("h-6 w-6 shrink-0 stroke-[1.75]", isActive && "text-brand");
+  const labelClass = clsx("mt-0.5 text-[10px] font-bold leading-tight", isActive && "text-brand");
+
+  if (item.kind === "more") {
+    return (
+      <button
+        type="button"
+        onClick={onMore}
+        className={tabClass}
+        aria-haspopup="dialog"
+      >
+        <SafeLucideIcon icon={item.icon} className={iconClass} />
+        <span className={labelClass}>{item.label}</span>
+        <span className="mt-0.5 hidden text-[8px] font-medium leading-none opacity-80 min-[400px]:block">
+          {item.subtitle}
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <Link key={item.href} href={item.href} className={tabClass} aria-current={isActive ? "page" : undefined}>
+      <SafeLucideIcon icon={item.icon} className={iconClass} />
+      <span className={labelClass}>{item.label}</span>
+      <span className="mt-0.5 hidden text-[8px] font-medium leading-none opacity-80 min-[400px]:block">
+        {item.subtitle}
+      </span>
+    </Link>
+  );
+}
+
 export function DashboardMobileBottomNav({
   role,
   companyModules,
@@ -215,51 +225,82 @@ export function DashboardMobileBottomNav({
   className?: string;
 }) {
   const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = useState(false);
   const items = getMobileBottomNavItems(role, companyModules, planVocabulary);
+  const moreItems = role === "EMPLOYEE" ? getEmployeeMobileMoreNavItems() : [];
+  const morePaths = new Set(moreItems.map((item) => item.href));
+  const colCount = items.length <= 2 ? 2 : items.length === 3 ? 3 : 5;
 
   return (
-    <nav
-      className={clsx(
-        "fixed bottom-0 left-0 right-0 z-50 w-full max-w-full overflow-x-hidden border-t border-white/40 bg-white/80 px-1 pt-1 shadow-[0_-8px_28px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-white/10 dark:bg-background/80 md:hidden pb-safe",
-        className,
-      )}
-      aria-label="Hauptnavigation"
-    >
-      <div
+    <>
+      <nav
         className={clsx(
-          "mx-auto grid w-full min-w-0 max-w-lg gap-0.5 overflow-hidden",
-          items.length === 2 ? "grid-cols-2" : "grid-cols-5",
+          "fixed bottom-0 left-0 right-0 z-50 w-full max-w-full overflow-x-hidden border-t border-white/40 bg-white/80 px-1 pt-1 shadow-[0_-8px_28px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-white/10 dark:bg-background/80 md:hidden pb-safe",
+          className,
         )}
+        aria-label="Hauptnavigation"
       >
-        {items.map((item) => {
-          const isActive =
-            pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={clsx(
-                "flex min-h-[3.5rem] flex-col items-center justify-center gap-0 rounded-xl px-0.5 py-1 transition-transform duration-100 active:scale-95 min-[400px]:min-h-[3.75rem] min-[400px]:rounded-2xl",
-                isActive
-                  ? "bg-brand/15 text-brand ring-1 ring-inset ring-brand/25"
-                  : "text-muted-foreground",
-              )}
-              aria-current={isActive ? "page" : undefined}
-            >
-              <SafeLucideIcon
-                icon={item.icon}
-                className={clsx("h-6 w-6 shrink-0 stroke-[1.75]", isActive && "text-brand")}
+        <div
+          className={clsx(
+            "mx-auto grid w-full min-w-0 max-w-lg gap-0.5 overflow-hidden",
+            colCount === 2 ? "grid-cols-2" : colCount === 3 ? "grid-cols-3" : "grid-cols-5",
+          )}
+        >
+          {items.map((item) => {
+            const isActive =
+              item.kind === "more"
+                ? morePaths.has(pathname) || pathname.startsWith("/dashboard/support")
+                : pathname === item.href ||
+                  (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            return (
+              <MobileNavTab
+                key={item.kind === "more" ? "more" : item.href}
+                item={item}
+                isActive={isActive}
+                onMore={() => setMoreOpen(true)}
               />
-              <span className={clsx("mt-0.5 text-[10px] font-bold leading-tight", isActive && "text-brand")}>
-                {item.label}
-              </span>
-              <span className="mt-0.5 hidden text-[8px] font-medium leading-none opacity-80 min-[400px]:block">
-                {item.subtitle}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+            );
+          })}
+        </div>
+      </nav>
+
+      {role === "EMPLOYEE" ? (
+        <Drawer.Root open={moreOpen} onOpenChange={setMoreOpen} repositionInputs fixed shouldScaleBackground={false}>
+          <Drawer.Portal>
+            <Drawer.Overlay className="fixed inset-0 z-[101] bg-black/45" />
+            <Drawer.Content className="fixed inset-x-0 bottom-0 z-[102] flex max-h-[70vh] flex-col rounded-t-[28px] border border-border bg-card outline-none pb-safe">
+              <Drawer.Handle className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/35" />
+              <div className="border-b border-border px-5 pb-3 pt-2">
+                <Drawer.Title className="text-lg font-semibold text-foreground">Mehr</Drawer.Title>
+                <Drawer.Description className="text-sm text-muted-foreground">
+                  Team, Urlaub und Konto.
+                </Drawer.Description>
+              </div>
+              <div className="space-y-0.5 overflow-y-auto px-3 py-2">
+                {moreItems.map((item) => {
+                  const active =
+                    pathname === item.href ||
+                    (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMoreOpen(false)}
+                      className={clsx(
+                        "flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium",
+                        active ? "bg-muted text-foreground" : "text-muted-foreground active:bg-muted/60",
+                      )}
+                    >
+                      <SafeLucideIcon icon={item.icon} className="h-5 w-5 shrink-0" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </Drawer.Content>
+          </Drawer.Portal>
+        </Drawer.Root>
+      ) : null}
+    </>
   );
 }

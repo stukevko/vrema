@@ -14,6 +14,7 @@ import {
   UserCircle2,
   TrendingUp,
   ListTodo,
+  MoreHorizontal,
 } from "lucide-react";
 import type { CompanyModuleKey, CompanyModules } from "@/lib/company-modules";
 import type { VocabularyLabels } from "@/lib/vocabulary";
@@ -24,6 +25,8 @@ export type MobileBottomNavItem = {
   /** Kurzer Kontext unter dem Tab-Label (nur Mobil). */
   subtitle: string;
   icon: LucideIcon;
+  /** `more` öffnet Drawer statt Navigation (nur Mitarbeiter). */
+  kind?: "link" | "more";
 };
 
 export type DashboardNavItem = {
@@ -34,6 +37,85 @@ export type DashboardNavItem = {
   /** Leer = immer sichtbar (Kern). Sonst müssen alle Module aktiv sein. */
   requiresModules?: CompanyModuleKey[];
 };
+
+export type DashboardNavGroup = {
+  label: string;
+  items: DashboardNavItem[];
+};
+
+/** Sidebar-Gruppen — Betrieb / Führung / Konto statt flacher Liste. */
+const NAV_GROUP_SPECS: { label: string; hrefs: string[] }[] = [
+  {
+    label: "Plattform",
+    hrefs: ["/dashboard/partners", "/dashboard/super-admin/tickets", "/dashboard/super-admin/blog"],
+  },
+  { label: "Betrieb", hrefs: ["/dashboard", "/dashboard/team"] },
+  {
+    label: "Führung",
+    hrefs: [
+      "/dashboard/planning",
+      "/dashboard/tasks",
+      "/dashboard/vacation",
+      "/dashboard/reports",
+      "/dashboard/insights",
+      "/dashboard/peaks",
+    ],
+  },
+  { label: "Konto", hrefs: ["/dashboard/support", "/dashboard/billing", "/dashboard/settings", "/dashboard/account"] },
+];
+
+const PRIMARY_SIDEBAR_ORDER: Record<"employee" | "default", string[]> = {
+  employee: ["/dashboard", "/dashboard/planning", "/dashboard/team", "/dashboard/vacation"],
+  default: ["/dashboard", "/dashboard/planning", "/dashboard/team", "/dashboard/insights"],
+};
+
+function primarySidebarLabel(role: string, item: DashboardNavItem): string {
+  if (item.href === "/dashboard") return role === "EMPLOYEE" ? "Heute" : "Start";
+  if (item.href === "/dashboard/planning") return "Planer";
+  if (item.href === "/dashboard/insights") return "Auswertung";
+  return item.label;
+}
+
+/** Desktop-Sidebar: 4 Kern-Links + Rest im „Mehr“-Drawer. */
+export function splitDashboardSidebarNav(
+  role: string,
+  plan: string,
+  modules: CompanyModules,
+): { primary: DashboardNavItem[]; secondary: DashboardNavItem[] } {
+  const all = getDashboardNavItems(role, plan, modules);
+  if (role === "ADVISOR") {
+    return { primary: all, secondary: [] };
+  }
+
+  const order = role === "EMPLOYEE" ? PRIMARY_SIDEBAR_ORDER.employee : PRIMARY_SIDEBAR_ORDER.default;
+  const primary = order
+    .map((href) => all.find((item) => item.href === href))
+    .filter((item): item is DashboardNavItem => Boolean(item))
+    .map((item) => ({ ...item, label: primarySidebarLabel(role, item) }));
+
+  const primaryHrefs = new Set(primary.map((item) => item.href));
+  const secondary = all.filter((item) => !primaryHrefs.has(item.href));
+  return { primary, secondary };
+}
+
+export function groupDashboardNavItems(items: DashboardNavItem[]): DashboardNavGroup[] {
+  const byHref = new Map(items.map((item) => [item.href, item]));
+  const used = new Set<string>();
+  const groups: DashboardNavGroup[] = [];
+
+  for (const spec of NAV_GROUP_SPECS) {
+    const groupItems = spec.hrefs
+      .map((href) => byHref.get(href))
+      .filter((item): item is DashboardNavItem => Boolean(item));
+    if (groupItems.length === 0) continue;
+    groupItems.forEach((item) => used.add(item.href));
+    groups.push({ label: spec.label, items: groupItems });
+  }
+
+  const rest = items.filter((item) => !used.has(item.href));
+  if (rest.length > 0) groups.push({ label: "Weitere", items: rest });
+  return groups;
+}
 
 const ALL_PLANS = ["STARTER", "BUSINESS", "ENTERPRISE"] as const;
 
@@ -53,39 +135,71 @@ export function getMobileBottomNavItems(
       { href: "/dashboard/account", label: "Profil", subtitle: "Konto", icon: UserCircle2 },
     ];
   }
-  const profileHref = role === "EMPLOYEE" ? "/dashboard/account" : "/dashboard/settings";
-  const fourthTab: MobileBottomNavItem =
-    role === "EMPLOYEE"
-      ? { href: "/dashboard/vacation", label: "Urlaub", subtitle: "Frei/Tage", icon: CalendarClock }
-      : { href: "/dashboard/insights", label: "Auswertung", subtitle: "Hinweise", icon: Brain };
+  if (role === "EMPLOYEE") {
+    return [
+      {
+        href: "/dashboard",
+        label: "Heute",
+        subtitle: "Stempeln",
+        icon: LayoutDashboard,
+        kind: "link",
+      },
+      {
+        href: "/dashboard/planning",
+        label: "Planer",
+        subtitle: planSlots,
+        icon: CalendarDays,
+        kind: "link",
+      },
+      {
+        href: "/dashboard/account",
+        label: "Mehr",
+        subtitle: "Team & Urlaub",
+        icon: MoreHorizontal,
+        kind: "more",
+      },
+    ];
+  }
+
+  const profileHref = "/dashboard/settings";
   const items: MobileBottomNavItem[] = [
     {
       href: "/dashboard",
-      label: role === "EMPLOYEE" ? "Heute" : "Start",
-      subtitle: role === "EMPLOYEE" ? "Stempeln" : "Fokus",
+      label: "Start",
+      subtitle: "Fokus",
       icon: LayoutDashboard,
     },
     {
       href: "/dashboard/planning",
       label: "Planer",
-      subtitle: role === "EMPLOYEE" ? planSlots : "Woche",
+      subtitle: "Woche",
       icon: CalendarDays,
     },
     {
       href: "/dashboard/team",
       label: "Team",
-      subtitle: role === "EMPLOYEE" ? "Kollegen" : "Leute",
+      subtitle: "Leute",
       icon: Users,
     },
-    fourthTab,
+    { href: "/dashboard/insights", label: "Auswertung", subtitle: "Hinweise", icon: Brain },
     {
       href: profileHref,
       label: "Profil",
-      subtitle: role === "EMPLOYEE" ? "Konto" : "Setup",
+      subtitle: "Setup",
       icon: UserCircle2,
     },
   ];
   return items;
+}
+
+/** Links im Mitarbeiter-„Mehr“-Drawer (Bottom-Nav Tab 3). */
+export function getEmployeeMobileMoreNavItems(): MobileBottomNavItem[] {
+  return [
+    { href: "/dashboard/team", label: "Team", subtitle: "Kollegen", icon: Users },
+    { href: "/dashboard/vacation", label: "Urlaub", subtitle: "Frei/Tage", icon: CalendarClock },
+    { href: "/dashboard/account", label: "Profil", subtitle: "Konto", icon: UserCircle2 },
+    { href: "/dashboard/support", label: "Hilfe", subtitle: "Support", icon: LifeBuoy },
+  ];
 }
 
 /** Kern-Navigation — optionale Module per `requiresModules`. */

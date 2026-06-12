@@ -94,11 +94,7 @@ function guideForPath(
   }
   if (pathname === "/dashboard" || pathname === "/dashboard/") {
     if (role === "EMPLOYEE") {
-      return {
-        title: "Dein Tag",
-        hint: "Stempeln → Schicht → Urlaub bei Bedarf.",
-        cta: { href: "/dashboard/planning", label: "Schichten" },
-      };
+      return null;
     }
     return {
       title: "Übersicht",

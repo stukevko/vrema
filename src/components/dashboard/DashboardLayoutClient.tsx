@@ -142,7 +142,11 @@ export function DashboardLayoutClient({
             </div>
           ) : null}
           {children}
-          <footer className="no-print mb-2 mt-8 text-center text-xs text-muted-foreground">VREMA – Intelligente Zeiterfassung</footer>
+          {role !== "EMPLOYEE" ? (
+            <footer className="no-print mb-2 mt-8 text-center text-xs text-muted-foreground">
+              VREMA – Intelligente Zeiterfassung
+            </footer>
+          ) : null}
           </div>
         </main>
       </div>

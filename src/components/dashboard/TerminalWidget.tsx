@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { clockIn, clockOut, toggleBreak } from "@/lib/actions/worklogs";
 import { performClockAction } from "@/lib/offline/perform-clock-action";
 import { getQueuedClockCount } from "@/lib/offline/clock-queue";
+import { dashboardSurfaceClass } from "@/components/dashboard/DashboardSectionCard";
 
 export interface TerminalActiveLog {
   id: string;
@@ -188,7 +189,7 @@ export function TerminalWidget({ activeLog }: TerminalWidgetProps) {
   const isSyncing = displayLog?.id === "__optimistic__";
 
   return (
-    <div className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90 sm:p-6">
+    <div className={`${dashboardSurfaceClass} p-5 sm:p-6`}>
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Terminal</h2>
         {(!onLine || queuedCount > 0) && (

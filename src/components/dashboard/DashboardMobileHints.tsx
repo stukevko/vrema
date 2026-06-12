@@ -32,6 +32,11 @@ export function DashboardMobileHints({
 }) {
   const [pwaVisible, setPwaVisible] = useState(false);
 
+  // Mitarbeiter: kein Banner-Stack — Stempeln ohne Ablenkung (Marketing: „ein Tipp“).
+  if (role === "EMPLOYEE") {
+    return null;
+  }
+
   if (trialBanner) {
     return (
       <TrialStatusBanner
