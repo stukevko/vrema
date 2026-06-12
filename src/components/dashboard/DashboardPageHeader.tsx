@@ -13,6 +13,8 @@ type Props = {
   badge?: ReactNode;
   variant?: DashboardPageHeaderVariant;
   className?: string;
+  /** Mobil: Titel steht in der Topbar — kein doppelter Seitenkopf. */
+  hideOnMobile?: boolean;
 };
 
 /**
@@ -28,10 +30,13 @@ export function DashboardPageHeader({
   badge,
   variant = "card",
   className,
+  hideOnMobile = false,
 }: Props) {
+  const mobileHidden = hideOnMobile ? "max-md:hidden" : "";
+
   if (variant === "plain") {
     return (
-      <header className={clsx("min-w-0", className)}>
+      <header className={clsx("min-w-0", mobileHidden, className)}>
         {eyebrow ? (
           <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">{eyebrow}</p>
         ) : null}
@@ -48,6 +53,7 @@ export function DashboardPageHeader({
       <header
         className={clsx(
           "glass-card relative overflow-hidden px-3 py-3 sm:flex sm:items-start sm:justify-between sm:gap-4 sm:px-5 sm:py-5",
+          mobileHidden,
           className,
         )}
       >
@@ -73,6 +79,7 @@ export function DashboardPageHeader({
       className={clsx(
         "rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] dark:border-white/10 sm:p-5",
         Icon ? "flex items-start gap-3 sm:gap-4" : "",
+        mobileHidden,
         className,
       )}
     >

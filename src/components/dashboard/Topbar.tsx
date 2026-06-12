@@ -2,13 +2,14 @@
 
 import { ChevronDown, LifeBuoy, LogOut, Settings, UserCircle2 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
+import { getMobileScreenTitle } from "@/components/dashboard/dashboard-nav-config";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getPersonalAccountHref } from "@/lib/dashboard/account-href";
 import clsx from "clsx";
-import { VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
 import { AnchoredPopover } from "@/components/ui/AnchoredPopover";
 
 interface TopbarProps {
@@ -39,7 +40,8 @@ export function DashboardTopbar({
   const profileTriggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const accountHref = getPersonalAccountHref(user.role);
-
+  const pathname = usePathname();
+  const mobileScreenTitle = getMobileScreenTitle(pathname, user.role ?? "EMPLOYEE");
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -96,18 +98,12 @@ export function DashboardTopbar({
           )}
         </div>
 
-        <Link
-          href="/dashboard"
-          className="absolute left-1/2 top-1/2 z-[1] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 md:hidden"
-          aria-label="VREMA"
+        <p
+          className="absolute left-1/2 top-1/2 z-[1] max-w-[50%] -translate-x-1/2 -translate-y-1/2 truncate text-center text-base font-semibold tracking-tight text-foreground md:hidden"
+          aria-current="page"
         >
-          <VremaMarkLogo size={minimalMobile ? 24 : 28} className="shrink-0 text-foreground" />
-          {!minimalMobile ? (
-            <span className="hidden font-bold tracking-tighter text-foreground sm:block" style={{ fontSize: 17 }}>
-              VREMA
-            </span>
-          ) : null}
-        </Link>
+          {mobileScreenTitle}
+        </p>
 
         <div className="hidden md:block md:flex-1" />
 

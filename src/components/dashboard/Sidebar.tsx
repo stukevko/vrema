@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react";
 import clsx from "clsx";
 import {
   getEmployeeMobileMoreNavItems,
+  getManagerMobileMoreNavItems,
   getMobileBottomNavItems,
   splitDashboardSidebarNav,
   type DashboardNavItem,
@@ -221,9 +222,14 @@ export function DashboardMobileBottomNav({
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const items = getMobileBottomNavItems(role, companyModules, planVocabulary);
-  const moreItems = role === "EMPLOYEE" ? getEmployeeMobileMoreNavItems() : [];
+  const moreItems =
+    role === "EMPLOYEE"
+      ? getEmployeeMobileMoreNavItems()
+      : ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)
+        ? getManagerMobileMoreNavItems(role, companyModules)
+        : [];
   const morePaths = new Set(moreItems.map((item) => item.href));
-  const colCount = items.length <= 2 ? 2 : items.length === 3 ? 3 : 5;
+  const colCount = items.length <= 2 ? 2 : items.length <= 3 ? 3 : 5;
 
   return (
     <>
@@ -258,7 +264,7 @@ export function DashboardMobileBottomNav({
         </div>
       </nav>
 
-      {role === "EMPLOYEE" ? (
+      {moreItems.length > 0 ? (
         <Drawer.Root open={moreOpen} onOpenChange={setMoreOpen} repositionInputs fixed shouldScaleBackground={false}>
           <Drawer.Portal>
             <Drawer.Overlay className="fixed inset-0 z-[101] bg-black/45" />
@@ -267,7 +273,7 @@ export function DashboardMobileBottomNav({
               <div className="border-b border-border px-5 pb-3 pt-2">
                 <Drawer.Title className="text-lg font-semibold text-foreground">Mehr</Drawer.Title>
                 <Drawer.Description className="text-sm text-muted-foreground">
-                  Team, Urlaub und Konto.
+                  {role === "EMPLOYEE" ? "Team, Urlaub und Konto." : "Team, Auswertung, Berichte und Einstellungen."}
                 </Drawer.Description>
               </div>
               <div className="space-y-0.5 overflow-y-auto px-3 py-2">

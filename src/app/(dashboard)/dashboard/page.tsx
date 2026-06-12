@@ -445,10 +445,18 @@ export default async function DashboardPage({
         </div>
       )}
 
+      {isManager && teamStats && focus ? (
+        <div className="order-1 max-md:order-2 md:hidden">
+          <ManagerMobileCockpit
+            focus={focus}
+            planTitle={planVocabulary.planTitle}
+            firstName={session.user.name?.split(" ")[0]}
+          />
+        </div>
+      ) : null}
+
       {teamStats && (
-        <div
-          className={`order-1 mt-1 min-w-0 max-md:order-2 sm:mt-2${showChefKpiGrid ? "" : " max-md:hidden"}`}
-        >
+        <div className="order-1 mt-1 min-w-0 max-md:order-3 sm:mt-2 max-md:hidden">
           <HeroStats
             presentNow={teamStats.activeToday}
             totalEmployees={teamStats.totalEmployees}
@@ -458,17 +466,6 @@ export default async function DashboardPage({
             pendingApprovalsCount={heroPendingApprovalsCount}
             showKpiGrid={showChefKpiGrid}
             desktopCalm={!showChefKpiGrid}
-            mobileGreeting={
-              !isEmployee && showChefKpiGrid
-                ? `Guten ${berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"}, ${session.user.name?.split(" ")[0] ?? "Nutzer"} 👋`
-                : undefined
-            }
-            mobileDateLine={formatBerlinDate(now, {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
           />
         </div>
       )}
@@ -479,16 +476,6 @@ export default async function DashboardPage({
           <NoShowCard />
         </div>
       )}
-
-      {isManager && teamStats && focus ? (
-        <div className="order-2">
-          <ManagerMobileCockpit
-            focus={focus}
-            planTitle={planVocabulary.planTitle}
-            firstName={session.user.name?.split(" ")[0]}
-          />
-        </div>
-      ) : null}
 
       {/* Mitarbeiter: Personal Cockpit – Hero + Stempel + Quick-Stats.
           ID `terminal-widget` migriert hierhin, damit alle Deeplinks („Jetzt einstempeln")
@@ -530,7 +517,7 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {/* Team stats (for owners/managers) — Desktop: Fokus + Live-Ops; Mobil: im Cockpit + „Mehr“. */}
+      {/* Team stats (for owners/managers) — Desktop: Fokus + Live-Ops; Mobil: nur Cockpit + No-Show. */}
       {teamStats && focus && (
         <div className="order-5 min-w-0 space-y-4 md:order-4">
           {focus.title !== "Heute keine kritischen Hinweise" ? (
@@ -543,7 +530,8 @@ export default async function DashboardPage({
             </DashboardSectionCard>
           ) : null}
 
-          <CollapsibleMobileSection label="Mehr auf der Startseite" className="space-y-4">
+          <div className="hidden md:block">
+          <CollapsibleMobileSection label="Weitere Bereiche" className="space-y-4">
             {showOwnerWelcome && isOwner ? (
               <OwnerWelcomeStrip focusWeek={ownerWelcomeFocusWeek} showPeaksModule={companyModules.peaks} />
             ) : null}
@@ -573,45 +561,40 @@ export default async function DashboardPage({
                 </Link>
               ))}
             </div>
+
           </CollapsibleMobileSection>
+          </div>
         </div>
       )}
 
-      {/* Main grid: Mobil Terminal → Saldo → AI; Desktop gleiche Reihenfolge im Grid.
-          Für Mitarbeiter NORMALERWEISE keine TerminalWidget – sie haben oben den BigClockButton.
-          Ausnahme: wenn das Cockpit fehlschlägt, brauchen sie irgendeinen Stempel-Weg → wir
-          fallback-zeigen das TerminalWidget. */}
+      {/* Main grid: Desktop Terminal/Saldo; Nicht-Manager ohne eingeklappten Block oben. */}
       {isManager ? (
-        <CollapsibleMobileSection label="Terminal & Saldo" className="order-6 md:order-5">
-          <div className="flex flex-col gap-5 md:grid md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-            {!isEmployee || !cockpitData ? (
-              <div className="order-1 md:order-1">
-                <TerminalWidget
-                  activeLog={
-                    activeLog
-                      ? {
-                          id: activeLog.id,
-                          clockIn: activeLog.clockIn,
-                          breakMins: activeLog.breakMins,
-                          isOnBreak: activeLog.isOnBreak,
-                          breakStartedAt: activeLog.breakStartedAt,
-                        }
-                      : null
-                  }
-                />
-              </div>
-            ) : null}
-            <div className="order-2 md:order-2">
-              <SaldoWidget
-                workedMinutes={saldo.workedMinutes}
-                expectedMinutes={saldo.expectedMinutes}
-                saldoMinutes={saldo.saldoMinutes}
-                weekLabel={saldo.weekLabel}
-                hasWorkLogs={Boolean(hasAnyWorkLog)}
-              />
-            </div>
+        <div className="order-6 hidden flex-col gap-5 md:order-5 md:grid md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+          <div className="order-1 md:order-1">
+            <TerminalWidget
+              activeLog={
+                activeLog
+                  ? {
+                      id: activeLog.id,
+                      clockIn: activeLog.clockIn,
+                      breakMins: activeLog.breakMins,
+                      isOnBreak: activeLog.isOnBreak,
+                      breakStartedAt: activeLog.breakStartedAt,
+                    }
+                  : null
+              }
+            />
           </div>
-        </CollapsibleMobileSection>
+          <div className="order-2 md:order-2">
+            <SaldoWidget
+              workedMinutes={saldo.workedMinutes}
+              expectedMinutes={saldo.expectedMinutes}
+              saldoMinutes={saldo.saldoMinutes}
+              weekLabel={saldo.weekLabel}
+              hasWorkLogs={Boolean(hasAnyWorkLog)}
+            />
+          </div>
+        </div>
       ) : isEmployee && cockpitData ? null : (
         <div className="order-6 flex flex-col gap-5 md:order-5 md:grid md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
           {!isEmployee || !cockpitData ? (
@@ -644,9 +627,7 @@ export default async function DashboardPage({
       )}
 
       {isManager ? (
-        <CollapsibleMobileSection label="Heutige Zeiten" className="order-7">
-          {todayPanel}
-        </CollapsibleMobileSection>
+        <div className="order-7 hidden md:block">{todayPanel}</div>
       ) : !(isEmployee && cockpitData) ? (
         <div className="order-7">{todayPanel}</div>
       ) : null}

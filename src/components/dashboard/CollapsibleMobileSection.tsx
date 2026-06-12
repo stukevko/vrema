@@ -5,7 +5,7 @@ import { ChevronDown } from "lucide-react";
 import clsx from "clsx";
 
 /**
- * Mobil: Sekundärinhalte hinter „Mehr anzeigen“. Desktop: Kinder immer sichtbar (`md:contents`).
+ * Mobil: Sekundärinhalte eingeklappt. Desktop: immer sichtbar (`md:contents`).
  */
 export function CollapsibleMobileSection({
   label,
@@ -26,11 +26,11 @@ export function CollapsibleMobileSection({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="mb-3 flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition-colors active:scale-[0.99] md:hidden"
+        className="mb-2 flex min-h-10 w-full items-center justify-between gap-2 border-t border-border/50 py-3 text-left text-sm font-medium text-muted-foreground active:text-foreground md:hidden"
       >
         <span>{label}</span>
         <ChevronDown
-          className={clsx("h-5 w-5 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
+          className={clsx("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")}
           aria-hidden
         />
       </button>

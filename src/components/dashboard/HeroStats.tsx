@@ -77,7 +77,29 @@ export function HeroStats({
         </div>
       ) : null}
       {showKpiGrid ? (
-      <div className="dashboard-kpi-grid grid w-full min-w-0 max-w-full grid-cols-2 gap-2 max-md:[&>*:nth-child(3)]:col-span-2 sm:grid-cols-3 sm:gap-4">
+      <>
+      <Link
+        href="/dashboard/reports"
+        className={[
+          "flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm transition-colors active:scale-[0.99] md:hidden",
+          attentionTone === "brand"
+            ? "border-border/60 bg-card"
+            : attentionTone === "warning"
+              ? "border-warning/35 bg-warning-soft/30"
+              : "border-danger/35 bg-danger-soft/30",
+        ].join(" ")}
+      >
+        <span className="min-w-0 font-medium text-foreground">
+          {attentionCount > 0
+            ? `${attentionCount} ${attentionCount === 1 ? "Hinweis" : "Hinweise"} heute`
+            : `${presentNow} von ${totalEmployees} anwesend`}
+          {pendingApprovalsCount > 0
+            ? ` · ${pendingApprovalsCount} ${pendingApprovalsCount === 1 ? "Antrag" : "Anträge"}`
+            : ""}
+        </span>
+        <span className="shrink-0 font-semibold text-brand">Ansehen</span>
+      </Link>
+      <div className="dashboard-kpi-grid hidden w-full min-w-0 max-w-full grid-cols-2 gap-2 md:grid md:grid-cols-3 md:gap-4">
       {/* KPI 1 – Anwesend jetzt (Petrol, ruhig) */}
       <Link
         href="/dashboard/reports"
@@ -196,6 +218,7 @@ export function HeroStats({
         </div>
       </Link>
       </div>
+      </>
       ) : null}
     </section>
   );

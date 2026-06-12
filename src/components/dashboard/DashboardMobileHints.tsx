@@ -1,11 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { MobileWayfindingStrip } from "@/components/dashboard/MobileWayfindingStrip";
 import { PwaInstallHint } from "@/components/dashboard/PwaInstallHint";
 import { TrialStatusBanner } from "@/components/dashboard/TrialStatusBanner";
 import { PasskeySecurityNudge } from "@/components/dashboard/PasskeySecurityNudge";
-import type { CompanyModules } from "@/lib/company-modules";
 
 type TrialBannerProps = {
   daysRemaining: number;
@@ -16,26 +13,28 @@ type TrialBannerProps = {
 };
 
 /**
- * Mobil: maximal ein kontextloser Hinweis gleichzeitig (Support-Banner bleibt separat).
- * Priorität: Trial → Passkey → PWA → Wayfinding.
+ * Mobil: maximal ein Hinweis — kein Wayfinding (Seitentitel steht in der Topbar).
  */
 export function DashboardMobileHints({
   role,
-  companyModules,
   trialBanner,
   showPasskeyNudge,
+  pathname = "",
 }: {
   role: string;
-  companyModules: CompanyModules;
+  companyModules?: unknown;
   trialBanner: TrialBannerProps | null;
   showPasskeyNudge: boolean;
+  pathname?: string;
 }) {
-  const [pwaVisible, setPwaVisible] = useState(false);
-
-  // Mitarbeiter: kein Banner-Stack — Stempeln ohne Ablenkung (Marketing: „ein Tipp“).
   if (role === "EMPLOYEE") {
     return null;
   }
+
+  const onDashboardHome =
+    pathname === "/dashboard" || pathname === "/dashboard/";
+  const minimalManagerMobile =
+    onDashboardHome && ["COMPANY_OWNER", "MANAGER"].includes(role);
 
   if (trialBanner) {
     return (
@@ -49,14 +48,13 @@ export function DashboardMobileHints({
     );
   }
 
-  if (showPasskeyNudge) {
+  if (showPasskeyNudge && !minimalManagerMobile) {
     return <PasskeySecurityNudge />;
   }
 
-  return (
-    <>
-      <PwaInstallHint onVisibleChange={setPwaVisible} />
-      {!pwaVisible ? <MobileWayfindingStrip role={role} companyModules={companyModules} /> : null}
-    </>
-  );
+  if (minimalManagerMobile) {
+    return null;
+  }
+
+  return <PwaInstallHint />;
 }

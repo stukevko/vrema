@@ -120,8 +120,8 @@ export function groupDashboardNavItems(items: DashboardNavItem[]): DashboardNavG
 const ALL_PLANS = ["STARTER", "BUSINESS", "ENTERPRISE"] as const;
 
 /**
- * Mobil-Bottom-Nav (< md): feste 5 Tabs.
- * Chef: Start · Planer · Team · Auswertung · Profil — Berichte im Cockpit-Schnellzugriff.
+ * Mobil-Bottom-Nav (< md): 3 Tabs für MA & Chef.
+ * Chef: Start · Planer · Mehr (Team, Berichte, Einstellungen im Drawer).
  */
 export function getMobileBottomNavItems(
   role: string,
@@ -161,35 +161,58 @@ export function getMobileBottomNavItems(
     ];
   }
 
-  const profileHref = "/dashboard/settings";
-  const items: MobileBottomNavItem[] = [
-    {
-      href: "/dashboard",
-      label: "Start",
-      subtitle: "Fokus",
-      icon: LayoutDashboard,
-    },
-    {
-      href: "/dashboard/planning",
-      label: "Planer",
-      subtitle: "Woche",
-      icon: CalendarDays,
-    },
-    {
-      href: "/dashboard/team",
-      label: "Team",
-      subtitle: "Leute",
-      icon: Users,
-    },
+  // Chef: gleiches Easy-Prinzip wie Mitarbeiter — 3 Tabs, Rest im Drawer.
+  if (["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
+    return [
+      { href: "/dashboard", label: "Start", subtitle: "Fokus", icon: LayoutDashboard, kind: "link" },
+      { href: "/dashboard/planning", label: "Planer", subtitle: "Woche", icon: CalendarDays, kind: "link" },
+      {
+        href: "/dashboard/settings",
+        label: "Mehr",
+        subtitle: "Team & Berichte",
+        icon: MoreHorizontal,
+        kind: "more",
+      },
+    ];
+  }
+
+  return [
+    { href: "/dashboard", label: "Start", subtitle: "Fokus", icon: LayoutDashboard },
+    { href: "/dashboard/planning", label: "Planer", subtitle: "Woche", icon: CalendarDays },
+    { href: "/dashboard/team", label: "Team", subtitle: "Leute", icon: Users },
     { href: "/dashboard/insights", label: "Auswertung", subtitle: "Hinweise", icon: Brain },
-    {
-      href: profileHref,
-      label: "Profil",
-      subtitle: "Setup",
-      icon: UserCircle2,
-    },
+    { href: "/dashboard/settings", label: "Profil", subtitle: "Setup", icon: UserCircle2 },
   ];
-  return items;
+}
+
+/** Ein Seitenname in der Mobil-Topbar — eine Orientierung, kein zweites Banner. */
+const MOBILE_SCREEN_ROUTES: { prefix: string; title: string }[] = [
+  { prefix: "/dashboard/planning", title: "Planer" },
+  { prefix: "/dashboard/team", title: "Team" },
+  { prefix: "/dashboard/vacation", title: "Urlaub" },
+  { prefix: "/dashboard/insights", title: "Auswertung" },
+  { prefix: "/dashboard/reports", title: "Berichte" },
+  { prefix: "/dashboard/tasks", title: "Aufgaben" },
+  { prefix: "/dashboard/peaks", title: "Stoß & Umsatz" },
+  { prefix: "/dashboard/settings", title: "Einstellungen" },
+  { prefix: "/dashboard/account", title: "Profil" },
+  { prefix: "/dashboard/support", title: "Hilfe" },
+  { prefix: "/dashboard/billing", title: "Abonnement" },
+  { prefix: "/dashboard/welcome", title: "Willkommen" },
+  { prefix: "/dashboard/partners", title: "Partner" },
+];
+
+export function getMobileScreenTitle(pathname: string, role: string): string {
+  if (pathname === "/dashboard" || pathname === "/dashboard/") {
+    return role === "EMPLOYEE" ? "Heute" : "Start";
+  }
+  for (const route of MOBILE_SCREEN_ROUTES) {
+    if (pathname === route.prefix || pathname.startsWith(`${route.prefix}/`)) {
+      if (route.prefix === "/dashboard/account" && role !== "EMPLOYEE") return "Einstellungen";
+      return route.title;
+    }
+  }
+  return role === "EMPLOYEE" ? "Heute" : "Start";
 }
 
 /** Links im Mitarbeiter-„Mehr“-Drawer (Bottom-Nav Tab 3). */
@@ -200,6 +223,37 @@ export function getEmployeeMobileMoreNavItems(): MobileBottomNavItem[] {
     { href: "/dashboard/account", label: "Profil", subtitle: "Konto", icon: UserCircle2 },
     { href: "/dashboard/support", label: "Hilfe", subtitle: "Support", icon: LifeBuoy },
   ];
+}
+
+/** Links im Chef-„Mehr“-Drawer — alles außer Start & Planer. */
+export function getManagerMobileMoreNavItems(
+  role: string,
+  modules: CompanyModules,
+): MobileBottomNavItem[] {
+  const items: MobileBottomNavItem[] = [];
+  if (role === "SUPER_ADMIN") {
+    items.push(
+      { href: "/dashboard/partners", label: "Partner", subtitle: "", icon: Shield },
+      { href: "/dashboard/super-admin/tickets", label: "Tickets", subtitle: "", icon: LifeBuoy },
+    );
+  }
+  items.push(
+    { href: "/dashboard/team", label: "Team", subtitle: "", icon: Users },
+    { href: "/dashboard/insights", label: "Auswertung", subtitle: "", icon: Brain },
+    { href: "/dashboard/vacation", label: "Urlaub", subtitle: "", icon: CalendarDays },
+    { href: "/dashboard/reports", label: "Berichte", subtitle: "", icon: FileText },
+  );
+  if (modules.shiftTasks) {
+    items.push({ href: "/dashboard/tasks", label: "Aufgaben", subtitle: "", icon: ListTodo });
+  }
+  if (modules.peaks) {
+    items.push({ href: "/dashboard/peaks", label: "Stoß & Umsatz", subtitle: "", icon: TrendingUp });
+  }
+  items.push(
+    { href: "/dashboard/settings", label: "Einstellungen", subtitle: "", icon: Settings },
+    { href: "/dashboard/support", label: "Hilfe", subtitle: "", icon: LifeBuoy },
+  );
+  return items;
 }
 
 /** Kern-Navigation — optionale Module per `requiresModules`. */

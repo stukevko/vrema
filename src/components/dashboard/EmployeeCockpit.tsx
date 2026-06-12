@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { EmployeeCockpitData } from "@/lib/dashboard/employee-cockpit-data";
 import { BigClockButton } from "@/components/dashboard/BigClockButton";
 import { vocabularyLabels, type VocabularyLabels } from "@/lib/vocabulary";
@@ -67,18 +66,6 @@ export function EmployeeCockpit({
           isOnBreak={data.isOnBreak}
           stampHero
         />
-
-        <nav
-          aria-label="Schnellzugriff"
-          className="flex items-center gap-6 text-sm text-muted-foreground"
-        >
-          <Link href="/dashboard/planning" className="font-medium text-brand/90 active:opacity-70">
-            Plan
-          </Link>
-          <Link href="/dashboard/vacation" className="font-medium text-brand/90 active:opacity-70">
-            Urlaub
-          </Link>
-        </nav>
       </div>
     </section>
   );

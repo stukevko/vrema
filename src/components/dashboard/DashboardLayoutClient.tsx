@@ -106,7 +106,7 @@ export function DashboardLayoutClient({
         <DashboardTopbar
           className="no-print"
           user={user}
-          minimalMobile={role === "EMPLOYEE"}
+          minimalMobile={role === "EMPLOYEE" || ["COMPANY_OWNER", "MANAGER"].includes(role)}
           unreadNotifications={initialUnreadNotifications}
           onOpenSupport={(mode) => {
             setSupportInitialUnread(mode === "unread");
@@ -118,7 +118,7 @@ export function DashboardLayoutClient({
           ref={mainScrollRef}
           className={clsx(
             "dashboard-touch-scroll native-app-tap relative z-0 w-full max-w-full flex-1 min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-y-contain touch-pan-y md:pt-0",
-            role === "EMPLOYEE"
+            role === "EMPLOYEE" || ["COMPANY_OWNER", "MANAGER"].includes(role)
               ? "max-md:px-4 max-md:pt-[calc(2.75rem+env(safe-area-inset-top,0px))] max-md:pb-[calc(3.75rem+env(safe-area-inset-bottom,0px))]"
               : "max-md:px-3 max-md:pt-[calc(3.25rem+env(safe-area-inset-top,0px))] max-md:pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))]",
             "pt-[calc(4.25rem+env(safe-area-inset-top,0px))] pb-[max(6.25rem,calc(env(safe-area-inset-bottom,0px)+5.25rem))] sm:px-2 md:overflow-y-auto md:px-8 md:pb-6",
@@ -131,6 +131,7 @@ export function DashboardLayoutClient({
               companyModules={companyModules}
               trialBanner={trialBanner ? { ...trialBanner, role } : null}
               showPasskeyNudge={showPasskeyNudge && !trialBanner}
+              pathname={pathname}
             />
           {unreadReplies > 0 ? (
             <div className="no-print mb-4 min-w-0 max-w-full rounded-2xl border border-brand/25 bg-brand-soft/80 px-4 py-3 text-sm text-foreground dark:border-white/10 dark:bg-brand/18 md:mb-5">
