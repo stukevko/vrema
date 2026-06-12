@@ -9,6 +9,7 @@ import { clockIn, clockOut, toggleBreak } from "@/lib/actions/worklogs";
 import { useVocabulary } from "@/components/VocabularyContext";
 import { getQueuedClockCount } from "@/lib/offline/clock-queue";
 import { performClockAction } from "@/lib/offline/perform-clock-action";
+import clsx from "clsx";
 
 function formatHHMMSS(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -46,10 +47,13 @@ export function BigClockButton({
   isClockedIn,
   clockInAtIso,
   isOnBreak,
+  stampHero = false,
 }: {
   isClockedIn: boolean;
   clockInAtIso: string | null;
   isOnBreak: boolean;
+  /** Volle Breite, Timer im Button — für Mitarbeiter-Mobil ohne Scroll. */
+  stampHero?: boolean;
 }) {
   const vocab = useVocabulary();
   const router = useRouter();
@@ -210,6 +214,7 @@ export function BigClockButton({
         }
         toast.success(goingOnBreak ? "Pause gestartet." : "Pause beendet.", {
           icon: goingOnBreak ? <Pause className="h-4 w-4" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />,
+          duration: 2000,
         });
         router.refresh();
       } catch (e: unknown) {
@@ -230,13 +235,15 @@ export function BigClockButton({
         {!isOnline
           ? queuedCount > 0
             ? `Offline – ${queuedCount} Stempel warten auf Sync.`
-            : "Offline – Stempel werden lokal gespeichert und später synchronisiert."
-          : `${queuedCount} Stempel werden gerade synchronisiert…`}
+            : "Offline – Stempel werden lokal gespeichert."
+          : `${queuedCount} Stempel werden synchronisiert…`}
       </div>
     ) : null;
 
+  const clockLabel = state.isClockedIn ? "Ausstempeln" : "Einstempeln";
+
   return (
-    <div className="flex flex-col gap-3">
+    <div className={clsx("flex flex-col", stampHero ? "gap-2" : "gap-3")}>
       {offlineBanner}
       <button
         type="button"
@@ -244,26 +251,54 @@ export function BigClockButton({
         disabled={isPending}
         aria-label={state.isClockedIn ? "Ausstempeln" : "Einstempeln"}
         aria-busy={isPending}
-        className={`relative flex w-full items-center justify-center gap-3 rounded-3xl border border-white/20 px-6 py-6 text-lg font-extrabold tracking-tight transition-[filter,box-shadow] duration-200 ease-out active:brightness-95 active:scale-[0.99] disabled:opacity-90 sm:py-7 sm:text-xl dark:border-white/10 ${
+        className={clsx(
+          "relative flex w-full flex-col items-center justify-center border border-white/20 transition-[filter,box-shadow] duration-200 ease-out active:brightness-95 active:scale-[0.99] disabled:opacity-90 dark:border-white/10",
+          stampHero ? "min-h-[min(42dvh,17.5rem)] gap-2 rounded-[1.75rem] px-6 py-8" : "gap-3 rounded-3xl px-6 py-6 sm:py-7",
           state.isClockedIn
-            ? "bg-gradient-to-b from-danger to-danger text-white shadow-[var(--shadow-button)] hover:brightness-[1.06] hover:shadow-[var(--shadow-button-hover)]"
-            : "bg-gradient-to-b from-brand to-brand-hover text-brand-foreground shadow-[var(--shadow-button)] hover:brightness-[1.05] hover:shadow-[var(--shadow-button-hover)]"
-        }`}
+            ? "bg-gradient-to-b from-danger to-danger text-white shadow-[var(--shadow-button)] hover:brightness-[1.06]"
+            : "bg-gradient-to-b from-brand to-brand-hover text-brand-foreground shadow-[var(--shadow-button)] hover:brightness-[1.05]",
+        )}
       >
         {isPending ? (
-          <Loader2 className="h-6 w-6 animate-spin" aria-hidden />
-        ) : state.isClockedIn ? (
-          <LogOut className="h-6 w-6" aria-hidden />
+          <Loader2 className="h-7 w-7 animate-spin" aria-hidden />
         ) : (
-          <LogIn className="h-6 w-6" aria-hidden />
+          <>
+            <span className="flex items-center gap-2.5 text-lg font-extrabold tracking-tight sm:text-xl">
+              {state.isClockedIn ? (
+                <LogOut className="h-6 w-6 shrink-0" aria-hidden />
+              ) : (
+                <LogIn className="h-6 w-6 shrink-0" aria-hidden />
+              )}
+              {clockLabel}
+            </span>
+            {stampHero && state.isClockedIn ? (
+              <span className="font-mono text-3xl font-bold tabular-nums tracking-tight sm:text-4xl">
+                {formatHHMMSS(elapsedMs)}
+              </span>
+            ) : null}
+            {stampHero && state.isOnBreak ? (
+              <span className="text-sm font-semibold opacity-90">Pause aktiv</span>
+            ) : null}
+          </>
         )}
-        <span>{state.isClockedIn ? "Jetzt Ausstempeln" : "Jetzt Einstempeln"}</span>
       </button>
 
-      {state.isClockedIn ? (
+      {state.isClockedIn && stampHero ? (
+        <button
+          type="button"
+          onClick={handleBreak}
+          disabled={isPending}
+          className="mx-auto inline-flex min-h-10 items-center gap-1.5 px-3 text-sm font-semibold text-brand active:opacity-70 disabled:opacity-60"
+        >
+          {state.isOnBreak ? <Play className="h-4 w-4" aria-hidden /> : <Pause className="h-4 w-4" aria-hidden />}
+          {state.isOnBreak ? "Pause beenden" : "Pause"}
+        </button>
+      ) : null}
+
+      {state.isClockedIn && !stampHero ? (
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-3 dark:border-white/10 dark:bg-surface/85">
           <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <p className="text-xs font-medium text-muted-foreground">
               {state.isOnBreak ? "Pause aktiv" : `Aktiver ${vocab.singular}`}
             </p>
             <p className="font-mono text-base font-bold tabular-nums text-foreground sm:text-lg">
@@ -274,11 +309,12 @@ export function BigClockButton({
             type="button"
             onClick={handleBreak}
             disabled={isPending}
-            className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-2xl border px-4 py-2 text-sm font-semibold transition-[background-color,border-color] duration-150 active:brightness-95 disabled:opacity-60 ${
+            className={clsx(
+              "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-2xl border px-4 py-2 text-sm font-semibold transition-colors active:brightness-95 disabled:opacity-60",
               state.isOnBreak
-                ? "border-brand/30 bg-brand-soft text-brand hover:bg-brand-soft/80 dark:border-white/10 dark:bg-brand/22"
-                : "border-line bg-card text-foreground hover:bg-card/80 dark:border-white/10 dark:bg-surface/85"
-            }`}
+                ? "border-brand/30 bg-brand-soft text-brand dark:border-white/10 dark:bg-brand/22"
+                : "border-line bg-card text-foreground dark:border-white/10 dark:bg-surface/85",
+            )}
           >
             {state.isOnBreak ? <Play className="h-4 w-4" aria-hidden /> : <Pause className="h-4 w-4" aria-hidden />}
             {state.isOnBreak ? "Pause beenden" : "Pause"}

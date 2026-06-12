@@ -13,6 +13,8 @@ import { AnchoredPopover } from "@/components/ui/AnchoredPopover";
 
 interface TopbarProps {
   className?: string;
+  /** Mitarbeiter-Stempel-Screen: nur Logo + Profil, keine Ablenkung. */
+  minimalMobile?: boolean;
   user: {
     name?: string | null;
     email?: string | null;
@@ -27,6 +29,7 @@ interface TopbarProps {
 
 export function DashboardTopbar({
   className,
+  minimalMobile = false,
   user,
   unreadNotifications = 0,
   onOpenSupport,
@@ -64,9 +67,16 @@ export function DashboardTopbar({
         className,
       )}
     >
-      <div className="relative flex h-16 min-w-0 items-center justify-between gap-2 px-3 sm:px-4 md:px-6">
-        <div className="relative z-10 flex w-11 shrink-0 items-center md:hidden">
-          {onOpenSupport ? (
+      <div
+        className={clsx(
+          "relative flex min-w-0 items-center justify-between gap-2 px-3 sm:px-4 md:h-16 md:px-6",
+          minimalMobile ? "h-12" : "h-16",
+        )}
+      >
+        <div className="relative z-10 flex w-10 shrink-0 items-center md:hidden">
+          {minimalMobile ? (
+            <span className="block h-9 w-9 shrink-0" aria-hidden />
+          ) : onOpenSupport ? (
             <button
               type="button"
               onClick={() => onOpenSupport("default")}
@@ -91,10 +101,12 @@ export function DashboardTopbar({
           className="absolute left-1/2 top-1/2 z-[1] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 md:hidden"
           aria-label="VREMA"
         >
-          <VremaMarkLogo size={28} className="shrink-0 text-foreground" />
-          <span className="hidden font-bold tracking-tighter text-foreground sm:block" style={{ fontSize: 17 }}>
-            VREMA
-          </span>
+          <VremaMarkLogo size={minimalMobile ? 24 : 28} className="shrink-0 text-foreground" />
+          {!minimalMobile ? (
+            <span className="hidden font-bold tracking-tighter text-foreground sm:block" style={{ fontSize: 17 }}>
+              VREMA
+            </span>
+          ) : null}
         </Link>
 
         <div className="hidden md:block md:flex-1" />
@@ -105,8 +117,8 @@ export function DashboardTopbar({
               Super Admin
             </span>
           )}
-          <ThemeToggle />
-          <NotificationBell initialUnread={unreadNotifications} />
+          {!minimalMobile ? <ThemeToggle /> : null}
+          {!minimalMobile ? <NotificationBell initialUnread={unreadNotifications} /> : null}
           <div className="relative" ref={dropdownRef}>
             <button
               ref={profileTriggerRef}

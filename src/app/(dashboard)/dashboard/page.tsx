@@ -428,7 +428,11 @@ export default async function DashboardPage({
   );
 
   return (
-    <div className="dashboard-page-root mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 overflow-x-hidden px-0 text-foreground sm:max-w-6xl sm:gap-6 sm:px-2 md:gap-8 md:px-0">
+    <div
+      className={`dashboard-page-root mx-auto flex w-full min-w-0 max-w-full flex-col gap-4 overflow-x-hidden px-0 text-foreground sm:max-w-6xl sm:gap-6 sm:px-2 md:gap-8 md:px-0${
+        isEmployee && cockpitData ? " max-md:h-full max-md:min-h-0 max-md:flex-1 max-md:gap-0" : ""
+      }`}
+    >
       {/* Header — für Mitarbeiter überspringen, weil das Cockpit selbst begrüßt */}
       {!isEmployee && (
         <div className="order-1 min-w-0 max-w-full shrink-0 max-md:hidden">
@@ -446,7 +450,9 @@ export default async function DashboardPage({
       )}
 
       {teamStats && (
-        <div className="order-1 mt-1 min-w-0 max-md:order-2 sm:mt-2">
+        <div
+          className={`order-1 mt-1 min-w-0 max-md:order-2 sm:mt-2${showChefKpiGrid ? "" : " max-md:hidden"}`}
+        >
           <HeroStats
             presentNow={teamStats.activeToday}
             totalEmployees={teamStats.totalEmployees}
@@ -457,7 +463,7 @@ export default async function DashboardPage({
             showKpiGrid={showChefKpiGrid}
             desktopCalm={!showChefKpiGrid}
             mobileGreeting={
-              !isEmployee
+              !isEmployee && showChefKpiGrid
                 ? `Guten ${berlinHour < 12 ? "Morgen" : berlinHour < 18 ? "Tag" : "Abend"}, ${session.user.name?.split(" ")[0] ?? "Nutzer"} 👋`
                 : undefined
             }
@@ -480,7 +486,11 @@ export default async function DashboardPage({
 
       {isManager && teamStats && focus ? (
         <div className="order-2">
-          <ManagerMobileCockpit focus={focus} planTitle={planVocabulary.planTitle} />
+          <ManagerMobileCockpit
+            focus={focus}
+            planTitle={planVocabulary.planTitle}
+            firstName={session.user.name?.split(" ")[0]}
+          />
         </div>
       ) : null}
 
@@ -488,7 +498,7 @@ export default async function DashboardPage({
           ID `terminal-widget` migriert hierhin, damit alle Deeplinks („Jetzt einstempeln")
           beim Mitarbeiter direkt auf den großen Stempel-Button springen. */}
       {isEmployee && cockpitData && (
-        <div className="order-1 -mx-1 max-md:mt-1 sm:mx-0">
+        <div className="order-1 max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col sm:mx-0">
           <EmployeeCockpit
             data={cockpitData}
             firstName={session.user.name?.split(" ")[0] ?? "Hallo"}
@@ -513,7 +523,7 @@ export default async function DashboardPage({
 
       {/* Aufgaben prominent: nur sichtbar, wenn eingestempelt + Liste vorhanden */}
       {companyModules.shiftTasks && activeLog && shiftTasksPayload && shiftTasksPayload.items.length > 0 ? (
-        <div className="order-2">
+        <div className={`order-2${isEmployee ? " max-md:hidden" : ""}`}>
           <ActiveShiftTasksCard tasks={shiftTasksPayload} />
         </div>
       ) : null}

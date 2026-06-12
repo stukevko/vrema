@@ -179,7 +179,7 @@ function MobileNavTab({
   onMore?: () => void;
 }) {
   const tabClass = clsx(
-    "flex min-h-[3.5rem] flex-col items-center justify-center gap-0 rounded-xl px-0.5 py-1 transition-transform duration-100 active:scale-95 min-[400px]:min-h-[3.75rem] min-[400px]:rounded-2xl",
+    "flex min-h-[3.25rem] flex-col items-center justify-center gap-0 rounded-xl px-0.5 py-1 transition-transform duration-100 active:scale-95 min-[400px]:min-h-[3.5rem] min-[400px]:rounded-2xl",
     isActive ? "bg-brand/15 text-brand ring-1 ring-inset ring-brand/25" : "text-muted-foreground",
   );
   const iconClass = clsx("h-6 w-6 shrink-0 stroke-[1.75]", isActive && "text-brand");

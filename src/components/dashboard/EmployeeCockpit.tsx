@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { EmployeeCockpitData } from "@/lib/dashboard/employee-cockpit-data";
 import { BigClockButton } from "@/components/dashboard/BigClockButton";
-import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
 import { vocabularyLabels, type VocabularyLabels } from "@/lib/vocabulary";
 
 function formatHours(mins: number): string {
@@ -32,7 +31,7 @@ function getGreeting(now = new Date()): string {
 }
 
 /**
- * Mitarbeiter-Start: ein Tipp zum Stempeln — Rest ist Kontext, keine zweite Ebene.
+ * Mitarbeiter-Start: ein Screen, ein Button — passt zwischen Topbar und Bottom-Nav.
  */
 export function EmployeeCockpit({
   data,
@@ -47,57 +46,46 @@ export function EmployeeCockpit({
   const slot = labels.singular;
 
   const statusLine = data.isClockedIn
-    ? [
-        data.clockInAtIso ? `${formatBerlinTimeShort(data.clockInAtIso)} Uhr` : null,
-        data.isOnBreak ? "Pause" : "läuft",
-        `${formatHours(data.workedTodayMins)} heute`,
-      ]
-        .filter(Boolean)
-        .join(" · ")
+    ? `${formatHours(data.workedTodayMins)} heute${
+        data.clockInAtIso ? ` · seit ${formatBerlinTimeShort(data.clockInAtIso)}` : ""
+      }`
     : data.nextShift
       ? `Plan ${data.nextShift.startTime}–${data.nextShift.endTime}`
       : `Heute kein ${slot} im Plan`;
 
-  const planLinkLabel = data.nextShift ? "Wochenplan" : "Planung";
-  const vacationLinkLabel =
-    data.vacation.pendingRequests > 0
-      ? `${data.vacation.pendingRequests} Urlaub offen`
-      : `${data.vacation.remaining} Tage frei`;
-
   return (
-    <DashboardSectionCard
+    <section
       id="terminal-widget"
-      bare
-      padding="comfortable"
-      className="scroll-mt-20 max-md:!border-0 max-md:!bg-transparent max-md:!p-2 max-md:!shadow-none"
-      ariaLabel="Stempeln"
+      aria-label="Stempeln"
+      className="scroll-mt-20 max-md:flex max-md:h-full max-md:min-h-0 max-md:flex-1 max-md:flex-col max-md:justify-center"
     >
-      <div className="flex min-h-[min(72dvh,calc(100dvh-12rem))] flex-col justify-center text-center max-md:min-h-[min(68dvh,calc(100dvh-11rem))]">
+      <div className="text-center">
         <p className="text-sm text-muted-foreground">
           {greeting}, {firstName}
         </p>
-        <p className="mt-1 text-base font-medium text-foreground">{statusLine}</p>
-
-        <div className="my-5 sm:my-7">
-          <BigClockButton
-            isClockedIn={data.isClockedIn}
-            clockInAtIso={data.clockInAtIso}
-            isOnBreak={data.isOnBreak}
-          />
-        </div>
-
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm">
-          <Link href="/dashboard/planning" className="font-medium text-brand underline-offset-2 hover:underline">
-            {planLinkLabel}
-          </Link>
-          <span className="text-muted-foreground/40" aria-hidden>
-            ·
-          </span>
-          <Link href="/dashboard/vacation" className="font-medium text-brand underline-offset-2 hover:underline">
-            {vacationLinkLabel}
-          </Link>
-        </div>
+        <p className="mt-0.5 text-sm font-medium text-foreground">{statusLine}</p>
       </div>
-    </DashboardSectionCard>
+
+      <div className="my-4 max-md:my-3 sm:my-6">
+        <BigClockButton
+          isClockedIn={data.isClockedIn}
+          clockInAtIso={data.clockInAtIso}
+          isOnBreak={data.isOnBreak}
+          stampHero
+        />
+      </div>
+
+      <nav
+        aria-label="Schnellzugriff"
+        className="flex items-center justify-center gap-4 text-sm text-muted-foreground"
+      >
+        <Link href="/dashboard/planning" className="min-h-10 min-w-[5.5rem] font-medium text-brand active:opacity-70">
+          Plan
+        </Link>
+        <Link href="/dashboard/vacation" className="min-h-10 min-w-[5.5rem] font-medium text-brand active:opacity-70">
+          Urlaub
+        </Link>
+      </nav>
+    </section>
   );
 }

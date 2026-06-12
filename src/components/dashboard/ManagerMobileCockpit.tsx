@@ -14,9 +14,11 @@ type Focus = {
 /** Mobil-Cockpit für Chefs: Fokus + drei Schnelllinks. */
 export function ManagerMobileCockpit({
   focus,
+  firstName,
 }: {
   focus: Focus;
   planTitle?: string;
+  firstName?: string;
 }) {
   const hasUrgentFocus = focus.title !== "Heute keine kritischen Hinweise";
 
@@ -28,6 +30,9 @@ export function ManagerMobileCockpit({
       className="md:hidden"
       ariaLabel="Führungs-Cockpit"
     >
+      {firstName && !hasUrgentFocus ? (
+        <p className="mb-2 text-sm text-muted-foreground">Guten Tag, {firstName}</p>
+      ) : null}
       <p className="font-semibold text-foreground">{focus.title}</p>
       <p className="mt-0.5 text-sm text-muted-foreground">{focus.description}</p>
       <Link
