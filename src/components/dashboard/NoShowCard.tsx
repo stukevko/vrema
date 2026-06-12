@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition } from "react";
 import { AlertOctagon, BellRing, CheckCircle2 } from "lucide-react";
 import { listNoShows, sendNoShowReminder, type NoShowEntry } from "@/lib/actions/no-show";
 import { useToast } from "@/components/ui/Toast";
+import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
 
 /**
  *  No-Show-Card — wird im Manager-Dashboard angezeigt.
@@ -42,14 +43,13 @@ export function NoShowCard() {
   }
 
   return (
-    <section className="rounded-2xl border border-rose-300/45 bg-rose-50/60 p-5 shadow-sm dark:border-rose-500/15 dark:bg-rose-500/[0.06]">
-      <header className="flex items-center gap-2">
-        <AlertOctagon className="h-4 w-4 text-rose-700 dark:text-rose-300" aria-hidden />
-        <h2 className="text-sm font-bold uppercase tracking-widest text-rose-800 dark:text-rose-200">
-          Nicht erschienen · {rows.length} offen
-        </h2>
-      </header>
-      <ul className="mt-4 space-y-2">
+    <DashboardSectionCard
+      tone="alert"
+      title={`Nicht erschienen · ${rows.length} offen`}
+      icon={AlertOctagon}
+      ariaLabel="Nicht erschienen"
+    >
+      <ul className="space-y-2">
         {rows.map((r) => {
           const wasReminded = reminded.has(r.shiftId);
           return (
@@ -85,6 +85,6 @@ export function NoShowCard() {
           );
         })}
       </ul>
-    </section>
+    </DashboardSectionCard>
   );
 }

@@ -180,11 +180,15 @@ function MobileNavTab({
   onMore?: () => void;
 }) {
   const tabClass = clsx(
-    "flex min-h-[3rem] flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 transition-colors active:opacity-80",
+    "flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-0.5 transition-colors active:opacity-80",
     isActive ? "text-brand" : "text-muted-foreground",
   );
   const iconClass = clsx("h-5 w-5 shrink-0 stroke-[1.75]", isActive && "text-brand");
   const labelClass = clsx("text-[11px] font-medium leading-none", isActive && "font-semibold text-brand");
+  const subtitleClass = clsx(
+    "text-[9px] leading-none text-muted-foreground/75",
+    isActive && "text-brand/70",
+  );
 
   if (item.kind === "more") {
     return (
@@ -196,6 +200,7 @@ function MobileNavTab({
       >
         <SafeLucideIcon icon={item.icon} className={iconClass} />
         <span className={labelClass}>{item.label}</span>
+        {item.subtitle ? <span className={subtitleClass}>{item.subtitle}</span> : null}
       </button>
     );
   }
@@ -204,6 +209,7 @@ function MobileNavTab({
     <Link key={item.href} href={item.href} className={tabClass} aria-current={isActive ? "page" : undefined}>
       <SafeLucideIcon icon={item.icon} className={iconClass} />
       <span className={labelClass}>{item.label}</span>
+      {item.subtitle ? <span className={subtitleClass}>{item.subtitle}</span> : null}
     </Link>
   );
 }

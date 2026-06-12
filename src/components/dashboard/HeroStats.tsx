@@ -28,6 +28,8 @@ type HeroStatsProps = {
   showKpiGrid?: boolean;
   /** Desktop: ruhiger „Alles im Plan“-Zustand wenn keine KPIs nötig. */
   desktopCalm?: boolean;
+  /** Desktop: 3-KPI-Grid aus — Fokus-Karte reicht. */
+  hideDesktopKpiGrid?: boolean;
 };
 
 function formatEuroCents(value: number) {
@@ -49,6 +51,7 @@ export function HeroStats({
   mobileDateLine,
   showKpiGrid = true,
   desktopCalm = false,
+  hideDesktopKpiGrid = false,
 }: HeroStatsProps) {
   const presentTone = presentNow > 0 ? "brand" : "muted";
   const attentionTone = attentionCount === 0 ? "brand" : attentionCount <= 2 ? "warning" : "danger";
@@ -99,14 +102,19 @@ export function HeroStats({
         </span>
         <span className="shrink-0 font-semibold text-brand">Ansehen</span>
       </Link>
-      <div className="dashboard-kpi-grid hidden w-full min-w-0 max-w-full grid-cols-2 gap-2 md:grid md:grid-cols-3 md:gap-4">
+      <div
+        className={[
+          "dashboard-kpi-grid hidden w-full min-w-0 max-w-full grid-cols-2 gap-2 md:grid-cols-3 md:gap-4",
+          hideDesktopKpiGrid ? "max-md:grid" : "md:grid",
+        ].join(" ")}
+      >
       {/* KPI 1 – Anwesend jetzt (Petrol, ruhig) */}
       <Link
         href="/dashboard/reports"
         className="group/kpi block min-w-0 max-w-full overflow-hidden rounded-xl border border-line/60 bg-white/55 p-3.5 transition-[box-shadow,border-color] duration-150 max-md:shadow-none sm:rounded-2xl sm:p-6 md:backdrop-blur-md md:hover:border-brand/35 md:hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025]"
       >
         <div className="flex min-w-0 items-center justify-between gap-2">
-          <p className="min-w-0 text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
+          <p className="min-w-0 text-xs font-medium text-fg-muted">
             <Tooltip content="Mitarbeiter, die jetzt eingestempelt sind.">
               <span className="cursor-help">Anwesend jetzt</span>
             </Tooltip>
@@ -134,7 +142,7 @@ export function HeroStats({
         className="group/kpi block min-w-0 max-w-full overflow-hidden rounded-xl border border-line/60 bg-white/55 p-3.5 transition-[box-shadow,border-color] duration-150 max-md:shadow-none sm:rounded-2xl sm:p-6 md:backdrop-blur-md md:hover:border-brand/35 md:hover:shadow-[0_18px_42px_-22px_rgba(10,58,82,0.35)] dark:border-white/[0.06] dark:bg-white/[0.025]"
       >
         <div className="flex min-w-0 items-center justify-between gap-2">
-          <p className="min-w-0 text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
+          <p className="min-w-0 text-xs font-medium text-fg-muted">
             <Tooltip content="Hochrechnung: gestempelte Stunden heute × hinterlegter Stundenlohn.">
               <span className="cursor-help">Heutige Personalkosten</span>
             </Tooltip>
@@ -170,7 +178,7 @@ export function HeroStats({
       >
         <div className="flex min-w-0 flex-1 flex-col max-md:min-w-0">
         <div className="flex min-w-0 items-center justify-between gap-2">
-          <p className="min-w-0 text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
+          <p className="min-w-0 text-xs font-medium text-fg-muted">
             <Tooltip content="Verspätet + Fehlend zusammen, plus offene Anträge & Korrekturen, die auf Freigabe warten.">
               <span className="cursor-help">Heute prüfen</span>
             </Tooltip>

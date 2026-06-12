@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -1183,11 +1184,16 @@ export function ReportsClient({
             icon={FileText}
             eyebrow="Export"
             title="Berichte"
-            description={`${month} · ${logs.length} Einträge — Stunden, Korrekturen, PDF & Lohnbüro.`}
+            description="Stunden, Korrekturen, PDF und Lohnbüro — Monat wählen, exportieren, fertig."
             hideOnMobile
           />
 
-          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 md:flex md:flex-wrap md:justify-end md:gap-2">
+          <DashboardSectionCard
+            title="Zeitraum & Export"
+            description={`${month} · ${logs.length} Einträge`}
+            icon={FileText}
+          >
+          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 md:flex md:flex-wrap md:gap-2">
             <select
               value={monthKey}
               onChange={(e) => {
@@ -1278,6 +1284,7 @@ export function ReportsClient({
               {isDatevDownloading ? "DATEV wird erstellt..." : "DATEV-Lohnexport (CSV)"}
             </button>
           </div>
+          </DashboardSectionCard>
         </div>
 
         <div className="no-print flex flex-col gap-3 sm:gap-4">

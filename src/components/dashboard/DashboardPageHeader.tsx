@@ -38,7 +38,7 @@ export function DashboardPageHeader({
     return (
       <header className={clsx("min-w-0", mobileHidden, className)}>
         {eyebrow ? (
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">{eyebrow}</p>
+          <p className="text-xs font-medium text-brand">{eyebrow}</p>
         ) : null}
         <h1 className="mt-0.5 text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">{title}</h1>
         {description ? <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
@@ -63,7 +63,7 @@ export function DashboardPageHeader({
         />
         <div className="relative min-w-0">
           {eyebrow ? (
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">{eyebrow}</p>
+            <p className="text-xs font-medium text-brand">{eyebrow}</p>
           ) : null}
           <h1 className="mt-1 text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">{title}</h1>
           {description ? <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
@@ -90,7 +90,7 @@ export function DashboardPageHeader({
       ) : null}
       <div className="min-w-0 flex-1">
         {eyebrow ? (
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-brand">{eyebrow}</p>
+          <p className="text-xs font-medium text-brand">{eyebrow}</p>
         ) : null}
         <h1 className="text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">{title}</h1>
         {description ? <p className="mt-1.5 text-sm text-muted-foreground">{description}</p> : null}

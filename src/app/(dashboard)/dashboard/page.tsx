@@ -44,7 +44,7 @@ import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 import type { CompanyModules } from "@/lib/company-modules";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { ManagerMobileCockpit } from "@/components/dashboard/ManagerMobileCockpit";
-import { CollapsibleMobileSection } from "@/components/dashboard/CollapsibleMobileSection";
+import { CollapsibleDesktopSection } from "@/components/dashboard/CollapsibleDesktopSection";
 import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
 import { vocabularyLabels } from "@/lib/vocabulary";
 
@@ -359,6 +359,7 @@ export default async function DashboardPage({
       teamStats.pendingTradeApprovals
     : 0;
   const showChefKpiGrid = heroAttentionCount > 0 || heroPendingApprovalsCount > 0;
+  const managerUrgentFocus = Boolean(focus && focus.title !== "Heute keine kritischen Hinweise");
 
   const todayWorkedLabel = `${Math.floor(todayWorkedMins / 60)}h ${Math.floor(todayWorkedMins % 60).toString().padStart(2, "0")}m`;
 
@@ -479,6 +480,7 @@ export default async function DashboardPage({
             pendingApprovalsCount={heroPendingApprovalsCount}
             showKpiGrid={showChefKpiGrid}
             desktopCalm={!showChefKpiGrid}
+            hideDesktopKpiGrid={isManager && Boolean(managerUrgentFocus)}
           />
         </div>
       )}
@@ -533,18 +535,20 @@ export default async function DashboardPage({
       {/* Team stats (for owners/managers) — Desktop: Fokus + Live-Ops; Mobil: nur Cockpit + No-Show. */}
       {teamStats && focus && (
         <div className="order-5 min-w-0 space-y-4 md:order-4">
-          {focus.title !== "Heute keine kritischen Hinweise" ? (
+          {managerUrgentFocus ? (
             <DashboardSectionCard tone="alert" bare padding="default" className="hidden md:block">
-              <p className="font-semibold text-foreground">{focus.title}</p>
-              <p className="mt-0.5 text-sm text-muted-foreground">{focus.description}</p>
-              <Link href={focus.href} className="mt-2 inline-flex text-sm font-semibold text-brand underline-offset-2 hover:underline">
-                {focus.cta} →
+              <p className="text-lg font-semibold text-foreground">{focus.title}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{focus.description}</p>
+              <Link
+                href={focus.href}
+                className="btn-brand mt-4 inline-flex min-h-11 items-center justify-center rounded-2xl px-5 text-sm font-bold transition-transform active:scale-[0.99]"
+              >
+                {focus.cta}
               </Link>
             </DashboardSectionCard>
           ) : null}
 
-          <div className="hidden md:block">
-          <CollapsibleMobileSection label="Weitere Bereiche" className="space-y-4">
+          <CollapsibleDesktopSection label="Mehr auf der Startseite">
             {showOwnerWelcome && isOwner ? (
               <OwnerWelcomeStrip focusWeek={ownerWelcomeFocusWeek} showPeaksModule={companyModules.peaks} />
             ) : null}
@@ -557,7 +561,7 @@ export default async function DashboardPage({
 
             <LiveOperationsWidget rows={liveOpsRows} />
 
-            <div className="hidden grid-cols-3 gap-2 md:grid">
+            <div className="grid grid-cols-3 gap-2">
               {(
                 [
                   { href: "/dashboard/planning", label: "Wochenplan" },
@@ -568,15 +572,13 @@ export default async function DashboardPage({
                 <Link
                   key={q.href}
                   href={q.href}
-                  className="flex min-h-11 items-center justify-center rounded-2xl border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors active:scale-[0.99] md:hover:border-brand/35 md:hover:bg-card/80"
+                  className="flex min-h-11 items-center justify-center rounded-2xl border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors active:scale-[0.99] hover:border-brand/35 hover:bg-card/80"
                 >
                   {q.label}
                 </Link>
               ))}
             </div>
-
-          </CollapsibleMobileSection>
-          </div>
+          </CollapsibleDesktopSection>
         </div>
       )}
 

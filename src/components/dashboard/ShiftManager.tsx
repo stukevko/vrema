@@ -38,6 +38,7 @@ import {
 import type { ShiftTemplateRow } from "@/lib/actions/shift-templates";
 import type { CompanyModules } from "@/lib/company-modules";
 import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
+import { dashboardSurfaceClass } from "@/components/dashboard/DashboardSectionCard";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildComplianceFlagsByShiftId, type ShiftPlanRow } from "@/lib/planning/compliance";
@@ -2833,7 +2834,7 @@ export function ShiftManager({
     ) : null;
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
+    <section className={`${dashboardSurfaceClass} p-4 sm:p-5`}>
       {enableTaskListActions && companyModules.autopilot ? (
         <div className="mb-4">
           <PlannerAutopilotPanel
@@ -2852,7 +2853,7 @@ export function ShiftManager({
         <div className="mb-4 rounded-2xl border border-brand/20 bg-gradient-to-br from-brand/[0.07] to-card px-4 py-3 shadow-sm sm:px-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 space-y-2">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+              <p className="text-sm font-medium text-muted-foreground">
                 Plan-Status · Zyklus-Woche {selectedWeekIndex}
               </p>
               <div className="flex flex-wrap gap-2 text-sm">
