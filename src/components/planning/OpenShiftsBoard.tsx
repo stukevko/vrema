@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Handshake } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
 import { planningToggleTradeOfferFormAction } from "@/app/(dashboard)/dashboard/planning/planning-trade-actions";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { OpenShiftVacancyForm } from "@/components/planning/OpenShiftVacancyForm";
@@ -18,11 +19,12 @@ export function OpenShiftsBoard({
   defaultDayOfWeek?: number;
 }) {
   return (
-    <section className="glass-card p-5" id="open-shifts">
-      <h2 className="text-base font-semibold tracking-tight">Offene Schichten</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Kolleg:innen können Übernahmen anfragen — du bestätigst unter „Tausch-Freigaben“.
-      </p>
+    <DashboardSectionCard
+      id="open-shifts"
+      title="Offene Schichten"
+      description="Kolleg:innen können Übernahmen anfragen — du bestätigst unter „Tausch-Freigaben“."
+      icon={Handshake}
+    >
       <OpenShiftVacancyForm defaultWeekIndex={defaultWeekIndex} defaultDayOfWeek={defaultDayOfWeek} />
       {open.length === 0 ? (
         <div className="mt-4">
@@ -68,6 +70,6 @@ export function OpenShiftsBoard({
           ))}
         </ul>
       )}
-    </section>
+    </DashboardSectionCard>
   );
 }

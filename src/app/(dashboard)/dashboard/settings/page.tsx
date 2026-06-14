@@ -45,7 +45,7 @@ import { TerminalAccessSection } from "@/components/dashboard/TerminalAccessSect
 import { getSiteUrl } from "@/lib/seo/site";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
-import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
+import { DashboardSectionCard, dashboardSurfaceClass } from "@/components/dashboard/DashboardSectionCard";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -141,83 +141,43 @@ export default async function SettingsPage() {
         </div>
       </nav>
 
-      <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <UserRound className="h-4 w-4 text-muted-foreground" />
-          <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">Profil</h2>
-        </div>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Persönliches Profilbild — erscheint in der Kopfzeile und macht das Konto leichter wiederzuerkennen.
-        </p>
+      <DashboardSectionCard title="Profil" icon={UserRound} description="Persönliches Profilbild — erscheint in der Kopfzeile.">
         <ProfileAvatarForm imageUrl={session.user.image ?? null} />
-      </section>
+      </DashboardSectionCard>
 
-      {/* Company settings – only for owners */}
       {isOwner && company && (
-        <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Building2 className="w-4 h-4 text-muted-foreground" />
-            <h2 className="font-semibold text-sm text-foreground uppercase tracking-widest font-sans">Firmendaten</h2>
-          </div>
+        <DashboardSectionCard title="Firmendaten" icon={Building2}>
           <CompanySettingsForm company={company} />
-        </section>
+        </DashboardSectionCard>
       )}
 
       {isOwner && companyModules && (
-        <section
-          id="company-modules"
-          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
-        >
-          <div className="mb-4 flex items-center gap-2">
-            <Brain className="h-4 w-4 text-muted-foreground" />
-            <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
-              Module & Erweiterungen
-            </h2>
-          </div>
+        <DashboardSectionCard id="company-modules" title="Module & Erweiterungen" icon={Brain}>
           <CompanyModulesSection
             initialModules={companyModules}
             industry={company?.industry ?? null}
           />
-        </section>
+        </DashboardSectionCard>
       )}
 
       {isOwner && (
-        <section
-          id="shift-templates"
-          className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5"
-        >
-          <div className="mb-4 flex items-center gap-2">
-            <Timer className="h-4 w-4 text-muted-foreground" />
-            <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
-              Schicht-Vorlagen
-            </h2>
-          </div>
+        <DashboardSectionCard id="shift-templates" title="Schicht-Vorlagen" icon={Timer}>
           <ShiftTemplatesSection initialTemplates={shiftTemplates} />
-        </section>
+        </DashboardSectionCard>
       )}
 
-      {/* Password change – for all users */}
-      <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Lock className="w-4 h-4 text-muted-foreground" />
-          <h2 className="font-semibold text-sm text-foreground uppercase tracking-widest font-sans">Passwort ändern</h2>
-        </div>
+      <DashboardSectionCard title="Passwort ändern" icon={Lock}>
         <PasswordChangeForm />
-      </section>
+      </DashboardSectionCard>
 
-      <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] sm:p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Fingerprint className="w-4 h-4 text-muted-foreground" />
-          <h2 className="font-semibold text-sm text-foreground uppercase tracking-widest font-sans">Sicherheit</h2>
-        </div>
+      <DashboardSectionCard title="Sicherheit" icon={Fingerprint} description="Passkeys für schnelleres Anmelden ohne Passwort.">
         <PasskeySecurityForm />
-      </section>
+      </DashboardSectionCard>
 
-
-      <details className="group rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+      <details className={`group ${dashboardSurfaceClass}`}>
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 marker:content-none sm:px-5 [&::-webkit-details-marker]:hidden">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Optional</p>
+            <p className="text-xs font-medium text-muted-foreground">Optional</p>
             <p className="text-sm font-semibold text-foreground">Erweitert · API, Branding, Geofence</p>
           </div>
           <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" />

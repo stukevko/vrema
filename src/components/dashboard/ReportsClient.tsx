@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
-import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
+import { DashboardSectionCard, dashboardSurfaceClass } from "@/components/dashboard/DashboardSectionCard";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -1287,136 +1287,18 @@ export function ReportsClient({
           </DashboardSectionCard>
         </div>
 
-        <div className="no-print flex flex-col gap-3 sm:gap-4">
-        <div className="order-2 rounded-2xl border border-brand/20 bg-brand-soft/50 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.04)] max-md:order-1 sm:p-6">
-            <div className="flex items-start gap-3">
-              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
-                <CheckCircle2 className="h-5 w-5" aria-hidden />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-widest text-fg-muted">Monats-Stundenzettel</p>
-                <h3 className="mt-1 text-base font-semibold text-fg">Eigene Stunden bestätigen</h3>
-                <p className="mt-2 text-sm text-fg-muted">
-                  Einmal pro Monat bestätigen – der Zeitstempel erscheint in deinem Abschnitt im PDF-Export (Nachweis für die Personalakte).
-                </p>
-                {timesheetAcknowledgedAtByUserId[currentUserId] ? (
-                  <p className="mt-4 text-sm font-medium text-success-foreground">
-                    Bestätigt am {formatDateDE(new Date(timesheetAcknowledgedAtByUserId[currentUserId]))} um{" "}
-                    {formatTimeCsv(new Date(timesheetAcknowledgedAtByUserId[currentUserId]))} ({DISPLAY_TIME_ZONE})
-                  </p>
-                ) : (
-                  <Button
-                    type="button"
-                    disabled={isAckPending}
-                    variant="brand"
-                    size="md"
-                    className="mt-4"
-                    loading={isAckPending}
-                    onClick={() => {
-                      startAckTransition(async () => {
-                        const result = await confirmTimesheetMonth(monthKey);
-                        if (!result.ok) {
-                          show(result.error, "error");
-                          return;
-                        }
-                        show("Stunden für den Monat bestätigt.", "success");
-                        router.refresh();
-                      });
-                    }}
-                  >
-                    {isAckPending ? "Speichere…" : "Stunden bestätigen"}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-        <div className="no-print order-1 grid grid-cols-2 gap-2 max-md:order-2 sm:gap-4 sm:grid-cols-2 xl:[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
-          {[
-            { label: "Gesamtstunden", value: `${totalHoursDecimal} h`, tone: "text-foreground", note: "Monat gesamt" },
-            { label: costSummaryLabel, value: costSummaryValue, tone: "text-foreground", note: costSummaryNote },
-            { label: "Ø pro Tag", value: `${avgHoursPerDay} h`, tone: "text-muted-foreground", note: `${productiveDays} Tage` },
-            { label: "Einträge", value: String(logs.length), tone: "text-muted-foreground", note: "Buchungen" },
-          ].map((s) => (
-            <motion.div
-              key={s.label}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
-              className="rounded-xl border border-border bg-card p-3.5 shadow-sm sm:rounded-2xl sm:p-5 sm:shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
-            >
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{s.label}</p>
-              <p className={`mt-1 text-2xl font-extrabold tracking-tight tabular-nums sm:text-3xl ${s.tone}`}>{s.value}</p>
-              <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground sm:mt-1 sm:text-xs">{s.note}</p>
-            </motion.div>
-          ))}
-        </div>
-        </div>
-
-        {(isAIAnalyzing || aiAnalysis) && (
-          <div className="no-print rounded-2xl border border-brand/20 bg-surface p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-brand-soft text-brand">
-                <Sparkles className="h-4 w-4" />
-              </span>
-              <div>
-                <p className="text-xs uppercase tracking-widest text-fg-muted">Hinweise</p>
-                <h3 className="text-sm font-semibold text-fg">Tipps aus deinen Betriebsdaten</h3>
-              </div>
-            </div>
-
-            {isAIAnalyzing ? (
-              <div className="space-y-2">
-                <div className="h-4 animate-pulse rounded-full bg-brand-soft" />
-                <div className="h-4 w-11/12 animate-pulse rounded-full bg-brand-soft" />
-                <div className="h-4 w-9/12 animate-pulse rounded-full bg-brand-soft" />
-              </div>
-            ) : aiAnalysis ? (
-              <div className="space-y-3">
-                <p className="text-sm leading-relaxed text-fg">{aiAnalysis.summary}</p>
-                <ul className="space-y-2">
-                  {aiAnalysis.highlights.map((item) => (
-                    <li key={item} className="text-sm leading-relaxed text-fg-muted">
-                      ✨ {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        {isManager && (
-          <motion.div className="no-print rounded-2xl border border-line bg-surface px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-fg-muted">Status-Legende</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge tone="success" size="sm">
-                Pünktlich
-              </StatusBadge>
-              <StatusBadge tone="warning" size="sm">
-                Zu spät (&gt;15 Min nach Schichtbeginn)
-              </StatusBadge>
-              <StatusBadge tone="danger" size="sm">
-                Fehlend (automatisch per Cron)
-              </StatusBadge>
-              <StatusBadge tone="brand" size="sm">
-                Manuell angepasst
-              </StatusBadge>
-            </div>
-          </motion.div>
-        )}
-
+        <section aria-label="Heute prüfen" className="no-print space-y-3">
         <div
           id="zeitkorrekturen"
           ref={correctionSectionRef}
-          className={`no-print scroll-mt-24 rounded-2xl bg-card border p-4 md:p-5 space-y-3 transition-all duration-500 ${
+          className={`no-print scroll-mt-24 rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] md:p-5 space-y-3 transition-all duration-500 dark:border-white/10 ${
             highlightCorrections
-              ? "border-brand ring-4 ring-brand/40 shadow-[0_24px_60px_rgba(0,0,0,0.10)]"
-              : "border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
+              ? "border-brand ring-4 ring-brand/40"
+              : "border-border"
           }`}
         >
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold tracking-wide">Zeitkorrektur-Anträge</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">Heute prüfen · Zeitkorrekturen</h2>
             <span className="text-[11px] text-muted-foreground">
               {correctionRequests.filter((r) => r.status === "PENDING").length} offen
             </span>
@@ -1758,11 +1640,136 @@ export function ReportsClient({
           </div>
         </div>
 
+        </section>
+
+        <section aria-label="Monat exportieren" className="no-print space-y-4">
+        <div className="no-print flex flex-col gap-3 sm:gap-4">
+        <div className="order-2 rounded-3xl border border-brand/20 bg-brand-soft/50 p-4 shadow-[var(--shadow-card)] max-md:order-1 sm:p-6 dark:border-white/10">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
+                <CheckCircle2 className="h-5 w-5" aria-hidden />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-muted-foreground">Monats-Stundenzettel</p>
+                <h3 className="mt-1 text-base font-semibold text-fg">Eigene Stunden bestätigen</h3>
+                <p className="mt-2 text-sm text-fg-muted">
+                  Einmal pro Monat bestätigen – der Zeitstempel erscheint in deinem Abschnitt im PDF-Export (Nachweis für die Personalakte).
+                </p>
+                {timesheetAcknowledgedAtByUserId[currentUserId] ? (
+                  <p className="mt-4 text-sm font-medium text-success-foreground">
+                    Bestätigt am {formatDateDE(new Date(timesheetAcknowledgedAtByUserId[currentUserId]))} um{" "}
+                    {formatTimeCsv(new Date(timesheetAcknowledgedAtByUserId[currentUserId]))} ({DISPLAY_TIME_ZONE})
+                  </p>
+                ) : (
+                  <Button
+                    type="button"
+                    disabled={isAckPending}
+                    variant="brand"
+                    size="md"
+                    className="mt-4"
+                    loading={isAckPending}
+                    onClick={() => {
+                      startAckTransition(async () => {
+                        const result = await confirmTimesheetMonth(monthKey);
+                        if (!result.ok) {
+                          show(result.error, "error");
+                          return;
+                        }
+                        show("Stunden für den Monat bestätigt.", "success");
+                        router.refresh();
+                      });
+                    }}
+                  >
+                    {isAckPending ? "Speichere…" : "Stunden bestätigen"}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+
+        <div className="no-print order-1 grid grid-cols-2 gap-2 max-md:order-2 sm:gap-4 sm:grid-cols-2 xl:[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+          {[
+            { label: "Gesamtstunden", value: `${totalHoursDecimal} h`, tone: "text-foreground", note: "Monat gesamt" },
+            { label: costSummaryLabel, value: costSummaryValue, tone: "text-foreground", note: costSummaryNote },
+            { label: "Ø pro Tag", value: `${avgHoursPerDay} h`, tone: "text-muted-foreground", note: `${productiveDays} Tage` },
+            { label: "Einträge", value: String(logs.length), tone: "text-muted-foreground", note: "Buchungen" },
+          ].map((s) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className="rounded-2xl border border-border bg-card p-3.5 shadow-[var(--shadow-card)] sm:rounded-3xl sm:p-5 dark:border-white/10"
+            >
+              <p className="text-xs font-medium text-muted-foreground">{s.label}</p>
+              <p className={`mt-1 text-2xl font-extrabold tracking-tight tabular-nums sm:text-3xl ${s.tone}`}>{s.value}</p>
+              <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground sm:mt-1 sm:text-xs">{s.note}</p>
+            </motion.div>
+          ))}
+        </div>
+        </div>
+
+        {(isAIAnalyzing || aiAnalysis) && (
+          <div className="no-print rounded-2xl border border-brand/20 bg-surface p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-brand-soft text-brand">
+                <Sparkles className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-xs uppercase tracking-widest text-fg-muted">Hinweise</p>
+                <h3 className="text-sm font-semibold text-fg">Tipps aus deinen Betriebsdaten</h3>
+              </div>
+            </div>
+
+            {isAIAnalyzing ? (
+              <div className="space-y-2">
+                <div className="h-4 animate-pulse rounded-full bg-brand-soft" />
+                <div className="h-4 w-11/12 animate-pulse rounded-full bg-brand-soft" />
+                <div className="h-4 w-9/12 animate-pulse rounded-full bg-brand-soft" />
+              </div>
+            ) : aiAnalysis ? (
+              <div className="space-y-3">
+                <p className="text-sm leading-relaxed text-fg">{aiAnalysis.summary}</p>
+                <ul className="space-y-2">
+                  {aiAnalysis.highlights.map((item) => (
+                    <li key={item} className="text-sm leading-relaxed text-fg-muted">
+                      ✨ {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        </section>
+
+        <section aria-label="Details" className="no-print space-y-3">
+        {isManager && (
+          <motion.div className="no-print rounded-2xl border border-line bg-surface px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-fg-muted">Status-Legende</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge tone="success" size="sm">
+                Pünktlich
+              </StatusBadge>
+              <StatusBadge tone="warning" size="sm">
+                Zu spät (&gt;15 Min nach Schichtbeginn)
+              </StatusBadge>
+              <StatusBadge tone="danger" size="sm">
+                Fehlend (automatisch per Cron)
+              </StatusBadge>
+              <StatusBadge tone="brand" size="sm">
+                Manuell angepasst
+              </StatusBadge>
+            </div>
+          </motion.div>
+        )}
+
         {/* Table */}
-        <div className="rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden print:overflow-visible print:rounded-none print:border print:border-slate-200 print:shadow-none">
+        <div className="rounded-3xl bg-card border border-border shadow-[var(--shadow-card)] overflow-hidden dark:border-white/10 print:overflow-visible print:rounded-none print:border print:border-slate-200 print:shadow-none">
           <div className="no-print px-4 md:px-5 py-3 bg-card/80 flex items-center gap-2">
             <FileText className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xl font-bold tracking-wide">Work-Logs – {month}</span>
+            <span className="text-lg font-semibold tracking-tight text-foreground">Work-Logs – {month}</span>
           </div>
           <h2 className="print-only print-section-title">Work-Logs – {month}</h2>
 
@@ -1995,7 +2002,6 @@ export function ReportsClient({
           )}
         </div>
 
-        {/* Upgrade hint for locked features */}
         {plan === "STARTER" && (
           <div className="no-print rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-5 flex items-center justify-between gap-4">
             <div>
@@ -2012,6 +2018,7 @@ export function ReportsClient({
             </a>
           </div>
         )}
+        </section>
       </motion.div>
 
       <ToastContainer toasts={toasts} remove={remove} />

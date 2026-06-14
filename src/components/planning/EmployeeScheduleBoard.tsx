@@ -10,6 +10,7 @@ import {
 import { clampWeekIndex, getWeekCycleIndex, type ShiftCycleWeeks } from "@/lib/shift-cycle";
 import { formatShiftRange, shiftCardTone, shiftSlotLabel } from "@/lib/planning/shift-display";
 import { Button } from "@/components/ui/Button";
+import { dashboardSurfaceClass } from "@/components/dashboard/DashboardSectionCard";
 import { comparePlannerShifts } from "@/lib/planning/sort-shifts";
 
 const DAY_NAMES = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"] as const;
@@ -94,7 +95,7 @@ export function EmployeeScheduleBoard({
   }, [weekShifts, todayStart]);
 
   return (
-    <section className="employee-schedule-print glass-card relative overflow-hidden p-4 sm:p-6">
+    <section className={`employee-schedule-print ${dashboardSurfaceClass} relative overflow-hidden p-4 sm:p-6`}>
       <span
         aria-hidden
         className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/15"

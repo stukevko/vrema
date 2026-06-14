@@ -27,6 +27,11 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ShiftTradeApprovalDiff } from "@/components/planning/ShiftTradeApprovalDiff";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
+import {
+  PlanningManagerExtras,
+  PlanningTradeApprovalsHint,
+} from "@/components/planning/PlanningManagerExtras";
 import { vocabularyLabels } from "@/lib/vocabulary";
 
 const DAY_LABELS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
@@ -73,6 +78,7 @@ export default async function PlanningPage({
           description="Person wählen · Tag antippen · PDF teilen. Mitarbeitende sehen nur ihren Plan."
           className="hidden md:block"
         />
+        <PlanningTradeApprovalsHint count={data.pendingTrades.length} />
         <Suspense
           fallback={
             <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
@@ -119,11 +125,26 @@ export default async function PlanningPage({
             planTitle={planLabels.planTitle}
           />
         </Suspense>
-        {data.companyModules.shiftTrade ? <OpenShiftsBoard open={data.openShifts} /> : null}
-        {data.companyModules.shiftTrade && data.pendingTrades.length > 0 && (
-          <section id="shift-trade-approvals" className="glass-card p-5">
-            <h2 className="text-base font-semibold tracking-tight">Schicht-Tausch: Offene Bestätigungen</h2>
-            <div className="mt-3 space-y-2">
+        {data.companyModules.shiftTrade ? (
+          <PlanningManagerExtras
+            label={`Offene Schichten${data.openShifts.length > 0 ? ` (${data.openShifts.length})` : ""}`}
+          >
+            <OpenShiftsBoard open={data.openShifts} />
+          </PlanningManagerExtras>
+        ) : null}
+        {data.companyModules.shiftTrade && data.pendingTrades.length > 0 ? (
+          <PlanningManagerExtras
+            label={`Tausch-Freigaben (${data.pendingTrades.length})`}
+            defaultOpen
+          >
+          <DashboardSectionCard
+            id="shift-trade-approvals"
+            title="Schicht-Tausch: Offene Bestätigungen"
+            description="Vorher/Nachher prüfen und freigeben."
+            icon={Handshake}
+            className="scroll-mt-24"
+          >
+            <div className="space-y-2">
               {data.pendingTrades.map((trade) => {
                 const intelTone =
                   trade.intel?.badge === "green"
@@ -186,8 +207,9 @@ export default async function PlanningPage({
                 );
               })}
             </div>
-          </section>
-        )}
+          </DashboardSectionCard>
+          </PlanningManagerExtras>
+        ) : null}
       </DashboardPageShell>
     );
   }
