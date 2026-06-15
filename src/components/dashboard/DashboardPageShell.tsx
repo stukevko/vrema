@@ -29,7 +29,7 @@ export function DashboardPageShell({
   return (
     <div
       className={clsx(
-        "mx-auto space-y-5 px-1 text-foreground sm:space-y-6 sm:px-0",
+        "mx-auto w-full min-w-0 max-w-full space-y-5 px-1 text-foreground sm:space-y-6 sm:px-0",
         WIDTH_CLASS[maxWidth],
         animateEnter && "premium-enter",
         className,

@@ -15,60 +15,77 @@ const MON_FIRST_DOW = [1, 2, 3, 4, 5, 6, 0] as const;
 
 type PlannerMonthGridProps = {
   planCalendarMonday: Date;
+  selectedDayIso: string | null;
   shiftCycleWeeks: ShiftCycleWeeks;
   shifts: BoardShiftRow[];
+  neededStaff: number;
   onSelectDay: (monday: Date, iso: string) => void;
 };
 
-function countShiftsOnDate(shifts: BoardShiftRow[], date: Date, cycleWeeks: ShiftCycleWeeks): number {
+function shiftsOnDate(shifts: BoardShiftRow[], date: Date, cycleWeeks: ShiftCycleWeeks): BoardShiftRow[] {
   const weekIndex = getWeekCycleIndex(date, cycleWeeks);
   const dayOfWeek = date.getDay();
-  return shifts.filter((s) => s.weekIndex === weekIndex && s.dayOfWeek === dayOfWeek && !s.isDraft).length;
+  return shifts.filter((s) => s.weekIndex === weekIndex && s.dayOfWeek === dayOfWeek && !s.isDraft);
 }
+
+function dayTone(count: number, neededStaff: number): "empty" | "partial" | "ok" {
+  if (count === 0) return "empty";
+  if (count < neededStaff) return "partial";
+  return "ok";
+}
+
+const TONE_CLASS = {
+  empty: "bg-muted/30 text-muted-foreground",
+  partial: "bg-warning-soft/60 text-warning-foreground ring-1 ring-warning/30",
+  ok: "bg-success-soft/50 text-success-foreground ring-1 ring-success/25",
+} as const;
 
 export function PlannerMonthGrid({
   planCalendarMonday,
+  selectedDayIso,
   shiftCycleWeeks,
   shifts,
+  neededStaff,
   onSelectDay,
 }: PlannerMonthGridProps) {
   const monthAnchor = planCalendarMonday;
   const weeks = useMemo(() => calendarWeeksForMonth(monthAnchor), [monthAnchor]);
   const todayIso = isoFromPlannerDate(new Date());
-  const activeMondayIso = isoFromPlannerDate(planCalendarMonday);
   const displayMonth = monthAnchor.getMonth();
 
   return (
-    <div className="mt-3 overflow-hidden rounded-2xl border-2 border-border bg-background shadow-sm">
-      <div className="border-b border-border bg-surface-muted/40 px-4 py-2.5">
-        <p className="text-sm font-semibold capitalize text-foreground">{monthYearLabel(monthAnchor)}</p>
-        <p className="text-[11px] text-muted-foreground">Punkte = geplante Schichten · Tag antippen für Details</p>
+    <div className="overflow-hidden rounded-2xl border-2 border-border bg-background shadow-sm">
+      <div className="border-b border-border bg-surface-muted/30 px-3 py-2">
+        <p className="text-xs font-semibold capitalize text-foreground">{monthYearLabel(monthAnchor)}</p>
+        <p className="text-[10px] text-muted-foreground">Tag antippen → unten bearbeiten</p>
       </div>
 
-      <div className="grid grid-cols-7 border-b border-border bg-muted/20 text-center">
+      <div className="grid grid-cols-7 border-b border-border bg-muted/15">
         {DOW_LABELS.map((label) => (
-          <div key={label} className="border-r border-border py-1.5 text-[10px] font-bold uppercase text-muted-foreground last:border-r-0">
+          <div
+            key={label}
+            className="border-r border-border/80 py-1 text-center text-[9px] font-bold uppercase text-muted-foreground last:border-r-0"
+          >
             {label}
           </div>
         ))}
       </div>
 
-      <div className="divide-y divide-border">
+      <div className="divide-y divide-border/80">
         {weeks.map((weekMonday) => {
           const weekIso = isoFromPlannerDate(weekMonday);
-          const isActiveWeek = weekIso === activeMondayIso;
           return (
-            <div
-              key={weekIso}
-              className={`grid grid-cols-7 ${isActiveWeek ? "bg-brand-soft/25 ring-1 ring-inset ring-brand/25" : ""}`}
-            >
+            <div key={weekIso} className="grid grid-cols-7">
               {MON_FIRST_DOW.map((dow) => {
                 const date = new Date(weekMonday);
                 date.setDate(weekMonday.getDate() + dayOrderMonFirst(dow));
                 const iso = isoFromPlannerDate(date);
                 const inMonth = date.getMonth() === displayMonth;
-                const count = inMonth ? countShiftsOnDate(shifts, date, shiftCycleWeeks) : 0;
+                const dayShifts = inMonth ? shiftsOnDate(shifts, date, shiftCycleWeeks) : [];
+                const count = dayShifts.length;
+                const tone = inMonth ? dayTone(count, neededStaff) : "empty";
                 const isToday = iso === todayIso;
+                const isSelected = iso === selectedDayIso;
                 return (
                   <button
                     key={`${weekIso}-${dow}`}
@@ -78,30 +95,15 @@ export function PlannerMonthGrid({
                       if (!inMonth) return;
                       onSelectDay(weekMonday, iso);
                     }}
-                    className={`relative flex min-h-[2.75rem] flex-col items-center justify-center border-r border-border px-0.5 py-1 text-center transition last:border-r-0 sm:min-h-[3.25rem] ${
-                      inMonth
-                        ? "hover:bg-muted/40"
-                        : "cursor-default bg-muted/10 text-muted-foreground/40"
-                    } ${isToday ? "ring-1 ring-inset ring-brand/50" : ""}`}
+                    className={`relative flex min-h-[2.5rem] flex-col items-center justify-center border-r border-border/60 px-0.5 py-1 transition last:border-r-0 sm:min-h-[2.85rem] ${
+                      inMonth ? TONE_CLASS[tone] : "cursor-default bg-muted/5 text-muted-foreground/30"
+                    } ${isSelected ? "!ring-2 !ring-inset !ring-brand" : ""} ${isToday && !isSelected ? "font-bold underline decoration-brand/50" : ""} ${
+                      inMonth ? "hover:brightness-95" : ""
+                    }`}
                   >
-                    <span
-                      className={`text-xs font-semibold tabular-nums ${
-                        inMonth ? "text-foreground" : "text-muted-foreground/50"
-                      }`}
-                    >
-                      {date.getDate()}
-                    </span>
-                    {count > 0 ? (
-                      <span className="mt-0.5 flex items-center gap-0.5" aria-label={`${count} Schichten`}>
-                        {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
-                          <span key={i} className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden />
-                        ))}
-                        {count > 3 ? (
-                          <span className="text-[9px] font-bold text-brand">+{count - 3}</span>
-                        ) : null}
-                      </span>
-                    ) : inMonth ? (
-                      <span className="mt-1 h-1 w-1 rounded-full bg-transparent" aria-hidden />
+                    <span className={`text-[11px] tabular-nums ${inMonth ? "font-semibold" : ""}`}>{date.getDate()}</span>
+                    {inMonth && count > 0 ? (
+                      <span className="text-[8px] font-bold tabular-nums opacity-90">{count}</span>
                     ) : null}
                   </button>
                 );
@@ -109,6 +111,18 @@ export function PlannerMonthGrid({
             </div>
           );
         })}
+      </div>
+
+      <div className="flex flex-wrap gap-3 border-t border-border bg-muted/10 px-3 py-1.5 text-[9px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1">
+          <span className="h-2 w-2 rounded-sm bg-muted/40 ring-1 ring-border" /> leer
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="h-2 w-2 rounded-sm bg-warning-soft ring-1 ring-warning/30" /> wenig besetzt
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="h-2 w-2 rounded-sm bg-success-soft ring-1 ring-success/25" /> besetzt
+        </span>
       </div>
     </div>
   );

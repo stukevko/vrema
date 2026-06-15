@@ -50,11 +50,11 @@ export function DashboardSectionCard({
     <section
       id={id}
       aria-label={ariaLabel}
-      className={clsx(surface, paddingClass, "dashboard-surface-mobile", className)}
+      className={clsx(surface, paddingClass, "dashboard-surface-mobile min-w-0 max-w-full", className)}
     >
       {!bare && (title || description || Icon) ? (
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div className="min-w-0">
+        <div className="dashboard-card-row dashboard-card-row--split mb-4">
+          <div className="dashboard-card-row__content">
             {title ? (
               <div className="flex items-center gap-2">
                 {Icon ? <Icon className="h-4 w-4 shrink-0 text-brand" aria-hidden /> : null}
@@ -63,7 +63,7 @@ export function DashboardSectionCard({
             ) : null}
             {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
           </div>
-          {headerAction}
+          {headerAction ? <div className="dashboard-card-row__aside">{headerAction}</div> : null}
         </div>
       ) : null}
       {children}

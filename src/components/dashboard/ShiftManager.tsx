@@ -74,6 +74,7 @@ import {
   weekIndexForPlannerDate,
 } from "@/lib/planning/cycle-display-date";
 import { getWeekCycleIndex, type ShiftCycleWeeks } from "@/lib/shift-cycle";
+import { PlannerDayEditor } from "@/components/planning/PlannerDayEditor";
 import { PlannerMonthGrid } from "@/components/planning/PlannerMonthGrid";
 import { PlannerPeriodNav, type PlannerPlanView } from "@/components/planning/PlannerPeriodNav";
 import type { DailyWeatherForecast } from "@/lib/weather/shared";
@@ -356,7 +357,9 @@ export function ShiftManager({
     }
     return mondayOfWeekContaining(new Date());
   });
-  const [planView, setPlanView] = useState<PlannerPlanView>("week");
+  const [planView, setPlanView] = useState<PlannerPlanView>("month");
+  const [selectedPlanDayIso, setSelectedPlanDayIso] = useState(() => isoFromPlannerDate(new Date()));
+  const [planStatusExpanded, setPlanStatusExpanded] = useState(false);
   const selectedWeekIndex = useMemo(
     () => getWeekCycleIndex(planCalendarMonday, shiftCycleWeeks),
     [planCalendarMonday, shiftCycleWeeks],
@@ -402,7 +405,32 @@ export function ShiftManager({
     const d = new Date(planCalendarMonday);
     d.setMonth(d.getMonth() + delta, 1);
     setPlanCalendarMonday(mondayOfWeekContaining(d));
+    const today = new Date();
+    if (today.getMonth() === d.getMonth() && today.getFullYear() === d.getFullYear()) {
+      setSelectedPlanDayIso(isoFromPlannerDate(today));
+    } else {
+      setSelectedPlanDayIso(isoFromPlannerDate(d));
+    }
     setMessage(null);
+  };
+  const selectPlanDay = (monday: Date, iso: string) => {
+    setPlanCalendarMonday(monday);
+    setSelectedPlanDayIso(iso);
+    setMessage(null);
+  };
+  const openAddForSelectedPlanDay = () => {
+    const parsed = new Date(`${selectedPlanDayIso}T12:00:00`);
+    if (Number.isNaN(parsed.getTime())) return;
+    setBoardAddDay(parsed.getDay());
+    setBoardAddSheetOpen(true);
+    if (!selectedUserId && members[0]) setSelectedUserId(members[0].id);
+    if (activeTemplateId) {
+      const t = shiftTemplates.find((x) => x.id === activeTemplateId);
+      if (t) {
+        setStartTime(t.startTime.slice(0, 5));
+        setEndTime(t.endTime.slice(0, 5));
+      }
+    }
   };
   const canTimelinePrevWeek = useMemo(() => {
     const parsed = new Date(`${timelineDate}T12:00:00`);
@@ -612,8 +640,6 @@ export function ShiftManager({
   const [showPlannerInfo, setShowPlannerInfo] = useState(false);
   /** Desktop Einfach-/Timeline: ausführliche Hilfe hinter (i), Standard schlank. */
   const [desktopPlannerHelpOpen, setDesktopPlannerHelpOpen] = useState(false);
-  /** Leitungs-Statuszeile: Fußnote zu Lücken/Ruhezeit optional. */
-  const [planStatusMetricsHelpOpen, setPlanStatusMetricsHelpOpen] = useState(false);
   const [memberSaldoById, setMemberSaldoById] = useState<Record<string, MemberSaldoSnapshot>>({});
   const [overtimeFilterOnly, setOvertimeFilterOnly] = useState(false);
   const [overtimePopover, setOvertimePopover] = useState<{ userId: string; rect: DOMRect } | null>(null);
@@ -1709,10 +1735,6 @@ export function ShiftManager({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- einmaliger Sonntags-Deep-Link
   }, [autopilotAction, enableTaskListActions, draftShiftsInWeek.length, members.length]);
 
-  const scrollToAutopilot = () => {
-    document.getElementById("planner-autopilot")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   const clearMobileDayLongPressTimer = () => {
     if (mobileDayLongPressTimerRef.current !== null) {
       clearTimeout(mobileDayLongPressTimerRef.current);
@@ -2511,21 +2533,73 @@ export function ShiftManager({
     });
   };
 
-  const DesktopView = (
+  const PlannerMainView = (
     <>
       {planView === "month" ? (
-        <PlannerMonthGrid
-          planCalendarMonday={planCalendarMonday}
-          shiftCycleWeeks={shiftCycleWeeks}
-          shifts={displayShifts}
-          onSelectDay={(monday) => {
-            setPlanCalendarMonday(monday);
-            setPlanView("week");
-            setMessage(null);
-          }}
-        />
+        <div className="space-y-3">
+          <PlannerMonthGrid
+            planCalendarMonday={planCalendarMonday}
+            selectedDayIso={selectedPlanDayIso}
+            shiftCycleWeeks={shiftCycleWeeks}
+            shifts={displayShifts}
+            neededStaff={neededStaff}
+            onSelectDay={selectPlanDay}
+          />
+          <PlannerDayEditor
+            selectedIso={selectedPlanDayIso}
+            shiftCycleWeeks={shiftCycleWeeks}
+            members={members}
+            shifts={displayShifts}
+            shiftTemplates={shiftTemplates}
+            neededStaff={neededStaff}
+            isPending={isPending}
+            onOpenAddSlot={openAddForSelectedPlanDay}
+            onEditAssignment={(slot, userId, shiftId) => {
+              const member = members.find((m) => m.id === userId);
+              setShiftEdit({
+                userId,
+                shiftId,
+                dayOfWeek: slot.dayOfWeek,
+                label: member?.name ?? member?.email ?? "Mitarbeiter",
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+              });
+            }}
+            onRemoveAssignment={(userId, dayOfWeek, shiftId, slotStart, slotEnd) => {
+              if (!shiftId?.trim()) {
+                const msg = "Zuweisung konnte nicht identifiziert werden — bitte Seite neu laden.";
+                setMessage(msg);
+                showToast(msg, "error");
+                return;
+              }
+              const sk = slotKey(dayOfWeek, slotStart, slotEnd);
+              setMessage(null);
+              setSlotBusy(sk, true);
+              setHiddenShiftIds((prev) => new Set(prev).add(shiftId));
+              setBoardOptimisticShifts((prev) => prev.filter((s) => s.id !== shiftId));
+              startTransition(async () => {
+                const result = await removeShiftViaApi(shiftId);
+                setSlotBusy(sk, false);
+                if (!result.ok) {
+                  setHiddenShiftIds((prev) => {
+                    const next = new Set(prev);
+                    next.delete(shiftId);
+                    return next;
+                  });
+                  setMessage(result.error);
+                  showToast(result.error, "error");
+                  return;
+                }
+                const member = members.find((m) => m.id === userId);
+                showToast(`${member?.name ?? member?.email ?? "Mitarbeiter"} von der Schicht entfernt.`, "success");
+                scheduleBoardRefresh();
+              });
+            }}
+          />
+        </div>
       ) : (
       <ShiftCentricBoard
+        compact
         members={members}
         shifts={displayShifts}
         selectedWeekIndex={selectedWeekIndex}
@@ -2774,7 +2848,6 @@ export function ShiftManager({
       <PlannerPeriodNav
         planCalendarMonday={planCalendarMonday}
         planView={planView}
-        shiftCycleWeeks={shiftCycleWeeks}
         onSelectMonday={setPlanCalendarMonday}
         onPlanViewChange={setPlanView}
         onShiftMonth={shiftPlanMonth}
@@ -2792,7 +2865,6 @@ export function ShiftManager({
     <PlannerPeriodNav
       planCalendarMonday={planCalendarMonday}
       planView={planView}
-      shiftCycleWeeks={shiftCycleWeeks}
       onSelectMonday={setPlanCalendarMonday}
       onPlanViewChange={setPlanView}
       onShiftMonth={shiftPlanMonth}
@@ -2808,159 +2880,61 @@ export function ShiftManager({
     ) : null;
 
   return (
-    <section className={`${dashboardSurfaceClass} p-4 sm:p-5`}>
-      {enableTaskListActions && companyModules.autopilot ? (
-        <div className="mb-4">
-          <PlannerAutopilotPanel
-            weekIndex={selectedWeekIndex}
-            draftCount={draftShiftsInWeek.length}
-            busy={autopilotBusy}
-            report={autopilotReport}
-            disabled={isPending}
-            onSuggest={startAutopilot}
-            onPublish={confirmAutopilot}
-            onDiscard={discardAutopilot}
-          />
-        </div>
-      ) : null}
+    <section className={`${dashboardSurfaceClass} min-w-0 max-w-full p-4 sm:p-5`}>
       {enableTaskListActions ? (
-        <div className="mb-4 rounded-2xl border border-brand/20 bg-gradient-to-br from-brand/[0.07] to-card px-4 py-3 shadow-sm sm:px-5">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0 space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Plan-Status · Zyklus-Woche {selectedWeekIndex}
-              </p>
-              <div className="flex flex-wrap gap-2 text-sm">
-                <div
-                  className={
-                    weekCoverageGapSlots === 0
-                      ? "inline-flex min-w-0 max-w-full flex-col gap-1.5 rounded-2xl border border-emerald-200/90 bg-emerald-50/90 px-3 py-2 text-emerald-950 shadow-sm dark:border-emerald-500/35 dark:bg-emerald-500/12 dark:text-emerald-50"
-                      : "inline-flex min-w-0 max-w-full flex-col gap-1.5 rounded-2xl border border-border bg-background/80 px-3 py-2 text-foreground shadow-sm dark:border-white/[0.08] dark:bg-surface-muted/40"
-                  }
-                >
-                  <span className="inline-flex items-center gap-1.5 font-medium leading-snug">
-                    <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                    {weekCoverageGapSlots === 0 ? (
-                      <>Mindestbesetzung erreicht · alle Zeitfenster (Mo–So)</>
-                    ) : (
-                      <>
-                        <span className="min-w-0">
-                          Noch{" "}
-                          <span className="tabular-nums font-semibold text-foreground">{weekCoverageGapSlots}</span>{" "}
-                          von{" "}
-                          <span className="tabular-nums text-muted-foreground">{weekMaxCoverageGapSlots}</span>{" "}
-                          Fenstern offen
-                        </span>
-                        <span className="hidden text-xs font-normal text-muted-foreground sm:inline">
-                          ({Math.round(weekCoverageGapFillRatio * 100)} % geschlossen)
-                        </span>
-                      </>
-                    )}
-                  </span>
-                  {weekCoverageGapSlots > 0 ? (
-                    <div
-                      className="h-1.5 w-full min-w-[10rem] max-w-[14rem] overflow-hidden rounded-full bg-amber-200/50 dark:bg-amber-950/40"
-                      role="progressbar"
-                      aria-valuenow={Math.round(weekCoverageGapFillRatio * 100)}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label="Anteil der Zeitfenster mit ausreichender Mindestbesetzung"
-                    >
-                      <div
-                        className="h-full rounded-full transition-[width] duration-300 ease-out"
-                        style={{
-                          width: `${Math.round(weekCoverageGapFillRatio * 100)}%`,
-                          background: "linear-gradient(90deg, #facc15, #22c55e)",
-                        }}
-                      />
-                    </div>
-                  ) : null}
-                  {weekCoverageGapSlots > 0 ? (
-                    <span className="text-[10px] font-normal text-muted-foreground sm:hidden">
-                      {Math.round(weekCoverageGapFillRatio * 100)} % der Fenster erfüllen die Mindestbesetzung
-                    </span>
-                  ) : null}
-                </div>
-                <span
-                  className={
-                    restRiskShiftCount > 0
-                      ? "inline-flex items-center gap-1.5 rounded-full border border-orange-300/80 bg-orange-50 px-3 py-1 text-orange-950 dark:border-orange-500/40 dark:bg-orange-500/12 dark:text-orange-100"
-                      : "inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1 text-foreground"
-                  }
-                >
-                  <AlarmClock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                  {restRiskShiftCount === 0
-                    ? "Keine Ruhezeit-Konflikte"
-                    : `${restRiskShiftCount} Ruhezeit-Warnung${restRiskShiftCount === 1 ? "" : "en"} (< 11h)`}
+        <div className="mb-3 min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-muted/10">
+          <button
+            type="button"
+            onClick={() => setPlanStatusExpanded((v) => !v)}
+            className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left"
+            aria-expanded={planStatusExpanded}
+          >
+            <span className="text-xs leading-snug text-foreground">
+              {weekCoverageGapSlots === 0 ? (
+                <span className="text-success-foreground">Woche komplett besetzt</span>
+              ) : (
+                <span className="text-warning-foreground">{weekCoverageGapSlots} offene Fenster</span>
+              )}
+              <span className="text-muted-foreground">
+                {" · "}
+                {restRiskShiftCount === 0
+                  ? "keine Ruhezeit-Probleme"
+                  : `${restRiskShiftCount} Ruhezeit-Warnung${restRiskShiftCount === 1 ? "" : "en"}`}
+              </span>
+            </span>
+            <span className="shrink-0 text-[10px] font-semibold text-brand">
+              {planStatusExpanded ? "Weniger" : "Details"}
+            </span>
+          </button>
+          {planStatusExpanded ? (
+            <div className="space-y-3 border-t border-border px-3 py-3">
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="rounded-full border border-border bg-background px-2.5 py-1 text-foreground">
+                  {weekCoverageGapSlots === 0
+                    ? "Mindestbesetzung OK"
+                    : `${weekCoverageGapSlots}/${weekMaxCoverageGapSlots} Fenster offen`}
                 </span>
-                <span
-                  className={
-                    criticalOvertimeCount > 0
-                      ? "inline-flex flex-wrap items-center gap-2 rounded-full border border-warning/50 bg-warning-soft px-3 py-1 text-warning-foreground"
-                      : "inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1 text-foreground"
-                  }
-                >
-                  <Flame className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                  {criticalOvertimeCount > 0 ? (
-                    <>
-                      <span>
-                        {criticalOvertimeCount} Mitarbeitende mit kritischen Überstunden
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOvertimeFilterOnly((v) => !v);
-                          setMessage(
-                            overtimeFilterOnly
-                              ? "Alle Mitarbeitenden im Deck angezeigt."
-                              : "Deck zeigt nur kritische Überstunden — Flammen-Icon für Empfehlung.",
-                          );
-                        }}
-                        className="text-xs font-bold underline underline-offset-2"
-                      >
-                        {overtimeFilterOnly ? "Alle anzeigen" : "Jetzt lösen"}
-                      </button>
-                    </>
-                  ) : (
-                    "Keine kritischen Überstunden"
-                  )}
+                <span className="rounded-full border border-border bg-background px-2.5 py-1 text-foreground">
+                  {criticalOvertimeCount === 0
+                    ? "Keine kritischen Überstunden"
+                    : `${criticalOvertimeCount} kritische Überstunden`}
                 </span>
               </div>
-              <div className="flex items-start gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPlanStatusMetricsHelpOpen((v) => !v)}
-                  className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                  aria-expanded={planStatusMetricsHelpOpen}
-                  title={planStatusMetricsHelpOpen ? "Legende ausblenden" : "Was bedeuten die Zahlen?"}
-                >
-                  <Info className="h-3.5 w-3.5" aria-hidden />
-                  <span className="sr-only">Zahlen-Legende</span>
-                </button>
-                {planStatusMetricsHelpOpen ? (
-                  <p className="text-[10px] leading-snug text-muted-foreground">
-                    Offene Fenster: Mo–So in {coverageSlotMinutes}-Minuten-Slots. Ein Slot gilt als besetzt, wenn mindestens
-                    so viele parallele Schichten liegen wie die Mindestbesetzung (Zahl oben rechts am Planer).
-                    Ruhezeit: weniger als 11 Stunden Pause zwischen zwei Schichten derselben Person in dieser Zykluswoche.
-                  </p>
-                ) : null}
-              </div>
-            </div>
-            <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap lg:flex-col lg:items-end">
               {companyModules.autopilot ? (
-                <button
-                  type="button"
-                  disabled={isPending || autopilotBusy}
-                  onClick={scrollToAutopilot}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand/35 bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm ring-1 ring-inset ring-white/15 transition-colors hover:bg-brand/90 disabled:opacity-50"
-                >
-                  <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
-                  Zum Autopilot
-                </button>
+                <PlannerAutopilotPanel
+                  weekIndex={selectedWeekIndex}
+                  draftCount={draftShiftsInWeek.length}
+                  busy={autopilotBusy}
+                  report={autopilotReport}
+                  disabled={isPending}
+                  onSuggest={startAutopilot}
+                  onPublish={confirmAutopilot}
+                  onDiscard={discardAutopilot}
+                />
               ) : (
                 <Link
                   href="/dashboard/settings"
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-background px-4 py-2.5 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
+                  className="dashboard-action-btn rounded-xl border border-border bg-background px-3 py-2 text-center text-xs font-medium text-muted-foreground hover:text-foreground"
                 >
                   Autopilot in Einstellungen aktivieren
                 </Link>
@@ -2968,42 +2942,20 @@ export function ShiftManager({
               {renderDesktopTree ? (
                 <a
                   href="#planner-compliance-radar"
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-background px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
+                  className="dashboard-action-btn rounded-xl border border-border bg-background px-3 py-2 text-center text-xs font-medium text-foreground hover:bg-muted/40"
                 >
-                  Zu Compliance & Budget
+                  Compliance &amp; Budget anzeigen
                 </a>
               ) : null}
             </div>
-          </div>
+          ) : null}
         </div>
       ) : null}
 
       {enableTaskListActions ? (
-        <div className="block">
-          {renderDesktopTree ? (
-            <>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold tracking-tight">{resolvedPlanTitle}</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Team links · Schichtkarten in der Woche · Zuweisen per Drag oder Antippen.
-                  </p>
-                </div>
-              </div>
-              {weekPicker}
-              {DesktopView}
-            </>
-          ) : (
-            <>
-              <h2 className="text-lg font-semibold tracking-tight">{resolvedPlanTitle}</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Mitarbeiter wählen, Tag antippen, Schicht pflegen — optimiert fürs Handy.
-              </p>
-              {weekPicker}
-              {selectedMemberChip}
-              {MobileView}
-            </>
-          )}
+        <div className="block min-w-0">
+          {weekPicker}
+          {PlannerMainView}
         </div>
       ) : (
         <div className="block">

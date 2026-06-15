@@ -69,7 +69,9 @@ export function DashboardPageHeader({
           {description ? <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
           {badge ? <div className="mt-3">{badge}</div> : null}
         </div>
-        {actions ? <div className="relative mt-3 shrink-0 sm:mt-0">{actions}</div> : null}
+        {actions ? (
+          <div className="dashboard-card-row__aside relative mt-0 flex-row flex-wrap sm:mt-0">{actions}</div>
+        ) : null}
       </header>
     );
   }
@@ -77,8 +79,8 @@ export function DashboardPageHeader({
   return (
     <header
       className={clsx(
-        "glossy-surface rounded-2xl sm:rounded-3xl",
-        Icon ? "flex items-start gap-3 sm:gap-4" : "",
+        "glossy-surface min-w-0 max-w-full rounded-2xl p-4 sm:rounded-3xl sm:p-5",
+        Icon ? "flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4" : "",
         mobileHidden,
         className,
       )}
@@ -96,7 +98,9 @@ export function DashboardPageHeader({
         {description ? <p className="mt-1.5 text-sm text-muted-foreground">{description}</p> : null}
         {badge ? <div className="mt-3">{badge}</div> : null}
       </div>
-      {actions ? <div className="mt-3 shrink-0 sm:mt-0">{actions}</div> : null}
+      {actions ? (
+        <div className="dashboard-card-row__aside mt-0 flex-row flex-wrap sm:mt-0">{actions}</div>
+      ) : null}
     </header>
   );
 }

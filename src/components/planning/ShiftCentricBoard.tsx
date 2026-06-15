@@ -51,6 +51,7 @@ export type ShiftCentricBoardProps = {
   members: BoardMember[];
   shifts: BoardShiftRow[];
   selectedWeekIndex: number;
+  compact?: boolean;
   neededStaff: number;
   planWeekRangeLabel: string;
   weatherWeek: Array<DailyWeatherForecast | null>;
@@ -217,6 +218,7 @@ export function ShiftCentricBoard({
   members,
   shifts,
   selectedWeekIndex,
+  compact = false,
   neededStaff,
   planWeekRangeLabel,
   weatherWeek,
@@ -268,15 +270,23 @@ export function ShiftCentricBoard({
   };
 
   return (
-    <div className="mt-3 flex min-h-[22rem] flex-col overflow-hidden rounded-2xl border-2 border-border bg-background shadow-md sm:min-h-[28rem] lg:min-h-[32rem] lg:flex-row">
-      <aside className="shrink-0 border-b-2 border-border bg-surface/60 max-lg:max-h-[40vh] lg:w-52 lg:max-h-none lg:border-b-0 lg:border-r-2">
+    <div
+      className={`mt-2 flex flex-col overflow-hidden rounded-xl border-2 border-border bg-background shadow-sm lg:flex-row ${
+        compact ? "min-h-0" : "min-h-[18rem] sm:min-h-[22rem] lg:min-h-[26rem]"
+      }`}
+    >
+      <aside
+        className={`shrink-0 border-b-2 border-border bg-surface/60 max-lg:max-h-[28vh] lg:border-b-0 lg:border-r-2 ${
+          compact ? "lg:w-40" : "lg:w-52"
+        } lg:max-h-none`}
+      >
         <div className="border-b border-border px-3 py-2.5">
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Team</p>
           <p className="text-[11px] text-muted-foreground">
             {overtimeFilterOnly ? "Nur kritische Überstunden" : "Antippen oder in Schicht ziehen"}
           </p>
         </div>
-        <ul className="max-h-[min(36vh,14rem)] overflow-y-auto scrollbar-hide sm:max-h-48 lg:max-h-none lg:flex-1">
+        <ul className={`overflow-y-auto scrollbar-hide ${compact ? "max-h-[min(28vh,10rem)] lg:max-h-[20rem]" : "max-h-[min(36vh,14rem)] sm:max-h-48 lg:max-h-none lg:flex-1"}`}>
           {visibleMembers.length === 0 ? (
             <li className="px-3 py-6 text-center text-[11px] text-muted-foreground">
               {overtimeFilterOnly ? "Keine kritischen Überstunden in dieser Woche." : "Kein Team geladen."}
@@ -359,10 +369,12 @@ export function ShiftCentricBoard({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b-2 border-border px-3 py-2.5">
+        <div className="flex flex-wrap items-end justify-between gap-2 border-b-2 border-border px-2.5 py-2">
           <div>
-            <h3 className="text-base font-semibold text-foreground">{planWeekRangeLabel}</h3>
-            <p className="text-[11px] text-muted-foreground">Schichten nach Tag · Deckung pro Schichtkarte</p>
+            <h3 className={`font-semibold text-foreground ${compact ? "text-sm" : "text-base"}`}>{planWeekRangeLabel}</h3>
+            {!compact ? (
+              <p className="text-[10px] text-muted-foreground">Schichten nach Tag · Drag aus Team-Spalte</p>
+            ) : null}
           </div>
           <div className="flex flex-wrap items-end gap-2">
             <div className="w-16">
@@ -406,8 +418,8 @@ export function ShiftCentricBoard({
           </div>
         </div>
 
-        <div className="flex-1 overflow-x-auto overflow-y-auto p-2.5 scrollbar-hide">
-          <div className="flex min-w-max gap-2">
+        <div className="flex-1 overflow-x-auto overflow-y-auto p-2 scrollbar-hide">
+          <div className={`flex min-w-max ${compact ? "gap-1.5" : "gap-2"}`}>
             {MON_FIRST_DOW.map((dow, colIdx) => {
               const slots = slotsByDay.get(dow) ?? [];
               const wx = weatherWeek[colIdx] ?? null;
@@ -415,7 +427,9 @@ export function ShiftCentricBoard({
               return (
                 <div
                   key={`col-${dow}`}
-                  className="flex w-[10.5rem] shrink-0 flex-col rounded-xl border-2 border-border bg-muted/25"
+                  className={`flex shrink-0 flex-col rounded-lg border-2 border-border bg-muted/25 ${
+                    compact ? "w-[8.75rem]" : "w-[10.5rem]"
+                  }`}
                 >
                   <header className="rounded-t-[0.65rem] border-b border-border bg-background px-2 py-1.5 text-center">
                     <p className="text-xs font-bold text-foreground">{WEEK_SHORT_MON[colIdx]}</p>

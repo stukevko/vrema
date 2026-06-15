@@ -378,7 +378,7 @@
     0 0 0 1px hsl(var(--specular-line) / calc(var(--glossy-border) * 0.42)),
     var(--shadow-card);
   transition: box-shadow 220ms ease, border-color 220ms ease;
-  contain: layout style;
+  contain: style;
 }
 .dark .glossy-surface {
   border-color: hsl(var(--border-strong) / 0.95);
@@ -634,6 +634,71 @@ button[class] {
 
 .dashboard-touch-scroll {
   -webkit-overflow-scrolling: touch;
+}
+
+/* Dashboard-Karten: Flex-Inhalte nicht seitlich abschneiden (overflow-x clip auf Shell). */
+.dashboard-touch-scroll .glossy-surface,
+.dashboard-shell .glossy-surface,
+.dashboard-page-root .glossy-surface,
+.dashboard-surface-mobile {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-card-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (min-width: 1280px) {
+  .dashboard-card-row--split {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
+
+.dashboard-card-row__content {
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: 100%;
+}
+
+.dashboard-card-row__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 1280px) {
+  .dashboard-card-row__aside {
+    width: auto;
+    flex: 0 1 auto;
+    max-width: 100%;
+  }
+}
+
+.dashboard-action-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  width: 100%;
+  max-width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 1280px) {
+  .dashboard-action-btn {
+    width: auto;
+  }
 }
 
 /* =========================================================================
