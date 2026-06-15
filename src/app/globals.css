@@ -152,10 +152,10 @@
     0 2px 4px hsl(0 0% 0% / 0.5),
     0 8px 18px hsl(0 0% 0% / 0.45);
   --specular-line: 0 0% 100%;
-  /* Glossy surfaces – Dark */
-  --glossy-highlight: 0.07;
-  --glossy-border: 0.14;
-  --glossy-inset: 0.20;
+  /* Glossy surfaces – Dark: flach, eine Linie — keine Doppel-Ringe/Balken */
+  --glossy-highlight: 0;
+  --glossy-border: 0;
+  --glossy-inset: 0;
   --glossy-fill: var(--surface);
 }
 
@@ -359,66 +359,63 @@
 }
 
 /**
- * Glossy Surface – ein System für Karten, Panels, Dashboard-Sektionen.
- * Specular-Highlight oben, weicher Schatten, Light/Dark über Tokens.
+ * Glossy Surface – Dashboard-Karten.
+ * Light: dezenter Glanz. Dark: flache Fläche, eine saubere Border (keine Doppel-Linien).
  */
 .glossy-surface {
   position: relative;
   isolation: isolate;
-  background:
-    linear-gradient(
-      168deg,
-      hsl(var(--specular-line) / var(--glossy-highlight)) 0%,
-      hsl(var(--specular-line) / 0) 46%
-    ),
-    hsl(var(--glossy-fill));
-  border: 1px solid hsl(var(--border) / 0.92);
-  box-shadow:
-    inset 0 1px 0 0 hsl(var(--specular-line) / var(--glossy-inset)),
-    0 0 0 1px hsl(var(--specular-line) / calc(var(--glossy-border) * 0.42)),
-    var(--shadow-card);
+  overflow: hidden;
+  background: hsl(var(--glossy-fill));
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-card);
   transition: box-shadow 220ms ease, border-color 220ms ease;
-  contain: style;
+}
+.glossy-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    168deg,
+    hsl(var(--specular-line) / var(--glossy-highlight)) 0%,
+    hsl(var(--specular-line) / 0) 42%
+  );
 }
 .dark .glossy-surface {
-  border-color: hsl(var(--border-strong) / 0.95);
-  box-shadow:
-    inset 0 1px 0 0 hsl(var(--specular-line) / var(--glossy-inset)),
-    0 0 0 1px hsl(var(--specular-line) / calc(var(--glossy-border) * 0.85)),
-    var(--shadow-card);
+  background: hsl(var(--surface));
+  border-color: hsl(var(--border));
+  box-shadow: none;
+}
+.dark .glossy-surface::before {
+  display: none;
 }
 .glossy-surface:hover {
-  box-shadow:
-    inset 0 1px 0 0 hsl(var(--specular-line) / calc(var(--glossy-inset) + 0.04)),
-    var(--shadow-card-hover);
+  box-shadow: var(--shadow-card-hover);
+}
+.dark .glossy-surface:hover {
+  border-color: hsl(var(--border-strong));
+  box-shadow: none;
+}
+.glossy-surface > * {
+  position: relative;
+  z-index: 1;
 }
 .glossy-surface--brand {
   --glossy-fill: var(--brand-soft);
   border-color: hsl(var(--brand) / 0.22);
 }
 .dark .glossy-surface--brand {
-  --glossy-fill: var(--brand);
-  background:
-    linear-gradient(
-      168deg,
-      hsl(var(--specular-line) / 0.09) 0%,
-      hsl(var(--specular-line) / 0) 46%
-    ),
-    hsl(var(--brand) / 0.12);
-  border-color: hsl(var(--brand) / 0.28);
+  background: hsl(var(--brand) / 0.1);
+  border-color: hsl(var(--brand) / 0.25);
 }
 .glossy-surface--alert {
   --glossy-fill: var(--warning-soft);
   border-color: hsl(var(--warning) / 0.28);
 }
 .dark .glossy-surface--alert {
-  background:
-    linear-gradient(
-      168deg,
-      hsl(var(--specular-line) / 0.06) 0%,
-      hsl(var(--specular-line) / 0) 46%
-    ),
-    hsl(var(--warning) / 0.12);
+  background: hsl(var(--warning) / 0.1);
   border-color: hsl(var(--warning) / 0.22);
 }
 .glossy-surface--muted {
@@ -435,24 +432,23 @@
 .glass-card:not(.glossy-surface) {
   position: relative;
   isolation: isolate;
-  background:
-    linear-gradient(
-      168deg,
-      hsl(var(--specular-line) / var(--glossy-highlight)) 0%,
-      hsl(var(--specular-line) / 0) 46%
-    ),
-    hsl(var(--glossy-fill));
-  border: 1px solid hsl(var(--specular-line) / var(--glossy-border));
-  box-shadow:
-    inset 0 1px 0 0 hsl(var(--specular-line) / var(--glossy-inset)),
-    var(--shadow-card);
+  overflow: hidden;
+  background: hsl(var(--glossy-fill));
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-card);
   transition: box-shadow 220ms ease, border-color 220ms ease;
-  contain: layout style;
+}
+.dark .glass-card:not(.glossy-surface) {
+  background: hsl(var(--surface));
+  border-color: hsl(var(--border));
+  box-shadow: none;
 }
 .glass-card:hover {
-  box-shadow:
-    inset 0 1px 0 0 hsl(var(--specular-line) / calc(var(--glossy-inset) + 0.04)),
-    var(--shadow-card-hover);
+  box-shadow: var(--shadow-card-hover);
+}
+.dark .glass-card:hover {
+  border-color: hsl(var(--border-strong));
+  box-shadow: none;
 }
 
 /* Mobile: blur ist auf vielen Geräten zu teuer → komplett aus für flüssiges Scrollen */
@@ -699,6 +695,19 @@ button[class] {
   .dashboard-action-btn {
     width: auto;
   }
+}
+
+/* Innere Dashboard-Panels — flach, eine Linie, keine Glossy-Doppelung */
+.surface-panel {
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+}
+.dark .surface-panel {
+  background: hsl(var(--surface));
+  border-color: hsl(var(--border));
+  box-shadow: none;
 }
 
 /* =========================================================================
@@ -999,8 +1008,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 .dark .dashboard-glossy-ambient::before {
   background:
-    radial-gradient(44rem 32rem at 8% -8%, hsl(var(--brand) / 0.14), transparent 58%),
-    radial-gradient(36rem 28rem at 96% 4%, hsl(var(--brand) / 0.09), transparent 52%);
+    radial-gradient(44rem 32rem at 8% -8%, hsl(var(--brand) / 0.05), transparent 58%),
+    radial-gradient(36rem 28rem at 96% 4%, hsl(var(--brand) / 0.03), transparent 52%);
 }
 .dashboard-glossy-ambient > * {
   position: relative;
@@ -1008,24 +1017,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .glossy-topbar {
-  background:
-    linear-gradient(
-      180deg,
-      hsl(var(--specular-line) / calc(var(--glossy-highlight) * 0.7)) 0%,
-      hsl(var(--specular-line) / 0) 36%
-    ),
-    hsl(var(--background) / 0.92);
-  border-bottom: 1px solid hsl(var(--specular-line) / calc(var(--glossy-border) * 0.55)) !important;
-  box-shadow: inset 0 1px 0 0 hsl(var(--specular-line) / calc(var(--glossy-inset) * 0.55));
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  box-shadow: none;
 }
 .dark .glossy-topbar {
-  background:
-    linear-gradient(
-      180deg,
-      hsl(var(--specular-line) / 0.04) 0%,
-      hsl(var(--specular-line) / 0) 36%
-    ),
-    hsl(var(--background) / 0.94);
+  background: hsl(var(--background));
+  border-bottom-color: hsl(var(--border)) !important;
+  box-shadow: none;
 }
 @media (min-width: 768px) {
   .glossy-topbar {
@@ -1036,31 +1035,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .glossy-bottom-nav {
-  background:
-    linear-gradient(
-      0deg,
-      hsl(var(--specular-line) / 0) 62%,
-      hsl(var(--specular-line) / calc(var(--glossy-highlight) * 0.55)) 100%
-    ),
-    hsl(var(--background) / 0.94);
-  border-top: 1px solid hsl(var(--specular-line) / calc(var(--glossy-border) * 0.45)) !important;
-  box-shadow:
-    inset 0 1px 0 0 hsl(var(--specular-line) / calc(var(--glossy-inset) * 0.45)),
-    0 -8px 24px hsl(220 40% 12% / 0.04);
+  background: hsl(var(--background) / 0.96);
+  border-top: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 -4px 16px hsl(220 40% 12% / 0.04);
   backdrop-filter: saturate(140%) blur(12px);
   -webkit-backdrop-filter: saturate(140%) blur(12px);
 }
 .dark .glossy-bottom-nav {
-  background:
-    linear-gradient(
-      0deg,
-      hsl(var(--specular-line) / 0) 62%,
-      hsl(var(--specular-line) / 0.04) 100%
-    ),
-    hsl(var(--background) / 0.96);
-  box-shadow:
-    inset 0 1px 0 0 hsl(var(--specular-line) / 0.08),
-    0 -8px 28px hsl(0 0% 0% / 0.35);
+  background: hsl(var(--background));
+  border-top-color: hsl(var(--border)) !important;
+  box-shadow: none;
 }
 
 /* Stempel-Hero – glossy Kreis (MA) */
@@ -1109,9 +1093,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   .dashboard-mobile-breathe .dashboard-surface-mobile,
   .dashboard-mobile-breathe .glossy-surface {
-    border-color: hsl(var(--specular-line) / calc(var(--glossy-border) * 0.55));
-    box-shadow: inset 0 1px 0 0 hsl(var(--specular-line) / calc(var(--glossy-inset) * 0.55));
+    border-color: hsl(var(--border));
+    box-shadow: none;
     border-radius: 1.25rem;
+  }
+  .dark .dashboard-mobile-breathe .dashboard-surface-mobile,
+  .dark .dashboard-mobile-breathe .glossy-surface {
+    border-color: hsl(var(--border));
+    box-shadow: none;
   }
 }
 

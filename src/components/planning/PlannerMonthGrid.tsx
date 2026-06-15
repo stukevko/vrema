@@ -54,7 +54,7 @@ export function PlannerMonthGrid({
   const displayMonth = monthAnchor.getMonth();
 
   return (
-    <div className="overflow-hidden rounded-2xl border-2 border-border bg-background shadow-sm">
+    <div className="surface-panel sm:rounded-2xl">
       <div className="border-b border-border bg-surface-muted/30 px-3 py-2">
         <p className="text-xs font-semibold capitalize text-foreground">{monthYearLabel(monthAnchor)}</p>
         <p className="text-[10px] text-muted-foreground">Tag antippen → unten bearbeiten</p>

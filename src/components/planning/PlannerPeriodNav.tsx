@@ -32,7 +32,7 @@ export function PlannerPeriodNav({
 
   return (
     <div className="space-y-2.5">
-      <div className="rounded-xl border border-border bg-surface-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
+      <div className="surface-panel rounded-xl px-3 py-2 text-[11px] text-muted-foreground">
         <span className="font-semibold text-foreground">So geht&apos;s:</span> Monat oben ansehen → Tag antippen → Schicht
         hinzufügen. Für Drag &amp; Team-Übersicht: „Wochen-Board“.
       </div>

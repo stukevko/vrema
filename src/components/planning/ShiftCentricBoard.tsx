@@ -271,12 +271,12 @@ export function ShiftCentricBoard({
 
   return (
     <div
-      className={`mt-2 flex flex-col overflow-hidden rounded-xl border-2 border-border bg-background shadow-sm lg:flex-row ${
+      className={`surface-panel mt-2 flex flex-col lg:flex-row ${
         compact ? "min-h-0" : "min-h-[18rem] sm:min-h-[22rem] lg:min-h-[26rem]"
       }`}
     >
       <aside
-        className={`shrink-0 border-b-2 border-border bg-surface/60 max-lg:max-h-[28vh] lg:border-b-0 lg:border-r-2 ${
+        className={`shrink-0 border-b border-border bg-surface/60 max-lg:max-h-[28vh] lg:border-b-0 lg:border-r ${
           compact ? "lg:w-40" : "lg:w-52"
         } lg:max-h-none`}
       >
@@ -369,7 +369,7 @@ export function ShiftCentricBoard({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex flex-wrap items-end justify-between gap-2 border-b-2 border-border px-2.5 py-2">
+        <div className="flex flex-wrap items-end justify-between gap-2 border-b border-border px-2.5 py-2">
           <div>
             <h3 className={`font-semibold text-foreground ${compact ? "text-sm" : "text-base"}`}>{planWeekRangeLabel}</h3>
             {!compact ? (
@@ -427,7 +427,7 @@ export function ShiftCentricBoard({
               return (
                 <div
                   key={`col-${dow}`}
-                  className={`flex shrink-0 flex-col rounded-lg border-2 border-border bg-muted/25 ${
+                  className={`flex shrink-0 flex-col rounded-lg border border-border bg-muted/20 ${
                     compact ? "w-[8.75rem]" : "w-[10.5rem]"
                   }`}
                 >

@@ -86,7 +86,7 @@ export function DashboardPageHeader({
       )}
     >
       {Icon ? (
-        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl glossy-surface border-0 bg-brand-soft/80 text-brand dark:bg-brand/20">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand/20 bg-brand-soft/70 text-brand dark:border-brand/25 dark:bg-brand/12">
           <Icon className="h-5 w-5" aria-hidden />
         </span>
       ) : null}

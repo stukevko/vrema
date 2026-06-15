@@ -68,7 +68,7 @@ export function ShiftPlanPdfExport({
 
   return (
     <>
-      <details className="group rounded-xl border border-brand/20 bg-gradient-to-br from-brand-soft/80 to-surface open:border-brand/30 dark:border-white/10 dark:from-brand/15 dark:to-surface/90 md:hidden">
+      <details className="group surface-panel rounded-xl open:border-brand/30 md:hidden">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
           <span className="flex min-w-0 items-center gap-2">
             <Share2 className="h-4 w-4 shrink-0 text-brand" aria-hidden />
@@ -96,7 +96,7 @@ export function ShiftPlanPdfExport({
         </div>
       </details>
 
-      <div className="hidden flex-col gap-3 rounded-2xl border border-brand/20 bg-gradient-to-br from-brand-soft/80 to-surface p-3 shadow-sm dark:border-white/10 dark:from-brand/15 dark:to-surface/90 sm:flex-row sm:items-center sm:justify-between md:flex">
+      <div className="surface-panel hidden flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between md:flex">
         <div className="flex min-w-0 items-start gap-3">
           <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand/10 text-brand dark:border-white/10">
             <Share2 className="h-4 w-4" aria-hidden />

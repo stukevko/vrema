@@ -69,7 +69,7 @@ export function PlannerDayEditor({
   const gapSlots = slots.filter((s) => s.assignments.length < neededStaff).length;
 
   return (
-    <div className="rounded-2xl border-2 border-border bg-background">
+    <div className="surface-panel sm:rounded-2xl">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2.5">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground">{formatDayHeading(selectedIso)}</p>
