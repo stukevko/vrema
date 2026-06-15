@@ -64,14 +64,18 @@ import {
   ChevronRight,
 } from "lucide-react";
 import {
+  calendarDateForWeekDay,
   dateForPlannerCycleDay,
   formatPlannerWeekRange,
   isoFromPlannerDate,
+  isoWeekDatesFromMonday,
   mondayOfWeekContaining,
   plannerCycleDateBounds,
   weekIndexForPlannerDate,
 } from "@/lib/planning/cycle-display-date";
-import { type ShiftCycleWeeks } from "@/lib/shift-cycle";
+import { getWeekCycleIndex, type ShiftCycleWeeks } from "@/lib/shift-cycle";
+import { PlannerMonthGrid } from "@/components/planning/PlannerMonthGrid";
+import { PlannerPeriodNav, type PlannerPlanView } from "@/components/planning/PlannerPeriodNav";
 import type { DailyWeatherForecast } from "@/lib/weather/shared";
 import { isRainLikeCondition } from "@/lib/weather/shared";
 import { Avatar } from "@/components/ui/avatar";
@@ -221,8 +225,8 @@ function weatherIconForDay(day: DailyWeatherForecast | null, className: string) 
   return <CloudSun className={className} aria-hidden />;
 }
 
-function dateForCycleDay(weekIndex: number, dayOfWeek: number) {
-  return dateForPlannerCycleDay(weekIndex as ShiftCycleWeeks, dayOfWeek);
+function dateForCycleDay(monday: Date, dayOfWeek: number) {
+  return calendarDateForWeekDay(monday, dayOfWeek);
 }
 
 function getRoleTimelineSegmentTone(role?: string | null) {
@@ -346,8 +350,16 @@ export function ShiftManager({
   );
   const [boardAddSheetOpen, setBoardAddSheetOpen] = useState(false);
   const [boardAddDay, setBoardAddDay] = useState<number | null>(null);
-  const [selectedWeekIndex, setSelectedWeekIndex] = useState<ShiftCycleWeeks>(
-    initialFocusWeek && initialFocusWeek <= shiftCycleWeeks ? initialFocusWeek : 1,
+  const [planCalendarMonday, setPlanCalendarMonday] = useState(() => {
+    if (initialFocusWeek && initialFocusWeek <= shiftCycleWeeks) {
+      return mondayOfWeekContaining(dateForPlannerCycleDay(initialFocusWeek as ShiftCycleWeeks, 1));
+    }
+    return mondayOfWeekContaining(new Date());
+  });
+  const [planView, setPlanView] = useState<PlannerPlanView>("week");
+  const selectedWeekIndex = useMemo(
+    () => getWeekCycleIndex(planCalendarMonday, shiftCycleWeeks),
+    [planCalendarMonday, shiftCycleWeeks],
   );
   const [timelineDate, setTimelineDate] = useState(() =>
     new Intl.DateTimeFormat("en-CA", {
@@ -382,17 +394,16 @@ export function ShiftManager({
     () => isoFromPlannerDate(timelineWeekMonday),
     [timelineWeekMonday],
   );
-  const planWeekMonday = useMemo(
-    () => mondayOfWeekContaining(dateForPlannerCycleDay(selectedWeekIndex, 1)),
-    [selectedWeekIndex],
-  );
+  const planWeekMonday = planCalendarMonday;
   const planWeekRangeLabel = useMemo(() => formatPlannerWeekRange(planWeekMonday), [planWeekMonday]);
   const planWeekMondayIso = useMemo(() => isoFromPlannerDate(planWeekMonday), [planWeekMonday]);
-  const weekDayDates = useMemo(
-    () =>
-      [1, 2, 3, 4, 5, 6, 0].map((dow) => isoFromPlannerDate(dateForPlannerCycleDay(selectedWeekIndex, dow))),
-    [selectedWeekIndex],
-  );
+  const weekDayDates = useMemo(() => isoWeekDatesFromMonday(planCalendarMonday), [planCalendarMonday]);
+  const shiftPlanMonth = (delta: -1 | 1) => {
+    const d = new Date(planCalendarMonday);
+    d.setMonth(d.getMonth() + delta, 1);
+    setPlanCalendarMonday(mondayOfWeekContaining(d));
+    setMessage(null);
+  };
   const canTimelinePrevWeek = useMemo(() => {
     const parsed = new Date(`${timelineDate}T12:00:00`);
     if (Number.isNaN(parsed.getTime())) return false;
@@ -406,45 +417,23 @@ export function ShiftManager({
     return weekIndexForPlannerDate(parsed, shiftCycleWeeks) !== null;
   }, [timelineDate, shiftCycleWeeks]);
   const shiftTimelineWeek = (delta: -1 | 1) => {
-    const parsed = new Date(`${timelineDate}T12:00:00`);
-    if (Number.isNaN(parsed.getTime())) return;
-    parsed.setDate(parsed.getDate() + delta * 7);
-    const week = weekIndexForPlannerDate(parsed, shiftCycleWeeks);
-    if (!week) {
-      setMessage(
-        delta < 0
-          ? "Das ist bereits die erste Planwoche in deinem Zyklus."
-          : "Das ist bereits die letzte Planwoche in deinem Zyklus.",
-      );
-      return;
-    }
-    setTimelineDate(isoFromPlannerDate(parsed));
-    setSelectedWeekIndex(week);
+    const d = new Date(planCalendarMonday);
+    d.setDate(d.getDate() + delta * 7);
+    setPlanCalendarMonday(mondayOfWeekContaining(d));
+    setTimelineDate(isoFromPlannerDate(d));
     setMessage(null);
   };
   const onTimelineDateInput = (iso: string) => {
     setTimelineDate(iso);
     const parsed = new Date(`${iso}T12:00:00`);
     if (Number.isNaN(parsed.getTime())) return;
-    const week = weekIndexForPlannerDate(parsed, shiftCycleWeeks);
-    if (week) {
-      setSelectedWeekIndex(week);
-      setMessage(null);
-    } else {
-      setMessage(
-        `Datum außerhalb des ${shiftCycleWeeks}-Wochen-Zyklus — bitte zwischen ${plannerCycleMinIso} und ${plannerCycleMaxIso} wählen.`,
-      );
-    }
+    setPlanCalendarMonday(mondayOfWeekContaining(parsed));
+    setMessage(null);
   };
   const goTimelineToday = () => {
     const today = new Date();
-    const week = weekIndexForPlannerDate(today, shiftCycleWeeks);
-    if (!week) {
-      setMessage("Heute liegt außerhalb des aktuellen Plan-Zyklus.");
-      return;
-    }
     setTimelineDate(isoFromPlannerDate(today));
-    setSelectedWeekIndex(week);
+    setPlanCalendarMonday(mondayOfWeekContaining(today));
     setMessage(null);
   };
   const [coverageSlotMinutes] = useState<60>(60);
@@ -681,7 +670,7 @@ export function ShiftManager({
       focusWeekParam <= shiftCycleWeeks
     ) {
       const w = focusWeekParam as ShiftCycleWeeks;
-      setSelectedWeekIndex(w);
+      setPlanCalendarMonday(mondayOfWeekContaining(dateForPlannerCycleDay(w, 1)));
       setMessage(`Planungsfokus: Schichtzyklus Woche ${w}.`);
     }
 
@@ -689,11 +678,12 @@ export function ShiftManager({
     const weekParam = Number(params.get("week"));
     const targetWeek: ShiftCycleWeeks =
       weekParam === 2 ? 2 : weekParam === 3 ? 3 : 1;
-    setSelectedWeekIndex(targetWeek);
+    const focusMonday = mondayOfWeekContaining(dateForPlannerCycleDay(targetWeek, 1));
+    setPlanCalendarMonday(focusMonday);
     const dayParam = Number(params.get("day"));
     if (Number.isInteger(dayParam) && dayParam >= 0 && dayParam <= 6) {
       setCostPeakFocusDay(dayParam);
-      const d = dateForCycleDay(targetWeek, dayParam);
+      const d = dateForCycleDay(focusMonday, dayParam);
       setTimelineDate(isoFromDate(d));
     }
     setMessage("Kosten-Peak-Fokus: teure Schichten im Plan markiert (Wochenansicht).");
@@ -1829,7 +1819,7 @@ export function ShiftManager({
               const unavailableCount = members.filter((m) =>
                 (unavailableDaysByUserId[m.id] ?? []).includes(idx),
               ).length;
-              const dateLabel = dateForCycleDay(selectedWeekIndex, idx).toLocaleDateString("de-DE", {
+              const dateLabel = dateForCycleDay(planCalendarMonday, idx).toLocaleDateString("de-DE", {
                 day: "2-digit",
                 month: "2-digit",
               });
@@ -2523,6 +2513,18 @@ export function ShiftManager({
 
   const DesktopView = (
     <>
+      {planView === "month" ? (
+        <PlannerMonthGrid
+          planCalendarMonday={planCalendarMonday}
+          shiftCycleWeeks={shiftCycleWeeks}
+          shifts={displayShifts}
+          onSelectDay={(monday) => {
+            setPlanCalendarMonday(monday);
+            setPlanView("week");
+            setMessage(null);
+          }}
+        />
+      ) : (
       <ShiftCentricBoard
         members={members}
         shifts={displayShifts}
@@ -2671,6 +2673,7 @@ export function ShiftManager({
           });
         }}
       />
+      )}
       <OvertimeRecoveryPopover
         open={overtimePopover != null}
         userId={overtimePopover?.userId ?? null}
@@ -2767,35 +2770,15 @@ export function ShiftManager({
   );
 
   const weekPicker = enableTaskListActions ? (
-    <div className="mt-4 space-y-3">
-      {shiftCycleWeeks > 1 ? (
-        <div
-          className="inline-flex max-w-full gap-1 overflow-x-auto rounded-2xl border border-line bg-surface-muted/80 p-1 scrollbar-hide dark:border-white/10"
-          role="tablist"
-          aria-label="Planungswoche"
-        >
-          {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
-            const week = (idx + 1) as ShiftCycleWeeks;
-            const active = selectedWeekIndex === week;
-            return (
-              <button
-                key={week}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setSelectedWeekIndex(week)}
-                className={`min-h-11 min-w-[4.5rem] touch-manipulation rounded-xl px-4 py-2 text-xs font-semibold transition-all sm:min-h-9 ${
-                  active
-                    ? "bg-brand text-brand-foreground shadow-[var(--shadow-button)]"
-                    : "text-muted-foreground hover:bg-surface hover:text-foreground"
-                }`}
-              >
-                Woche {week}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+    <div className="space-y-3">
+      <PlannerPeriodNav
+        planCalendarMonday={planCalendarMonday}
+        planView={planView}
+        shiftCycleWeeks={shiftCycleWeeks}
+        onSelectMonday={setPlanCalendarMonday}
+        onPlanViewChange={setPlanView}
+        onShiftMonth={shiftPlanMonth}
+      />
       <ShiftPlanPdfExport
         companyName={companyName}
         plan={plan}
@@ -2805,25 +2788,16 @@ export function ShiftManager({
         shifts={pdfShifts}
       />
     </div>
-  ) : shiftCycleWeeks > 1 ? (
-    <div className="mt-3 inline-flex max-w-full gap-1 rounded-2xl border border-line bg-surface-muted/80 p-1 dark:border-white/10">
-      {Array.from({ length: shiftCycleWeeks }).map((_, idx) => {
-        const week = (idx + 1) as ShiftCycleWeeks;
-        return (
-          <button
-            key={week}
-            type="button"
-            onClick={() => setSelectedWeekIndex(week)}
-            className={`min-h-11 rounded-xl px-4 py-2 text-xs font-semibold ${
-              selectedWeekIndex === week ? "bg-brand text-brand-foreground" : "text-muted-foreground"
-            }`}
-          >
-            Woche {week}
-          </button>
-        );
-      })}
-    </div>
-  ) : null;
+  ) : (
+    <PlannerPeriodNav
+      planCalendarMonday={planCalendarMonday}
+      planView={planView}
+      shiftCycleWeeks={shiftCycleWeeks}
+      onSelectMonday={setPlanCalendarMonday}
+      onPlanViewChange={setPlanView}
+      onShiftMonth={shiftPlanMonth}
+    />
+  );
 
   const selectedMemberChip =
     selectedMember ? (

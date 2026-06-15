@@ -268,9 +268,9 @@ export function ShiftCentricBoard({
   };
 
   return (
-    <div className="mt-3 flex min-h-[22rem] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-sm sm:min-h-[28rem] lg:min-h-[32rem] lg:flex-row">
-      <aside className="shrink-0 border-b border-border bg-surface/50 max-lg:max-h-[40vh] lg:w-56 lg:max-h-none lg:border-b-0 lg:border-r">
-        <div className="border-b border-border/60 px-3 py-2.5">
+    <div className="mt-3 flex min-h-[22rem] flex-col overflow-hidden rounded-2xl border-2 border-border bg-background shadow-md sm:min-h-[28rem] lg:min-h-[32rem] lg:flex-row">
+      <aside className="shrink-0 border-b-2 border-border bg-surface/60 max-lg:max-h-[40vh] lg:w-52 lg:max-h-none lg:border-b-0 lg:border-r-2">
+        <div className="border-b border-border px-3 py-2.5">
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Team</p>
           <p className="text-[11px] text-muted-foreground">
             {overtimeFilterOnly ? "Nur kritische Überstunden" : "Antippen oder in Schicht ziehen"}
@@ -359,7 +359,7 @@ export function ShiftCentricBoard({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border px-3 py-3">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b-2 border-border px-3 py-2.5">
           <div>
             <h3 className="text-base font-semibold text-foreground">{planWeekRangeLabel}</h3>
             <p className="text-[11px] text-muted-foreground">Schichten nach Tag · Deckung pro Schichtkarte</p>
@@ -406,8 +406,8 @@ export function ShiftCentricBoard({
           </div>
         </div>
 
-        <div className="flex-1 overflow-x-auto overflow-y-auto p-3 scrollbar-hide">
-          <div className="flex min-w-max gap-3">
+        <div className="flex-1 overflow-x-auto overflow-y-auto p-2.5 scrollbar-hide">
+          <div className="flex min-w-max gap-2">
             {MON_FIRST_DOW.map((dow, colIdx) => {
               const slots = slotsByDay.get(dow) ?? [];
               const wx = weatherWeek[colIdx] ?? null;
@@ -415,9 +415,9 @@ export function ShiftCentricBoard({
               return (
                 <div
                   key={`col-${dow}`}
-                  className="flex w-[11.5rem] shrink-0 flex-col rounded-xl border border-border/80 bg-muted/15"
+                  className="flex w-[10.5rem] shrink-0 flex-col rounded-xl border-2 border-border bg-muted/25"
                 >
-                  <header className="rounded-t-xl border-b border-border/60 bg-background/80 px-2.5 py-2 text-center">
+                  <header className="rounded-t-[0.65rem] border-b border-border bg-background px-2 py-1.5 text-center">
                     <p className="text-xs font-bold text-foreground">{WEEK_SHORT_MON[colIdx]}</p>
                     <p className="text-[10px] tabular-nums text-muted-foreground">{formatShortDate(weekDayDates[colIdx] ?? "")}</p>
                     <div className="mt-1 flex items-center justify-center gap-1 text-muted-foreground">

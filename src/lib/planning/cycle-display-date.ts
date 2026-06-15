@@ -52,6 +52,51 @@ export function plannerCycleDateBounds(cycleWeeks: ShiftCycleWeeks, anchor: Date
   return { startMonday, endSunday };
 }
 
+/** Kompakt: „23.06–29.06“ */
+export function shortWeekRangeLabel(monday: Date): string {
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit" };
+  return `${monday.toLocaleDateString("de-DE", opts)}–${sunday.toLocaleDateString("de-DE", opts)}`;
+}
+
+/** Kalenderwochen (Montage), die einen Monat abdecken — typisch 4–5 Wochen. */
+export function calendarWeeksForMonth(anchor: Date): Date[] {
+  const y = anchor.getFullYear();
+  const m = anchor.getMonth();
+  let monday = mondayOfWeekContaining(new Date(y, m, 1, 12, 0, 0, 0));
+  const weeks: Date[] = [];
+  for (let i = 0; i < 6; i++) {
+    weeks.push(new Date(monday));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    monday = new Date(monday);
+    monday.setDate(monday.getDate() + 7);
+    if (sunday.getMonth() > m && weeks.length >= 4) break;
+    if (weeks.length >= 5 && sunday.getMonth() !== m) break;
+  }
+  return weeks;
+}
+
+export function monthYearLabel(anchor: Date): string {
+  return anchor.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+}
+
+/** ISO-Daten Mo–So für eine Kalenderwoche ab Montag. */
+export function isoWeekDatesFromMonday(monday: Date): string[] {
+  return [1, 2, 3, 4, 5, 6, 0].map((dow) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + dayOrderMonFirst(dow));
+    return isoFromPlannerDate(d);
+  });
+}
+
+export function calendarDateForWeekDay(monday: Date, dayOfWeek: number): Date {
+  const d = new Date(monday);
+  d.setDate(monday.getDate() + dayOrderMonFirst(dayOfWeek));
+  return d;
+}
+
 /** z. B. „18.05. – 24.05.2026“ */
 export function formatPlannerWeekRange(monday: Date): string {
   const sunday = new Date(monday);

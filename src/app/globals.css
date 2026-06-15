@@ -89,8 +89,8 @@
   --specular-line: 0 0% 100%;
   /* Glossy surfaces – Light */
   --glossy-highlight: 0.16;
-  --glossy-border: 0.58;
-  --glossy-inset: 0.68;
+  --glossy-border: 0.72;
+  --glossy-inset: 0.75;
   --glossy-fill: var(--surface);
 }
 
@@ -154,8 +154,8 @@
   --specular-line: 0 0% 100%;
   /* Glossy surfaces – Dark */
   --glossy-highlight: 0.07;
-  --glossy-border: 0.10;
-  --glossy-inset: 0.16;
+  --glossy-border: 0.14;
+  --glossy-inset: 0.20;
   --glossy-fill: var(--surface);
 }
 
@@ -372,12 +372,20 @@
       hsl(var(--specular-line) / 0) 46%
     ),
     hsl(var(--glossy-fill));
-  border: 1px solid hsl(var(--specular-line) / var(--glossy-border));
+  border: 1px solid hsl(var(--border) / 0.92);
   box-shadow:
     inset 0 1px 0 0 hsl(var(--specular-line) / var(--glossy-inset)),
+    0 0 0 1px hsl(var(--specular-line) / calc(var(--glossy-border) * 0.42)),
     var(--shadow-card);
   transition: box-shadow 220ms ease, border-color 220ms ease;
   contain: layout style;
+}
+.dark .glossy-surface {
+  border-color: hsl(var(--border-strong) / 0.95);
+  box-shadow:
+    inset 0 1px 0 0 hsl(var(--specular-line) / var(--glossy-inset)),
+    0 0 0 1px hsl(var(--specular-line) / calc(var(--glossy-border) * 0.85)),
+    var(--shadow-card);
 }
 .glossy-surface:hover {
   box-shadow:
