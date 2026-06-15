@@ -2,9 +2,8 @@ import clsx from "clsx";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-/** Einheitliche Dashboard-Fläche — Marketing-Nähe (rounded-3xl, ein Schatten). */
-export const dashboardSurfaceClass =
-  "rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] dark:border-white/10";
+/** Einheitliche Dashboard-Fläche — glossy Specular (Light/Dark via CSS-Tokens). */
+export const dashboardSurfaceClass = "glossy-surface rounded-3xl";
 
 type Props = {
   title?: string;
@@ -37,11 +36,11 @@ export function DashboardSectionCard({
 }: Props) {
   const surface =
     tone === "brand"
-      ? "border-brand/20 bg-brand-soft/30 dark:border-white/10 dark:bg-brand/10"
+      ? "glossy-surface glossy-surface--brand rounded-3xl"
       : tone === "muted"
-        ? "border-line bg-surface-muted/60 dark:border-white/10"
+        ? "glossy-surface glossy-surface--muted rounded-3xl"
         : tone === "alert"
-          ? "border-warning/30 bg-warning-soft/35 dark:border-white/10 dark:bg-warning/10"
+          ? "glossy-surface glossy-surface--alert rounded-3xl"
           : dashboardSurfaceClass;
 
   const paddingClass =
@@ -51,7 +50,7 @@ export function DashboardSectionCard({
     <section
       id={id}
       aria-label={ariaLabel}
-      className={clsx(surface, paddingClass, "dashboard-surface-mobile max-md:shadow-none", className)}
+      className={clsx(surface, paddingClass, "dashboard-surface-mobile", className)}
     >
       {!bare && (title || description || Icon) ? (
         <div className="mb-4 flex items-start justify-between gap-3">

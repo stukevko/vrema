@@ -77,14 +77,14 @@ export function DashboardPageHeader({
   return (
     <header
       className={clsx(
-        "rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] dark:border-white/10 sm:p-5",
+        "glossy-surface rounded-2xl sm:rounded-3xl",
         Icon ? "flex items-start gap-3 sm:gap-4" : "",
         mobileHidden,
         className,
       )}
     >
       {Icon ? (
-        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-brand-soft text-brand dark:border-white/10 dark:bg-brand/25">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl glossy-surface border-0 bg-brand-soft/80 text-brand dark:bg-brand/20">
           <Icon className="h-5 w-5" aria-hidden />
         </span>
       ) : null}

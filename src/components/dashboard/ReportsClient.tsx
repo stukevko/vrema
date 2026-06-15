@@ -1291,7 +1291,7 @@ export function ReportsClient({
         <div
           id="zeitkorrekturen"
           ref={correctionSectionRef}
-          className={`no-print scroll-mt-24 rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] md:p-5 space-y-3 transition-all duration-500 dark:border-white/10 ${
+          className={`no-print scroll-mt-24 rounded-3xl border bg-card p-4 shadow-[var(--shadow-card)] md:p-5 space-y-3 transition-all duration-500 glossy-surface dark:border-white/10 ${
             highlightCorrections
               ? "border-brand ring-4 ring-brand/40"
               : "border-border"
@@ -1644,7 +1644,7 @@ export function ReportsClient({
 
         <section aria-label="Monat exportieren" className="no-print space-y-4">
         <div className="no-print flex flex-col gap-3 sm:gap-4">
-        <div className="order-2 rounded-3xl border border-brand/20 bg-brand-soft/50 p-4 shadow-[var(--shadow-card)] max-md:order-1 sm:p-6 dark:border-white/10">
+        <div className="order-2 rounded-3xl border border-brand/20 bg-brand-soft/50 p-4 shadow-[var(--shadow-card)] glossy-surface glossy-surface--brand max-md:order-1 sm:p-6">
             <div className="flex items-start gap-3">
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
                 <CheckCircle2 className="h-5 w-5" aria-hidden />
@@ -1766,7 +1766,7 @@ export function ReportsClient({
         )}
 
         {/* Table */}
-        <div className="rounded-3xl bg-card border border-border shadow-[var(--shadow-card)] overflow-hidden dark:border-white/10 print:overflow-visible print:rounded-none print:border print:border-slate-200 print:shadow-none">
+        <div className="rounded-3xl bg-card border border-border shadow-[var(--shadow-card)] overflow-hidden dark:border-white/10 glossy-surface print:overflow-visible print:rounded-none print:border print:border-slate-200 print:shadow-none">
           <div className="no-print px-4 md:px-5 py-3 bg-card/80 flex items-center gap-2">
             <FileText className="w-4 h-4 text-muted-foreground" />
             <span className="text-lg font-semibold tracking-tight text-foreground">Work-Logs – {month}</span>

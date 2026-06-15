@@ -64,10 +64,10 @@ export function DashboardTopbar({
 
   return (
     <header
-      className={clsx(
-        "fixed inset-x-0 top-0 z-[80] w-full max-w-full overflow-visible pt-[env(safe-area-inset-top,0px)] max-md:border-b max-md:border-border/30 max-md:bg-background md:relative md:inset-auto md:z-30 md:overflow-visible md:border-b-0 md:bg-transparent md:pt-0",
-        className,
-      )}
+        className={clsx(
+          "fixed inset-x-0 top-0 z-[80] w-full max-w-full overflow-visible pt-[env(safe-area-inset-top,0px)] glossy-topbar max-md:border-b md:relative md:inset-auto md:z-30 md:overflow-visible md:border-b-0 md:bg-transparent md:pt-0",
+          className,
+        )}
     >
       <div
         className={clsx(

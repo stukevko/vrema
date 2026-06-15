@@ -258,8 +258,8 @@ export function BigClockButton({
             : "w-full gap-3 rounded-3xl border border-white/20 px-6 py-6 dark:border-white/10 sm:py-7",
           stampHero
             ? state.isClockedIn
-              ? "bg-danger text-white shadow-[0_12px_40px_-12px_hsl(var(--danger)/0.55)]"
-              : "bg-brand text-brand-foreground shadow-[0_12px_40px_-12px_hsl(var(--brand)/0.5)]"
+              ? "glossy-stamp glossy-stamp--danger text-white"
+              : "glossy-stamp text-brand-foreground"
             : state.isClockedIn
               ? "bg-gradient-to-b from-danger to-danger text-white shadow-[var(--shadow-button)] hover:brightness-[1.06]"
               : "bg-gradient-to-b from-brand to-brand-hover text-brand-foreground shadow-[var(--shadow-button)] hover:brightness-[1.05]",

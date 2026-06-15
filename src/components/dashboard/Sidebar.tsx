@@ -241,7 +241,7 @@ export function DashboardMobileBottomNav({
     <>
       <nav
         className={clsx(
-          "fixed bottom-0 left-0 right-0 z-50 w-full max-w-full overflow-x-hidden border-t border-border/35 bg-background px-2 pt-1.5 md:hidden pb-safe",
+          "fixed bottom-0 left-0 right-0 z-50 w-full max-w-full overflow-x-hidden glossy-bottom-nav px-2 pt-1.5 md:hidden pb-safe",
           className,
         )}
         aria-label="Hauptnavigation"

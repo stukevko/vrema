@@ -102,7 +102,7 @@ export function DashboardLayoutClient({
         }}
         supportOverlayOpen={supportOverlayOpen}
       />
-      <div className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col bg-background">
+      <div className="dashboard-glossy-ambient relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col">
         <DashboardTopbar
           className="no-print"
           user={user}
