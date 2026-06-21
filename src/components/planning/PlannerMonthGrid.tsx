@@ -26,15 +26,13 @@ type PlannerMonthGridProps = {
 function formatDayNumber(date: Date, inMonth: boolean, isFirstOfMonth: boolean): string {
   if (!inMonth) return String(date.getDate());
   if (isFirstOfMonth) {
-    return date.toLocaleDateString("de-DE", { day: "numeric", month: "long" });
+    return date.toLocaleDateString("de-DE", { day: "numeric", month: "short" });
   }
   return String(date.getDate());
 }
 
 function formatShiftTime(startTime: string, endTime: string): string {
-  const s = startTime.slice(0, 5);
-  const e = endTime.slice(0, 5);
-  return `${s}–${e}`;
+  return `${startTime.slice(0, 5)}–${endTime.slice(0, 5)}`;
 }
 
 export function PlannerMonthGrid({
@@ -98,30 +96,36 @@ export function PlannerMonthGrid({
   }, [weeks, shifts, shiftCycleWeeks]);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="grid grid-cols-7 border-b border-border/80">
-        {DOW_LABELS.map((label) => (
+    <div className="overflow-hidden rounded-[1.25rem] border border-border/50 bg-card shadow-[0_1px_0_rgba(0,0,0,0.04),0_8px_30px_-16px_rgba(0,0,0,0.12)]">
+      <div className="grid grid-cols-7 border-b border-border/40 bg-muted/15">
+        {DOW_LABELS.map((label, idx) => (
           <div
             key={label}
-            className="border-r border-border/60 py-2 text-center text-[11px] font-medium text-muted-foreground last:border-r-0"
+            className={`py-2.5 text-center text-[11px] font-semibold ${
+              idx >= 5 ? "text-muted-foreground/70" : "text-muted-foreground"
+            }`}
           >
             {label}
           </div>
         ))}
       </div>
 
-      <div className="divide-y divide-border/80">
-        {weeks.map((weekMonday) => {
+      <div>
+        {weeks.map((weekMonday, weekIdx) => {
           const weekIso = isoFromPlannerDate(weekMonday);
           return (
-            <div key={weekIso} className="grid grid-cols-7 divide-x divide-border/60">
-              {MON_FIRST_DOW.map((dow) => {
+            <div
+              key={weekIso}
+              className={`grid grid-cols-7 ${weekIdx > 0 ? "border-t border-border/35" : ""}`}
+            >
+              {MON_FIRST_DOW.map((dow, colIdx) => {
                 const date = new Date(weekMonday);
                 date.setDate(weekMonday.getDate() + dayOrderMonFirst(dow));
                 const iso = isoFromPlannerDate(date);
                 const inMonth = date.getMonth() === displayMonth && date.getFullYear() === displayYear;
                 const isToday = iso === todayIso;
                 const isFirstOfMonth = inMonth && date.getDate() === 1;
+                const isWeekend = colIdx >= 5;
                 const dayShifts = shiftsByIso.get(iso) ?? [];
                 const holidayName =
                   holidayRegion != null
@@ -132,34 +136,43 @@ export function PlannerMonthGrid({
                   <button
                     key={`${weekIso}-${dow}`}
                     type="button"
-                    onClick={() => onAddShift(iso)}
-                    className={`group relative flex min-h-[4.5rem] flex-col items-stretch p-1 text-left transition sm:min-h-[5.5rem] sm:p-1.5 ${
+                    disabled={!inMonth}
+                    onClick={() => {
+                      if (!inMonth) return;
+                      onAddShift(iso);
+                    }}
+                    className={`group relative flex min-h-[5.25rem] flex-col border-r border-border/35 p-1.5 text-left transition last:border-r-0 sm:min-h-[6.75rem] sm:p-2 ${
                       inMonth
-                        ? "bg-card hover:bg-muted/20"
-                        : "cursor-default bg-muted/5 text-muted-foreground/35 hover:bg-muted/5"
-                    }`}
+                        ? isWeekend
+                          ? "bg-muted/[0.08] hover:bg-muted/25"
+                          : "bg-card hover:bg-muted/20"
+                        : "cursor-default bg-muted/[0.04] hover:bg-muted/[0.04]"
+                    } ${isToday && inMonth ? "ring-1 ring-inset ring-red-500/15" : ""}`}
                   >
-                    <div className="mb-0.5 flex shrink-0 items-start justify-end px-0.5">
+                    <div className="mb-1 flex shrink-0 justify-end">
                       {isToday ? (
-                        <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold tabular-nums text-white">
+                        <span className="inline-flex h-[1.35rem] min-w-[1.35rem] items-center justify-center rounded-full bg-[#FF3B30] px-1 text-[11px] font-bold tabular-nums text-white shadow-sm">
                           {date.getDate()}
                         </span>
                       ) : (
                         <span
                           className={`text-[11px] tabular-nums sm:text-xs ${
-                            inMonth ? "font-medium text-foreground" : "text-muted-foreground/40"
-                          } ${isFirstOfMonth ? "text-[10px] font-semibold sm:text-[11px]" : ""}`}
+                            inMonth
+                              ? isFirstOfMonth
+                                ? "font-semibold text-foreground"
+                                : "font-medium text-foreground/90"
+                              : "font-normal text-muted-foreground/35"
+                          }`}
                         >
                           {formatDayNumber(date, inMonth, isFirstOfMonth)}
                         </span>
                       )}
                     </div>
 
-                    <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
-                      {holidayName ? (
+                    <div className="flex min-h-0 flex-1 flex-col gap-[3px] overflow-hidden">
+                      {holidayName && inMonth ? (
                         <span
-                          className="truncate rounded px-1 py-0.5 text-[9px] font-medium leading-tight text-violet-100 sm:text-[10px]"
-                          style={{ backgroundColor: "rgb(88, 86, 214)" }}
+                          className="truncate rounded-[5px] bg-[#5856D6] px-1.5 py-[3px] text-[10px] font-medium leading-none text-white shadow-sm"
                           title={holidayName}
                         >
                           {holidayName}
@@ -167,7 +180,7 @@ export function PlannerMonthGrid({
                       ) : null}
                       {dayShifts.slice(0, inMonth ? 3 : 0).map((shift) => {
                         const label = memberLabelById.get(shift.userId) ?? "Schicht";
-                        const shortLabel = label.split(" ")[0] ?? label;
+                        const shortLabel = label.split(/\s+/)[0] ?? label;
                         return (
                           <span
                             key={shift.id}
@@ -184,8 +197,7 @@ export function PlannerMonthGrid({
                                 onEditShift(shift);
                               }
                             }}
-                            className="truncate rounded px-1 py-0.5 text-[9px] font-medium leading-tight text-white sm:text-[10px]"
-                            style={{ backgroundColor: "rgb(0, 122, 255)" }}
+                            className="truncate rounded-[5px] bg-[#007AFF] px-1.5 py-[3px] text-[10px] font-medium leading-none text-white shadow-sm transition hover:brightness-110"
                             title={`${label} · ${formatShiftTime(shift.startTime, shift.endTime)}`}
                           >
                             {shortLabel} {formatShiftTime(shift.startTime, shift.endTime)}
@@ -193,8 +205,8 @@ export function PlannerMonthGrid({
                         );
                       })}
                       {inMonth && dayShifts.length > 3 ? (
-                        <span className="px-0.5 text-[9px] font-medium text-muted-foreground">
-                          +{dayShifts.length - 3} weitere
+                        <span className="px-0.5 text-[10px] font-medium text-muted-foreground">
+                          +{dayShifts.length - 3}
                         </span>
                       ) : null}
                     </div>

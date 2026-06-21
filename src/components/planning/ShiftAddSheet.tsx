@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Clock, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/avatar";
 
@@ -78,32 +78,34 @@ export function ShiftAddSheet({
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/25 backdrop-blur-[6px]"
         aria-label="Schließen"
         onClick={onClose}
       />
-      <div className="relative flex max-h-[min(520px,92dvh)] w-full max-w-sm flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-xl sm:rounded-2xl">
-        <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
-          <div>
-            <h2 id="shift-add-title" className="text-base font-semibold text-foreground">
+      <div className="relative flex max-h-[min(540px,92dvh)] w-full max-w-[340px] flex-col overflow-hidden rounded-t-[1.35rem] border border-border/60 bg-card/95 shadow-[0_24px_80px_-12px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:rounded-[1.35rem]">
+        <div className="flex items-start justify-between gap-3 px-5 pb-2 pt-5">
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
               Schicht eintragen
+            </p>
+            <h2 id="shift-add-title" className="mt-1 text-lg font-semibold tracking-tight text-foreground">
+              {heading}
             </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">{heading}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/40"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted/60 text-muted-foreground transition hover:bg-muted"
             aria-label="Schließen"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-2">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Person</p>
-            <div className="mt-2 max-h-40 space-y-1.5 overflow-y-auto">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">Wer arbeitet?</p>
+            <div className="space-y-1.5">
               {members.map((member) => {
                 const label = (member.name ?? member.email).trim();
                 const active = member.id === selectedUserId;
@@ -113,20 +115,27 @@ export function ShiftAddSheet({
                     type="button"
                     disabled={isPending}
                     onClick={() => onSelectMember(member.id)}
-                    className={`flex min-h-10 w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left transition ${
+                    className={`flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition ${
                       active
-                        ? "border-brand bg-brand-soft text-brand"
-                        : "border-border bg-background text-foreground hover:bg-muted/40"
+                        ? "bg-brand-soft ring-1 ring-brand/40"
+                        : "hover:bg-muted/50"
                     }`}
                   >
                     <Avatar
                       src={member.image}
                       fallback={label.slice(0, 2).toUpperCase()}
                       alt={label}
-                      className="h-7 w-7 shrink-0"
-                      fallbackClassName="text-[9px]"
+                      className="h-8 w-8 shrink-0"
+                      fallbackClassName="text-[10px]"
                     />
-                    <span className="truncate text-sm font-medium">{label}</span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{label}</span>
+                    {active ? (
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand text-brand-foreground">
+                        <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
+                      </span>
+                    ) : (
+                      <span className="h-5 w-5 shrink-0 rounded-full border border-border/80" aria-hidden />
+                    )}
                   </button>
                 );
               })}
@@ -134,48 +143,49 @@ export function ShiftAddSheet({
           </div>
 
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Uhrzeit</p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <label className="block">
-                <span className="mb-1 block text-xs text-muted-foreground">Von</span>
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-semibold tabular-nums"
-                  disabled={isPending}
-                />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs text-muted-foreground">Bis</span>
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-semibold tabular-nums"
-                  disabled={isPending}
-                />
-              </label>
+            <p className="mb-2 text-xs font-medium text-muted-foreground">Wann?</p>
+            <div className="overflow-hidden rounded-2xl border border-border/70 bg-muted/20">
+              <div className="grid grid-cols-2 divide-x divide-border/60">
+                <label className="flex flex-col px-4 py-3">
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Von</span>
+                  <input
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    disabled={isPending}
+                    className="mt-1 w-full border-0 bg-transparent p-0 text-xl font-semibold tabular-nums text-foreground outline-none"
+                  />
+                </label>
+                <label className="flex flex-col px-4 py-3">
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Bis</span>
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    disabled={isPending}
+                    className="mt-1 w-full border-0 bg-transparent p-0 text-xl font-semibold tabular-nums text-foreground outline-none"
+                  />
+                </label>
+              </div>
             </div>
             {invalidRange ? (
-              <p className="mt-1.5 text-xs text-warning-foreground">Start und Ende müssen unterschiedlich sein.</p>
+              <p className="mt-2 text-center text-xs text-warning-foreground">Start und Ende müssen unterschiedlich sein.</p>
             ) : null}
           </div>
         </div>
 
-        <div className="shrink-0 border-t border-border px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="shrink-0 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
           <Button
             type="button"
             variant="brand"
             size="md"
-            className="w-full min-h-11"
+            className="min-h-11 w-full rounded-xl"
             disabled={!canSave}
             onClick={() => {
               if (dayOfWeek == null || !selectedUserId) return;
               onConfirm(dayOfWeek, selectedUserId, startTime, endTime);
             }}
           >
-            <Clock className="mr-1.5 h-4 w-4" aria-hidden />
             Speichern
           </Button>
         </div>

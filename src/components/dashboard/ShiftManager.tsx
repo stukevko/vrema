@@ -23,6 +23,7 @@ import { buildMemberWeekMinutes, slotKey, type BoardShiftSlot } from "@/lib/plan
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import { useVocabulary } from "@/components/VocabularyContext";
 import { ShiftAddSheet } from "@/components/planning/ShiftAddSheet";
+import { ShiftEditSheet } from "@/components/planning/ShiftEditSheet";
 import { ShiftPlanPdfExport } from "@/components/planning/ShiftPlanPdfExport";
 import { isOpenShiftPlaceholderEmail } from "@/lib/planning/open-shift-email";
 import { OvertimeRecoveryPopover } from "@/components/planning/OvertimeRecoveryPopover";
@@ -2523,6 +2524,9 @@ export function ShiftManager({
   };
 
   const editShiftFromCalendar = (shift: ShiftRow) => {
+    setBoardAddSheetOpen(false);
+    setBoardAddDay(null);
+    setBoardAddDateIso(null);
     const member = members.find((m) => m.id === shift.userId);
     setShiftEdit({
       userId: shift.userId,
@@ -2585,9 +2589,8 @@ export function ShiftManager({
 
   const PlannerMainView = (
     <>
-      <p className="mb-2 text-[11px] text-muted-foreground">
-        <span className="font-semibold text-foreground">So geht&apos;s:</span> Tag antippen → Person wählen → Von/Bis
-        eintragen → Speichern.
+      <p className="mb-3 text-center text-[11px] text-muted-foreground/90">
+        Tag antippen · Person · Uhrzeit · fertig
       </p>
       <PlannerMonthGrid
         monthAnchor={planMonthAnchor}
@@ -2728,8 +2731,8 @@ export function ShiftManager({
   return (
     <section className={`${dashboardSurfaceClass} min-w-0 max-w-full p-4 sm:p-5`}>
       {enableTaskListActions ? (
-        <div className="mb-3 rounded-xl border border-border bg-muted/10 px-3 py-2.5">
-          <p className="text-xs leading-snug text-foreground">
+        <div className="mb-3 rounded-2xl border border-border/50 bg-muted/15 px-3 py-2">
+          <p className="text-center text-[11px] leading-snug text-foreground/90">
             <span
               className={
                 staffingGaps.openShiftSlots === 0 && restRiskShiftCount === 0
@@ -2766,155 +2769,70 @@ export function ShiftManager({
       <ToastContainer toasts={toasts} remove={removeToast} />
 
       {shiftEdit ? (
-        <div
-          className={`fixed inset-0 z-[100] flex justify-center bg-black/45 ${
-            renderDesktopTree ? "items-end p-0 md:items-center md:bg-surface/70 md:p-4" : "items-stretch p-0"
-          }`}
-          role="dialog"
-          aria-modal="true"
-          onPointerDown={(e) => {
-            if (e.target === e.currentTarget) setShiftEdit(null);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              let s = toMinutes(shiftEdit.startTime);
-              let en = toMinutes(shiftEdit.endTime);
-              if (s === null || en === null || en === s) {
-                setMessage("Ungültige Zeitspanne.");
-                return;
-              }
-              s = snapMinutes(s);
-              const rawEnd = en < s ? en + 24 * 60 : en;
-              const snappedEnd = Math.max(s + TIMELINE_SNAP_MINUTES, snapMinutes(rawEnd));
-              const endTimeValue = minutesToHHMM(snappedEnd >= 24 * 60 ? snappedEnd - 24 * 60 : snappedEnd);
-              setMessage(null);
-              startTransition(async () => {
-                const ok = await persistShiftForDay(
-                  {
-                    userId: shiftEdit.userId,
-                    weekIndex: selectedWeekIndex,
-                    dayOfWeek: shiftEdit.dayOfWeek,
-                    startTime: minutesToHHMM(s),
-                    endTime: endTimeValue,
-                  },
-                  "Schicht gespeichert.",
-                );
-                if (!ok) return;
-                setShiftEdit(null);
-                router.refresh();
-              });
+        <ShiftEditSheet
+          open
+          dayOfWeek={shiftEdit.dayOfWeek}
+          memberLabel={shiftEdit.label}
+          startTime={shiftEdit.startTime}
+          endTime={shiftEdit.endTime}
+          slotLabel={slot}
+          isPending={isPending}
+          onClose={() => setShiftEdit(null)}
+          onChangeStart={(value) => setShiftEdit({ ...shiftEdit, startTime: value })}
+          onChangeEnd={(value) => setShiftEdit({ ...shiftEdit, endTime: value })}
+          onSave={() => {
+            let s = toMinutes(shiftEdit.startTime);
+            let e = toMinutes(shiftEdit.endTime);
+            if (s === null || e === null || e <= s) {
+              setMessage("Ungültige Zeitspanne.");
+              return;
             }
+            s = snapMinutes(s);
+            e = Math.max(s + TIMELINE_SNAP_MINUTES, snapMinutes(e));
+            setMessage(null);
+            startTransition(async () => {
+              const ok = await persistShiftForDay(
+                {
+                  userId: shiftEdit.userId,
+                  weekIndex: selectedWeekIndex,
+                  dayOfWeek: shiftEdit.dayOfWeek,
+                  startTime: minutesToHHMM(s),
+                  endTime: minutesToHHMM(e),
+                },
+                "Schicht gespeichert.",
+              );
+              if (!ok) return;
+              setShiftEdit(null);
+              router.refresh();
+            });
           }}
-        >
-          <div
-            className={`w-full max-w-full overflow-y-auto border border-border bg-card px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 ${
-              renderDesktopTree
-                ? "max-h-[min(88dvh,640px)] rounded-t-3xl border-b-0 sm:max-h-[90vh] md:max-h-none md:max-w-sm md:rounded-2xl md:border md:pb-5 md:shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
-                : "h-[100dvh] rounded-none border-0"
-            }`}
-          >
-            <h3 className="text-base font-semibold text-foreground md:text-sm">{slot} bearbeiten</h3>
-            <p className="mt-1 text-xs text-muted-foreground">{DAY_LABELS[shiftEdit.dayOfWeek]} · {shiftEdit.label}</p>
-            <div className="mt-4 grid gap-3">
-              <div>
-                <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Start</label>
-                <input
-                  type="time"
-                  step={900}
-                  value={shiftEdit.startTime.slice(0, 5)}
-                  onChange={(e) => setShiftEdit({ ...shiftEdit, startTime: e.target.value })}
-                  className="mt-1 min-h-12 w-full touch-manipulation rounded-lg border border-border bg-surface px-3 py-3 text-base text-foreground md:min-h-0 md:py-2 md:text-sm"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Ende</label>
-                <input
-                  type="time"
-                  step={900}
-                  value={shiftEdit.endTime.slice(0, 5)}
-                  onChange={(e) => setShiftEdit({ ...shiftEdit, endTime: e.target.value })}
-                  className="mt-1 min-h-12 w-full touch-manipulation rounded-lg border border-border bg-surface px-3 py-3 text-base text-foreground md:min-h-0 md:py-2 md:text-sm"
-                />
-              </div>
-            </div>
-            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => {
-                  let s = toMinutes(shiftEdit.startTime);
-                  let e = toMinutes(shiftEdit.endTime);
-                  if (s === null || e === null || e <= s) {
-                    setMessage("Ungültige Zeitspanne.");
-                    return;
-                  }
-                  s = snapMinutes(s);
-                  e = Math.max(s + TIMELINE_SNAP_MINUTES, snapMinutes(e));
-                  setMessage(null);
-                  startTransition(async () => {
-                    const ok = await persistShiftForDay(
-                      {
-                        userId: shiftEdit.userId,
-                        weekIndex: selectedWeekIndex,
-                        dayOfWeek: shiftEdit.dayOfWeek,
-                        startTime: minutesToHHMM(s),
-                        endTime: minutesToHHMM(e),
-                      },
-                      "Schicht gespeichert.",
-                    );
-                    if (!ok) return;
-                    setShiftEdit(null);
-                    router.refresh();
-                  });
-                }}
-                className="min-h-12 w-full touch-manipulation rounded-lg border border-brand/35 bg-brand-soft px-4 py-3 text-sm font-semibold text-brand transition-all hover:bg-brand/15 hover:shadow-md disabled:opacity-50 sm:w-auto sm:py-2"
-              >
-                Speichern
-              </button>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => {
-                  setMessage(null);
-                  startTransition(async () => {
-                    if (shiftEdit.shiftId) {
-                      const removed = await removeShiftViaApi(shiftEdit.shiftId);
-                      if (!removed.ok) {
-                        setMessage(removed.error);
-                        return;
-                      }
-                      setHiddenShiftIds((prev) => new Set(prev).add(shiftEdit.shiftId!));
-                    } else {
-                      const cleared = await clearShiftForDay({
-                        userId: shiftEdit.userId,
-                        weekIndex: selectedWeekIndex,
-                        dayOfWeek: shiftEdit.dayOfWeek,
-                      });
-                      if (!cleared.ok) {
-                        setMessage(cleared.error);
-                        return;
-                      }
-                    }
-                    setShiftEdit(null);
-                    setMessage("Schicht gelöscht.");
-                    router.refresh();
-                  });
-                }}
-                className="min-h-12 w-full touch-manipulation rounded-lg border border-danger/35 bg-danger-soft px-4 py-3 text-sm text-danger-foreground transition-colors hover:bg-danger-soft/90 disabled:opacity-50 sm:w-auto sm:py-2"
-              >
-                Löschen
-              </button>
-              <button
-                type="button"
-                onClick={() => setShiftEdit(null)}
-                className="min-h-12 w-full touch-manipulation rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground transition-colors sm:w-auto sm:py-2 md:hover:bg-card/80"
-              >
-                Abbrechen
-              </button>
-            </div>
-          </div>
-        </div>
+          onDelete={() => {
+            setMessage(null);
+            startTransition(async () => {
+              if (shiftEdit.shiftId) {
+                const removed = await removeShiftViaApi(shiftEdit.shiftId);
+                if (!removed.ok) {
+                  setMessage(removed.error);
+                  return;
+                }
+                setHiddenShiftIds((prev) => new Set(prev).add(shiftEdit.shiftId!));
+              } else {
+                const cleared = await clearShiftForDay({
+                  userId: shiftEdit.userId,
+                  weekIndex: selectedWeekIndex,
+                  dayOfWeek: shiftEdit.dayOfWeek,
+                });
+                if (!cleared.ok) {
+                  setMessage(cleared.error);
+                  return;
+                }
+              }
+              setShiftEdit(null);
+              setMessage("Schicht gelöscht.");
+              router.refresh();
+            });
+          }}
+        />
       ) : null}
 
       {renderDesktopTree && plannerComplianceHints.length > 0 ? (
