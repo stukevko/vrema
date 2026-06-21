@@ -2446,10 +2446,10 @@ export function ShiftManager({
     });
   };
 
-  const saveBoardShift = (dayOfWeek: number, slotStart: string, slotEnd: string) => {
-    if (!selectedUserId) {
-      setMessage("Zuerst oben eine Person wählen.");
-      showToast("Zuerst oben eine Person wählen.", "error");
+  const saveBoardShift = (dayOfWeek: number, slotStart: string, slotEnd: string, userId: string) => {
+    if (!userId) {
+      setMessage("Bitte eine Person wählen.");
+      showToast("Bitte eine Person wählen.", "error");
       return;
     }
     const slotStartNorm = slotStart.slice(0, 5);
@@ -2460,7 +2460,7 @@ export function ShiftManager({
       setMessage("Bitte gültige Start- und Endzeit wählen.");
       return;
     }
-    const conflict = conflictTypeByCell.get(`${selectedUserId}-${dayOfWeek}`);
+    const conflict = conflictTypeByCell.get(`${userId}-${dayOfWeek}`);
     if (conflict) {
       setMessage(conflict === "SICK" ? "Krank — keine Schicht möglich." : "Urlaub — keine Schicht möglich.");
       return;
@@ -2469,7 +2469,7 @@ export function ShiftManager({
     startTransition(async () => {
       const ok = await persistShiftForDay(
         {
-          userId: selectedUserId,
+          userId,
           weekIndex: selectedWeekIndex,
           dayOfWeek,
           startTime: slotStartNorm,
@@ -2478,24 +2478,15 @@ export function ShiftManager({
         `Schicht angelegt (${slotStartNorm}–${slotEndNorm}).`,
       );
       if (!ok) return;
-      setStartTime(slotStartNorm);
-      setEndTime(slotEndNorm);
+      setSelectedUserId(userId);
       showToast(`Schicht angelegt (${slotStartNorm}–${slotEndNorm}).`, "success");
       scheduleBoardRefresh();
     });
   };
 
   const openAddForDay = (dayOfWeek: number) => {
-    if (!selectedUserId && members[0]) setSelectedUserId(members[0].id);
     setBoardAddDay(dayOfWeek);
     setBoardAddSheetOpen(true);
-    if (activeTemplateId) {
-      const t = shiftTemplates.find((x) => x.id === activeTemplateId);
-      if (t) {
-        setStartTime(t.startTime.slice(0, 5));
-        setEndTime(t.endTime.slice(0, 5));
-      }
-    }
   };
 
   const editPlannerAssignment = (slot: BoardShiftSlot, userId: string, shiftId: string) => {
@@ -2557,9 +2548,7 @@ export function ShiftManager({
         shifts={displayShifts}
         shiftTemplates={shiftTemplates}
         neededStaff={neededStaff}
-        selectedUserId={selectedUserId}
         isPending={isPending}
-        onSelectMember={setSelectedUserId}
         onOpenAddForDay={openAddForDay}
         onEditAssignment={editPlannerAssignment}
         onRemoveAssignment={removePlannerAssignment}
@@ -2607,18 +2596,18 @@ export function ShiftManager({
       <ShiftAddSheet
         open={boardAddSheetOpen}
         dayOfWeek={boardAddDay}
-        memberLabel={selectedMember?.name ?? selectedMember?.email ?? null}
-        templates={shiftTemplates}
-        presetStart={startTime}
-        presetEnd={endTime}
-        activeTemplateId={activeTemplateId}
+        members={members}
+        selectedUserId={selectedUserId}
+        defaultStart={startTime}
+        defaultEnd={endTime}
         isPending={isPending}
+        onSelectMember={setSelectedUserId}
         onClose={() => {
           setBoardAddSheetOpen(false);
           setBoardAddDay(null);
         }}
-        onConfirm={(dayOfWeek, slotStart, slotEnd) => {
-          saveBoardShift(dayOfWeek, slotStart, slotEnd);
+        onConfirm={(dayOfWeek, userId, slotStart, slotEnd) => {
+          saveBoardShift(dayOfWeek, slotStart, slotEnd, userId);
           setBoardAddSheetOpen(false);
           setBoardAddDay(null);
         }}
