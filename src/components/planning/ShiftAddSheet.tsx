@@ -15,11 +15,17 @@ export type ShiftAddSheetMember = {
   image?: string | null;
 };
 
+export type ShiftAddSheetExisting = {
+  label: string;
+  timeRange: string;
+};
+
 type Props = {
   open: boolean;
   dateIso?: string | null;
   dayOfWeek: number | null;
   members: ShiftAddSheetMember[];
+  existingShifts?: ShiftAddSheetExisting[];
   selectedUserId: string;
   defaultStart?: string;
   defaultEnd?: string;
@@ -27,6 +33,12 @@ type Props = {
   onSelectMember: (userId: string) => void;
   onClose: () => void;
   onConfirm: (dayOfWeek: number, userId: string, startTime: string, endTime: string) => void;
+  onConfirmAndAddAnother?: (
+    dayOfWeek: number,
+    userId: string,
+    startTime: string,
+    endTime: string,
+  ) => void;
 };
 
 function formatDateHeading(dateIso: string | null | undefined, dayOfWeek: number | null): string {
@@ -47,6 +59,7 @@ export function ShiftAddSheet({
   dateIso,
   dayOfWeek,
   members,
+  existingShifts = [],
   selectedUserId,
   defaultStart = "09:00",
   defaultEnd = "17:00",
@@ -54,6 +67,7 @@ export function ShiftAddSheet({
   onSelectMember,
   onClose,
   onConfirm,
+  onConfirmAndAddAnother,
 }: Props) {
   const [startTime, setStartTime] = useState(defaultStart);
   const [endTime, setEndTime] = useState(defaultEnd);
@@ -105,6 +119,21 @@ export function ShiftAddSheet({
         </div>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-2">
+          {existingShifts.length > 0 ? (
+            <div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Bereits am Tag
+              </p>
+              <ul className="mt-1 space-y-0.5">
+                {existingShifts.map((row) => (
+                  <li key={`${row.label}-${row.timeRange}`} className="text-xs text-foreground">
+                    {row.label} · {row.timeRange}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           <div>
             <p className="mb-2 text-xs font-medium text-muted-foreground">Wer arbeitet?</p>
             <div className="space-y-1.5">
@@ -176,7 +205,7 @@ export function ShiftAddSheet({
           </div>
         </div>
 
-        <div className="shrink-0 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
+        <div className="shrink-0 space-y-2 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
           <Button
             type="button"
             variant="brand"
@@ -190,6 +219,21 @@ export function ShiftAddSheet({
           >
             Speichern
           </Button>
+          {onConfirmAndAddAnother ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              className="min-h-11 w-full rounded-xl"
+              disabled={!canSave}
+              onClick={() => {
+                if (dayOfWeek == null || !selectedUserId) return;
+                onConfirmAndAddAnother(dayOfWeek, selectedUserId, startTime, endTime);
+              }}
+            >
+              Speichern & nächste Person
+            </Button>
+          ) : null}
         </div>
         </div>
       </div>

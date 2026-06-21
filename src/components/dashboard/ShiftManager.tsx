@@ -2311,7 +2311,13 @@ export function ShiftManager({
     });
   };
 
-  const saveBoardShift = (dayOfWeek: number, slotStart: string, slotEnd: string, userId: string) => {
+  const saveBoardShift = (
+    dayOfWeek: number,
+    slotStart: string,
+    slotEnd: string,
+    userId: string,
+    keepOpen?: boolean,
+  ) => {
     if (!userId) {
       setMessage("Bitte eine Person wählen.");
       showToast("Bitte eine Person wählen.", "error");
@@ -2343,11 +2349,45 @@ export function ShiftManager({
         `Schicht angelegt (${slotStartNorm}–${slotEndNorm}).`,
       );
       if (!ok) return;
-      setSelectedUserId(userId);
-      showToast(`Schicht angelegt (${slotStartNorm}–${slotEndNorm}).`, "success");
       scheduleBoardRefresh();
+      if (keepOpen) {
+        const assigned = new Set(
+          displayShifts
+            .filter(
+              (s) => !s.isDraft && s.dayOfWeek === dayOfWeek && s.weekIndex === selectedWeekIndex,
+            )
+            .map((s) => s.userId),
+        );
+        assigned.add(userId);
+        const next = members.find(
+          (m) =>
+            !assigned.has(m.id) &&
+            !isOpenShiftPlaceholderEmail(m.email) &&
+            !conflictTypeByCell.has(`${m.id}-${dayOfWeek}`),
+        );
+        if (next) setSelectedUserId(next.id);
+        showToast("Gespeichert — nächste Person wählen.", "success");
+      } else {
+        setSelectedUserId(userId);
+        showToast(`Schicht angelegt (${slotStartNorm}–${slotEndNorm}).`, "success");
+      }
     });
   };
+
+  const boardAddExistingShifts = useMemo(() => {
+    if (boardAddDay == null) return [];
+    return displayShifts
+      .filter(
+        (s) => !s.isDraft && s.dayOfWeek === boardAddDay && s.weekIndex === selectedWeekIndex,
+      )
+      .map((s) => {
+        const m = members.find((x) => x.id === s.userId);
+        return {
+          label: (m?.name ?? m?.email ?? "Mitarbeiter").trim(),
+          timeRange: `${s.startTime.slice(0, 5)}–${s.endTime.slice(0, 5)}`,
+        };
+      });
+  }, [boardAddDay, displayShifts, selectedWeekIndex, members]);
 
   const openAddForDay = (dayOfWeek: number) => {
     setBoardAddDay(dayOfWeek);
@@ -2436,7 +2476,7 @@ export function ShiftManager({
   const PlannerMainView = (
     <>
       <p className="mb-3 text-center text-[11px] text-muted-foreground/90">
-        Tag antippen · Person · Uhrzeit · fertig
+        Am Tag „+ Schicht“ · Person · Uhrzeit · Speichern — für mehrere Personen wiederholen
       </p>
       <PlannerMonthGrid
         monthAnchor={planMonthAnchor}
@@ -2492,6 +2532,7 @@ export function ShiftManager({
         dateIso={boardAddDateIso}
         dayOfWeek={boardAddDay}
         members={members}
+        existingShifts={boardAddExistingShifts}
         selectedUserId={selectedUserId}
         defaultStart={startTime}
         defaultEnd={endTime}
@@ -2507,6 +2548,9 @@ export function ShiftManager({
           setBoardAddSheetOpen(false);
           setBoardAddDay(null);
           setBoardAddDateIso(null);
+        }}
+        onConfirmAndAddAnother={(dayOfWeek, userId, slotStart, slotEnd) => {
+          saveBoardShift(dayOfWeek, slotStart, slotEnd, userId, true);
         }}
       />
     </>

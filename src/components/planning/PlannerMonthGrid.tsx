@@ -133,20 +133,14 @@ export function PlannerMonthGrid({
                     : null;
 
                 return (
-                  <button
+                  <div
                     key={`${weekIso}-${dow}`}
-                    type="button"
-                    disabled={!inMonth}
-                    onClick={() => {
-                      if (!inMonth) return;
-                      onAddShift(iso);
-                    }}
-                    className={`group relative flex min-h-[5.25rem] flex-col border-r border-border/35 p-1.5 text-left transition last:border-r-0 sm:min-h-[6.75rem] sm:p-2 ${
+                    className={`group relative flex min-h-[5.25rem] flex-col border-r border-border/35 p-1.5 text-left last:border-r-0 sm:min-h-[6.75rem] sm:p-2 ${
                       inMonth
                         ? isWeekend
-                          ? "bg-muted/[0.08] hover:bg-muted/25"
-                          : "bg-card hover:bg-muted/20"
-                        : "cursor-default bg-muted/[0.04] hover:bg-muted/[0.04]"
+                          ? "bg-muted/[0.08]"
+                          : "bg-card"
+                        : "bg-muted/[0.04]"
                     } ${isToday && inMonth ? "ring-1 ring-inset ring-red-500/15" : ""}`}
                   >
                     <div className="mb-1 flex shrink-0 justify-end">
@@ -210,7 +204,17 @@ export function PlannerMonthGrid({
                         </span>
                       ) : null}
                     </div>
-                  </button>
+
+                    {inMonth ? (
+                      <button
+                        type="button"
+                        onClick={() => onAddShift(iso)}
+                        className="mt-auto w-full rounded-md py-0.5 text-[10px] font-semibold text-brand opacity-80 transition hover:bg-brand-soft hover:opacity-100"
+                      >
+                        + Schicht
+                      </button>
+                    ) : null}
+                  </div>
                 );
               })}
             </div>
