@@ -1,17 +1,17 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { getMySchedule, getOpenShiftTradesForMyRole } from "@/lib/actions/team";
+import { getMySchedule } from "@/lib/actions/team";
 import { EmployeeScheduleBoard } from "@/components/planning/EmployeeScheduleBoard";
 import { EmployeeShiftList } from "@/components/planning/EmployeeShiftList";
 import { formatShiftRange, shiftSlotLabel } from "@/lib/planning/shift-display";
 import {
   planningDecideTradeFormAction,
-  planningRequestTakeoverFormAction,
-  planningToggleTradeOfferFormAction,
 } from "@/app/(dashboard)/dashboard/planning/planning-trade-actions";
+import { getIncomingShiftTradeRequests } from "@/lib/actions/shift-trade";
+import { ShiftTradePeerInbox } from "@/components/planning/ShiftTradePeerInbox";
+import { ShiftTradeRequestButton } from "@/components/planning/ShiftTradeRequestButton";
 import { ShiftManager } from "@/components/dashboard/ShiftManager";
 import { TradePushHint } from "@/components/planning/TradePushHint";
-import { OpenShiftsBoard } from "@/components/planning/OpenShiftsBoard";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 import { loadPlanningManagerPageData } from "@/lib/planning/planning-page-data";
 import { dateForPlannerCycleDay } from "@/lib/planning/cycle-display-date";
@@ -19,11 +19,10 @@ import { sortPlannerShiftsChronologically } from "@/lib/planning/sort-shifts";
 import { parsePlannerWeekIndex } from "@/lib/planning/focus-week";
 import { clampWeekIndex } from "@/lib/shift-cycle";
 import Link from "next/link";
-import { CalendarClock, Handshake, Inbox } from "lucide-react";
+import { CalendarClock, Handshake } from "lucide-react";
 import { Suspense } from "react";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { ShiftTradeApprovalDiff } from "@/components/planning/ShiftTradeApprovalDiff";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
@@ -59,8 +58,6 @@ export default async function PlanningPage({
     const data = await loadPlanningManagerPageData(companyId, role);
     const planLabels = vocabularyLabels(data.shiftVocabulary);
     const initialFocusWeek = parsePlannerWeekIndex(params.focusWeek, data.shiftCycleWeeks);
-    const initialAutopilotAction =
-      params.autopilot === "suggest" ? "suggest" : params.autopilot === "1" ? "focus" : null;
 
     return (
       <DashboardPageShell maxWidth="6xl">
@@ -119,20 +116,12 @@ export default async function PlanningPage({
             vacationConflictDays={data.vacationConflictDays}
             unavailableDaysByUserId={data.unavailableDaysByUserId}
             enableTaskListActions={canManage}
-            initialAutopilotAction={initialAutopilotAction}
             shiftTemplates={data.shiftTemplates}
             companyModules={data.companyModules}
             planTitle={planLabels.planTitle}
             holidayRegion={data.holidayRegion}
           />
         </Suspense>
-        {data.companyModules.shiftTrade ? (
-          <PlanningManagerExtras
-            label={`Offene Schichten${data.openShifts.length > 0 ? ` (${data.openShifts.length})` : ""}`}
-          >
-            <OpenShiftsBoard open={data.openShifts} />
-          </PlanningManagerExtras>
-        ) : null}
         {data.companyModules.shiftTrade && data.pendingTrades.length > 0 ? (
           <PlanningManagerExtras
             label={`Tausch-Freigaben (${data.pendingTrades.length})`}
@@ -223,9 +212,9 @@ export default async function PlanningPage({
     autopilot: false,
   }));
 
-  const [schedule, openTrades] = await Promise.all([
+  const [schedule, incomingTrades] = await Promise.all([
     getMySchedule(),
-    employeeModules.shiftTrade ? getOpenShiftTradesForMyRole() : Promise.resolve([]),
+    employeeModules.shiftTrade ? getIncomingShiftTradeRequests() : Promise.resolve([]),
   ]);
 
   const sortedShifts = sortPlannerShiftsChronologically(schedule.shifts);
@@ -265,10 +254,11 @@ export default async function PlanningPage({
         variant="hero"
         eyebrow="Planung"
         title="Mein Dienstplan"
-        description="Woche, Uhrzeit und Tausch — ohne den Chef-Planer. Oben die Woche, unten alle Termine mit Aktionen."
+        description="Deine Schichten — bei Bedarf direkt an eine Kolleg:in senden."
         hideOnMobile
       />
 
+      {employeeModules.shiftTrade ? <ShiftTradePeerInbox requests={incomingTrades} /> : null}
       {employeeModules.shiftTrade ? <TradePushHint /> : null}
 
       <EmployeeScheduleBoard
@@ -291,55 +281,17 @@ export default async function PlanningPage({
         items={listItems}
         renderTradeAction={
           employeeModules.shiftTrade
-            ? (item) => (
-                <form action={planningToggleTradeOfferFormAction} className="inline">
-                  <input type="hidden" name="shiftId" value={item.id} />
-                  <input type="hidden" name="makeOpen" value={item.isOpenForTrade ? "false" : "true"} />
-                  <FormSubmitButton
-                    label={item.isOpenForTrade ? "Tausch beenden" : "Zum Tausch anbieten"}
-                    pendingLabel="Speichere..."
-                    className="btn-outline text-xs"
+            ? (item) =>
+                item.isPast ? null : (
+                  <ShiftTradeRequestButton
+                    shiftId={item.id}
+                    slotLabel={`${item.dateLine} · ${item.timeLine}`}
                   />
-                </form>
-              )
+                )
             : undefined
         }
       />
 
-      {employeeModules.shiftTrade ? (
-        <section className="glass-card p-5">
-          <h2 className="text-base font-semibold tracking-tight">Offene Schichten</h2>
-          {openTrades.length === 0 ? (
-            <EmptyState
-              className="mt-3"
-              icon={Handshake}
-              title="Keine offenen Tausche"
-              description="Wenn Kolleg:innen eine Schicht tauschen möchten, erscheint das hier."
-            />
-          ) : (
-            <ul className="mt-3 space-y-2">
-              {openTrades.map((trade) => (
-                <li
-                  key={trade.id}
-                  className="rounded-xl border border-warning/30 bg-warning-soft px-4 py-3 dark:border-white/10 dark:bg-warning/22"
-                >
-                  <p className="text-sm font-medium text-warning-foreground">
-                    Tausch: {trade.ownerName} · {DAY_LABELS[trade.dayOfWeek]} {trade.startTime}–{trade.endTime}
-                  </p>
-                  <form action={planningRequestTakeoverFormAction} className="mt-2">
-                    <input type="hidden" name="shiftId" value={trade.id} />
-                    <FormSubmitButton
-                      label="Übernahme anfragen"
-                      pendingLabel="Sende..."
-                      className="btn-brand text-xs"
-                    />
-                  </form>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      ) : null}
     </DashboardPageShell>
   );
 }

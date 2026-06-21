@@ -181,7 +181,6 @@ export function getMobileBottomNavItems(
     { href: "/dashboard", label: "Start", subtitle: "Fokus", icon: LayoutDashboard },
     { href: "/dashboard/planning", label: "Planer", subtitle: "Woche", icon: CalendarDays },
     { href: "/dashboard/team", label: "Team", subtitle: "Leute", icon: Users },
-    { href: "/dashboard/insights", label: "Auswertung", subtitle: "Hinweise", icon: Brain },
     { href: "/dashboard/settings", label: "Profil", subtitle: "Setup", icon: UserCircle2 },
   ];
 }
@@ -240,7 +239,6 @@ export function getManagerMobileMoreNavItems(
   }
   items.push(
     { href: "/dashboard/team", label: "Team", subtitle: "", icon: Users },
-    { href: "/dashboard/insights", label: "Auswertung", subtitle: "", icon: Brain },
     { href: "/dashboard/vacation", label: "Urlaub", subtitle: "", icon: CalendarDays },
     { href: "/dashboard/reports", label: "Berichte", subtitle: "", icon: FileText },
   );
@@ -260,7 +258,6 @@ export function getManagerMobileMoreNavItems(
 /** Kern-Navigation — optionale Module per `requiresModules`. */
 const BASE_NAV: DashboardNavItem[] = [
   { href: "/dashboard", label: "Übersicht", icon: LayoutDashboard, plans: ALL_PLANS },
-  { href: "/dashboard/insights", label: "Auswertung", icon: Brain, plans: ALL_PLANS },
   {
     href: "/dashboard/peaks",
     label: "Stoß & Umsatz",

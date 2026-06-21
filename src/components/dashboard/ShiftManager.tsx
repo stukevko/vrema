@@ -15,8 +15,6 @@ import { getPlannerQuickSuggest, type PlannerQuickSuggestRow } from "@/lib/actio
 import { getPlannerStaffingHints, type PlannerStaffingHint } from "@/lib/actions/predictive";
 import { StaffingHintBadge } from "@/components/planning/StaffingHintBadge";
 import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
-import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
-import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPanel";
 import { PlannerMonthGrid } from "@/components/planning/PlannerMonthGrid";
 import type { GermanRegion } from "@/lib/holidays/de";
 import { buildMemberWeekMinutes, slotKey, type BoardShiftSlot } from "@/lib/planning/shift-board-model";
@@ -39,7 +37,6 @@ import {
 } from "@/lib/planning/board-assistant";
 import type { ShiftTemplateRow } from "@/lib/actions/shift-templates";
 import type { CompanyModules } from "@/lib/company-modules";
-import type { AutopilotUserReport } from "@/lib/planning/autopilot-report";
 import { dashboardSurfaceClass } from "@/components/dashboard/DashboardSectionCard";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -77,7 +74,6 @@ import {
 import { getWeekCycleIndex, type ShiftCycleWeeks } from "@/lib/shift-cycle";
 import { PlannerPeriodNav } from "@/components/planning/PlannerPeriodNav";
 import {
-  buildPlannerComplianceHints,
   countPlannerStaffingGaps,
   formatPlannerWeekStatusLine,
 } from "@/lib/planning/planner-week-status";
@@ -309,7 +305,6 @@ export function ShiftManager({
   unavailableDaysByUserId = {},
   enableTaskListActions = false,
   initialFocusWeek = null,
-  initialAutopilotAction = null,
   planTitle = "Schichtplan",
   holidayRegion = null,
 }: {
@@ -326,10 +321,8 @@ export function ShiftManager({
   unavailableDaysByUserId?: Record<string, number[]>;
   /** Manager: Schicht-Checkliste für den sichtbaren Tag im Timeline erzeugen */
   enableTaskListActions?: boolean;
-  /** Aus URL `?focusWeek=` (Schichtzyklus 1–3), z. B. vom Sonntags-Wizard. */
+  /** Aus URL `?focusWeek=` (Schichtzyklus 1–3). */
   initialFocusWeek?: ShiftCycleWeeks | null;
-  /** `?autopilot=1` scrollt zum Panel; `?autopilot=suggest` schlägt einmalig vor (Sonntags-Flow). */
-  initialAutopilotAction?: "focus" | "suggest" | null;
   /** Firmen-Vokabular, z. B. „Einsatzplan“ / „Dienstplan“. */
   planTitle?: string;
 }) {
@@ -340,8 +333,6 @@ export function ShiftManager({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const [autopilotBusy, setAutopilotBusy] = useState(false);
-  const [autopilotReport, setAutopilotReport] = useState<AutopilotUserReport | null>(null);
   const [selectedUserId, setSelectedUserId] = useState(members[0]?.id ?? "");
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("16:00");
@@ -710,46 +701,6 @@ export function ShiftManager({
   }, [mobileEndPickerOpen]);
 
   useEffect(() => {
-    if (!companyModules.plannerWeather) {
-      setWeatherWeek([]);
-      setWeatherMondayIso(null);
-      setWeatherFetchErr(null);
-      return;
-    }
-    const anchor = planWeekMondayIso;
-    let cancelled = false;
-    setWeatherFetchErr(null);
-    fetch(`/api/planning/weather?anchorDate=${encodeURIComponent(anchor)}`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`weather_http_${r.status}`);
-        return r.json();
-      })
-      .then((data: { week?: Array<DailyWeatherForecast | null>; mondayIso?: string; error?: string | null }) => {
-        if (cancelled) return;
-        if (data.error === "no_location") {
-          setWeatherFetchErr("Für Wetter bitte PLZ oder Ort in den Einstellungen hinterlegen.");
-          setWeatherWeek([]);
-          setWeatherMondayIso(null);
-          return;
-        }
-        const week = Array.isArray(data.week) ? data.week : [];
-        setWeatherWeek(week);
-        setWeatherMondayIso(typeof data.mondayIso === "string" ? data.mondayIso : null);
-        if (data.error === "upstream" && week.every((d) => d == null)) {
-          setWeatherFetchErr("Wetter gerade nicht verfügbar — bitte später erneut öffnen.");
-        } else if (week.some((d) => d != null)) {
-          setWeatherFetchErr(null);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setWeatherFetchErr("Wetter gerade nicht verfügbar – bitte später erneut öffnen.");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [planWeekMondayIso, companyModules.plannerWeather]);
-
-  useEffect(() => {
     if (!companyModules.peaks) {
       setStaffingHints([]);
       return;
@@ -941,26 +892,13 @@ export function ShiftManager({
       ),
     [displayShifts, selectedWeekIndex, members, shiftTemplates, neededStaff],
   );
-  const plannerComplianceHints = useMemo(
-    () => buildPlannerComplianceHints(displayShifts, selectedWeekIndex, members),
-    [displayShifts, selectedWeekIndex, members],
-  );
-  const restRiskShiftCount = useMemo(() => {
-    let n = 0;
-    for (const s of shifts) {
-      if (s.weekIndex !== selectedWeekIndex || s.isDraft) continue;
-      if (complianceByShiftId.get(s.id)?.restRisk) n += 1;
-    }
-    return n;
-  }, [shifts, selectedWeekIndex, complianceByShiftId]);
   const weekStatusLine = useMemo(
     () =>
       formatPlannerWeekStatusLine({
         openShiftSlots: staffingGaps.openShiftSlots,
         missingAssignments: staffingGaps.missingAssignments,
-        restRiskCount: restRiskShiftCount,
       }),
-    [staffingGaps, restRiskShiftCount],
+    [staffingGaps],
   );
   const mobileDayShifts = useMemo(() => {
     return shifts
@@ -1612,103 +1550,6 @@ export function ShiftManager({
       }
     });
   };
-
-  const startAutopilot = () => {
-    setAutopilotReport(null);
-    setMessage(null);
-    setAutopilotBusy(true);
-    startTransition(async () => {
-      try {
-        const anchor =
-          new Date();
-        const planableCount = members.filter(
-          (m) => m.role === "EMPLOYEE" || m.role === "MANAGER",
-        ).length;
-        const slotTemplates =
-          planableCount <= 2
-            ? [{ startTime, endTime, breakDuration: 30 }]
-            : [
-                { startTime, endTime, breakDuration: 30 },
-                { startTime: "14:00", endTime: "22:00", breakDuration: 30 },
-              ];
-        const result = await runAutopilotDraft(selectedWeekIndex, {
-          slotTemplates,
-          coveragePerDay: planableCount <= 2 ? 1 : Math.min(2, Math.max(1, neededStaff)),
-          anchorDate: anchor,
-        });
-        setAutopilotReport(result.report);
-        if (result.shiftsCreated === 0 && result.unfilled.length === 0) {
-          setMessage(result.report.headline);
-        }
-        router.refresh();
-      } catch (e: unknown) {
-        setAutopilotReport(null);
-        setMessage(userErrorMessage(e, "Autopilot fehlgeschlagen."));
-      } finally {
-        setAutopilotBusy(false);
-      }
-    });
-  };
-
-  const confirmAutopilot = () => {
-    if (
-      !window.confirm(
-        `${draftShiftsInWeek.length} Entwurf${draftShiftsInWeek.length === 1 ? "" : "e"} veröffentlichen? Danach sieht dein Team den Plan.`,
-      )
-    )
-      return;
-    setMessage(null);
-    startTransition(async () => {
-      try {
-        await confirmAutopilotDrafts(selectedWeekIndex);
-        setAutopilotReport(null);
-        router.refresh();
-        setMessage("Plan veröffentlicht — Team wurde benachrichtigt.");
-      } catch (e: unknown) {
-        setMessage(userErrorMessage(e, "Freigabe fehlgeschlagen."));
-      }
-    });
-  };
-
-  const discardAutopilot = () => {
-    if (!window.confirm("Alle Entwurfs-Schichten dieser Planwoche verwerfen?")) return;
-    setMessage(null);
-    startTransition(async () => {
-      try {
-        await discardAutopilotDrafts(selectedWeekIndex);
-        setAutopilotReport(null);
-        router.refresh();
-        setMessage("Entwürfe verworfen.");
-      } catch (e: unknown) {
-        setMessage(userErrorMessage(e, "Verwerfen fehlgeschlagen."));
-      }
-    });
-  };
-
-  const autopilotAction =
-    initialAutopilotAction ??
-    (searchParams.get("autopilot") === "suggest"
-      ? "suggest"
-      : searchParams.get("autopilot") === "1"
-        ? "focus"
-        : null);
-  const autopilotSuggestOnceRef = useRef(false);
-
-  useEffect(() => {
-    if (autopilotAction !== "focus") return;
-    requestAnimationFrame(() => {
-      document.getElementById("planner-autopilot")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }, [autopilotAction]);
-
-  useEffect(() => {
-    if (!enableTaskListActions || autopilotAction !== "suggest") return;
-    if (autopilotSuggestOnceRef.current || autopilotBusy) return;
-    if (draftShiftsInWeek.length > 0 || members.length === 0) return;
-    autopilotSuggestOnceRef.current = true;
-    startAutopilot();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- einmaliger Sonntags-Deep-Link
-  }, [autopilotAction, enableTaskListActions, draftShiftsInWeek.length, members.length]);
 
   const clearMobileDayLongPressTimer = () => {
     if (mobileDayLongPressTimerRef.current !== null) {
@@ -2668,7 +2509,6 @@ export function ShiftManager({
           setBoardAddDateIso(null);
         }}
       />
-      {weatherFetchErr ? <p className="mt-2 text-[10px] text-muted-foreground">{weatherFetchErr}</p> : null}
     </>
   );
 
@@ -2740,7 +2580,7 @@ export function ShiftManager({
           <p className="text-center text-[11px] leading-snug text-foreground/90">
             <span
               className={
-                staffingGaps.openShiftSlots === 0 && restRiskShiftCount === 0
+                staffingGaps.openShiftSlots === 0
                   ? "text-success-foreground"
                   : "text-warning-foreground"
               }
@@ -2838,26 +2678,6 @@ export function ShiftManager({
             });
           }}
         />
-      ) : null}
-
-      {renderDesktopTree && plannerComplianceHints.length > 0 ? (
-        <div
-          id="planner-compliance-radar"
-          className="sticky bottom-0 z-20 mt-4 space-y-2 rounded-xl border border-border bg-background/95 px-3 py-3 text-[11px] text-muted-foreground shadow-[0_-8px_30px_rgba(0,0,0,0.06)] backdrop-blur-sm"
-        >
-        <p className="font-semibold text-foreground">Ruhezeit prüfen</p>
-        <ul className="space-y-2">
-          {plannerComplianceHints.map((hint) => (
-            <li key={hint.id} className="rounded-lg border border-warning/25 bg-warning-soft/30 px-2.5 py-2">
-              <p className="flex items-start gap-1.5 text-foreground">
-                <AlarmClock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning-foreground" aria-hidden />
-                {hint.message}
-              </p>
-              <p className="mt-1 pl-5 text-[10px] font-medium text-muted-foreground">{hint.action}</p>
-            </li>
-          ))}
-        </ul>
-        </div>
       ) : null}
     </section>
   );

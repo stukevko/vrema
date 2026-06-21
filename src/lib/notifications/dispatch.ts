@@ -81,6 +81,25 @@ export async function notifyOpenShiftPublished(params: {
   );
 }
 
+/** Kolleg:in über Direktanfrage informieren (TPA). */
+export async function notifyPeerShiftTradeRequest(params: {
+  companyId: string;
+  targetUserId: string;
+  fromName: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  isSwap: boolean;
+}): Promise<void> {
+  const when = shiftTimeLabel(params.dayOfWeek, params.startTime, params.endTime);
+  await createNotifications(params.companyId, [params.targetUserId], {
+    type: "GENERIC",
+    title: params.isSwap ? "Tauschanfrage" : "Schicht-Anfrage",
+    body: `${params.fromName} möchte ${when} ${params.isSwap ? "mit dir tauschen" : "an dich übergeben"}.`,
+    href: "/dashboard/planning",
+  });
+}
+
 /** Führungskräfte über neue Übernahme-Anfrage informieren. */
 export async function notifyManagersTradeRequest(params: {
   companyId: string;

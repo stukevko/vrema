@@ -897,70 +897,8 @@ export async function countPendingShiftTradeApprovals() {
 }
 
 export async function decideShiftTradeApproval(shiftId: string, approve: boolean) {
-  const { companyId, role } = await requireTenant();
-  if (!["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
-    throw new Error("Keine Berechtigung.");
-  }
-  const shift = await db.shift.findFirst({
-    where: tenantWhere(companyId, { id: shiftId, tradeStatus: ShiftTradeStatus.PENDING_APPROVAL, isDraft: false }),
-    include: {
-      user: { select: { role: true } },
-      company: { select: { users: { select: { id: true, role: true, isActive: true } } } },
-    },
-  });
-  if (!shift) throw new Error("Anfrage nicht gefunden.");
-  if (!shift.tradeRequestedBy) throw new Error("Kein Übernehmer hinterlegt.");
-  const requester = shift.company.users.find((u) => u.id === shift.tradeRequestedBy);
-  if (!requester || !requester.isActive || requester.role !== shift.user.role) {
-    throw new Error("Übernehmer ist nicht mehr berechtigt.");
-  }
-
-  if (!approve) {
-    await db.shift.update({
-      where: { id: shift.id },
-      data: { tradeStatus: ShiftTradeStatus.OPEN, tradeRequestedBy: null, isOpenForTrade: true },
-    });
-    if (shift.tradeRequestedBy) {
-      await notifyTradeDecision({
-        companyId,
-        userId: shift.tradeRequestedBy,
-        approved: false,
-        dayOfWeek: shift.dayOfWeek,
-        startTime: shift.startTime,
-        endTime: shift.endTime,
-      });
-    }
-  } else {
-    const intel = await evaluateShiftTradeProposal(companyId, shift.id);
-    if (!intel) {
-      throw new Error("Automatische Prüfung fehlgeschlagen. Bitte später erneut versuchen.");
-    }
-    if (!intel.legalOk) {
-      throw new Error(
-        "Tausch nicht freigegeben: Ruhezeit oder Überschneidung für den Übernehmer. Bitte ablehnen oder Plan anpassen."
-      );
-    }
-    const newOwnerId = shift.tradeRequestedBy;
-    await db.shift.update({
-      where: { id: shift.id },
-      data: {
-        userId: newOwnerId,
-        isOpenForTrade: false,
-        tradeStatus: ShiftTradeStatus.NONE,
-        tradeRequestedBy: null,
-      },
-    });
-    await notifyTradeDecision({
-      companyId,
-      userId: newOwnerId,
-      approved: true,
-      dayOfWeek: shift.dayOfWeek,
-      startTime: shift.startTime,
-      endTime: shift.endTime,
-    });
-  }
-  revalidatePath("/dashboard/planning");
-  revalidatePath("/dashboard");
+  const { finalizeShiftTradeApproval } = await import("@/lib/actions/shift-trade");
+  return finalizeShiftTradeApproval(shiftId, approve);
 }
 
 export async function copyWeekToAllMembers(sourceUserId: string) {

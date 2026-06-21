@@ -1,27 +1,36 @@
 "use server";
 
 import {
-  toggleShiftTradeOffer,
-  requestShiftTradeTakeover,
-  decideShiftTradeApproval,
-} from "@/lib/actions/team";
+  cancelShiftTradePeerRequest,
+  finalizeShiftTradeApproval,
+  requestShiftTradeToColleague,
+  respondShiftTradePeerRequest,
+} from "@/lib/actions/shift-trade";
 
-export async function planningToggleTradeOfferFormAction(formData: FormData) {
+export async function planningRequestTradeToColleagueFormAction(formData: FormData) {
   const shiftId = String(formData.get("shiftId") ?? "");
-  const makeOpen = String(formData.get("makeOpen") ?? "") === "true";
-  if (!shiftId) return;
-  await toggleShiftTradeOffer(shiftId, makeOpen);
+  const targetUserId = String(formData.get("targetUserId") ?? "");
+  const counterShiftId = String(formData.get("counterShiftId") ?? "").trim() || null;
+  if (!shiftId || !targetUserId) return;
+  await requestShiftTradeToColleague({ shiftId, targetUserId, counterShiftId });
 }
 
-export async function planningRequestTakeoverFormAction(formData: FormData) {
+export async function planningRespondPeerTradeFormAction(formData: FormData) {
+  const shiftId = String(formData.get("shiftId") ?? "");
+  const accept = String(formData.get("accept") ?? "") === "true";
+  if (!shiftId) return;
+  await respondShiftTradePeerRequest(shiftId, accept);
+}
+
+export async function planningCancelPeerTradeFormAction(formData: FormData) {
   const shiftId = String(formData.get("shiftId") ?? "");
   if (!shiftId) return;
-  await requestShiftTradeTakeover(shiftId);
+  await cancelShiftTradePeerRequest(shiftId);
 }
 
 export async function planningDecideTradeFormAction(formData: FormData) {
   const shiftId = String(formData.get("shiftId") ?? "");
   const approve = String(formData.get("approve") ?? "") === "true";
   if (!shiftId) return;
-  await decideShiftTradeApproval(shiftId, approve);
+  await finalizeShiftTradeApproval(shiftId, approve);
 }

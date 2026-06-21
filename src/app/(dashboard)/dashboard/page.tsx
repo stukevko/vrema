@@ -549,15 +549,9 @@ export default async function DashboardPage({
           ) : null}
 
           <CollapsibleDesktopSection label="Mehr auf der Startseite">
-            {showOwnerWelcome && isOwner ? (
-              <OwnerWelcomeStrip focusWeek={ownerWelcomeFocusWeek} showPeaksModule={companyModules.peaks} />
-            ) : null}
-
             {isManager && teamStats.totalEmployees <= 1 ? (
               <EmptyTeamBanner teamSize={teamStats.totalEmployees} />
             ) : null}
-
-            {isManager ? <SundayWeekPlannerBanner companyId={companyId} /> : null}
 
             <LiveOperationsWidget rows={liveOpsRows} />
 

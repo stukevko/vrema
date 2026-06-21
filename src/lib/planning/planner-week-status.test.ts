@@ -24,11 +24,11 @@ describe("planner-week-status", () => {
   });
 
   it("formatiert verständlichen Wochen-Status", () => {
-    expect(formatPlannerWeekStatusLine({ openShiftSlots: 0, missingAssignments: 0, restRiskCount: 0 }).primary).toBe(
+    expect(formatPlannerWeekStatusLine({ openShiftSlots: 0, missingAssignments: 0 }).primary).toBe(
       "Woche sieht gut aus",
     );
-    expect(
-      formatPlannerWeekStatusLine({ openShiftSlots: 2, missingAssignments: 3, restRiskCount: 1 }).primary,
-    ).toBe("2 offene Schichten");
+    expect(formatPlannerWeekStatusLine({ openShiftSlots: 2, missingAssignments: 3 }).primary).toBe(
+      "2 offene Schichten",
+    );
   });
 });

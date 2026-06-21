@@ -78,37 +78,21 @@ export function buildPlannerComplianceHints(
 export function formatPlannerWeekStatusLine(input: {
   openShiftSlots: number;
   missingAssignments: number;
-  restRiskCount: number;
 }): { primary: string; secondary: string | null } {
-  const { openShiftSlots, missingAssignments, restRiskCount } = input;
+  const { openShiftSlots, missingAssignments } = input;
 
-  if (openShiftSlots === 0 && restRiskCount === 0) {
+  if (openShiftSlots === 0) {
     return { primary: "Woche sieht gut aus", secondary: null };
   }
 
-  const parts: string[] = [];
-  if (openShiftSlots > 0) {
-    parts.push(
-      openShiftSlots === 1
-        ? "1 offene Schicht"
-        : `${openShiftSlots} offene Schichten`,
-    );
-    if (missingAssignments > openShiftSlots) {
-      parts.push(
-        missingAssignments === 1
-          ? "1 Person fehlt"
-          : `${missingAssignments} Personen fehlen`,
-      );
-    }
-  }
-  if (restRiskCount > 0) {
-    parts.push(
-      restRiskCount === 1 ? "1 Ruhezeit-Hinweis" : `${restRiskCount} Ruhezeit-Hinweise`,
-    );
-  }
+  const primary =
+    openShiftSlots === 1 ? "1 offene Schicht" : `${openShiftSlots} offene Schichten`;
+  const secondary =
+    missingAssignments > openShiftSlots
+      ? missingAssignments === 1
+        ? "1 Person fehlt"
+        : `${missingAssignments} Personen fehlen`
+      : null;
 
-  return {
-    primary: parts[0] ?? "Plan prüfen",
-    secondary: parts.length > 1 ? parts.slice(1).join(" · ") : null,
-  };
+  return { primary, secondary };
 }

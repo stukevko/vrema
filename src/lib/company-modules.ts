@@ -1,6 +1,6 @@
 import type { CompanyIndustry } from "@prisma/client";
 
-/** Optionale Erweiterungen — Kern ist immer Stempeln, Plan, Abwesenheit, Berichte. */
+/** Optionale Erweiterungen — Standard nur Schicht-Tausch. Kern: Stempeln, Planer, Team, Abwesenheit, Berichte. */
 export type CompanyModuleKey =
   | "peaks"
   | "plannerWeather"
@@ -54,11 +54,10 @@ const WEATHER_INDUSTRIES: CompanyIndustry[] = [
 export function industryModuleDefaults(
   industry: CompanyIndustry | null | undefined,
 ): CompanyModules {
-  const isGastro = industry != null && GASTRO_INDUSTRIES.includes(industry);
-  const weather = industry != null && WEATHER_INDUSTRIES.includes(industry);
+  void industry;
   return {
-    peaks: isGastro,
-    plannerWeather: weather,
+    peaks: false,
+    plannerWeather: false,
     shiftTrade: true,
     shiftTasks: false,
     autopilot: false,

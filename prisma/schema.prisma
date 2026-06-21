@@ -101,6 +101,7 @@ enum ShiftTaskItemStatus {
 enum ShiftTradeStatus {
   NONE
   OPEN
+  PEER_PENDING
   PENDING_APPROVAL
 }
 
@@ -675,6 +676,10 @@ model Shift {
   isOpenForTrade Boolean @default(false)
   tradeStatus ShiftTradeStatus @default(NONE)
   tradeRequestedBy String?
+  /// Direktanfrage: diese Person soll annehmen (/tpaccept)
+  tradeTargetUserId String?
+  /// Optional: Gegen-Schicht bei echtem Tausch
+  tradeCounterShiftId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

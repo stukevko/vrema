@@ -76,8 +76,7 @@ export function TradePushHint() {
         <div className="min-w-0 space-y-2">
           <p className="text-sm font-semibold text-foreground">Benachrichtigung bei offenen Schichten</p>
           <p className="text-xs leading-relaxed text-muted-foreground">
-            Neue offene Schichten und Übernahme-Anfragen landen in der Glocke oben. Aktiviere
-            zusätzlich Push, dann erreichen sie dich auch bei geschlossener App.
+            Tauschanfragen von Kolleg:innen landen in der Glocke. Push optional für sofortige Hinweise.
           </p>
           <button
             type="button"
