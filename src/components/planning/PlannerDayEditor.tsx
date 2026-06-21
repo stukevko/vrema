@@ -115,7 +115,9 @@ export function PlannerDayEditor({
                   </span>
                 </div>
                 {slot.assignments.length === 0 ? (
-                  <p className="mt-1 text-[10px] text-muted-foreground">Offen — Person zuweisen im Wochen-Board oder hier Schicht anlegen.</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Noch niemand — oben Person wählen, dann „+ Schicht“.
+                  </p>
                 ) : (
                   <ul className="mt-1.5 space-y-1">
                     {slot.assignments.map((a) => (

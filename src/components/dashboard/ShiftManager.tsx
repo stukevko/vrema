@@ -17,7 +17,7 @@ import { StaffingHintBadge } from "@/components/planning/StaffingHintBadge";
 import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
 import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPanel";
-import { ShiftCentricBoard } from "@/components/planning/ShiftCentricBoard";
+import { PlannerWeekList } from "@/components/planning/PlannerWeekList";
 import { buildMemberWeekMinutes, slotKey, type BoardShiftSlot } from "@/lib/planning/shift-board-model";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import { useVocabulary } from "@/components/VocabularyContext";
@@ -353,7 +353,6 @@ export function ShiftManager({
     }
     return mondayOfWeekContaining(new Date());
   });
-  const [planStatusExpanded, setPlanStatusExpanded] = useState(false);
   const selectedWeekIndex = useMemo(
     () => getWeekCycleIndex(planCalendarMonday, shiftCycleWeeks),
     [planCalendarMonday, shiftCycleWeeks],
@@ -395,11 +394,6 @@ export function ShiftManager({
   const planWeekRangeLabel = useMemo(() => formatPlannerWeekRange(planWeekMonday), [planWeekMonday]);
   const planWeekMondayIso = useMemo(() => isoFromPlannerDate(planWeekMonday), [planWeekMonday]);
   const weekDayDates = useMemo(() => isoWeekDatesFromMonday(planCalendarMonday), [planCalendarMonday]);
-  const selectPlanWeek = (monday: Date) => {
-    setPlanCalendarMonday(monday);
-    setTimelineDate(isoFromPlannerDate(monday));
-    setMessage(null);
-  };
   const canTimelinePrevWeek = useMemo(() => {
     const parsed = new Date(`${timelineDate}T12:00:00`);
     if (Number.isNaN(parsed.getTime())) return false;
@@ -2454,7 +2448,8 @@ export function ShiftManager({
 
   const saveBoardShift = (dayOfWeek: number, slotStart: string, slotEnd: string) => {
     if (!selectedUserId) {
-      setMessage("Zuerst links eine Person wählen.");
+      setMessage("Zuerst oben eine Person wählen.");
+      showToast("Zuerst oben eine Person wählen.", "error");
       return;
     }
     const slotStartNorm = slotStart.slice(0, 5);
@@ -2490,156 +2485,84 @@ export function ShiftManager({
     });
   };
 
+  const openAddForDay = (dayOfWeek: number) => {
+    if (!selectedUserId && members[0]) setSelectedUserId(members[0].id);
+    setBoardAddDay(dayOfWeek);
+    setBoardAddSheetOpen(true);
+    if (activeTemplateId) {
+      const t = shiftTemplates.find((x) => x.id === activeTemplateId);
+      if (t) {
+        setStartTime(t.startTime.slice(0, 5));
+        setEndTime(t.endTime.slice(0, 5));
+      }
+    }
+  };
+
+  const editPlannerAssignment = (slot: BoardShiftSlot, userId: string, shiftId: string) => {
+    const member = members.find((m) => m.id === userId);
+    setShiftEdit({
+      userId,
+      shiftId,
+      dayOfWeek: slot.dayOfWeek,
+      label: member?.name ?? member?.email ?? "Mitarbeiter",
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+    });
+  };
+
+  const removePlannerAssignment = (
+    userId: string,
+    dayOfWeek: number,
+    shiftId: string,
+    slotStart: string,
+    slotEnd: string,
+  ) => {
+    if (!shiftId?.trim()) {
+      const msg = "Zuweisung konnte nicht identifiziert werden — bitte Seite neu laden.";
+      setMessage(msg);
+      showToast(msg, "error");
+      return;
+    }
+    const sk = slotKey(dayOfWeek, slotStart, slotEnd);
+    setMessage(null);
+    setSlotBusy(sk, true);
+    setHiddenShiftIds((prev) => new Set(prev).add(shiftId));
+    setBoardOptimisticShifts((prev) => prev.filter((s) => s.id !== shiftId));
+    startTransition(async () => {
+      const result = await removeShiftViaApi(shiftId);
+      setSlotBusy(sk, false);
+      if (!result.ok) {
+        setHiddenShiftIds((prev) => {
+          const next = new Set(prev);
+          next.delete(shiftId);
+          return next;
+        });
+        setMessage(result.error);
+        showToast(result.error, "error");
+        return;
+      }
+      const member = members.find((m) => m.id === userId);
+      showToast(`${member?.name ?? member?.email ?? "Mitarbeiter"} von der Schicht entfernt.`, "success");
+      scheduleBoardRefresh();
+    });
+  };
+
   const PlannerMainView = (
     <>
-      <ShiftCentricBoard
-        compact
+      <PlannerWeekList
+        weekDayDates={weekDayDates}
+        shiftCycleWeeks={shiftCycleWeeks}
+        selectedWeekIndex={selectedWeekIndex}
         members={members}
         shifts={displayShifts}
-        selectedWeekIndex={selectedWeekIndex}
-        neededStaff={neededStaff}
-        planWeekRangeLabel={planWeekRangeLabel}
-        weatherWeek={companyModules.plannerWeather ? weatherWeek : []}
-        weekDayDates={weekDayDates}
-        staffingHintByDay={companyModules.peaks ? staffingHintByDay : new Map()}
         shiftTemplates={shiftTemplates}
-        activeTemplateId={activeTemplateId}
-        selectedMemberId={selectedUserId || null}
-        memberSaldoById={memberSaldoById}
-        overtimeFilterOnly={overtimeFilterOnly}
+        neededStaff={neededStaff}
+        selectedUserId={selectedUserId}
         isPending={isPending}
-        busySlotKeys={busySlotKeys}
-        gapFlashSlotKeys={gapFlashSlotKeys}
-        onSelectTemplate={selectShiftTemplate}
-        onNeededStaffChange={setNeededStaff}
         onSelectMember={setSelectedUserId}
-        onOpenAddSlot={(dayOfWeek) => {
-          setBoardAddDay(dayOfWeek);
-          setBoardAddSheetOpen(true);
-          if (activeTemplateId) {
-            const t = shiftTemplates.find((x) => x.id === activeTemplateId);
-            if (t) {
-              setStartTime(t.startTime.slice(0, 5));
-              setEndTime(t.endTime.slice(0, 5));
-            }
-          }
-        }}
-        onAssignMemberToSlot={requestAssignMemberToSlot}
-        onOvertimeWarningClick={(userId, el) => {
-          setOvertimePopover({ userId, rect: el.getBoundingClientRect() });
-        }}
-        onEditAssignment={(slot, userId, shiftId) => {
-          const assignment = slot.assignments.find((a) => a.userId === userId);
-          const member = members.find((m) => m.id === userId);
-          if (!assignment) return;
-          setShiftEdit({
-            userId,
-            shiftId,
-            dayOfWeek: slot.dayOfWeek,
-            label: member?.name ?? member?.email ?? "Mitarbeiter",
-            startTime: slot.startTime,
-            endTime: slot.endTime,
-          });
-        }}
-        onRemoveAssignment={(userId, dayOfWeek, shiftId, slotStart, slotEnd) => {
-          if (!shiftId?.trim()) {
-            const msg = "Zuweisung konnte nicht identifiziert werden — bitte Seite neu laden.";
-            setMessage(msg);
-            showToast(msg, "error");
-            return;
-          }
-          const sk = slotKey(dayOfWeek, slotStart, slotEnd);
-          setMessage(null);
-          setSlotBusy(sk, true);
-          setHiddenShiftIds((prev) => new Set(prev).add(shiftId));
-          setBoardOptimisticShifts((prev) => prev.filter((s) => s.id !== shiftId));
-          startTransition(async () => {
-            const result = await removeShiftViaApi(shiftId);
-            setSlotBusy(sk, false);
-            if (!result.ok) {
-              setHiddenShiftIds((prev) => {
-                const next = new Set(prev);
-                next.delete(shiftId);
-                return next;
-              });
-              setMessage(result.error);
-              showToast(result.error, "error");
-              return;
-            }
-            const member = members.find((m) => m.id === userId);
-            showToast(
-              `${member?.name ?? member?.email ?? "Mitarbeiter"} von der Schicht entfernt.`,
-              "success",
-            );
-            scheduleBoardRefresh();
-          });
-        }}
-        onClearSlot={(slot) => {
-          if (slot.assignments.length === 0) return;
-          const n = slot.assignments.length;
-          if (
-            !window.confirm(
-              `${slot.title} (${slot.rangeLabel}): ${n} Zuweisung${n === 1 ? "" : "en"} entfernen? Die Schichtkarte wird danach leer.`,
-            )
-          ) {
-            return;
-          }
-          setMessage(null);
-          const sk = slot.key;
-          const idsToHide = slot.assignments.map((a) => a.shiftId);
-          setSlotBusy(sk, true);
-          setHiddenShiftIds((prev) => {
-            const next = new Set(prev);
-            for (const id of idsToHide) next.add(id);
-            return next;
-          });
-          setBoardOptimisticShifts((prev) => prev.filter((s) => !idsToHide.includes(s.id)));
-          startTransition(async () => {
-            let result: Awaited<ReturnType<typeof clearPlannerShiftSlot>>;
-            try {
-              result = await clearPlannerShiftSlot({
-                weekIndex: selectedWeekIndex,
-                dayOfWeek: slot.dayOfWeek,
-                startTime: slot.startTime,
-                endTime: slot.endTime,
-              });
-            } catch {
-              setSlotBusy(sk, false);
-              for (const id of idsToHide) {
-                setHiddenShiftIds((prev) => {
-                  const next = new Set(prev);
-                  next.delete(id);
-                  return next;
-                });
-              }
-              const msg = "Schichtkarte konnte nicht geleert werden.";
-              setMessage(msg);
-              showToast(msg, "error");
-              return;
-            }
-            setSlotBusy(sk, false);
-            if (!result.ok) {
-              for (const id of idsToHide) {
-                setHiddenShiftIds((prev) => {
-                  const next = new Set(prev);
-                  next.delete(id);
-                  return next;
-                });
-              }
-              setMessage(result.error);
-              showToast(result.error, "error");
-              return;
-            }
-            flashGapSlot(sk);
-            const msg =
-              result.removed > 0
-                ? `${result.removed} Zuweisung${result.removed === 1 ? "" : "en"} entfernt — offene Lücke (${slot.assignments.length}/${neededStaff}).`
-                : "Schichtkarte ist leer.";
-            setMessage(msg);
-            showToast(msg, "success");
-            scheduleBoardRefresh();
-          });
-        }}
+        onOpenAddForDay={openAddForDay}
+        onEditAssignment={editPlannerAssignment}
+        onRemoveAssignment={removePlannerAssignment}
       />
       <OvertimeRecoveryPopover
         open={overtimePopover != null}
@@ -2736,11 +2659,16 @@ export function ShiftManager({
     [displayShifts],
   );
 
+  const cycleWeekLabel =
+    shiftCycleWeeks > 1
+      ? `Plan-Muster Woche ${selectedWeekIndex} von ${shiftCycleWeeks} (wiederholt sich im Kalender)`
+      : null;
+
   const weekPicker = (
     <PlannerPeriodNav
       planCalendarMonday={planCalendarMonday}
-      onSelectMonday={selectPlanWeek}
       onShiftWeek={shiftTimelineWeek}
+      cycleWeekLabel={cycleWeekLabel}
     />
   );
 
@@ -2768,81 +2696,21 @@ export function ShiftManager({
   return (
     <section className={`${dashboardSurfaceClass} min-w-0 max-w-full p-4 sm:p-5`}>
       {enableTaskListActions ? (
-        <div className="mb-3 min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-muted/10">
-          <button
-            type="button"
-            onClick={() => setPlanStatusExpanded((v) => !v)}
-            className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left"
-            aria-expanded={planStatusExpanded}
-          >
-            <span className="text-xs leading-snug text-foreground">
-              <span
-                className={
-                  staffingGaps.openShiftSlots === 0 && restRiskShiftCount === 0
-                    ? "text-success-foreground"
-                    : "text-warning-foreground"
-                }
-              >
-                {weekStatusLine.primary}
-              </span>
-              {weekStatusLine.secondary ? (
-                <span className="text-muted-foreground">{` · ${weekStatusLine.secondary}`}</span>
-              ) : null}
+        <div className="mb-3 rounded-xl border border-border bg-muted/10 px-3 py-2.5">
+          <p className="text-xs leading-snug text-foreground">
+            <span
+              className={
+                staffingGaps.openShiftSlots === 0 && restRiskShiftCount === 0
+                  ? "text-success-foreground"
+                  : "text-warning-foreground"
+              }
+            >
+              {weekStatusLine.primary}
             </span>
-            <span className="shrink-0 text-[10px] font-semibold text-brand">
-              {planStatusExpanded ? "Weniger" : "Details"}
-            </span>
-          </button>
-          {planStatusExpanded ? (
-            <div className="space-y-3 border-t border-border px-3 py-3">
-              <div className="flex flex-wrap gap-2 text-xs">
-                <span className="rounded-full border border-border bg-background px-2.5 py-1 text-foreground">
-                  {staffingGaps.openShiftSlots === 0
-                    ? "Alle Schichten besetzt"
-                    : staffingGaps.missingAssignments > 0
-                      ? `${staffingGaps.missingAssignments} Person${staffingGaps.missingAssignments === 1 ? "" : "en"} fehlen noch`
-                      : `${staffingGaps.openShiftSlots} offene Schicht${staffingGaps.openShiftSlots === 1 ? "" : "en"}`}
-                </span>
-                <span className="rounded-full border border-border bg-background px-2.5 py-1 text-foreground">
-                  {restRiskShiftCount === 0
-                    ? "Keine Ruhezeit-Konflikte"
-                    : `${restRiskShiftCount} Ruhezeit-Hinweis${restRiskShiftCount === 1 ? "" : "e"}`}
-                </span>
-                <span className="rounded-full border border-border bg-background px-2.5 py-1 text-foreground">
-                  {criticalOvertimeCount === 0
-                    ? "Keine kritischen Überstunden"
-                    : `${criticalOvertimeCount} kritische Überstunden`}
-                </span>
-              </div>
-              {companyModules.autopilot ? (
-                <PlannerAutopilotPanel
-                  weekIndex={selectedWeekIndex}
-                  draftCount={draftShiftsInWeek.length}
-                  busy={autopilotBusy}
-                  report={autopilotReport}
-                  disabled={isPending}
-                  onSuggest={startAutopilot}
-                  onPublish={confirmAutopilot}
-                  onDiscard={discardAutopilot}
-                />
-              ) : (
-                <Link
-                  href="/dashboard/settings"
-                  className="dashboard-action-btn rounded-xl border border-border bg-background px-3 py-2 text-center text-xs font-medium text-muted-foreground hover:text-foreground"
-                >
-                  Autopilot in Einstellungen aktivieren
-                </Link>
-              )}
-              {renderDesktopTree ? (
-                <a
-                  href="#planner-compliance-radar"
-                  className="dashboard-action-btn rounded-xl border border-border bg-background px-3 py-2 text-center text-xs font-medium text-foreground hover:bg-muted/40"
-                >
-                  Plan-Check &amp; Budget anzeigen
-                </a>
-              ) : null}
-            </div>
-          ) : null}
+            {weekStatusLine.secondary ? (
+              <span className="text-muted-foreground">{` · ${weekStatusLine.secondary}`}</span>
+            ) : null}
+          </p>
         </div>
       ) : null}
 
@@ -3017,41 +2885,23 @@ export function ShiftManager({
         </div>
       ) : null}
 
-      {renderDesktopTree ? (
+      {renderDesktopTree && plannerComplianceHints.length > 0 ? (
         <div
           id="planner-compliance-radar"
           className="sticky bottom-0 z-20 mt-4 space-y-2 rounded-xl border border-border bg-background/95 px-3 py-3 text-[11px] text-muted-foreground shadow-[0_-8px_30px_rgba(0,0,0,0.06)] backdrop-blur-sm"
         >
-        <p className="font-semibold text-foreground">Plan-Check · Budget</p>
-        {plannerComplianceHints.length === 0 ? (
-          <p className="text-success-foreground">Keine Ruhezeit-Konflikte in dieser Woche.</p>
-        ) : (
-          <ul className="space-y-2">
-            {plannerComplianceHints.map((hint) => (
-              <li key={hint.id} className="rounded-lg border border-warning/25 bg-warning-soft/30 px-2.5 py-2">
-                <p className="flex items-start gap-1.5 text-foreground">
-                  <AlarmClock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning-foreground" aria-hidden />
-                  {hint.message}
-                </p>
-                <p className="mt-1 pl-5 text-[10px] font-medium text-muted-foreground">{hint.action}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p className="text-[10px] text-muted-foreground">
-          Hinweis: Planungs-Orientierung, keine Rechtsberatung. Pausen prüfst du im laufenden Betrieb.
-        </p>
-        <div className="flex flex-wrap items-baseline justify-between gap-2 border-t border-border pt-2">
-          <span className="text-foreground">Geplante Brutto-Lohnkosten (Woche {selectedWeekIndex})</span>
-          <span className="font-sans tabular-nums font-semibold text-foreground">
-            {plannedPayrollWeek.coveredMinutes > 0
-              ? new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(plannedPayrollWeek.euro)
-              : "—"}
-          </span>
-        </div>
-        {plannedPayrollWeek.totalMinutesAll > 0 && plannedPayrollWeek.coveredMinutes < plannedPayrollWeek.totalMinutesAll ? (
-          <p className="text-[10px]">Es werden nur Schichten mit hinterlegtem Stundenlohn summiert (Team · €/Std).</p>
-        ) : null}
+        <p className="font-semibold text-foreground">Ruhezeit prüfen</p>
+        <ul className="space-y-2">
+          {plannerComplianceHints.map((hint) => (
+            <li key={hint.id} className="rounded-lg border border-warning/25 bg-warning-soft/30 px-2.5 py-2">
+              <p className="flex items-start gap-1.5 text-foreground">
+                <AlarmClock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning-foreground" aria-hidden />
+                {hint.message}
+              </p>
+              <p className="mt-1 pl-5 text-[10px] font-medium text-muted-foreground">{hint.action}</p>
+            </li>
+          ))}
+        </ul>
         </div>
       ) : null}
     </section>

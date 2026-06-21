@@ -75,7 +75,7 @@ export default async function PlanningPage({
           icon={CalendarClock}
           eyebrow="Planung"
           title={planLabels.planTitle}
-          description="Person wählen → in den Tag ziehen oder „+ Schicht“. Fertig planen → PDF unten fürs Team."
+          description="Person oben wählen → beim Tag „+ Schicht“. Unten PDF fürs Team."
           className="hidden md:block"
         />
         <PlanningTradeApprovalsHint count={data.pendingTrades.length} />
