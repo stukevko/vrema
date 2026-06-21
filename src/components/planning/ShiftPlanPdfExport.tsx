@@ -1,11 +1,8 @@
 "use client";
 
-import { FileDown, Lock, Share2 } from "lucide-react";
+import { FileDown, Share2 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { useUpgrade } from "@/components/dashboard/UpgradeContext";
-import { BUSINESS_UPGRADE_PATH } from "@/lib/plan-upgrade-messages";
 import { buildShiftPlanPdf, type ShiftPlanPdfMember, type ShiftPlanPdfShift } from "@/lib/planning/shift-plan-pdf";
-import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
 type Props = {
@@ -19,23 +16,17 @@ type Props = {
 
 export function ShiftPlanPdfExport({
   companyName,
-  plan,
+  plan: _plan,
   shiftCycleWeeks,
   weekIndex,
   members,
   shifts,
 }: Props) {
   const { show } = useToast();
-  const { openUpgrade } = useUpgrade();
-  const hasPdf = plan === "BUSINESS" || plan === "ENTERPRISE";
   const shiftsInWeek = shifts.filter((s) => s.weekIndex === weekIndex && !Number.isNaN(s.dayOfWeek)).length;
   const metaLine = `Woche ${weekIndex}${shiftCycleWeeks > 1 ? `/${shiftCycleWeeks}` : ""} · ${members.length} Pers. · ${shiftsInWeek} Schichten`;
 
   const exportPdf = () => {
-    if (!hasPdf) {
-      openUpgrade({ kind: "business_feature", feature: "pdf" });
-      return;
-    }
     const { doc, fileName } = buildShiftPlanPdf({
       companyName,
       weekIndex,
@@ -46,25 +37,6 @@ export function ShiftPlanPdfExport({
     doc.save(fileName);
     show(`Schichtplan Woche ${weekIndex} gespeichert — bereit für WhatsApp.`, "success");
   };
-
-  if (!hasPdf) {
-    return (
-      <div className="flex flex-col gap-2 rounded-xl border border-dashed border-line bg-surface-muted/60 p-3 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between sm:rounded-2xl">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold text-foreground">Team-Plan teilen</p>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">PDF — ab Business-Tarif.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="outline" size="sm" leadingIcon={<Lock className="h-3.5 w-3.5" />} onClick={exportPdf}>
-            PDF gesperrt
-          </Button>
-          <Link href={BUSINESS_UPGRADE_PATH} className="text-[11px] font-semibold text-brand hover:underline">
-            Freischalten →
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>

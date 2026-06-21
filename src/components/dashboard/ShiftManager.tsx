@@ -291,7 +291,7 @@ export function ShiftManager({
   members,
   shifts,
   companyName = "",
-  plan = "STARTER",
+  plan = "PETITE",
   shiftTemplates = [],
   companyModules = {
     peaks: false,

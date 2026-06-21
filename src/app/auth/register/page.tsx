@@ -14,11 +14,11 @@ export default async function RegisterPage({ searchParams }: PageProps) {
   const inviteCode = (sp.code ?? "").trim().toLowerCase();
   const inviteOrgId = (sp.org ?? "").trim();
   const inviteRole = (sp.role ?? "").trim().toUpperCase();
-  const rawPlan = sp.plan ?? "STARTER";
-  const allowedPlans = ["STARTER", "BUSINESS", "ENTERPRISE"] as const;
+  const rawPlan = sp.plan ?? "PETITE";
+  const allowedPlans = ["PETITE", "MAJOR"] as const;
   const plan = allowedPlans.includes(rawPlan as (typeof allowedPlans)[number])
     ? (rawPlan as (typeof allowedPlans)[number])
-    : "STARTER";
+    : "PETITE";
 
   let affiliatePartnerName: string | null = null;
   let flyerReferralLabel: string | null = null;

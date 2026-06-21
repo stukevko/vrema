@@ -6,7 +6,7 @@ import { getCompanyTrialState } from "@/lib/trial";
 import { flyerReferralDisplayName, isFlyerReferralCode } from "@/lib/trial/referral";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
-import { PLANS } from "@/lib/stripe";
+import { PLANS } from "@/lib/plans";
 
 export default async function TrialEndedPage() {
   const session = await auth();
@@ -61,7 +61,7 @@ export default async function TrialEndedPage() {
                 <li>Nach dem Tarif: sofort wieder voll nutzbar — keine Neu-Einrichtung</li>
               </ul>
               <p className="mt-3 text-xs text-muted-foreground">
-                Ab {PLANS.STARTER.monthlyPrice} €/Monat (Starter) · jederzeit über Stripe kündbar
+                Ab {PLANS.PETITE.monthlyPrice} €/Monat (Petite, All-In) · monatlich per Rechnung, monatlich kündbar
               </p>
             </div>
             <Link

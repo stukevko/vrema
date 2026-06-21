@@ -119,7 +119,7 @@ export async function inviteEmployeeForCompany(
     where: { id: companyId },
     select: { plan: true },
   });
-  await assertCanAddEmployees(companyId, companyMeta?.plan ?? "STARTER", 1);
+  await assertCanAddEmployees(companyId, companyMeta?.plan ?? "PETITE", 1);
 
   // Generate a temporary password the employee must change on first login
   const tempPassword = Math.random().toString(36).slice(2, 10) + "Aa1!";

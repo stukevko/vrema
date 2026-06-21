@@ -4,7 +4,6 @@ import { generateVerificationToken } from "../src/lib/actions/auth";
 import { inviteEmployeeForCompany } from "../src/lib/actions/team";
 import { validatePinAndClock } from "../src/lib/actions/terminal";
 import { calculateSaldoForUser } from "../src/lib/time/saldo-for-user";
-import { applyCheckoutSessionCompleted } from "../src/lib/actions/billing";
 
 type TestResult = { name: string; ok: boolean; details?: string };
 
@@ -43,7 +42,7 @@ async function main() {
     data: {
       name: "Initial Setup Company",
       slug: companySlug,
-      plan: "STARTER",
+      plan: "PETITE",
       users: {
         create: {
           name: "Founder User",
@@ -146,21 +145,18 @@ async function main() {
     details: `workedMinutes=${erikaSaldo.workedMinutes}`,
   });
 
-  // Phase 5: Billing & Gates
-  await applyCheckoutSessionCompleted({
-    companyId: company.id,
-    plan: "BUSINESS",
-    interval: "monthly",
-    stripeCustomerId: "cus_test_business",
-    stripeSubId: "sub_test_business",
+  // Phase 5: Manuelle Freischaltung
+  await db.company.update({
+    where: { id: company.id },
+    data: { tenantStatus: "ACTIVE", isActive: true, plan: "MAJOR" },
   });
 
   const billedCompany = await db.company.findUnique({ where: { id: company.id } });
-  const pdfUnlocked = billedCompany?.plan === "BUSINESS" || billedCompany?.plan === "ENTERPRISE";
+  const pdfUnlocked = billedCompany?.tenantStatus === "ACTIVE";
   results.push({
-    name: "Billing Upgrade Webhook Simulation",
-    ok: Boolean(billedCompany?.plan === "BUSINESS" && pdfUnlocked),
-    details: `plan=${billedCompany?.plan}`,
+    name: "Manual Tenant Activation",
+    ok: Boolean(billedCompany?.plan === "MAJOR" && pdfUnlocked),
+    details: `plan=${billedCompany?.plan}, status=${billedCompany?.tenantStatus}`,
   });
 
   // Phase 6: Absence type integrity (VACATION vs SICK)

@@ -1,106 +1,92 @@
+import type { TenantStatus } from "@prisma/client";
 import { db } from "@/lib/db";
-import {
-  TRIAL_DAYS,
-  TRIAL_MAX_EMPLOYEES,
-  computeTrialEndsAt,
-} from "@/lib/trial/constants";
+import { companyHasOperationalAccess } from "@/lib/tenant-access";
 
-export { TRIAL_DAYS, TRIAL_MAX_EMPLOYEES, computeTrialEndsAt };
+export { TRIAL_DAYS, TRIAL_MAX_EMPLOYEES, computeTrialEndsAt } from "@/lib/trial/constants";
 
 export type CompanyTrialFields = {
   trialEndsAt: Date | null;
-  stripeSubId: string | null;
-  subEndsAt: Date | null;
   billingExempt?: boolean;
+  tenantStatus?: TenantStatus;
+  isActive?: boolean;
 };
 
-/** Super-Admin / Demo: voller Zugang ohne Stripe. */
+/** Super-Admin / Demo: voller Zugang ohne Rechnung. */
 export function isBillingExempt(company: CompanyTrialFields): boolean {
   return Boolean(company.billingExempt);
 }
 
-/** Bezahltes Abo (Stripe) — unabhängig von der App-Testphase. */
+/** Manuell aktiver Tenant (= bezahlt / freigeschaltet). */
 export function hasPaidSubscription(company: CompanyTrialFields): boolean {
-  if (company.stripeSubId) return true;
-  if (company.subEndsAt && company.subEndsAt > new Date()) return true;
-  return false;
+  if (isBillingExempt(company)) return true;
+  return company.tenantStatus === "ACTIVE";
 }
 
-export type { CompanyAccessFields } from "@/lib/trial/access";
+export type { CompanyAccessFields } from "@/lib/tenant-access";
 export {
   companyHasOperationalAccess,
-  shouldApplyStripeAccessFlag,
-} from "@/lib/trial/access";
+  isTenantGateExemptPath,
+  tenantStatusLabel,
+} from "@/lib/tenant-access";
 
-/** Voller App-Zugang (Test, Abo, aktiv oder kostenfrei freigeschaltet). */
+/** Voller App-Zugang. */
 export function hasFullAppAccess(
-  company: CompanyTrialFields & { isActive?: boolean },
+  company: CompanyTrialFields & { isActive?: boolean; tenantStatus?: TenantStatus },
 ): boolean {
   if (isBillingExempt(company)) return true;
-  if (company.trialEndsAt && company.trialEndsAt > new Date()) return true;
-  if (company.isActive === false) return false;
-  if (hasPaidSubscription(company)) return true;
-  if (company.isActive === true) return true;
-  if (!company.trialEndsAt) return true;
+  if (company.tenantStatus === "ACTIVE") return true;
   return false;
 }
 
-export function isInAppTrial(company: CompanyTrialFields): boolean {
-  if (isBillingExempt(company)) return false;
-  if (!company.trialEndsAt) return false;
-  if (company.stripeSubId || (company.subEndsAt && company.subEndsAt > new Date())) return false;
-  return company.trialEndsAt > new Date();
+export function isInAppTrial(_company: CompanyTrialFields): boolean {
+  return false;
 }
 
-export function isTrialExpired(company: CompanyTrialFields): boolean {
-  if (isBillingExempt(company)) return false;
-  if (!company.trialEndsAt) return false;
-  if (company.stripeSubId || (company.subEndsAt && company.subEndsAt > new Date())) return false;
-  return company.trialEndsAt <= new Date();
+export function isTrialExpired(_company: CompanyTrialFields): boolean {
+  return false;
 }
 
-export function trialDaysRemaining(company: CompanyTrialFields): number {
-  if (isBillingExempt(company)) return 0;
-  if (!company.trialEndsAt || company.stripeSubId) return 0;
-  const ms = company.trialEndsAt.getTime() - Date.now();
-  return Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
+export function trialDaysRemaining(_company: CompanyTrialFields): number {
+  return 0;
 }
 
 export async function getCompanyTrialState(companyId: string) {
   const company = await db.company.findUnique({
     where: { id: companyId },
-    select: { trialEndsAt: true, stripeSubId: true, subEndsAt: true, billingExempt: true },
+    select: { trialEndsAt: true, billingExempt: true, tenantStatus: true, isActive: true },
   });
   if (!company) return null;
 
   return {
     ...company,
-    isInAppTrial: isInAppTrial(company),
-    isTrialExpired: isTrialExpired(company),
+    isInAppTrial: false,
+    isTrialExpired: false,
     hasPaidSubscription: hasPaidSubscription(company),
-    billingExempt: isBillingExempt(company),
+    daysRemaining: 0,
     hasFullAppAccess: hasFullAppAccess(company),
-    daysRemaining: trialDaysRemaining(company),
   };
 }
 
-/** Dashboard-Routen, die auch nach abgelaufener Testphase erreichbar bleiben. */
 export function isTrialExemptDashboardPath(pathname: string): boolean {
   return (
+    pathname.startsWith("/dashboard/access-pending") ||
+    pathname.startsWith("/dashboard/access-suspended") ||
     pathname.startsWith("/dashboard/billing") ||
     pathname.startsWith("/dashboard/trial-ended") ||
     pathname.startsWith("/dashboard/account") ||
-    pathname.startsWith("/dashboard/peaks") ||
-    pathname.startsWith("/dashboard/reports") ||
+    pathname.startsWith("/dashboard/support") ||
     pathname.startsWith("/dashboard/settings")
   );
 }
 
-/** Zahlungsausfall: Billing + Konto bleiben erreichbar. */
 export function isBillingSuspendedExemptPath(pathname: string): boolean {
-  return (
-    pathname.startsWith("/dashboard/billing") ||
-    pathname.startsWith("/dashboard/account") ||
-    pathname.startsWith("/dashboard/trial-ended")
-  );
+  return isTrialExemptDashboardPath(pathname);
+}
+
+export async function getCompanyTenantStatus(companyId: string): Promise<TenantStatus | null> {
+  const row = await db.company.findUnique({
+    where: { id: companyId },
+    select: { tenantStatus: true },
+  });
+  return row?.tenantStatus ?? null;
 }

@@ -7,14 +7,8 @@ import { db } from "@/lib/db";
 import { getMyUnreadSupportRepliesCount, countOpenSupportTicketsForSuperAdmin } from "@/lib/actions/support";
 import { countMyUnreadNotifications } from "@/lib/actions/notifications";
 import { buildBrandStyleCss, getCompanyBranding, VREMA_DEFAULT_BRAND_HEX } from "@/lib/branding/load";
-import { countActiveEmployees } from "@/lib/plan-limits";
-import {
-  getCompanyTrialState,
-  isTrialExemptDashboardPath,
-} from "@/lib/trial";
-import { flyerReferralDisplayName } from "@/lib/trial/referral";
+import { isTenantGateExemptPath } from "@/lib/tenant-access";
 import { vocabularyLabels } from "@/lib/vocabulary";
-import { isBillingSuspendedExemptPath } from "@/lib/trial";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 
 export default async function DashboardLayout({
@@ -34,18 +28,6 @@ export default async function DashboardLayout({
     redirect("/setup");
   }
 
-  const requireCard = process.env.REQUIRE_CARD_ON_SIGNUP === "true";
-  if (requireCard && session.user.role !== "SUPER_ADMIN") {
-    const company = await db.company.findUnique({
-      where: { id: session.user.companyId },
-      select: { paymentMethodVerifiedAt: true, referredBy: true },
-    });
-    const skipCardForFlyer = Boolean(company?.referredBy);
-    if (!skipCardForFlyer && !company?.paymentMethodVerifiedAt) {
-      redirect("/setup?payment=required");
-    }
-  }
-
   const role = session.user.role ?? "EMPLOYEE";
   const pathname = (await headers()).get("x-pathname") ?? "";
 
@@ -53,77 +35,26 @@ export default async function DashboardLayout({
     role === "ADVISOR" &&
     !pathname.startsWith("/dashboard/peaks") &&
     !pathname.startsWith("/dashboard/account") &&
-    !isTrialExemptDashboardPath(pathname)
+    !isTenantGateExemptPath(pathname)
   ) {
     redirect("/dashboard/peaks");
   }
-  const trialState =
-    role !== "SUPER_ADMIN" && role !== "SUPPORT"
-      ? await getCompanyTrialState(session.user.companyId)
-      : null;
 
-  if (trialState?.isTrialExpired && !isTrialExemptDashboardPath(pathname)) {
-    const canManageBilling =
-      role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN";
-    if (canManageBilling) {
-      redirect("/dashboard/billing?trial_expired=1");
-    }
-    redirect("/dashboard/trial-ended");
-  }
-
-  if (
-    role !== "SUPER_ADMIN" &&
-    role !== "SUPPORT" &&
-    session.user.companyId &&
-    !isBillingSuspendedExemptPath(pathname)
-  ) {
-    const billingGate = await db.company.findUnique({
+  if (role !== "SUPER_ADMIN" && role !== "SUPPORT" && !isTenantGateExemptPath(pathname)) {
+    const company = await db.company.findUnique({
       where: { id: session.user.companyId },
-      select: { isActive: true, billingExempt: true, stripeSubId: true },
+      select: { tenantStatus: true, billingExempt: true },
     });
-    if (
-      billingGate &&
-      !billingGate.billingExempt &&
-      billingGate.isActive === false &&
-      billingGate.stripeSubId
-    ) {
-      const canManageBilling =
-        role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN";
-      if (canManageBilling) {
-        redirect("/dashboard/billing?payment_failed=1");
+    if (company && !company.billingExempt) {
+      if (company.tenantStatus === "PENDING") {
+        redirect("/dashboard/access-pending");
       }
-      redirect("/dashboard/trial-ended");
+      if (company.tenantStatus === "SUSPENDED") {
+        redirect("/dashboard/access-suspended");
+      }
     }
   }
 
-  let trialBanner: {
-    daysRemaining: number;
-    activeEmployees: number;
-    flyerCampaignLabel?: string | null;
-    trialEndsAtIso?: string | null;
-  } | null = null;
-  if (trialState?.isInAppTrial && !isTrialExemptDashboardPath(pathname)) {
-    const [activeEmployees, companyRef] = await Promise.all([
-      countActiveEmployees(session.user.companyId),
-      db.company.findUnique({
-        where: { id: session.user.companyId },
-        select: { referredBy: true },
-      }),
-    ]);
-    trialBanner = {
-      daysRemaining: trialState.daysRemaining,
-      activeEmployees,
-      flyerCampaignLabel: companyRef?.referredBy
-        ? flyerReferralDisplayName(companyRef.referredBy)
-        : null,
-      trialEndsAtIso: trialState.trialEndsAt?.toISOString() ?? null,
-    };
-  }
-
-  const showPasskeyNudge =
-    role === "COMPANY_OWNER" && !isTrialExemptDashboardPath(pathname);
-
-  // Drei unabhängige Counts parallel statt sequenziell (spart 2 Roundtrips pro Seitenwechsel).
   const [supportUnreadRes, superOpenTicketsRes, unreadNotificationsRes] = await Promise.allSettled([
     getMyUnreadSupportRepliesCount(),
     countOpenSupportTicketsForSuperAdmin(),
@@ -133,9 +64,6 @@ export default async function DashboardLayout({
   const superOpenTickets = superOpenTicketsRes.status === "fulfilled" ? superOpenTicketsRes.value : 0;
   const unreadNotifications = unreadNotificationsRes.status === "fulfilled" ? unreadNotificationsRes.value : 0;
 
-  // Custom-Branding: nur applizieren, wenn Firma eine eigene Hex hinterlegt hat.
-  // Sonst bleibt VREMA-Petrol (Default-Branding) aktiv – kein Style-Injection,
-  // kein Flackern, keine zusätzliche CSS.
   const companyRow = await db.company
     .findUnique({
       where: { id: session.user.companyId },
@@ -156,6 +84,8 @@ export default async function DashboardLayout({
   const hasCustomBrand = Boolean(branding && branding.brandHex.toLowerCase() !== VREMA_DEFAULT_BRAND_HEX.toLowerCase());
   const brandStyleCss = hasCustomBrand && branding ? buildBrandStyleCss(branding) : null;
 
+  const showPasskeyNudge = role === "COMPANY_OWNER";
+
   return (
     <div data-tenant-brand={hasCustomBrand ? "custom" : "default"} className="contents">
       {brandStyleCss ? (
@@ -168,14 +98,14 @@ export default async function DashboardLayout({
       <PushBootstrap unreadCount={unreadNotifications} />
       <DashboardLayoutClient
         role={role}
-        plan={session.user.plan ?? "STARTER"}
+        plan={session.user.plan ?? "PETITE"}
         planVocabulary={planVocabulary}
         companyModules={companyModules}
         user={session.user}
         supportUnreadCount={supportUnreadCount}
         initialSuperOpenTickets={superOpenTickets}
         initialUnreadNotifications={unreadNotifications}
-        trialBanner={trialBanner}
+        trialBanner={null}
         showPasskeyNudge={showPasskeyNudge}
       >
         {children}

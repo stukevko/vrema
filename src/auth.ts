@@ -59,9 +59,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               select: {
                 plan: true,
                 isActive: true,
-                trialEndsAt: true,
-                stripeSubId: true,
-                subEndsAt: true,
+                tenantStatus: true,
                 billingExempt: true,
               },
             },
@@ -69,9 +67,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (user) {
-          // Account deactivated
-          const { companyHasOperationalAccess } = await import("@/lib/trial/access");
-          if (!user.isActive || !user.company || !companyHasOperationalAccess(user.company)) {
+          if (!user.isActive || !user.company) {
             throw new InvalidCredentialsError();
           }
 
@@ -115,7 +111,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           image: null,
           companyId: "",
           role: "AFFILIATE_PARTNER",
-          plan: "STARTER",
+          plan: "PETITE",
           affiliateId: affiliate.id,
           accountType: "affiliate",
         };
@@ -152,7 +148,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.id = (token.userId as string) ?? "";
       session.user.companyId = (token.companyId as string) ?? "";
       session.user.role = (token.role as string) ?? "EMPLOYEE";
-      session.user.plan = (token.plan as string) ?? "STARTER";
+      session.user.plan = (token.plan as string) ?? "PETITE";
       session.user.affiliateId = (token.affiliateId as string | undefined) ?? undefined;
       session.user.accountType = (token.accountType as "user" | "affiliate" | undefined) ?? undefined;
 
@@ -186,9 +182,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           isActive: true,
           company: {
             select: {
-              trialEndsAt: true,
-              stripeSubId: true,
-              subEndsAt: true,
+              tenantStatus: true,
               billingExempt: true,
               isActive: true,
             },
@@ -200,8 +194,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         throw new Error("Bitte verifiziere zuerst deine E-Mail-Adresse.");
       }
 
-      const { companyHasOperationalAccess } = await import("@/lib/trial/access");
-      if (!dbUser.isActive || !dbUser.company || !companyHasOperationalAccess(dbUser.company)) {
+      if (!dbUser.isActive || !dbUser.company) {
         throw new Error("Dein Zugang ist derzeit nicht aktiv. Bitte wende dich an die Geschäftsführung.");
       }
 

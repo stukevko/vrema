@@ -38,8 +38,8 @@ async function main() {
     data: {
       name: "VREMA Solutions",
       slug: companySlug,
-      plan: "BUSINESS",
-      trialEndsAt: addHours(new Date(), 24 * 7),
+      plan: "MAJOR",
+      tenantStatus: "ACTIVE",
       isActive: true,
     },
   });

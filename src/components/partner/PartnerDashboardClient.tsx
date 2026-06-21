@@ -10,7 +10,7 @@ type Row = {
   id: string;
   companyName: string;
   createdAt: string;
-  plan: "STARTER" | "BUSINESS" | "ENTERPRISE";
+  plan: "PETITE" | "MAJOR";
   status: "PENDING" | "AVAILABLE" | "PAID" | "CANCELLED";
   commissionCents: number;
   currency: string;
@@ -23,15 +23,15 @@ function formatCents(cents: number, currency: string) {
 }
 
 function formatProvisionByPlan(plan: Row["plan"]) {
-  if (plan === "STARTER") return "5,00 EUR";
-  if (plan === "BUSINESS") return "15,00 EUR";
+  if (plan === "PETITE") return "5,00 EUR";
+  if (plan === "MAJOR") return "15,00 EUR";
   return "—";
 }
 
 function planLabel(plan: Row["plan"]) {
-  if (plan === "STARTER") return "Starter";
-  if (plan === "BUSINESS") return "Business";
-  return "Enterprise";
+  if (plan === "PETITE") return "Petite";
+  if (plan === "MAJOR") return "Major";
+  return plan;
 }
 
 function statusLabel(status: Row["status"]) {
@@ -75,11 +75,11 @@ export function PartnerDashboardClient({
 
   const recentDeals = rows.slice(0, 8);
   const validDeals = rows.filter((r) => r.status !== "CANCELLED");
-  const starterDeals = validDeals.filter((r) => r.plan === "STARTER");
-  const businessDeals = validDeals.filter((r) => r.plan === "BUSINESS");
-  const starterTotalCents = starterDeals.length * 500;
-  const businessTotalCents = businessDeals.length * 1500;
-  const totalSuccessCents = starterTotalCents + businessTotalCents;
+  const petiteDeals = validDeals.filter((r) => r.plan === "PETITE");
+  const majorDeals = validDeals.filter((r) => r.plan === "MAJOR");
+  const petiteTotalCents = petiteDeals.length * 500;
+  const majorTotalCents = majorDeals.length * 1500;
+  const totalSuccessCents = petiteTotalCents + majorTotalCents;
 
   return (
     <div className="premium-enter min-h-screen bg-background p-4 text-foreground sm:p-6">
@@ -153,15 +153,15 @@ export function PartnerDashboardClient({
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <div className="rounded-2xl border border-line bg-surface p-4 dark:border-white/10 dark:bg-surface/85">
-              <p className="text-xs text-muted-foreground">Starter-Abschlüsse</p>
+              <p className="text-xs text-muted-foreground">Petite-Abschlüsse</p>
               <p className="mt-1 text-sm tabular-nums text-foreground">
-                {starterDeals.length} (insg. {formatCents(starterTotalCents, "eur")})
+                {petiteDeals.length} (insg. {formatCents(petiteTotalCents, "eur")})
               </p>
             </div>
             <div className="rounded-2xl border border-line bg-surface p-4 dark:border-white/10 dark:bg-surface/85">
-              <p className="text-xs text-muted-foreground">Business-Abschlüsse</p>
+              <p className="text-xs text-muted-foreground">Major-Abschlüsse</p>
               <p className="mt-1 text-sm tabular-nums text-foreground">
-                {businessDeals.length} (insg. {formatCents(businessTotalCents, "eur")})
+                {majorDeals.length} (insg. {formatCents(majorTotalCents, "eur")})
               </p>
             </div>
             <div className="rounded-2xl border border-brand/30 bg-brand-soft p-4 dark:border-white/10 dark:bg-brand/22">
@@ -174,7 +174,7 @@ export function PartnerDashboardClient({
         <div className="rounded-2xl border border-brand/30 bg-brand-soft p-5 dark:border-white/10 dark:bg-brand/20">
           <p className="text-sm font-semibold text-brand">Verdienst-Struktur</p>
           <p className="mt-1 text-sm leading-relaxed text-foreground">
-            5€ für jeden Starter-Abschluss, 15€ für jeden Business-Abschluss. Auszahlung erfolgt nach Bestätigung des
+            5€ für jeden Petite-Abschluss, 15€ für jeden Major-Abschluss. Auszahlung erfolgt nach Bestätigung des
             Kunden-Abos. Es zählt nur ein direkter Abschluss – die 7-Tage-Testphase zählt nicht.
           </p>
         </div>

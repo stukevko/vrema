@@ -6,8 +6,6 @@ import { redirect } from "next/navigation";
  * Returns { userId, companyId } – throws/redirects on failure.
  */
 export async function requireTenant() {
-  "use server";
-
   const session = await auth();
 
   if (!session?.user?.id || !session?.user?.companyId) {

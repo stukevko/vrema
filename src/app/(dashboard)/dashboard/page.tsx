@@ -143,7 +143,7 @@ export default async function DashboardPage({
 
   const params = await searchParams;
   const { companyId, id: userId } = session.user as { companyId: string; id: string };
-  const plan = session.user.plan ?? "STARTER";
+  const plan = session.user.plan ?? "PETITE";
   const role = session.user.role;
   const isSuperAdmin = role === "SUPER_ADMIN" || session.user.id === process.env.SUPER_ADMIN_USER_ID;
   const isManager = role === "COMPANY_OWNER" || role === "MANAGER" || role === "SUPER_ADMIN";
@@ -641,21 +641,6 @@ export default async function DashboardPage({
         <div className="order-7">{todayPanel}</div>
       ) : null}
 
-      {/* Business plan CTA */}
-      {plan === "STARTER" && (
-        <div className="order-8 hidden flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/85 sm:flex-row sm:items-center sm:justify-between sm:p-8 md:flex">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold">PDF-Export & Lohnbüro-Versand freischalten</p>
-            <p className="mt-1 text-xs text-muted-foreground">Upgrade auf Business für vollständige Berichte.</p>
-          </div>
-          <Link
-            href="/dashboard/billing"
-            className="btn-brand inline-flex min-h-12 w-full shrink-0 items-center justify-center rounded-2xl px-5 text-sm font-bold active:scale-[0.99] sm:w-auto"
-          >
-            Upgrade
-          </Link>
-        </div>
-      )}
     </div>
   );
 }

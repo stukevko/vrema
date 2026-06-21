@@ -18,26 +18,17 @@ export async function validatePinAndClock(companySlug: string, pin: string) {
     select: {
       id: true,
       isActive: true,
-      trialEndsAt: true,
-      stripeSubId: true,
-      subEndsAt: true,
+      tenantStatus: true,
+      billingExempt: true,
       clockIpRestrictionEnabled: true,
       clockIpAllowlist: true,
     },
   });
 
   const { companyHasOperationalAccess } = await import("@/lib/trial/access");
-  const { isTrialExpired } = await import("@/lib/trial");
 
   if (!company || !companyHasOperationalAccess(company)) {
     return { status: "error" as const, message: "Terminal ist nicht verfügbar." };
-  }
-
-  if (isTrialExpired(company)) {
-    return {
-      status: "error" as const,
-      message: "Testphase beendet. Der Betrieb muss zuerst einen Tarif wählen.",
-    };
   }
 
   // Enterprise: IP-Geofencing greift, falls aktiv. Terminal-Pfad kennt keine

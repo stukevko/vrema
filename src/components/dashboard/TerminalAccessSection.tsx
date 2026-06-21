@@ -1,7 +1,7 @@
 import { TerminalLinkCard } from "@/components/dashboard/TerminalLinkCard";
 import { TerminalQrPanel } from "@/components/dashboard/TerminalQrPanel";
 import { TerminalQrUpsell } from "@/components/dashboard/TerminalQrUpsell";
-import { canUseQrTerminal, getPlanLimits } from "@/lib/plan-limits";
+import { canUseQrTerminal, getPlanLimits } from "@/lib/plan-features";
 
 function isQrFeatureGloballyOff(): boolean {
   const flag = process.env.VREMA_FEATURE_QR_TERMINAL?.trim().toLowerCase();

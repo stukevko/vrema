@@ -30,7 +30,7 @@ export async function sendPayrollReportEmail(data: {
     throw new Error("Lohnbüro-Versand ist nur für Inhaber und Manager verfügbar.");
   }
   const { assertPlanFeature } = await import("@/lib/plan-limits");
-  assertPlanFeature(plan ?? "STARTER", "payrollEmail");
+  assertPlanFeature(plan ?? "PETITE", "payrollEmail");
 
   const recipients = normalizeRecipients(data.recipientEmail);
   await sendPayrollReportInternal({

@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import {
   createCompanyBySuperAdmin,
   deleteCompanyBySuperAdmin,
+  activateCompanyBySuperAdmin,
+  suspendCompanyBySuperAdmin,
   grantCompanyPlanWithoutBilling,
   updateCompanyBySuperAdmin,
   updateCompanyModulesBySuperAdmin,
@@ -19,17 +21,18 @@ import {
 import { Shield, Building2 } from "lucide-react";
 import { Fragment, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { tenantStatusLabel } from "@/lib/tenant-access";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 type CompanyRow = {
   id: string;
   name: string;
   slug: string;
-  plan: "STARTER" | "BUSINESS" | "ENTERPRISE";
+  plan: "PETITE" | "MAJOR";
   billingInterval: "MONTHLY" | "YEARLY";
+  tenantStatus: "PENDING" | "ACTIVE" | "SUSPENDED";
   isActive: boolean;
   billingExempt: boolean;
-  stripeSubId: string | null;
   referredBy: string | null;
   trialEndsAt: Date | null;
   createdAt: Date;
@@ -262,7 +265,7 @@ export function SuperAdminInlinePanel({
                             companyId: c.id,
                             plan: e.target.value as CompanyRow["plan"],
                             billingInterval: c.billingInterval,
-                            isActive: c.isActive,
+                            tenantStatus: c.tenantStatus,
                             billingExempt: c.billingExempt,
                           }),
                         { errorMsg: `Plan für „${c.name}“ konnte nicht geändert werden.` },
@@ -271,9 +274,8 @@ export function SuperAdminInlinePanel({
                     className={selectClass}
                     disabled={isPending}
                   >
-                    <option value="STARTER">STARTER</option>
-                    <option value="BUSINESS">BUSINESS</option>
-                    <option value="ENTERPRISE">ENTERPRISE</option>
+                    <option value="PETITE">Petite</option>
+                    <option value="MAJOR">Major</option>
                   </select>
                 </td>
                 <td className="px-3 py-2">
@@ -286,7 +288,7 @@ export function SuperAdminInlinePanel({
                             companyId: c.id,
                             plan: c.plan,
                             billingInterval: e.target.value as CompanyRow["billingInterval"],
-                            isActive: c.isActive,
+                            tenantStatus: c.tenantStatus,
                             billingExempt: c.billingExempt,
                           }),
                         { errorMsg: `Intervall für „${c.name}“ konnte nicht geändert werden.` },
@@ -300,8 +302,13 @@ export function SuperAdminInlinePanel({
                   </select>
                 </td>
                 <td className="px-3 py-2">
-                  <StatusBadge tone={c.isActive ? "brand" : "neutral"} size="sm" glass withDot={false}>
-                    {c.isActive ? "Aktiv" : "Inaktiv"}
+                  <StatusBadge
+                    tone={c.tenantStatus === "ACTIVE" ? "brand" : c.tenantStatus === "PENDING" ? "warning" : "danger"}
+                    size="sm"
+                    glass
+                    withDot={false}
+                  >
+                    {tenantStatusLabel(c.tenantStatus)}
                   </StatusBadge>
                 </td>
                 <td className="px-3 py-2 text-fg-muted">
@@ -337,13 +344,13 @@ export function SuperAdminInlinePanel({
                               companyId: c.id,
                               plan: c.plan,
                               billingInterval: c.billingInterval,
-                              isActive: c.isActive,
+                              tenantStatus: c.tenantStatus,
                               billingExempt: e.target.checked,
                             }),
                           {
                             successMsg: e.target.checked
-                              ? `„${c.name}“ ist kostenfrei — Stripe-Abo wurde beendet (falls vorhanden).`
-                              : `„${c.name}“ nutzt wieder normale Abrechnung.`,
+                              ? `„${c.name}“ ist kostenfrei freigeschaltet.`
+                              : `„${c.name}“ nutzt wieder normale Freischaltung.`,
                             errorMsg: `Abrechnungs-Status für „${c.name}“ konnte nicht geändert werden.`,
                           },
                         )
@@ -352,15 +359,29 @@ export function SuperAdminInlinePanel({
                     />
                     {c.billingExempt ? "Ja" : "Nein"}
                   </label>
-                  {c.stripeSubId && !c.billingExempt ? (
-                    <p className="mt-1 text-[9px] text-warning">Stripe aktiv</p>
-                  ) : null}
                 </td>
                 <td className="px-3 py-2 text-fg">
                   {c.activeUserCount}/{c.userCount}
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="brand"
+                      size="sm"
+                      onClick={() =>
+                        runCompanyAction(
+                          () => activateCompanyBySuperAdmin({ companyId: c.id, plan: c.plan }),
+                          {
+                            successMsg: `BAM — „${c.name}“ ist freigeschaltet.`,
+                            errorMsg: `„${c.name}“ konnte nicht freigeschaltet werden.`,
+                          },
+                        )
+                      }
+                      disabled={isPending || c.tenantStatus === "ACTIVE"}
+                    >
+                      Freischalten
+                    </Button>
                     <Button
                       type="button"
                       variant="outline"
@@ -374,7 +395,7 @@ export function SuperAdminInlinePanel({
                               billingInterval: c.billingInterval,
                             }),
                           {
-                            successMsg: `„${c.name}“: ${c.plan} kostenfrei freigeschaltet (ohne Stripe).`,
+                            successMsg: `„${c.name}“: ${c.plan} kostenfrei freigeschaltet.`,
                             errorMsg: `„${c.name}“ konnte nicht freigeschaltet werden.`,
                           },
                         )
@@ -390,25 +411,16 @@ export function SuperAdminInlinePanel({
                       className="border-danger/35 text-danger-foreground hover:border-danger/50 hover:bg-danger-soft/70 hover:text-danger"
                       onClick={() =>
                         runCompanyAction(
-                          () =>
-                            updateCompanyBySuperAdmin({
-                              companyId: c.id,
-                              plan: c.plan,
-                              billingInterval: c.billingInterval,
-                              isActive: !c.isActive,
-                              billingExempt: c.billingExempt,
-                            }),
+                          () => suspendCompanyBySuperAdmin(c.id),
                           {
-                            successMsg: !c.isActive
-                              ? `„${c.name}“ wurde aktiviert.`
-                              : `„${c.name}“ wurde deaktiviert.`,
-                            errorMsg: `Status für „${c.name}“ konnte nicht geändert werden.`,
+                            successMsg: `„${c.name}“ wurde gesperrt.`,
+                            errorMsg: `„${c.name}“ konnte nicht gesperrt werden.`,
                           },
                         )
                       }
-                      disabled={isPending}
+                      disabled={isPending || c.tenantStatus === "SUSPENDED"}
                     >
-                      {c.isActive ? "Deaktivieren" : "Aktivieren"}
+                      Sperren
                     </Button>
                     <Button
                       type="button"

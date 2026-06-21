@@ -69,7 +69,7 @@ export function TrialStatusBanner({
             <p className="mt-0.5 text-xs opacity-90">
               {flyerCampaignLabel
                 ? `30 Tage kostenlos · bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitende (${activeEmployees}/${TRIAL_MAX_EMPLOYEES} aktiv). Keine Kreditkarte nötig — Tarif erst nach der Aktion.`
-                : `Bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitende (${activeEmployees}/${TRIAL_MAX_EMPLOYEES} aktiv). PDF & Lohnbüro ab Business — danach ohne Unterbrechung weiterplanen.`}
+                : `Bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitende (${activeEmployees}/${TRIAL_MAX_EMPLOYEES} aktiv). Petite All-In ab 29 € — PDF, DATEV & Lohnbüro inklusive.`}
               {endLabel ? (
                 <>
                   {" "}

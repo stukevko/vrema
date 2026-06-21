@@ -37,7 +37,7 @@ export function TrialInviteHint({
           )}
           <p className="leading-relaxed opacity-90">
             {atLimit
-              ? "Ein Klick — Tarif wählen — bis zu 10 Mitarbeitende mit Starter."
+              ? "Ein Klick — Petite wählen — bis zu 50 Mitarbeitende, All-In inkl. PDF & DATEV."
               : "In der Testphase sind maximal 3 aktive Mitarbeitende möglich."}
           </p>
           {atLimit ? (

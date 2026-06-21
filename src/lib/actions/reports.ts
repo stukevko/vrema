@@ -134,7 +134,7 @@ export async function exportDatevCsvAction(monthKey: string) {
     throw new Error("Keine Berechtigung für DATEV-Export.");
   }
   const { assertPlanFeature } = await import("@/lib/plan-limits");
-  assertPlanFeature(plan ?? "STARTER", "datevExport");
+  assertPlanFeature(plan ?? "PETITE", "datevExport");
   const company = await db.company.findUnique({
     where: { id: companyId },
     select: { name: true },

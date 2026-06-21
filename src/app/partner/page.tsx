@@ -30,7 +30,7 @@ export default function PartnerPage() {
 
           <div className="space-y-4 text-base leading-relaxed text-foreground">
             <p>Empfehle VREMA an Betriebe, die Zeiterfassung und Schichtplanung vereinfachen wollen.</p>
-            <p>Du erhältst 5 € pro Starter-Abschluss und 15 € pro Business-Abschluss — nach der ersten bezahlten Rechnung.</p>
+            <p>Du erhältst 5 € pro Petite-Abschluss und 15 € pro Major-Abschluss — nach der ersten bezahlten Rechnung.</p>
             <p>Die 7-Tage-Testphase zählt nicht; es zählt nur der echte Abschluss.</p>
           </div>
 

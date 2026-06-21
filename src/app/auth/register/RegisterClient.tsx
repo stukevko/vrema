@@ -176,7 +176,7 @@ export function RegisterClient({
 
         const loginTarget = isInviteFlow
           ? `/auth/login?registered=1&callbackUrl=${encodeURIComponent("/dashboard/welcome")}`
-          : `/auth/login?registered=1&callbackUrl=${encodeURIComponent("/onboarding")}`;
+          : `/auth/login?registered=1&callbackUrl=${encodeURIComponent("/dashboard/access-pending")}`;
         router.push(loginTarget);
       } catch {
         setError("Ein unerwarteter Fehler ist aufgetreten.");
@@ -227,7 +227,7 @@ export function RegisterClient({
               <span className="mt-0.5 block font-mono text-[10px] text-fg-subtle">{resolvedCode}</span>
             </p>
           ) : null}
-          {!isInviteFlow && plan !== "STARTER" && (
+          {!isInviteFlow && plan !== "PETITE" && (
             <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-brand/25 bg-brand-soft px-3 py-1 text-xs font-semibold text-brand">
               Plan: {plan}
             </div>

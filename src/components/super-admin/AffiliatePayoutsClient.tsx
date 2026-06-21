@@ -40,12 +40,10 @@ function queueStatusDe(s: SuperAdminAffiliatePayoutQueueRow["status"]) {
 
 function planDe(p: SuperAdminAffiliatePayoutQueueRow["plan"]) {
   switch (p) {
-    case "STARTER":
-      return "Starter";
-    case "BUSINESS":
-      return "Business";
-    case "ENTERPRISE":
-      return "Enterprise";
+    case "PETITE":
+      return "Petite";
+    case "MAJOR":
+      return "Major";
     default:
       return p;
   }
@@ -152,7 +150,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
         <div>
           <h2 className="font-semibold">Affiliate & Auszahlungen</h2>
           <p className="text-xs text-muted-foreground">
-            Einmal-Bounty je geworbener Firma (Starter 5 €, Business 15 €) nach erster bezahlter Abo-Rechnung; Haltefrist,
+            Bounty-Modell: Petite 5,00 € · Major 15,00 € nach erster bezahlter Abo-Rechnung; Haltefrist,
             dann manuell erledigen.
           </p>
         </div>
@@ -174,7 +172,7 @@ export function AffiliatePayoutsClient({ affiliates, payoutQueue }: Props) {
         <div>
           <h3 className="mb-3 text-sm font-medium text-foreground">Partner-Salden</h3>
           <p className="mb-2 text-[11px] text-muted-foreground">
-            Bounty-Modell: Starter 5,00 € · Business 15,00 € · Enterprise ohne Auto-Provision.
+            Bounty-Modell: Petite 5,00 € · Major 15,00 €.
           </p>
           <div className="overflow-x-auto rounded-xl border border-line bg-surface dark:border-white/10 dark:bg-surface/85">
             <table className="w-full text-sm">

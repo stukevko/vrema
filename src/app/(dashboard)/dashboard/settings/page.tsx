@@ -104,7 +104,7 @@ export default async function SettingsPage() {
           <div className="mt-4">
             <TerminalAccessSection
               terminalUrl={`${getSiteUrl()}/terminal/${company.slug}`}
-              plan={session.user.plan ?? "STARTER"}
+              plan={session.user.plan ?? "PETITE"}
             />
           </div>
         ) : null}

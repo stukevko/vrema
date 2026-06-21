@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { QrCode, Lock } from "lucide-react";
-import { planDisplayName } from "@/lib/plan-limits";
+import { planDisplayName } from "@/lib/plan-features";
 
 export function TerminalQrUpsell({
   plan,
@@ -31,7 +31,7 @@ export function TerminalQrUpsell({
             </p>
           ) : needsUpgrade ? (
             <p className="mt-1 text-xs text-muted-foreground">
-              QR zum Ausdrucken am Stempel-Tablet ist ab Business verfügbar (aktuell:{" "}
+              QR zum Ausdrucken am Stempel-Tablet ist in Petite & Major enthalten (aktuell:{" "}
               {planDisplayName(plan)}). Link kopieren funktioniert in jedem Tarif.
             </p>
           ) : (

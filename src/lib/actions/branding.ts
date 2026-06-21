@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/tenant-guard";
+import { canUseCustomBranding } from "@/lib/plan-limits";
 import { normalizeHex, VREMA_DEFAULT_BRAND_HEX, VREMA_DEFAULT_BRAND_HEX_DARK } from "@/lib/branding/load";
 
 export async function getBrandingSettings() {
@@ -17,7 +18,7 @@ export async function getBrandingSettings() {
   return {
     brandColor: company?.brandColor ?? null,
     brandColorDark: company?.brandColorDark ?? null,
-    plan: company?.plan ?? "STARTER",
+    plan: company?.plan ?? "PETITE",
   };
 }
 
@@ -30,17 +31,15 @@ export async function updateBranding(data: {
     throw new Error("Branding-Einstellungen sind nur für den Inhaber verfügbar.");
   }
 
-  // Plan-Gate: Custom-Branding ist Enterprise-Feature.
   const company = await db.company.findUnique({
     where: { id: companyId },
     select: { plan: true },
   });
   if (!company) throw new Error("Firma nicht gefunden.");
-  if (company.plan !== "ENTERPRISE" && role !== "SUPER_ADMIN") {
-    throw new Error("Custom-Branding ist Bestandteil des Enterprise-Plans.");
+  if (!canUseCustomBranding(company.plan) && role !== "SUPER_ADMIN") {
+    throw new Error("Custom-Branding ist in deinem Tarif enthalten — bitte Tarif prüfen.");
   }
 
-  // Wenn das Feld explizit null kommt → zurück auf VREMA-Default.
   const brandColor =
     data.brandColor === null
       ? null

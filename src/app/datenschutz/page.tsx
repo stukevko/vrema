@@ -36,7 +36,7 @@ export default function DatenschutzPage() {
 
         <section className="space-y-2 text-sm text-foreground">
           <h2 className="font-semibold text-foreground">4. Empfänger und Dienstleister</h2>
-          <p>Zahlungen über Stripe, E-Mail-Versand über Resend, Hosting/Serverbetrieb durch beauftragte Infrastrukturpartner.</p>
+          <p>Rechnungsstellung und Zahlung per Überweisung; E-Mail-Versand über Resend, Hosting/Serverbetrieb durch beauftragte Infrastrukturpartner.</p>
           <p>Mit Auftragsverarbeitern werden, soweit erforderlich, AV-Verträge abgeschlossen.</p>
         </section>
 

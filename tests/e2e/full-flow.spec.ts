@@ -164,28 +164,11 @@ test.describe("VREMA full browser flow", () => {
     await page.getByRole("combobox").first().selectOption(sickDayOfWeek);
     await expect(page.getByText("Krank (gesperrt)")).toBeVisible();
 
-    // Phase 4: Billing check
+    // Phase 4: Manuelle Abrechnung
     await page.goto("/dashboard/billing");
-    await expect(page.getByRole("heading", { name: "Abonnement & Billing" })).toBeVisible();
-
-    const hasStripeEnv =
-      Boolean(process.env.STRIPE_SECRET_KEY) &&
-      Boolean(process.env.STRIPE_BUSINESS_MONTHLY) &&
-      Boolean(process.env.NEXT_PUBLIC_APP_URL);
-
-    if (!hasStripeEnv) {
-      test.info().annotations.push({
-        type: "info",
-        description: "Stripe-Redirect nicht geprueft (fehlende STRIPE_* Env-Variablen).",
-      });
-      return;
-    }
-
-    await Promise.all([
-      page.waitForURL(/checkout\.stripe\.com/, { timeout: 30_000 }),
-      page.getByRole("button", { name: "Monatlich upgraden" }).first().click(),
-    ]);
-    expect(page.url()).toContain("checkout.stripe.com");
+    await expect(page.getByRole("heading", { name: "Tarif & Abrechnung" })).toBeVisible();
+    await expect(page.getByText(/Flatrate per Rechnung/i)).toBeVisible();
+    await expect(page.getByText(/kontakt@kevko\.studio/i)).toBeVisible();
   });
 
   test.afterAll(async () => {

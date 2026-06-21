@@ -3,12 +3,11 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { Prisma, type BillingInterval, type Plan } from "@prisma/client";
+import { Prisma, type BillingInterval, type Plan, type TenantStatus } from "@prisma/client";
 import { generateUniqueAffiliateCode, publicRegisterRefUrl } from "@/lib/affiliate-code";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "@/lib/email/transactional";
-import { stripe } from "@/lib/stripe";
 import type { CompanyModuleKey } from "@/lib/company-modules";
 import { flyerReferralCompanyFilters } from "@/lib/trial/referral";
 
@@ -54,7 +53,7 @@ export async function getSuperAdminOverview() {
         billingInterval: true,
         isActive: true,
         billingExempt: true,
-        stripeSubId: true,
+        tenantStatus: true,
         referredBy: true,
         trialEndsAt: true,
         createdAt: true,
@@ -147,41 +146,66 @@ export async function updateCompanyBySuperAdmin(params: {
   companyId: string;
   plan: Plan;
   billingInterval: BillingInterval;
-  isActive: boolean;
+  tenantStatus?: TenantStatus;
   billingExempt?: boolean;
 }) {
   const session = await auth();
   assertSuperAdmin(session);
 
-  const existing = await db.company.findUnique({
-    where: { id: params.companyId },
-    select: { stripeSubId: true },
-  });
-
-  if (params.billingExempt && existing?.stripeSubId) {
-    try {
-      await stripe.subscriptions.cancel(existing.stripeSubId);
-    } catch {
-      // Stripe-Sub evtl. schon gelöscht — DB trotzdem bereinigen
-    }
-  }
+  const tenantStatus = params.tenantStatus;
+  const billingExempt = params.billingExempt;
+  const isActive =
+    billingExempt === true || tenantStatus === "ACTIVE" || (tenantStatus === undefined && billingExempt !== false);
 
   await db.company.update({
     where: { id: params.companyId },
     data: {
       plan: params.plan,
       billingInterval: params.billingInterval,
-      isActive: params.isActive,
-      ...(params.billingExempt !== undefined ? { billingExempt: params.billingExempt } : {}),
-      ...(params.billingExempt
-        ? { stripeSubId: null, subEndsAt: null }
-        : {}),
+      ...(tenantStatus !== undefined ? { tenantStatus, isActive: billingExempt || tenantStatus === "ACTIVE" } : {}),
+      ...(billingExempt !== undefined ? { billingExempt, isActive: billingExempt || tenantStatus === "ACTIVE" } : {}),
+      ...(tenantStatus === undefined && billingExempt === undefined ? { isActive } : {}),
     },
   });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/billing");
   revalidatePath("/dashboard/partners");
+}
+
+/** BAM-Freischaltung: Tenant aktivieren, optional Plan setzen. */
+export async function activateCompanyBySuperAdmin(params: {
+  companyId: string;
+  plan?: Plan;
+}) {
+  const session = await auth();
+  assertSuperAdmin(session);
+
+  await db.company.update({
+    where: { id: params.companyId },
+    data: {
+      tenantStatus: "ACTIVE",
+      isActive: true,
+      ...(params.plan ? { plan: params.plan } : {}),
+    },
+  });
+
+  revalidatePath("/dashboard");
+}
+
+export async function suspendCompanyBySuperAdmin(companyId: string) {
+  const session = await auth();
+  assertSuperAdmin(session);
+
+  await db.company.update({
+    where: { id: companyId },
+    data: {
+      tenantStatus: "SUSPENDED",
+      isActive: false,
+    },
+  });
+
+  revalidatePath("/dashboard");
 }
 
 /** Erweiterungs-Module pro Betrieb (Super-Admin, ohne Stripe). */
@@ -229,7 +253,7 @@ export async function grantCompanyPlanWithoutBilling(params: {
     companyId: params.companyId,
     plan: params.plan,
     billingInterval: params.billingInterval ?? "MONTHLY",
-    isActive: true,
+    tenantStatus: "ACTIVE",
     billingExempt: true,
   });
 }
@@ -278,8 +302,9 @@ export async function createCompanyBySuperAdmin(params: {
     data: {
       name: companyName,
       slug,
-      plan: "STARTER",
+      plan: "PETITE",
       billingInterval: "MONTHLY",
+      tenantStatus: "ACTIVE",
       isActive: true,
       billingExempt: true,
       users: {
@@ -326,7 +351,7 @@ export type SuperAdminAffiliateRecentEntry = {
   commissionCents: number;
   currency: string;
   status: "PENDING" | "AVAILABLE" | "PAID" | "CANCELLED";
-  plan: "STARTER" | "BUSINESS" | "ENTERPRISE";
+  plan: "PETITE" | "MAJOR";
   companyName: string;
 };
 
@@ -346,7 +371,7 @@ export type SuperAdminAffiliateSummary = {
 export type SuperAdminAffiliatePayoutQueueRow = {
   id: string;
   status: "PENDING" | "AVAILABLE";
-  plan: "STARTER" | "BUSINESS" | "ENTERPRISE";
+  plan: "PETITE" | "MAJOR";
   commissionCents: number;
   currency: string;
   invoiceAmountCents: number;

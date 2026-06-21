@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   upgradeSheetContent,
   upgradeReasonFromErrorMessage,
-  businessFeatureLabel,
 } from "@/lib/plan-upgrade-messages";
+import { PLANS } from "@/lib/plans";
 
 describe("upgradeSheetContent", () => {
   it("trial limit hat klaren CTA", () => {
@@ -12,9 +12,10 @@ describe("upgradeSheetContent", () => {
     expect(c.href).toContain("/dashboard/billing");
   });
 
-  it("business feature nennt Feature", () => {
-    const c = upgradeSheetContent({ kind: "business_feature", feature: "pdf" });
-    expect(c.title).toContain(businessFeatureLabel("pdf"));
+  it("petite limit nennt Major", () => {
+    const c = upgradeSheetContent({ kind: "petite_employee_limit", limit: PLANS.PETITE.limits.employees });
+    expect(c.title).toContain(String(PLANS.PETITE.limits.employees));
+    expect(c.cta).toContain("Major");
   });
 });
 
@@ -29,5 +30,11 @@ describe("upgradeReasonFromErrorMessage", () => {
     expect(
       upgradeReasonFromErrorMessage("Deine Testphase ist abgelaufen. Bitte wähle"),
     ).toEqual({ kind: "trial_expired" });
+  });
+
+  it("erkennt Petite-Limit für Major-Upgrade", () => {
+    expect(
+      upgradeReasonFromErrorMessage("Plan-Limit: Petite erlaubt maximal 50 Mitarbeitende. Ab 51 MA bitte Major"),
+    ).toEqual({ kind: "petite_employee_limit", limit: 50 });
   });
 });

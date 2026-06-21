@@ -58,7 +58,6 @@ export default function AvvPage() {
             <h2 className="mb-2 font-semibold text-foreground">5. Unterauftragsverarbeiter</h2>
             <p>Je nach Nutzung können unter anderem folgende Anbieter eingesetzt werden:</p>
             <p>- Hosting/Infrastrukturanbieter</p>
-            <p>- Stripe (Zahlungsabwicklung)</p>
             <p>- Resend (transaktionale E-Mails)</p>
           </section>
 

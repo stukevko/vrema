@@ -331,7 +331,7 @@ export function trialReminderEmailHtml(data: {
         : `für <strong style="color:${BASE.textPrimary};">${data.companyName}</strong> bleiben noch <strong style="color:${BASE.textPrimary};">3 Tage</strong> in der Testphase. Ein Tarif jetzt sichern heißt: kein Stress am letzten Tag.`;
 
   const flyerNote = data.flyerCampaignLabel
-    ? `<p style="color:${BASE.textMuted};font-size:12px;margin:0 0 20px;line-height:1.6;">Aktions-Zugang (${data.flyerCampaignLabel}) — danach normaler Tarif über Stripe, jederzeit kündbar.</p>`
+    ? `<p style="color:${BASE.textMuted};font-size:12px;margin:0 0 20px;line-height:1.6;">Aktions-Zugang (${data.flyerCampaignLabel}) — danach normaler Tarif per Rechnung, monatlich kündbar.</p>`
     : "";
 
   const body = /* html */ `

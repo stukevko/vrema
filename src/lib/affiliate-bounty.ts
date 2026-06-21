@@ -1,14 +1,12 @@
 import type { Plan } from "@prisma/client";
 
-/** Einmal-Bounty in Cent (kein Lifetime-Prozent). Enterprise = kein automatischer Affiliate. */
-export function affiliateBountyCentsForPlan(plan: Plan): number | null {
+/** Einmal-Bounty in Cent — Major höher wegen höherem Ticket. */
+export function affiliateBountyCentsForPlan(plan: Plan | string): number | null {
   switch (plan) {
-    case "STARTER":
+    case "PETITE":
       return 500;
-    case "BUSINESS":
+    case "MAJOR":
       return 1500;
-    case "ENTERPRISE":
-      return null;
     default:
       return null;
   }

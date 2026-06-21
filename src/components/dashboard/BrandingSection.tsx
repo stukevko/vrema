@@ -29,7 +29,6 @@ export function BrandingSection({ initial }: Props) {
   const [isPending, startTransition] = useTransition();
   const { toasts, show, remove } = useToast();
 
-  const isEnterprise = initial.plan === "ENTERPRISE";
   const dirty = useMemo(
     () => light !== (initial.brandColor ?? DEFAULT_LIGHT) || dark !== (initial.brandColorDark ?? DEFAULT_DARK),
     [light, dark, initial.brandColor, initial.brandColorDark],
@@ -67,12 +66,6 @@ export function BrandingSection({ initial }: Props) {
 
   return (
     <div className="space-y-5">
-      {!isEnterprise && (
-        <div className="rounded-xl border border-amber-300/40 bg-amber-50/70 p-3 text-xs text-amber-900 dark:border-amber-300/15 dark:bg-amber-500/10 dark:text-amber-100">
-          Custom-Branding ist Bestandteil des Enterprise-Plans. Änderungen werden erst aktiv, wenn dein Tarif Enterprise ist.
-        </div>
-      )}
-
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         {/* Light */}
         <div>

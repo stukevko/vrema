@@ -85,7 +85,7 @@ export default async function PlanningPage({
         >
           <ShiftManager
             companyName={data.companyName}
-            plan={session.user.plan ?? "STARTER"}
+            plan={session.user.plan ?? "PETITE"}
             members={data.members.map((m) => ({
               id: m.id,
               name: m.name,

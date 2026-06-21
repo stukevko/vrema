@@ -34,7 +34,7 @@ export async function createAbsentEntriesForMissingShifts(prisma: PrismaClient):
   const shifts = await prisma.shift.findMany({
     where: {
       dayOfWeek: todayDow,
-      company: { isActive: true, plan: "BUSINESS" },
+      company: { isActive: true, plan: { in: ["PETITE", "MAJOR"] } },
       user: { isActive: true },
     },
     select: {

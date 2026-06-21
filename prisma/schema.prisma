@@ -8,9 +8,14 @@ datasource db {
 }
 
 enum Plan {
-  STARTER
-  BUSINESS
-  ENTERPRISE
+  PETITE
+  MAJOR
+}
+
+enum TenantStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
 }
 
 enum BillingInterval {
@@ -216,7 +221,7 @@ model AffiliateEarning {
   affiliateId       String
   companyId         String                 @unique
   stripeInvoiceId     String                 @unique
-  plan                Plan                 @default(STARTER)
+  plan                Plan                 @default(PETITE)
   invoiceAmountCents  Int
   commissionCents     Int // Fixbetrag je Plan (Starter/Business)
   currency            String                 @default("eur")
@@ -237,12 +242,9 @@ model Company {
   id                String          @id @default(cuid())
   name              String
   slug              String          @unique
-  plan              Plan            @default(STARTER)
+  plan              Plan            @default(PETITE)
   billingInterval   BillingInterval @default(MONTHLY)
-  stripeCustomerId  String?         @unique
-  stripeSubId       String?         @unique
-  stripePaymentMethodFingerprint String? @unique
-  paymentMethodVerifiedAt DateTime?
+  tenantStatus      TenantStatus    @default(PENDING)
   trialEndsAt       DateTime?
   /// E-Mail „noch 3 Tage“ (Cron, idempotent).
   trialRemind3dSentAt DateTime?
@@ -252,8 +254,7 @@ model Company {
   trialExpiredNotifiedAt DateTime?
   /// Flyer-/Kampagnen-Code bei Registrierung (z. B. speyer-altstadt).
   referredBy        String?
-  subEndsAt         DateTime?
-  isActive          Boolean         @default(true)
+  isActive          Boolean         @default(false)
   logoUrl           String?
   shiftCycleWeeks   Int             @default(4)
   /// Branchen-neutrales Vokabular für „Schicht": SHIFT | ASSIGNMENT (Einsatz) | DUTY (Dienst).
@@ -278,7 +279,7 @@ model Company {
   moduleShiftTrade      Boolean @default(true)
   moduleShiftTasks      Boolean @default(false)
   moduleAutopilot       Boolean @default(false)
-  /// Kostenfreier Zugang ohne Stripe-Abo (Super-Admin-Vergabe, Demo, interne Tenants).
+  /// Manuelle Freischaltung / Demo ohne Rechnung (Super-Admin).
   billingExempt         Boolean @default(false)
   affiliateId       String?
   // ── Enterprise: Custom Branding ──────────────────────────────────────────

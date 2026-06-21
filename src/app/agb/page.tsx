@@ -59,8 +59,8 @@ export default function AgbPage() {
           <h2 className="mb-2 font-semibold text-foreground">4. Preise, Abrechnung und Zahlung</h2>
           <p>Es gelten die auf der Website ausgewiesenen Preise zum Zeitpunkt des Vertragsschlusses.</p>
           <p>
-            Abrechnung und Zahlungsabwicklung erfolgen über den angebundenen Zahlungsdienstleister (z. B. Stripe). Bei
-            Zahlungsverzug oder fehlgeschlagener Zahlung kann der Zugang eingeschränkt werden.
+            Abrechnung erfolgt monatlich per Rechnung auf das angegebene Geschäftskonto. Bei Zahlungsverzug kann der
+            Zugang eingeschränkt werden.
           </p>
         </section>
 
@@ -71,7 +71,7 @@ export default function AgbPage() {
             automatisch um die jeweilige Laufzeit, sofern nicht fristgerecht gekündigt wird.
           </p>
           <p>
-            Kündigungen erfolgen über das bereitgestellte Billing-Portal oder in Textform an kontakt@kevko.studio.
+            Kündigungen erfolgen in Textform an kontakt@kevko.studio.
             Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt.
           </p>
         </section>

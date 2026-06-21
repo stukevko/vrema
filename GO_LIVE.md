@@ -9,18 +9,12 @@ Dieses Runbook ist für den Moment gedacht, in dem du auf der VM den Schalter um
 | `DATABASE_URL` | Postgres |
 | `AUTH_SECRET`, `AUTH_URL`, `AUTH_TRUST_HOST` | Login |
 | `NEXT_PUBLIC_APP_URL` | Links, SEO, E-Mails |
-| `STRIPE_*` (Live) | Abos |
-| Stripe Webhook-Events | `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, **`invoice.payment_failed`**, `invoice.payment_action_required`, `charge.refunded` |
 | `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | Verify, Reset, Welcome |
-| `SUPER_ADMIN_USER_ID` | Backoffice |
+| `SUPER_ADMIN_USER_ID` | Backoffice (Freischaltung PENDING → ACTIVE) |
 | `AUTH_WEBAUTHN_*` | Passkeys (Domain muss passen) |
 | `OPENWEATHER_API_KEY` | Wetter im Planer + Personal-Empfehlung |
-| `DATA_RETENTION_CRON_SECRET` | Nightly Cleanup + Trial-Reminder (Fallback) |
-| `TRIAL_REMINDER_CRON_SECRET` | Optional: eigener Secret für Trial-E-Mails |
-| `RESEND_API_KEY` | Verify, Reset, Welcome, **Trial-Ende-E-Mails** |
-| `REQUIRE_CARD_ON_SIGNUP=false` | Trial ohne Karte (Standard) |
-| Flyer `/ref/speyer` | 30 Tage Trial ohne Karte (`FLYER_CAMPAIGN_CODES`) |
-| `NEXT_PUBLIC_REQUIRE_CARD_ON_SIGNUP=false` | Marketing-Copy ohne Karten-Zwang — **nach Änderung neu bauen** |
+| `DATA_RETENTION_CRON_SECRET` | Nightly Cleanup |
+| Flyer `/ref/speyer` | 30 Tage Trial (`FLYER_CAMPAIGN_CODES`) |
 | `npm run build` grün | Kein kaputter Deploy |
 | `npm run prod:cleanup` einmalig | Keine Test-Altlasten |
 | Smoke-Tests unten | Register → Dashboard → Passkey → Terminal |
@@ -42,7 +36,6 @@ Ohne `OPENWEATHER_API_KEY` läuft VREMA – aber **ohne Wetterzeile im Planer** 
      - `DATABASE_URL`
      - `AUTH_SECRET`
      - `NEXT_PUBLIC_APP_URL=https://vrema.app`
-     - Stripe Live Keys
      - Resend Keys
      - Passkey/WebAuthn Variablen
      - `OPENWEATHER_API_KEY` (OpenWeatherMap)
@@ -56,7 +49,7 @@ Ohne `OPENWEATHER_API_KEY` läuft VREMA – aber **ohne Wetterzeile im Planer** 
 
 1. **Schema synchronisieren** (Production: **immer** Migrationen)
    - `npx prisma migrate deploy`
-   - Neu u. a.: `trial_reminder_emails`, `stripe_processed_events`, `company_shift_vocabulary`
+   - Neu u. a.: `plan_petite_major`, `manual_onboarding_tenant_status`, `company_shift_vocabulary`
 
 2. **Build**
    - `npm run build`

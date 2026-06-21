@@ -36,10 +36,7 @@ import {
 import { sendPayrollReportEmail } from "@/lib/actions/emails";
 import { exportDatevCsvAction } from "@/lib/actions/reports";
 import { confirmTimesheetMonth } from "@/lib/actions/timesheet";
-import {
-  BUSINESS_UPGRADE_PATH,
-  type GatedBusinessFeature,
-} from "@/lib/plan-upgrade-messages";
+import { canExportPdf } from "@/lib/plan-features";
 import { useUpgrade } from "@/components/dashboard/UpgradeContext";
 import { minutesToDecimalHours, workedMinutes } from "@/lib/time/payroll";
 import { payrollDocumentTitle, payrollFileSlug, pdfAsciiSafe } from "@/lib/exports/payroll-formats";
@@ -330,31 +327,27 @@ function PlanGateButton({
   icon: Icon,
   label,
   plan,
-  requiredPlan,
-  onLockedClick,
   onClick,
 }: {
   icon: React.ElementType;
   label: string;
   plan: string;
-  requiredPlan: string;
-  onLockedClick: () => void;
   onClick?: () => void;
 }) {
-  const hasAccess = plan === requiredPlan || plan === "ENTERPRISE" || (requiredPlan === "BUSINESS" && plan === "ENTERPRISE");
-  const locked = !hasAccess;
+  const hasAccess = canExportPdf(plan);
 
   return (
     <button
       type="button"
-      onClick={locked ? onLockedClick : onClick}
+      onClick={hasAccess ? onClick : undefined}
+      disabled={!hasAccess}
       className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition-all active:scale-[0.99] sm:w-auto sm:py-2.5 ${
-        locked
-          ? "cursor-pointer border-border bg-card text-muted-foreground md:hover:bg-muted/50"
-          : "border-border bg-surface text-foreground md:hover:bg-muted/50"
+        hasAccess
+          ? "border-border bg-surface text-foreground md:hover:bg-muted/50"
+          : "cursor-not-allowed border-border bg-card text-muted-foreground opacity-60"
       }`}
     >
-      {locked ? <Lock className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
+      {hasAccess ? <Icon className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
       {label}
     </button>
   );
@@ -415,14 +408,10 @@ export function ReportsClient({
   } | null>(null);
   const [correctionDecisionError, setCorrectionDecisionError] = useState<string | null>(null);
 
-  const showBusinessUpgrade = (feature: GatedBusinessFeature) => {
-    openUpgrade({ kind: "business_feature", feature });
-  };
-
   const [isDatevDownloading, setIsDatevDownloading] = useState(false);
   const [isAIAnalyzing, setIsAIAnalyzing] = useState(false);
   const [aiAnalysis, setAIAnalysis] = useState<AIReportAnalysisPayload | null>(null);
-  const hasBusinessAccess = plan === "BUSINESS" || plan === "ENTERPRISE";
+  const hasProAccess = canExportPdf(plan);
   const totalHoursDecimal = minutesToDecimalHours(totalMinutes, 2);
   const productiveDays = new Set(
     logs.map((log) =>
@@ -1226,44 +1215,32 @@ export function ReportsClient({
             </button>
             <button
               type="button"
-              onClick={hasBusinessAccess ? exportPdf : () => showBusinessUpgrade("pdf")}
+              onClick={hasProAccess ? exportPdf : undefined}
+              disabled={!hasProAccess}
               className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 md:min-h-0 md:w-auto ${
-                hasBusinessAccess
+                hasProAccess
                   ? "bg-primary text-foreground ring-1 ring-inset ring-white/20 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
-                  : "border border-border bg-card text-muted-foreground md:hover:bg-muted/50"
+                  : "border border-border bg-card text-muted-foreground opacity-60"
               }`}
             >
-              {hasBusinessAccess ? <Download className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+              {hasProAccess ? <Download className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
               PDF exportieren
             </button>
             <button
               type="button"
-              onClick={hasBusinessAccess ? printReport : () => showBusinessUpgrade("print")}
+              onClick={hasProAccess ? printReport : undefined}
+              disabled={!hasProAccess}
               className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all active:scale-[0.99] sm:py-2.5 md:min-h-0 md:w-auto ${
-                hasBusinessAccess
+                hasProAccess
                   ? "border-border bg-surface text-foreground md:hover:bg-muted/50"
-                  : "border border-border bg-card text-muted-foreground md:hover:bg-muted/50"
+                  : "border border-border bg-card text-muted-foreground opacity-60"
               }`}
             >
-              {hasBusinessAccess ? <Printer className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+              {hasProAccess ? <Printer className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
               Drucken
             </button>
-            <PlanGateButton
-              icon={Mail}
-              label="An Lohnbüro senden"
-              plan={plan}
-              requiredPlan="BUSINESS"
-              onLockedClick={() => showBusinessUpgrade("payroll")}
-              onClick={sendToPayroll}
-            />
-            <PlanGateButton
-              icon={FileSpreadsheet}
-              label="CSV exportieren"
-              plan={plan}
-              requiredPlan="BUSINESS"
-              onLockedClick={() => showBusinessUpgrade("csv")}
-              onClick={exportCsv}
-            />
+            <PlanGateButton icon={Mail} label="An Lohnbüro senden" plan={plan} onClick={sendToPayroll} />
+            <PlanGateButton icon={FileSpreadsheet} label="CSV exportieren" plan={plan} onClick={exportCsv} />
             <button
               type="button"
               onClick={canDatevExport ? handleDatevExport : () => show("Nur Owner/Admin dürfen DATEV exportieren.", "error")}
@@ -2001,23 +1978,6 @@ export function ReportsClient({
             </>
           )}
         </div>
-
-        {plan === "STARTER" && (
-          <div className="no-print rounded-2xl bg-card border border-border shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-5 flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold">PDF, Lohnbüro & DATEV — ab Business</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Am Monatsende direkt ans Lohnbüro senden oder DATEV-CSV ziehen (79 €/Monat).
-              </p>
-            </div>
-            <a
-              href={BUSINESS_UPGRADE_PATH}
-              className="shrink-0 rounded-2xl bg-primary px-4 py-2 text-sm font-bold text-foreground transition-all active:scale-95 md:hover:bg-primary/90"
-            >
-              Business ansehen
-            </a>
-          </div>
-        )}
         </section>
       </motion.div>
 

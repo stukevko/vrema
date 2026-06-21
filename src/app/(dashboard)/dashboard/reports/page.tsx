@@ -33,7 +33,7 @@ export default async function ReportsPage({
     // seltene DB-Serialisierung: Berichte trotzdem laden
   }
 
-  const plan = session.user.plan ?? "STARTER";
+  const plan = session.user.plan ?? "PETITE";
   const canDatevExport = role === "COMPANY_OWNER" || role === "SUPER_ADMIN";
   const company = await db.company.findUnique({
     where: { id: companyId },

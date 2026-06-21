@@ -8,11 +8,9 @@ import {
   EMPLOYEE_NUMBER_AUTO_START,
   nextNumericEmployeeNumber,
 } from "@/lib/team/allocate-employee-number";
-import { computeTrialEndsAt } from "@/lib/trial/constants";
 import {
-  computeFlyerTrialEndsAt,
-  isFlyerReferralCode,
   normalizeReferralCode,
+  isFlyerReferralCode,
 } from "@/lib/trial/referral";
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -125,7 +123,7 @@ export async function POST(req: NextRequest) {
       });
       const { assertCanAddEmployees } = await import("@/lib/plan-limits");
       try {
-        await assertCanAddEmployees(invite.orgId, orgPlan?.plan ?? "STARTER", 1);
+        await assertCanAddEmployees(invite.orgId, orgPlan?.plan ?? "PETITE", 1);
       } catch (e) {
         return NextResponse.json(
           { error: e instanceof Error ? e.message : "Plan-Limit erreicht." },
@@ -189,7 +187,6 @@ export async function POST(req: NextRequest) {
 
     let resolvedAffiliateId: string | undefined;
     let referredBy: string | undefined;
-    let trialEndsAt = computeTrialEndsAt();
 
     if (refRaw) {
       const affiliate = await db.affiliate.findUnique({
@@ -200,21 +197,19 @@ export async function POST(req: NextRequest) {
         resolvedAffiliateId = affiliate.id;
       } else if (isFlyerReferralCode(refRaw)) {
         referredBy = refRaw;
-        trialEndsAt = computeFlyerTrialEndsAt();
       }
     }
 
-    const safePlan: "STARTER" | "BUSINESS" | "ENTERPRISE" =
-      plan === "BUSINESS" || plan === "ENTERPRISE" ? plan : "STARTER";
+    const safePlan: "PETITE" | "MAJOR" = plan === "MAJOR" ? "MAJOR" : "PETITE";
 
     const company = await db.company.create({
       data: {
         name: String(companyName).trim(),
         slug: uniqueSlug,
         plan: safePlan,
-        trialEndsAt,
+        tenantStatus: "PENDING",
         referredBy,
-        isActive: true,
+        isActive: false,
         affiliateId: resolvedAffiliateId,
         users: {
           create: {

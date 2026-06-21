@@ -1,310 +1,115 @@
+import Link from "next/link";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { PLANS } from "@/lib/stripe";
-import { createCheckoutSession, createBillingPortalSession } from "@/lib/actions/billing";
-import { Check, Zap, CreditCard, Clock } from "lucide-react";
-import Link from "next/link";
-import { getCompanyTrialState, TRIAL_DAYS, TRIAL_MAX_EMPLOYEES } from "@/lib/trial";
-import { FLYER_TRIAL_DAYS, flyerReferralDisplayName, isFlyerReferralCode } from "@/lib/trial/referral";
-import { grantCompanyPlanWithoutBilling } from "@/lib/actions/super-admin";
-import { Shield } from "lucide-react";
+import { PLANS, MANUAL_BILLING } from "@/lib/plans";
+import { planDisplayName } from "@/lib/plan-limits";
+import { tenantStatusLabel } from "@/lib/tenant-access";
+import { Check, Mail, Clock } from "lucide-react";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
-export default async function BillingPage({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    success?: string;
-    canceled?: string;
-    trial_expired?: string;
-    upgrade?: string;
-    payment_failed?: string;
-  }>;
-}) {
+export default async function BillingPage() {
   const session = await auth();
   if (!session?.user?.companyId) redirect("/auth/login");
 
-  const params = await searchParams;
-  const { companyId } = session.user as { companyId: string };
   const role = session.user.role ?? "EMPLOYEE";
   if (role === "EMPLOYEE") redirect("/dashboard");
-  const isSuperAdmin =
-    role === "SUPER_ADMIN" || session.user.id === process.env.SUPER_ADMIN_USER_ID;
 
   const company = await db.company.findUnique({
-    where: { id: companyId },
+    where: { id: session.user.companyId },
     select: {
       plan: true,
-      billingInterval: true,
-      stripeCustomerId: true,
-      stripeSubId: true,
-      subEndsAt: true,
-      trialEndsAt: true,
+      tenantStatus: true,
       billingExempt: true,
-      isActive: true,
-      referredBy: true,
+      name: true,
     },
   });
-
   if (!company) redirect("/auth/login");
 
-  const trial = await getCompanyTrialState(companyId);
-  const currentPlan = company.plan;
-  const showTrialExpired = params.trial_expired === "1" || trial?.isTrialExpired;
-  const highlightBusiness = params.upgrade === "business";
-  const flyerLabel =
-    company.referredBy && isFlyerReferralCode(company.referredBy)
-      ? flyerReferralDisplayName(company.referredBy)
-      : null;
-  const trialDaysLabel = flyerLabel ? FLYER_TRIAL_DAYS : TRIAL_DAYS;
+  const planConfig = PLANS[company.plan];
+  const isPending = company.tenantStatus === "PENDING";
+  const isSuspended = company.tenantStatus === "SUSPENDED";
 
   return (
-    <DashboardPageShell maxWidth="5xl" animateEnter className="sm:space-y-8">
+    <DashboardPageShell maxWidth="3xl" animateEnter className="sm:space-y-8">
       <DashboardPageHeader
         variant="hero"
         eyebrow="Abonnement"
-        title="Tarif & Zahlung"
-        description="Plan wählen, Stripe-Portal öffnen oder Testphase verlängern."
+        title="Tarif & Abrechnung"
+        description="Flatrate per Rechnung — kein Kreditkarten-Zwang."
       />
 
-      {(params.payment_failed === "1" || (!company.isActive && !company.billingExempt && company.stripeSubId)) && (
-        <div className="rounded-xl border border-danger/40 bg-danger-soft/40 px-4 py-4">
-          <p className="text-sm font-semibold text-danger-foreground">Zahlung ausstehend — Zugang gesperrt</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Die letzte Abbuchung ist fehlgeschlagen. Bitte Zahlungsmethode im Stripe-Kundenportal aktualisieren.
-            Nach erfolgreicher Zahlung wird der Zugang automatisch wieder freigeschaltet.
-          </p>
-          {company.stripeCustomerId && (
-            <form action={createBillingPortalSession} className="mt-3">
-              <button
-                type="submit"
-                className="inline-flex min-h-10 items-center rounded-xl bg-brand px-4 text-sm font-bold text-brand-foreground"
-              >
-                Zahlung im Portal beheben
-              </button>
-            </form>
-          )}
-        </div>
-      )}
-
-      {company.billingExempt && (
-        <div className="rounded-xl border border-emerald-300/50 bg-emerald-50 px-4 py-4 dark:border-emerald-500/30 dark:bg-emerald-950/40">
-          <p className="text-sm font-semibold text-emerald-950 dark:text-emerald-100">Kostenfrei freigeschaltet</p>
-          <p className="mt-1 text-sm text-emerald-900/90 dark:text-emerald-100/90">
-            Dieser Zugang läuft ohne Stripe-Abbuchung. Plan: <strong>{currentPlan}</strong>
-            {company.stripeSubId
-              ? " — aktives Stripe-Abo wurde beim Freischalten beendet."
-              : " — kein aktives Abo."}
-          </p>
-        </div>
-      )}
-
-      {isSuperAdmin && !company.billingExempt && (
-        <form
-          action={async () => {
-            "use server";
-            await grantCompanyPlanWithoutBilling({
-              companyId,
-              plan: company.plan,
-              billingInterval: company.billingInterval,
-            });
-          }}
-          className="rounded-xl border border-brand/30 bg-brand-soft/50 px-4 py-3 dark:border-white/10 dark:bg-brand/10"
-        >
-          <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <Shield className="h-4 w-4 text-brand" aria-hidden />
-            Super-Admin: eigenen Tenant schenken
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Setzt kostenfreien Zugang und beendet ein vorhandenes Stripe-Abo — keine weiteren Abbuchungen für diese Firma.
-          </p>
-          <button
-            type="submit"
-            className="mt-3 inline-flex min-h-10 items-center rounded-xl bg-brand px-4 text-sm font-bold text-brand-foreground"
-          >
-            {currentPlan} kostenfrei aktivieren
-          </button>
-        </form>
-      )}
-
-      {showTrialExpired && !trial?.hasPaidSubscription && !company.billingExempt && (
+      {isPending && (
         <div className="rounded-xl border border-amber-300/50 bg-amber-50 px-4 py-4 dark:border-amber-500/30 dark:bg-amber-950/40">
           <div className="flex gap-3">
             <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden />
             <div>
-              <p className="text-sm font-semibold text-amber-950 dark:text-amber-100">
-                {flyerLabel ? `${flyerLabel} beendet` : "Testphase beendet"}
-              </p>
+              <p className="text-sm font-semibold text-amber-950 dark:text-amber-100">Zugang wird vorbereitet</p>
               <p className="mt-1 text-sm text-amber-900/90 dark:text-amber-100/90">
-                Dein Team kann nicht weiter stempeln oder planen, bis du einen Tarif abschließt.
-                {flyerLabel
-                  ? ` Die Aktion (${trialDaysLabel} Tage) war einmalig — danach normaler Tarif über Stripe.`
-                  : ` Keine zweite Testphase — einmal ${trialDaysLabel} Tage mit bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitenden.`}
+                Wir melden uns in Kürze bei dir und schalten {company.name} frei. Danach erhältst du die Rechnung per
+                E-Mail.
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {highlightBusiness && !trial?.hasPaidSubscription && (
-        <div className="rounded-xl border border-brand/30 bg-brand-soft/70 px-4 py-3 text-sm dark:border-white/10 dark:bg-brand/15">
-          <p className="font-semibold text-foreground">Business — für Lohnbüro & Exporte</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            PDF-Monatsberichte, Versand ans Lohnbüro und DATEV-CSV — der nächste Schritt nach der Testphase.
-          </p>
-        </div>
-      )}
-
-      {trial?.isInAppTrial && !company.billingExempt && (
-        <div className="rounded-xl border border-brand/25 bg-brand-soft/60 px-4 py-3 text-sm dark:border-white/10 dark:bg-brand/15">
-          <p className="font-medium text-foreground">
-            Testphase läuft — noch {trial.daysRemaining} {trial.daysRemaining === 1 ? "Tag" : "Tage"}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Bis zu {TRIAL_MAX_EMPLOYEES} Mitarbeitende in der Testphase. Wähle rechtzeitig einen Tarif, damit nichts
-            unterbrochen wird.
-          </p>
-        </div>
-      )}
-
-      {params.canceled === "1" && (
-        <div className="rounded-xl border border-line bg-surface-muted/80 px-4 py-4 dark:border-white/10">
-          <p className="text-sm font-semibold text-foreground">Checkout abgebrochen</p>
+      {isSuspended && (
+        <div className="rounded-xl border border-danger/40 bg-danger-soft/40 px-4 py-4">
+          <p className="text-sm font-semibold text-danger-foreground">Zugang pausiert</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Keine Sorge — es wurde nichts abgebucht. Du kannst jederzeit einen Tarif wählen.
+            Bitte offene Rechnung begleichen oder uns kurz schreiben — dann schalten wir wieder frei.
           </p>
         </div>
       )}
 
-      {params.success && (
-        <div className="rounded-xl bg-primary/10 border border-primary/30 p-4 flex items-center gap-3">
-          <Check className="w-5 h-5 text-[#22c55e]" />
-          <p className="text-sm text-[#22c55e] font-medium">Zahlung erfolgreich. Dein Plan wurde aktualisiert.</p>
-        </div>
-      )}
-
-      {/* Current plan */}
       <div className="rounded-2xl glass-panel p-6 sm:p-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs text-muted-foreground mb-1">Aktueller Plan</p>
-            <p className="text-2xl font-bold capitalize">{currentPlan}</p>
-            {company.subEndsAt && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Läuft bis: {new Date(company.subEndsAt).toLocaleDateString("de-DE")}
-              </p>
-            )}
-          </div>
-          {company.stripeCustomerId && !company.billingExempt && (
-            <form action={createBillingPortalSession}>
-              <button
-                type="submit"
-              className="flex min-h-12 items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium transition-colors hover:bg-surface-muted hover:border-brand/40 sm:min-h-0 sm:py-2"
-              >
-                <CreditCard className="w-4 h-4" />
-                Zahlungsportal
-              </button>
-            </form>
-          )}
-        </div>
+        <p className="text-xs text-muted-foreground mb-1">Dein Tarif</p>
+        <p className="text-2xl font-bold">{planDisplayName(company.plan)}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Status: {tenantStatusLabel(company.tenantStatus)}
+          {company.billingExempt ? " · Kostenfrei freigeschaltet" : ""}
+        </p>
+        <p className="mt-3 text-3xl font-bold">
+          {planConfig.monthlyPrice}€
+          <span className="text-sm font-normal text-muted-foreground"> / Monat (Flatrate)</span>
+        </p>
       </div>
 
-      {/* Plan cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {(Object.entries(PLANS) as [keyof typeof PLANS, (typeof PLANS)[keyof typeof PLANS]][]).map(([key, plan]) => {
-          const isCurrent = currentPlan === key;
-          return (
-            <div
-              key={key}
-              className={`rounded-2xl border p-8 shadow-[var(--shadow-card)] transition-[box-shadow,border-color] duration-200 hover:shadow-[var(--shadow-card-hover)] ${
-                isCurrent
-                  ? "border-brand/30 bg-brand-soft/40 dark:bg-brand/15"
-                  : "border-line bg-surface dark:bg-surface/85"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold">{plan.name}</h3>
-                {isCurrent && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary font-semibold">
-                    Aktiv
-                  </span>
-                )}
-              </div>
-
-              {isCurrent ? (
-                <a
-                  href="/dashboard"
-                  className="mb-1 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 sm:min-h-0"
-                >
-                  Zum Dashboard gehen
-                </a>
-              ) : (
-                <p className="text-2xl md:text-3xl font-bold mb-1">
-                  {plan.monthlyPrice === null ? "Auf Anfrage" : `${plan.monthlyPrice}€`}
-                  {plan.monthlyPrice !== null && <span className="text-sm font-normal text-muted-foreground">/mo</span>}
-                </p>
-              )}
-
-              <ul className="mt-4 mb-6 space-y-2">
-                {plan.features.slice(0, 6).map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-xs text-foreground">
-                    <Check className="w-3.5 h-3.5 text-[#22c55e] shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-
-              {!isCurrent && key !== "ENTERPRISE" && !company.billingExempt && (
-                <div className="flex flex-col gap-2">
-                  <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "monthly")}>
-                    <button
-                      type="submit"
-                      className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-bold text-foreground ring-1 ring-inset ring-white/20 transition-colors hover:bg-primary/90 sm:min-h-0 sm:py-2.5"
-                    >
-                      <Zap className="w-4 h-4" />
-                      Monatlich upgraden
-                    </button>
-                  </form>
-                  <form action={createCheckoutSession.bind(null, key as "STARTER" | "BUSINESS", "yearly")}>
-                    <button
-                      type="submit"
-                      className="min-h-12 w-full rounded-xl border border-line bg-surface py-3.5 text-sm font-medium transition-colors hover:bg-surface-muted hover:border-brand/40 sm:min-h-0 sm:py-2.5"
-                    >
-                      Jährlich (2 Monate gratis)
-                    </button>
-                  </form>
-                </div>
-              )}
-              {key === "ENTERPRISE" && !isCurrent && (
-                <a
-                  href="mailto:kontakt@kevko.studio?subject=Enterprise%20Anfrage%20Vrema"
-                  className="block min-h-12 w-full rounded-xl border border-line bg-surface py-3.5 text-center text-sm font-medium transition-colors hover:bg-surface-muted hover:border-brand/40 sm:min-h-0 sm:py-2.5"
-                >
-                  Kontakt aufnehmen
-                </a>
-              )}
-            </div>
-          );
-        })}
+      <div className="rounded-2xl border border-line bg-surface p-6">
+        <h2 className="text-sm font-bold">All-In — alles drin</h2>
+        <ul className="mt-4 space-y-2">
+          {planConfig.features.map((f) => (
+            <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Check className="h-3.5 w-3.5 shrink-0 text-[#22c55e]" />
+              {f}
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <div className="rounded-2xl border border-line bg-surface px-4 py-3 text-xs text-muted-foreground">
-        Mit dem Abschluss eines kostenpflichtigen Plans gelten die{" "}
-        <Link href="/agb" className="text-foreground underline underline-offset-2 hover:text-foreground">
-          AGB
-        </Link>{" "}
-        , die{" "}
-        <Link href="/datenschutz" className="text-foreground underline underline-offset-2 hover:text-foreground">
-          Datenschutzhinweise
-        </Link>{" "}
-        und bei Bedarf die{" "}
-        <Link href="/avv" className="text-foreground underline underline-offset-2 hover:text-foreground">
-          AVV
+      <div className="rounded-2xl border border-brand/25 bg-brand-soft/50 px-5 py-4 dark:border-white/10 dark:bg-brand/10">
+        <p className="flex items-center gap-2 text-sm font-semibold">
+          <Mail className="h-4 w-4 text-brand" aria-hidden />
+          Manuelle Abrechnung
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">{MANUAL_BILLING.paymentNote}</p>
+        <a
+          href={`mailto:${MANUAL_BILLING.contactEmail}?subject=VREMA%20Abrechnung%20${encodeURIComponent(company.name)}`}
+          className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brand px-4 text-sm font-bold text-brand-foreground"
+        >
+          {MANUAL_BILLING.contactEmail}
+        </a>
+      </div>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Tarif wechseln (Petite ↔ Major)?{" "}
+        <Link href={`mailto:${MANUAL_BILLING.contactEmail}`} className="text-brand underline underline-offset-2">
+          Schreib uns kurz
         </Link>
         .
-      </div>
+      </p>
     </DashboardPageShell>
   );
 }

@@ -1,7 +1,7 @@
 import { UserRole } from "@prisma/client";
 import { db } from "@/lib/db";
 import { tenantWhere } from "@/lib/tenant-guard";
-import { PLANS } from "@/lib/stripe";
+import { PLANS } from "@/lib/plans";
 import {
   TRIAL_MAX_EMPLOYEES,
   hasPaidSubscription,
@@ -10,43 +10,26 @@ import {
   isTrialExpired,
   type CompanyTrialFields,
 } from "@/lib/trial";
+import {
+  assertPlanFeature,
+  maxEmployees,
+  normalizePlan,
+  planDisplayName,
+  type CompanyPlan,
+} from "@/lib/plan-features";
 
-export type CompanyPlan = keyof typeof PLANS;
-
-export function getPlanLimits(plan: string) {
-  const key = (plan in PLANS ? plan : "STARTER") as CompanyPlan;
-  return PLANS[key].limits;
-}
-
-export function canExportPdf(plan: string): boolean {
-  return getPlanLimits(plan).pdfExport;
-}
-
-export function canEmailPayroll(plan: string): boolean {
-  return getPlanLimits(plan).payrollEmail;
-}
-
-/**
- * QR-Code fürs Terminal-Tablet.
- * Vorbereitet, standardmäßig aus: `VREMA_FEATURE_QR_TERMINAL=plan` (oder `all` zum Testen).
- * Ohne Env oder `off`/`false`: für niemanden sichtbar — Freischaltung nach Bedarf.
- */
-export function canUseQrTerminal(plan: string): boolean {
-  const flag = process.env.VREMA_FEATURE_QR_TERMINAL?.trim().toLowerCase();
-  if (!flag || flag === "off" || flag === "false") return false;
-  if (flag === "all") return true;
-  return getPlanLimits(plan).qrTerminal;
-}
-
-export function maxEmployees(plan: string): number {
-  return getPlanLimits(plan).employees;
-}
-
-export function planDisplayName(plan: string): string {
-  if (plan === "BUSINESS") return "Business";
-  if (plan === "ENTERPRISE") return "Enterprise";
-  return "Starter";
-}
+export type { CompanyPlan };
+export {
+  assertPlanFeature,
+  canEmailPayroll,
+  canExportPdf,
+  canUseCustomBranding,
+  canUseQrTerminal,
+  getPlanLimits,
+  maxEmployees,
+  normalizePlan,
+  planDisplayName,
+} from "@/lib/plan-features";
 
 export async function countActiveEmployees(companyId: string): Promise<number> {
   return db.user.count({
@@ -61,11 +44,11 @@ export async function countActiveEmployees(companyId: string): Promise<number> {
 async function getCompanyTrialFields(companyId: string): Promise<CompanyTrialFields | null> {
   return db.company.findUnique({
     where: { id: companyId },
-    select: { trialEndsAt: true, stripeSubId: true, subEndsAt: true, billingExempt: true },
+    select: { trialEndsAt: true, billingExempt: true, tenantStatus: true, isActive: true },
   });
 }
 
-/** Effektives MA-Limit inkl. Testphase (3) vs. Plan (10/100/∞). */
+/** Effektives MA-Limit inkl. Testphase (3) vs. Plan (50/∞). */
 export async function getEffectiveEmployeeLimit(companyId: string, plan: string): Promise<number> {
   const company = await getCompanyTrialFields(companyId);
   const planLimit = maxEmployees(plan);
@@ -102,24 +85,14 @@ export async function assertCanAddEmployees(
         `Testphase: maximal ${TRIAL_MAX_EMPLOYEES} aktive Mitarbeitende (aktuell ${current}). Nach dem Tarifwechsel gelten die Limits deines Plans.`,
       );
     }
+    const normalized = normalizePlan(plan);
+    if (normalized === "PETITE" && limit === PLANS.PETITE.limits.employees) {
+      throw new Error(
+        `Plan-Limit: Petite erlaubt maximal ${limit} Mitarbeitende (aktuell ${current}). Ab 51 MA bitte Major (90 €/Monat) unter Abonnement wählen.`,
+      );
+    }
     throw new Error(
       `Plan-Limit: ${planDisplayName(plan)} erlaubt maximal ${limit} aktive Mitarbeitende (aktuell ${current}). Bitte Tarif wechseln unter Abonnement.`,
     );
-  }
-}
-
-export function assertPlanFeature(
-  plan: string,
-  feature: "pdfExport" | "payrollEmail" | "datevExport",
-): void {
-  const limits = getPlanLimits(plan);
-  if (feature === "pdfExport" && !limits.pdfExport) {
-    throw new Error("PDF-Export ist ab dem Business-Tarif verfügbar.");
-  }
-  if (feature === "payrollEmail" && !limits.payrollEmail) {
-    throw new Error("E-Mail an das Lohnbüro ist ab dem Business-Tarif verfügbar.");
-  }
-  if (feature === "datevExport" && !limits.pdfExport) {
-    throw new Error("DATEV-Export ist ab dem Business-Tarif verfügbar.");
   }
 }

@@ -43,18 +43,8 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 
   // ── Kritisch: in Production zwingend (verhindert Kaltstart-Crashs) ──
-  STRIPE_SECRET_KEY: requiredString(),
   AUTH_SECRET: requiredString(),
   NEXT_PUBLIC_APP_URL: requiredUrl("http://localhost:3000"),
-  STRIPE_WEBHOOK_SECRET: requiredString(),
-
-  // ── Stripe Price-IDs (optional; früher ebenfalls via `!`) ──
-  STRIPE_STARTER_MONTHLY: optionalString(),
-  STRIPE_STARTER_YEARLY: optionalString(),
-  STRIPE_BUSINESS_MONTHLY: optionalString(),
-  STRIPE_BUSINESS_YEARLY: optionalString(),
-  STRIPE_ENTERPRISE_MONTHLY: optionalString(),
-  STRIPE_ENTERPRISE_YEARLY: optionalString(),
 
   // ── Web Push / VAPID (optional; Push ist ein Add-on) ──
   // Public-Key ist NEXT_PUBLIC_*, da ihn der Client zum Abonnieren braucht.

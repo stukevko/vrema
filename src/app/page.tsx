@@ -107,54 +107,34 @@ const STATS = [
 
 const PLANS = [
   {
-    key: "STARTER",
-    name: "Starter",
+    key: "PETITE",
+    name: "Petite",
     monthlyPrice: 29,
     yearlyPrice: 24,
-    highlight: false,
+    highlight: true,
+    badge: "All-In",
     features: [
-      "Bis zu 10 Mitarbeiter",
-      "Live-Terminal",
-      "Saldo-Übersicht",
-      "Urlaubsanträge",
-      "Privacy by Design (ohne Standort-Tracking)",
-      "E-Mail-Support",
+      "Bis zu 50 Mitarbeitende",
+      "Stempeln, Planer, Team & Abwesenheit",
+      "Schicht-Tausch",
+      "PDF-Export & DATEV-CSV",
+      "E-Mail ans Lohnbüro",
+      "QR-Terminal",
     ],
-    missing: ["PDF-Export", "Lohnbüro-Versand"],
+    missing: [] as string[],
   },
   {
-    key: "BUSINESS",
-    name: "Business",
-    monthlyPrice: 79,
-    yearlyPrice: 66,
-    highlight: true,
-    badge: "Beliebtester Plan",
+    key: "MAJOR",
+    name: "Major",
+    monthlyPrice: 90,
+    yearlyPrice: 75,
+    highlight: false,
     features: [
-      "Bis zu 100 Mitarbeiter",
-      "Alles aus Starter",
-      "PDF-Export",
-      "Lohnbüro-Versand",
-      "Privacy by Design (ohne Standort-Tracking)",
+      "Unbegrenzte Mitarbeitende (ab 51 MA)",
+      "Alles aus Petite — gleiche Features",
       "Prioritäts-Support",
     ],
-    missing: ["API-Zugang"],
-  },
-  {
-    key: "ENTERPRISE",
-    name: "Enterprise",
-    monthlyPrice: null,
-    yearlyPrice: null,
-    highlight: false,
-    features: [
-      "Unbegrenzte Mitarbeiter",
-      "Alles aus Business",
-      "API-Zugang",
-      "Custom Branding",
-      "Privacy by Design (ohne Standort-Tracking)",
-      "Dedizierter Support",
-      "SLA-Garantie",
-    ],
-    missing: [],
+    missing: [] as string[],
   },
 ];
 
@@ -585,7 +565,7 @@ export default function LandingPage() {
             <h2 className="mb-4 max-w-full hyphens-auto break-words text-4xl font-black md:text-5xl">Starten.</h2>
             <p className="text-muted-foreground">{trialPricingIntroLine()}</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Feste Tarife nach Teamgröße — Starter bis 10, Business bis 100, Enterprise unbegrenzt.
+              All-In nach Teamgröße — Petite bis 50 MA (29 €), Major unbegrenzt (90 €).
             </p>
           </div>
 
@@ -633,7 +613,7 @@ export default function LandingPage() {
             </span>
           </div>
 
-          <div className="mt-4 grid min-w-0 max-w-full grid-cols-1 gap-5 pt-1 md:grid-cols-3">
+          <div className="mt-4 grid min-w-0 max-w-full grid-cols-1 gap-5 pt-1 md:grid-cols-2">
             {PLANS.map((plan) => (
               <div
                 key={plan.key}
@@ -696,18 +676,14 @@ export default function LandingPage() {
                 </ul>
 
                 <Link
-                  href={
-                    plan.key === "ENTERPRISE"
-                      ? "mailto:kontakt@kevko.studio?subject=Enterprise%20Anfrage%20Vrema"
-                      : `/auth/register?plan=${plan.key}&interval=${yearly ? "yearly" : "monthly"}`
-                  }
+                  href={`/auth/register?plan=${plan.key}&interval=${yearly ? "yearly" : "monthly"}`}
                   className={
                     plan.highlight
                       ? "btn-primary-solid block w-full text-center py-3 text-sm"
                       : "btn-secondary-outline block w-full text-center py-3 text-sm"
                   }
                 >
-                  {plan.key === "ENTERPRISE" ? "Enterprise anfragen" : `${plan.name} wählen`}
+                  {`${plan.name} wählen`}
                 </Link>
               </div>
             ))}

@@ -118,7 +118,7 @@ export function groupDashboardNavItems(items: DashboardNavItem[]): DashboardNavG
   return groups;
 }
 
-const ALL_PLANS = ["STARTER", "BUSINESS", "ENTERPRISE"] as const;
+const ALL_PLANS = ["PETITE", "MAJOR"] as const;
 
 /**
  * Mobil-Bottom-Nav (< md): 3 Tabs für MA & Chef.
