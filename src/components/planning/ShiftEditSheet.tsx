@@ -2,6 +2,7 @@
 
 import { Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { PlannerModalPortal } from "@/components/planning/PlannerModalPortal";
 
 const DAY_NAMES = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"] as const;
 
@@ -40,19 +41,20 @@ export function ShiftEditSheet({
   const invalidRange = !startTime || !endTime || startTime === endTime;
 
   return (
-    <div
-      className="fixed inset-0 z-[110] flex items-end justify-center p-0 sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="shift-edit-title"
-    >
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/25 backdrop-blur-[6px]"
-        aria-label="Schließen"
-        onClick={onClose}
-      />
-      <div className="relative flex w-full max-w-[340px] flex-col overflow-hidden rounded-t-[1.35rem] border border-border/60 bg-card/95 shadow-[0_24px_80px_-12px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:rounded-[1.35rem]">
+    <PlannerModalPortal open={open}>
+      <div
+        className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="shift-edit-title"
+      >
+        <button
+          type="button"
+          className="absolute inset-0 bg-black/30 backdrop-blur-[8px]"
+          aria-label="Schließen"
+          onClick={onClose}
+        />
+        <div className="relative flex w-full max-w-[360px] flex-col overflow-hidden rounded-[1.35rem] border border-border/60 bg-card shadow-[0_24px_80px_-12px_rgba(0,0,0,0.35)]">
         <div className="flex items-start justify-between gap-3 px-5 pb-2 pt-5">
           <div className="min-w-0">
             <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
@@ -126,7 +128,8 @@ export function ShiftEditSheet({
             Löschen
           </button>
         </div>
+        </div>
       </div>
-    </div>
+    </PlannerModalPortal>
   );
 }

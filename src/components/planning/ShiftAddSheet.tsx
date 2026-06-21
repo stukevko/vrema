@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/avatar";
+import { PlannerModalPortal } from "@/components/planning/PlannerModalPortal";
 
 const DAY_NAMES = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"] as const;
 
@@ -70,19 +71,20 @@ export function ShiftAddSheet({
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="shift-add-title"
-    >
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/25 backdrop-blur-[6px]"
-        aria-label="Schließen"
-        onClick={onClose}
-      />
-      <div className="relative flex max-h-[min(540px,92dvh)] w-full max-w-[340px] flex-col overflow-hidden rounded-t-[1.35rem] border border-border/60 bg-card/95 shadow-[0_24px_80px_-12px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:rounded-[1.35rem]">
+    <PlannerModalPortal open={open}>
+      <div
+        className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="shift-add-title"
+      >
+        <button
+          type="button"
+          className="absolute inset-0 bg-black/30 backdrop-blur-[8px]"
+          aria-label="Schließen"
+          onClick={onClose}
+        />
+        <div className="relative flex max-h-[min(520px,calc(100dvh-2rem))] w-full max-w-[360px] flex-col overflow-hidden rounded-[1.35rem] border border-border/60 bg-card shadow-[0_24px_80px_-12px_rgba(0,0,0,0.35)]">
         <div className="flex items-start justify-between gap-3 px-5 pb-2 pt-5">
           <div className="min-w-0">
             <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
@@ -189,7 +191,8 @@ export function ShiftAddSheet({
             Speichern
           </Button>
         </div>
+        </div>
       </div>
-    </div>
+    </PlannerModalPortal>
   );
 }

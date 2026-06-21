@@ -20,7 +20,7 @@ type PlannerMonthGridProps = {
   members: BoardMember[];
   holidayRegion?: GermanRegion | null;
   onAddShift: (iso: string) => void;
-  onEditShift: (shift: BoardShiftRow) => void;
+  onEditShift: (shift: BoardShiftRow, iso: string) => void;
 };
 
 function formatDayNumber(date: Date, inMonth: boolean, isFirstOfMonth: boolean): string {
@@ -188,13 +188,13 @@ export function PlannerMonthGrid({
                             tabIndex={0}
                             onClick={(e) => {
                               e.stopPropagation();
-                              onEditShift(shift);
+                              onEditShift(shift, iso);
                             }}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                onEditShift(shift);
+                                onEditShift(shift, iso);
                               }
                             }}
                             className="truncate rounded-[5px] bg-[#007AFF] px-1.5 py-[3px] text-[10px] font-medium leading-none text-white shadow-sm transition hover:brightness-110"

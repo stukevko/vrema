@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Handshake } from "lucide-react";
 import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
 import { CollapsibleMobileSection } from "@/components/dashboard/CollapsibleMobileSection";
+import { CollapsibleDesktopSection } from "@/components/dashboard/CollapsibleDesktopSection";
 
 /** Mobil: Hinweis oben, Freigaben unten eingeklappt. */
 export function PlanningTradeApprovalsHint({ count }: { count: number }) {
@@ -40,7 +41,9 @@ export function PlanningManagerExtras({
           {children}
         </CollapsibleMobileSection>
       </div>
-      <div className="hidden md:block">{children}</div>
+      <CollapsibleDesktopSection label={label} defaultOpen={defaultOpen}>
+        {children}
+      </CollapsibleDesktopSection>
     </>
   );
 }

@@ -2515,6 +2515,7 @@ export function ShiftManager({
   };
 
   const openAddForCalendarDate = (iso: string) => {
+    setShiftEdit(null);
     const parsed = new Date(`${iso}T12:00:00`);
     if (Number.isNaN(parsed.getTime())) return;
     setPlanCalendarMonday(mondayOfWeekContaining(parsed));
@@ -2523,10 +2524,14 @@ export function ShiftManager({
     setBoardAddSheetOpen(true);
   };
 
-  const editShiftFromCalendar = (shift: ShiftRow) => {
+  const editShiftFromCalendar = (shift: ShiftRow, iso: string) => {
     setBoardAddSheetOpen(false);
     setBoardAddDay(null);
     setBoardAddDateIso(null);
+    const parsed = new Date(`${iso}T12:00:00`);
+    if (!Number.isNaN(parsed.getTime())) {
+      setPlanCalendarMonday(mondayOfWeekContaining(parsed));
+    }
     const member = members.find((m) => m.id === shift.userId);
     setShiftEdit({
       userId: shift.userId,
