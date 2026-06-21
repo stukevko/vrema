@@ -8,7 +8,7 @@ import { PLANS } from "@/lib/plans";
 describe("upgradeSheetContent", () => {
   it("trial limit hat klaren CTA", () => {
     const c = upgradeSheetContent({ kind: "trial_employee_limit" });
-    expect(c.cta).toContain("Tarif");
+    expect(c.cta).toContain("anfragen");
     expect(c.href).toContain("/dashboard/billing");
   });
 

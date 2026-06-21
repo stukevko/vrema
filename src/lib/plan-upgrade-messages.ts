@@ -19,7 +19,7 @@ export const MAJOR_UPGRADE_PATH = "/dashboard/billing?upgrade=major";
 /** @deprecated Use MAJOR_UPGRADE_PATH */
 export const BUSINESS_UPGRADE_PATH = MAJOR_UPGRADE_PATH;
 export const TRIAL_UPGRADE_PATH = "/dashboard/billing";
-export const TRIAL_EXPIRED_PATH = "/dashboard/billing?trial_expired=1";
+export const TRIAL_EXPIRED_PATH = "/dashboard/trial-ended";
 
 export type UpgradeReason =
   | { kind: "trial_employee_limit" }
@@ -42,8 +42,8 @@ export function upgradeSheetContent(reason: UpgradeReason): UpgradeSheetContent 
       return {
         eyebrow: "Testphase",
         title: `${TRIAL_MAX_EMPLOYEES} Plätze sind voll`,
-        body: `Ein Klick — Petite wählen — bis zu 50 Mitarbeitende ab ${PLANS.PETITE.monthlyPrice} €/Monat. Kein Neu-Setup, Team bleibt wie es ist.`,
-        cta: "Tarif wählen — weiter einladen",
+        body: `In der Testphase sind ${TRIAL_MAX_EMPLOYEES} Mitarbeitende drin. Zugang anfragen — Petite schaltet bis zu 50 frei ab ${PLANS.PETITE.monthlyPrice} €/Monat.`,
+        cta: "Zugang anfragen",
         href: TRIAL_UPGRADE_PATH,
         secondary: "All-In: PDF, DATEV und Lohnbüro ab dem kleinsten Tarif.",
       };
@@ -52,15 +52,15 @@ export function upgradeSheetContent(reason: UpgradeReason): UpgradeSheetContent 
         eyebrow: "Team wächst",
         title: `Petite erlaubt ${reason.limit} Mitarbeitende`,
         body: `Major schaltet unbegrenzte Plätze frei — ab ${PLANS.MAJOR.monthlyPrice} €/Monat, gleiche Features.`,
-        cta: "Major freischalten",
+        cta: "Major anfragen",
         href: MAJOR_UPGRADE_PATH,
       };
     case "trial_expired":
       return {
         eyebrow: "Testphase",
-        title: "Testphase vorbei — ein Klick zurück",
-        body: "Tarif wählen und sofort weiter stempeln und planen. Nichts geht verloren.",
-        cta: "Jetzt Tarif wählen",
+        title: "Testphase vorbei",
+        body: "Kurz Zugang anfragen — wir schalten frei und schicken die Rechnung. Nichts geht verloren.",
+        cta: "Zugang anfragen",
         href: TRIAL_EXPIRED_PATH,
       };
     case "trial_ending":
@@ -68,10 +68,10 @@ export function upgradeSheetContent(reason: UpgradeReason): UpgradeSheetContent 
         eyebrow: "Testphase",
         title:
           reason.daysRemaining <= 1
-            ? "Letzter Tag — ein Klick sichert alles"
-            : `Noch ${reason.daysRemaining} Tage — rechtzeitig klicken`,
-        body: "Ohne Tarif stoppt Stempeln und Planung. Ein Klick auf Billing — fertig.",
-        cta: "Tarif sichern",
+            ? "Letzter Testtag — Zugang rechtzeitig anfragen"
+            : `Noch ${reason.daysRemaining} Tage Testphase`,
+        body: "Ohne Freischaltung stoppt Stempeln und Planung. Ein Klick — wir melden uns.",
+        cta: "Zugang anfragen",
         href: TRIAL_UPGRADE_PATH,
       };
   }

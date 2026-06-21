@@ -7,7 +7,10 @@ import { db } from "@/lib/db";
 import { getMyUnreadSupportRepliesCount, countOpenSupportTicketsForSuperAdmin } from "@/lib/actions/support";
 import { countMyUnreadNotifications } from "@/lib/actions/notifications";
 import { buildBrandStyleCss, getCompanyBranding, VREMA_DEFAULT_BRAND_HEX } from "@/lib/branding/load";
-import { isTenantGateExemptPath } from "@/lib/tenant-access";
+import { isTenantGateExemptPath, resolveTenantGateRedirect } from "@/lib/tenant-access";
+import { getCompanyTrialState } from "@/lib/trial";
+import { flyerReferralDisplayName, isFlyerReferralCode } from "@/lib/trial/referral";
+import { countActiveEmployees } from "@/lib/plan-limits";
 import { vocabularyLabels } from "@/lib/vocabulary";
 import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 
@@ -43,14 +46,18 @@ export default async function DashboardLayout({
   if (role !== "SUPER_ADMIN" && role !== "SUPPORT" && !isTenantGateExemptPath(pathname)) {
     const company = await db.company.findUnique({
       where: { id: session.user.companyId },
-      select: { tenantStatus: true, billingExempt: true },
+      select: { tenantStatus: true, billingExempt: true, trialEndsAt: true },
     });
     if (company && !company.billingExempt) {
-      if (company.tenantStatus === "PENDING") {
-        redirect("/dashboard/access-pending");
-      }
-      if (company.tenantStatus === "SUSPENDED") {
+      const gate = resolveTenantGateRedirect(company);
+      if (gate === "suspended") {
         redirect("/dashboard/access-suspended");
+      }
+      if (gate === "trial-ended") {
+        redirect("/dashboard/trial-ended");
+      }
+      if (gate === "access-pending") {
+        redirect("/dashboard/access-pending");
       }
     }
   }
@@ -86,6 +93,20 @@ export default async function DashboardLayout({
 
   const showPasskeyNudge = role === "COMPANY_OWNER";
 
+  const trialState = await getCompanyTrialState(session.user.companyId).catch(() => null);
+  const trialBanner =
+    trialState?.isInAppTrial
+      ? {
+          daysRemaining: trialState.daysRemaining,
+          activeEmployees: await countActiveEmployees(session.user.companyId).catch(() => 0),
+          flyerCampaignLabel:
+            trialState.referredBy && isFlyerReferralCode(trialState.referredBy)
+              ? flyerReferralDisplayName(trialState.referredBy)
+              : null,
+          trialEndsAtIso: trialState.trialEndsAt?.toISOString() ?? null,
+        }
+      : null;
+
   return (
     <div data-tenant-brand={hasCustomBrand ? "custom" : "default"} className="contents">
       {brandStyleCss ? (
@@ -105,7 +126,7 @@ export default async function DashboardLayout({
         supportUnreadCount={supportUnreadCount}
         initialSuperOpenTickets={superOpenTickets}
         initialUnreadNotifications={unreadNotifications}
-        trialBanner={null}
+        trialBanner={trialBanner}
         showPasskeyNudge={showPasskeyNudge}
       >
         {children}

@@ -21,7 +21,7 @@ import {
 import { Shield, Building2 } from "lucide-react";
 import { Fragment, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { tenantStatusLabel } from "@/lib/tenant-access";
+import { tenantDisplayStatus } from "@/lib/tenant-access";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 type CompanyRow = {
@@ -308,7 +308,7 @@ export function SuperAdminInlinePanel({
                     glass
                     withDot={false}
                   >
-                    {tenantStatusLabel(c.tenantStatus)}
+                    {tenantDisplayStatus(c)}
                   </StatusBadge>
                 </td>
                 <td className="px-3 py-2 text-fg-muted">

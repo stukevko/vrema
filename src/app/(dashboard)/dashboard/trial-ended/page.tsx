@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getCompanyTrialState } from "@/lib/trial";
 import { flyerReferralDisplayName, isFlyerReferralCode } from "@/lib/trial/referral";
+import { MANUAL_BILLING, PLANS } from "@/lib/plans";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
-import { PLANS } from "@/lib/plans";
+import { Mail } from "lucide-react";
 
 export default async function TrialEndedPage() {
   const session = await auth();
@@ -45,9 +46,9 @@ export default async function TrialEndedPage() {
           description={
             isManager
               ? flyerLabel
-                ? `Dein ${flyerLabel}-Zugang ist ausgelaufen. Wähle einen Tarif, damit dein Team weiter stempeln und planen kann.`
-                : "Wähle einen Tarif, damit dein Team weiter stempeln und planen kann."
-              : "Dein Betrieb muss einen Tarif wählen. Sprich mit der Geschäftsführung oder der Führung."
+                ? `Dein ${flyerLabel}-Zugang ist ausgelaufen. Frag kurz den Vollzugang an — wir schalten frei und schicken die Rechnung.`
+                : "Deine Gratis-Testphase ist vorbei. Kurz Zugang anfragen — wir schalten frei und dein Team kann sofort weiter."
+              : "Die Testphase ist vorbei. Sprich mit der Geschäftsführung — die stellt den Vollzugang an."
           }
         />
 
@@ -58,18 +59,27 @@ export default async function TrialEndedPage() {
               <ul className="mt-2 list-inside list-disc space-y-1 text-muted-foreground">
                 <li>Stempeln und Planung sind für das Team pausiert</li>
                 <li>Berichte und Einstellungen bleiben für dich erreichbar</li>
-                <li>Nach dem Tarif: sofort wieder voll nutzbar — keine Neu-Einrichtung</li>
+                <li>Nach der Freischaltung: sofort weiter — nichts geht verloren</li>
               </ul>
               <p className="mt-3 text-xs text-muted-foreground">
                 Ab {PLANS.PETITE.monthlyPrice} €/Monat (Petite, All-In) · monatlich per Rechnung, monatlich kündbar
               </p>
             </div>
-            <Link
-              href="/dashboard/billing?trial_expired=1"
-              className="btn-primary-solid mt-8 inline-flex min-h-12 w-full items-center justify-center px-6 text-sm font-semibold sm:w-auto"
-            >
-              Tarif wählen
-            </Link>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <a
+                href={`mailto:${MANUAL_BILLING.contactEmail}?subject=VREMA%20Vollzugang%20${encodeURIComponent(company?.name ?? "")}`}
+                className="btn-primary-solid inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-semibold"
+              >
+                <Mail className="h-4 w-4" aria-hidden />
+                Zugang anfragen
+              </a>
+              <Link
+                href="/dashboard/billing"
+                className="btn-secondary-outline inline-flex min-h-12 items-center justify-center px-6 text-sm font-semibold"
+              >
+                Tarif & Abrechnung
+              </Link>
+            </div>
           </>
         ) : (
           <Link

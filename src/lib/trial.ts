@@ -1,68 +1,50 @@
 import type { TenantStatus } from "@prisma/client";
 import { db } from "@/lib/db";
-import { companyHasOperationalAccess } from "@/lib/tenant-access";
+import {
+  hasFullAppAccess,
+  hasPaidSubscription,
+  isInAppTrial,
+  isTrialExpired,
+  trialDaysRemaining,
+  type CompanyTrialFields,
+} from "@/lib/trial/state";
 
 export { TRIAL_DAYS, TRIAL_MAX_EMPLOYEES, computeTrialEndsAt } from "@/lib/trial/constants";
-
-export type CompanyTrialFields = {
-  trialEndsAt: Date | null;
-  billingExempt?: boolean;
-  tenantStatus?: TenantStatus;
-  isActive?: boolean;
-};
-
-/** Super-Admin / Demo: voller Zugang ohne Rechnung. */
-export function isBillingExempt(company: CompanyTrialFields): boolean {
-  return Boolean(company.billingExempt);
-}
-
-/** Manuell aktiver Tenant (= bezahlt / freigeschaltet). */
-export function hasPaidSubscription(company: CompanyTrialFields): boolean {
-  if (isBillingExempt(company)) return true;
-  return company.tenantStatus === "ACTIVE";
-}
+export type { CompanyTrialFields } from "@/lib/trial/state";
+export {
+  hasFullAppAccess,
+  hasPaidSubscription,
+  isBillingExempt,
+  isInAppTrial,
+  isTrialExpired,
+  trialDaysRemaining,
+} from "@/lib/trial/state";
 
 export type { CompanyAccessFields } from "@/lib/tenant-access";
 export {
   companyHasOperationalAccess,
   isTenantGateExemptPath,
+  resolveTenantGateRedirect,
+  tenantDisplayStatus,
   tenantStatusLabel,
 } from "@/lib/tenant-access";
-
-/** Voller App-Zugang. */
-export function hasFullAppAccess(
-  company: CompanyTrialFields & { isActive?: boolean; tenantStatus?: TenantStatus },
-): boolean {
-  if (isBillingExempt(company)) return true;
-  if (company.tenantStatus === "ACTIVE") return true;
-  return false;
-}
-
-export function isInAppTrial(_company: CompanyTrialFields): boolean {
-  return false;
-}
-
-export function isTrialExpired(_company: CompanyTrialFields): boolean {
-  return false;
-}
-
-export function trialDaysRemaining(_company: CompanyTrialFields): number {
-  return 0;
-}
 
 export async function getCompanyTrialState(companyId: string) {
   const company = await db.company.findUnique({
     where: { id: companyId },
-    select: { trialEndsAt: true, billingExempt: true, tenantStatus: true, isActive: true },
+    select: { trialEndsAt: true, billingExempt: true, tenantStatus: true, isActive: true, referredBy: true },
   });
   if (!company) return null;
 
+  const inTrial = isInAppTrial(company);
+  const expired = isTrialExpired(company);
+
   return {
     ...company,
-    isInAppTrial: false,
-    isTrialExpired: false,
+    isInAppTrial: inTrial,
+    isTrialExpired: expired,
     hasPaidSubscription: hasPaidSubscription(company),
-    daysRemaining: 0,
+    daysRemaining: inTrial ? trialDaysRemaining(company) : 0,
     hasFullAppAccess: hasFullAppAccess(company),
   };
 }

@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { trialPricingIntroLine } from "@/lib/marketing/trial-copy";
+import {
+  trialHeroBadge,
+  trialHeroCta,
+  trialHeroSubline,
+  trialLandingCtaLine,
+  trialPricingIntroLine,
+} from "@/lib/marketing/trial-copy";
+import { TRIAL_DAYS } from "@/lib/trial/constants";
 import { VremaLockup, VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
 import { RoiCalculator } from "@/components/marketing/RoiCalculator";
 import {
@@ -196,7 +203,7 @@ export default function LandingPage() {
               href="/auth/register"
               className="btn-primary-solid !py-2 !px-3 sm:!px-4 text-sm md:whitespace-nowrap"
             >
-              Registrieren
+              {trialHeroCta()}
             </Link>
           </div>
           <div className="flex items-center gap-2 md:hidden">
@@ -252,7 +259,7 @@ export default function LandingPage() {
                     onClick={() => setMobileNavOpen(false)}
                     className="btn-primary-solid flex min-h-12 w-full items-center justify-center px-4 text-sm"
                   >
-                    Registrieren
+                    {trialHeroCta()}
                   </Link>
                 </div>
               </Drawer.Content>
@@ -270,7 +277,7 @@ export default function LandingPage() {
             <div className="min-w-0 max-w-full transition-all duration-300">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface text-foreground text-xs mb-8">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
-                Geschlossene Beta · Gastro, Handwerk, Pflege & Handel
+                {trialHeroBadge()} · Gastro, Handwerk, Pflege & Handel
               </div>
 
               <h1 className="mb-5 max-w-full hyphens-auto break-words text-[1.65rem] font-bold leading-[1.12] tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-[3.25rem]">
@@ -286,11 +293,11 @@ export default function LandingPage() {
                   href="/auth/register"
                   className="btn-primary-solid group flex min-w-0 max-w-full items-center justify-center gap-2 px-7 py-3.5 text-center sm:justify-start"
                 >
-                  Jetzt exklusiven Beta-Zugang sichern (Limitiert auf 15 Betriebe)
+                  {trialHeroCta()}
                   <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <p className="text-center text-xs text-muted-foreground sm:text-left">
-                  Start im Juni 2026 · Kostenlose Pilotphase
+                  {trialHeroSubline()}
                 </p>
               </div>
 
@@ -565,7 +572,8 @@ export default function LandingPage() {
             <h2 className="mb-4 max-w-full hyphens-auto break-words text-4xl font-black md:text-5xl">Starten.</h2>
             <p className="text-muted-foreground">{trialPricingIntroLine()}</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              All-In nach Teamgröße — Petite bis 50 MA (29 €), Major unbegrenzt (90 €).
+              {TRIAL_DAYS} Tage gratis — danach All-In: Petite bis 50 MA (29 €), Major unbegrenzt (90 €), Rechnung statt
+              Kreditkarte.
             </p>
           </div>
 
@@ -683,7 +691,7 @@ export default function LandingPage() {
                       : "btn-secondary-outline block w-full text-center py-3 text-sm"
                   }
                 >
-                  {`${plan.name} wählen`}
+                  {`${TRIAL_DAYS} Tage testen · ${plan.name}`}
                 </Link>
               </div>
             ))}
@@ -713,14 +721,14 @@ export default function LandingPage() {
               />
               <div className="relative">
                 <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-brand">
-                  05 / Beta
+                  05 / Loslegen
                 </p>
                 <h2 className="mx-auto max-w-3xl hyphens-auto break-words text-3xl font-black tracking-tight text-foreground md:text-4xl">
                   Schluss mit der Excel-Hölle.
                 </h2>
                 <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                  Sichere dir jetzt einen der limitierten Plätze für die geschlossene Beta-Phase ab Juni. Begleite die
-                  Entwicklung und passe VREMA perfekt an deinen Betrieb an.
+                  {trialLandingCtaLine()} Stempeln, Planer und Berichte in wenigen Minuten — danach kurz Zugang anfragen,
+                  wir schalten frei.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                   <Link
@@ -728,7 +736,7 @@ export default function LandingPage() {
                     className="btn-primary-solid flex items-center gap-2 px-8 py-3.5"
                   >
                     <Zap className="h-4 w-4" />
-                    Beta-Zugang kostenlos anfragen
+                    {trialHeroCta()}
                   </Link>
                   <Link
                     href="/#pricing"

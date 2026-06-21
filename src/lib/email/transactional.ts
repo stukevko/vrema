@@ -198,7 +198,7 @@ export async function sendTrialReminderEmail(data: {
 }) {
   const billingUrl =
     data.kind === "expired"
-      ? `${APP_URL}/dashboard/billing?trial_expired=1`
+      ? `${APP_URL}/dashboard/trial-ended`
       : `${APP_URL}/dashboard/billing`;
   const trialEndsAtLabel = data.trialEndsAt.toLocaleDateString("de-DE", {
     weekday: "long",

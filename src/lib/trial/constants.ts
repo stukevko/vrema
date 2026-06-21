@@ -1,5 +1,5 @@
-/** Kostenlose Testphase für neue Betriebe (ohne Stripe-Abo). */
-export const TRIAL_DAYS = 7;
+/** Kostenlose Testphase für neue Betriebe — danach manuelle Freischaltung. */
+export const TRIAL_DAYS = 14;
 export const TRIAL_MAX_EMPLOYEES = 3;
 
 export function computeTrialEndsAt(from = new Date()): Date {

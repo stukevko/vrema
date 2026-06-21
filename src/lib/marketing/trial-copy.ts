@@ -1,36 +1,53 @@
 import { PLANS } from "@/lib/plans";
+import { TRIAL_DAYS, TRIAL_MAX_EMPLOYEES } from "@/lib/trial/constants";
+import { FLYER_TRIAL_DAYS } from "@/lib/trial/referral";
+
+/** Hero-Badge auf der Startseite. */
+export function trialHeroBadge(): string {
+  return `${TRIAL_DAYS} Tage gratis testen`;
+}
+
+/** Primärer Hero-/Nav-CTA. */
+export function trialHeroCta(): string {
+  return `${TRIAL_DAYS} Tage kostenlos testen`;
+}
+
+/** Zeile unter dem Hero-CTA. */
+export function trialHeroSubline(): string {
+  return `Voller Kern · bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitende · keine Kreditkarte · danach Rechnung per Überweisung`;
+}
 
 /** Untertitel auf /auth/register (Flyer-/QR-Aktion). */
 export function trialRegisterSubtitleForFlyer(): string {
-  return "Zugang anfordern — persönliche Freischaltung, Rechnung per Überweisung.";
+  return `${FLYER_TRIAL_DAYS} Tage kostenlos testen — danach Tarif per Rechnung, persönliche Freischaltung.`;
 }
 
 /** Untertitel auf /auth/register */
 export function trialRegisterSubtitle(): string {
-  return "Zugang anfordern — wir melden uns zur Freischaltung. Rechnung per Überweisung, keine Kreditkarte.";
+  return `${TRIAL_DAYS} Tage kostenlos testen — danach Tarif per Rechnung, keine Kreditkarte.`;
 }
 
 /** Absatz unter CTAs (Features, Demo, Footer-CTA) */
 export function trialMarketingParagraph(): string {
-  return "Persönliche Freischaltung nach kurzer Prüfung. Keine Kreditkarte — monatliche Rechnung per Überweisung.";
+  return `${TRIAL_DAYS} Tage gratis testen — voller Kern. Danach Rechnung per Überweisung, persönliche Freischaltung.`;
 }
 
 /** Kurzzeile unter Pricing-Überschrift oder ROI-CTA */
 export function trialPricingIntroLine(): string {
-  return "Flatrate Petite & Major · Rechnung statt Kreditkarte.";
+  return `${TRIAL_DAYS} Tage testen · danach Flatrate Petite & Major per Rechnung.`;
 }
 
 /** Abschluss-CTA auf der Landing (große Karte) */
 export function trialLandingCtaLine(): string {
-  return "Zugang anfordern — wir schalten persönlich frei. Keine Kreditkarte.";
+  return `${TRIAL_DAYS} Tage kostenlos testen — keine Kreditkarte, kein Risiko.`;
 }
 
 /** Demo: Was zum Start nötig ist */
 export function trialDemoSignupLine(): string {
-  return "E-Mail reicht. Kurze Freischaltung durch unser Team — dann sofort loslegen.";
+  return `E-Mail reicht. ${TRIAL_DAYS} Tage voller Zugang — danach kurz anfragen, wir schalten frei.`;
 }
 
 /** Kurzer Hinweis zu Tarifen (Features-Hero, Blog-CTA) */
 export function pricingTiersHint(): string {
-  return `All-In-Tarife — Petite ab ${PLANS.PETITE.monthlyPrice} €/Monat, Major ab ${PLANS.MAJOR.monthlyPrice} €/Monat.`;
+  return `Danach All-In — Petite ab ${PLANS.PETITE.monthlyPrice} €/Monat, Major ab ${PLANS.MAJOR.monthlyPrice} €/Monat.`;
 }

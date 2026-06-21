@@ -11,7 +11,9 @@ import {
 import {
   normalizeReferralCode,
   isFlyerReferralCode,
+  computeFlyerTrialEndsAt,
 } from "@/lib/trial/referral";
+import { computeTrialEndsAt } from "@/lib/trial/constants";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -201,6 +203,8 @@ export async function POST(req: NextRequest) {
     }
 
     const safePlan: "PETITE" | "MAJOR" = plan === "MAJOR" ? "MAJOR" : "PETITE";
+    const trialEndsAt =
+      referredBy && isFlyerReferralCode(referredBy) ? computeFlyerTrialEndsAt() : computeTrialEndsAt();
 
     const company = await db.company.create({
       data: {
@@ -208,8 +212,9 @@ export async function POST(req: NextRequest) {
         slug: uniqueSlug,
         plan: safePlan,
         tenantStatus: "PENDING",
+        trialEndsAt,
         referredBy,
-        isActive: false,
+        isActive: true,
         affiliateId: resolvedAffiliateId,
         users: {
           create: {

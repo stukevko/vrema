@@ -176,7 +176,7 @@ export function RegisterClient({
 
         const loginTarget = isInviteFlow
           ? `/auth/login?registered=1&callbackUrl=${encodeURIComponent("/dashboard/welcome")}`
-          : `/auth/login?registered=1&callbackUrl=${encodeURIComponent("/dashboard/access-pending")}`;
+          : `/auth/login?registered=1&callbackUrl=${encodeURIComponent("/onboarding")}`;
         router.push(loginTarget);
       } catch {
         setError("Ein unerwarteter Fehler ist aufgetreten.");

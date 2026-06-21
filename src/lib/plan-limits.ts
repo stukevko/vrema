@@ -77,7 +77,7 @@ export async function assertCanAddEmployees(
   if (current + additional > limit) {
     if (company && isTrialExpired(company)) {
       throw new Error(
-        "Deine Testphase ist abgelaufen. Bitte wähle unter Abonnement einen Tarif, um weitere Mitarbeitende einzuladen.",
+        "Deine Testphase ist abgelaufen. Bitte Zugang unter Abonnement anfragen, um weitere Mitarbeitende einzuladen.",
       );
     }
     if (company && isInAppTrial(company)) {

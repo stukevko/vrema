@@ -4,8 +4,10 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { PLANS, MANUAL_BILLING } from "@/lib/plans";
 import { planDisplayName } from "@/lib/plan-limits";
-import { tenantStatusLabel } from "@/lib/tenant-access";
-import { Check, Mail, Clock } from "lucide-react";
+import { tenantDisplayStatus } from "@/lib/tenant-access";
+import { getCompanyTrialState } from "@/lib/trial";
+import { TRIAL_DAYS } from "@/lib/trial/constants";
+import { Check, Mail, Clock, Sparkles } from "lucide-react";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
@@ -23,13 +25,16 @@ export default async function BillingPage() {
       tenantStatus: true,
       billingExempt: true,
       name: true,
+      trialEndsAt: true,
     },
   });
   if (!company) redirect("/auth/login");
 
+  const trial = await getCompanyTrialState(session.user.companyId);
   const planConfig = PLANS[company.plan];
-  const isPending = company.tenantStatus === "PENDING";
   const isSuspended = company.tenantStatus === "SUSPENDED";
+  const inTrial = trial?.isInAppTrial ?? false;
+  const trialExpired = trial?.isTrialExpired ?? false;
 
   return (
     <DashboardPageShell maxWidth="3xl" animateEnter className="sm:space-y-8">
@@ -40,15 +45,43 @@ export default async function BillingPage() {
         description="Flatrate per Rechnung — kein Kreditkarten-Zwang."
       />
 
-      {isPending && (
+      {inTrial && (
+        <div className="rounded-xl border border-brand/25 bg-brand-soft/50 px-4 py-4 dark:border-white/10 dark:bg-brand/10">
+          <div className="flex gap-3">
+            <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-brand" aria-hidden />
+            <div>
+              <p className="text-sm font-semibold">Testphase läuft — noch {trial?.daysRemaining} Tage</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Du testest VREMA kostenlos ({TRIAL_DAYS} Tage). Danach kurz Zugang anfragen — wir schalten frei und
+                schicken die Rechnung per E-Mail.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {trialExpired && (
         <div className="rounded-xl border border-amber-300/50 bg-amber-50 px-4 py-4 dark:border-amber-500/30 dark:bg-amber-950/40">
           <div className="flex gap-3">
             <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden />
             <div>
-              <p className="text-sm font-semibold text-amber-950 dark:text-amber-100">Zugang wird vorbereitet</p>
+              <p className="text-sm font-semibold text-amber-950 dark:text-amber-100">Testphase vorbei</p>
               <p className="mt-1 text-sm text-amber-900/90 dark:text-amber-100/90">
-                Wir melden uns in Kürze bei dir und schalten {company.name} frei. Danach erhältst du die Rechnung per
-                E-Mail.
+                Schreib uns kurz — wir schalten {company.name} frei und senden die Rechnung.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!inTrial && !trialExpired && company.tenantStatus === "PENDING" && (
+        <div className="rounded-xl border border-amber-300/50 bg-amber-50 px-4 py-4 dark:border-amber-500/30 dark:bg-amber-950/40">
+          <div className="flex gap-3">
+            <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden />
+            <div>
+              <p className="text-sm font-semibold text-amber-950 dark:text-amber-100">Freischaltung ausstehend</p>
+              <p className="mt-1 text-sm text-amber-900/90 dark:text-amber-100/90">
+                Wir melden uns in Kürze bei dir und schalten {company.name} frei.
               </p>
             </div>
           </div>
@@ -68,7 +101,7 @@ export default async function BillingPage() {
         <p className="text-xs text-muted-foreground mb-1">Dein Tarif</p>
         <p className="text-2xl font-bold">{planDisplayName(company.plan)}</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Status: {tenantStatusLabel(company.tenantStatus)}
+          Status: {tenantDisplayStatus(company)}
           {company.billingExempt ? " · Kostenfrei freigeschaltet" : ""}
         </p>
         <p className="mt-3 text-3xl font-bold">

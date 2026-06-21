@@ -26,7 +26,7 @@ export function TrialStatusBanner({
 }: {
   daysRemaining: number;
   activeEmployees: number;
-  /** z. B. „Speyer Flyer-Aktion“ — 30-Tage-Kampagne statt Standard-7-Tage-Trial. */
+  /** z. B. „Speyer Flyer-Aktion“ — 30-Tage-Kampagne statt Standard-14-Tage-Trial. */
   flyerCampaignLabel?: string | null;
   /** ISO-Ende der Testphase — für klare Deadline-Anzeige. */
   trialEndsAtIso?: string | null;
@@ -61,15 +61,15 @@ export function TrialStatusBanner({
                   ? `${flyerCampaignLabel}: noch ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tage"}`
                   : `Aktions-Zugang (${flyerCampaignLabel}): noch ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tage"}`
                 : urgent
-                  ? `Testphase endet in ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tagen"} — Tarif sichern`
+                  ? `Testphase endet in ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tagen"} — Zugang anfragen`
                   : soonEnding
-                    ? `Noch ${daysRemaining} Tage Testphase — rechtzeitig Tarif wählen`
+                    ? `Noch ${daysRemaining} Tage Testphase — rechtzeitig Zugang anfragen`
                     : `Testphase: noch ${daysRemaining} ${daysRemaining === 1 ? "Tag" : "Tage"}`}
             </p>
             <p className="mt-0.5 text-xs opacity-90">
               {flyerCampaignLabel
-                ? `30 Tage kostenlos · bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitende (${activeEmployees}/${TRIAL_MAX_EMPLOYEES} aktiv). Keine Kreditkarte nötig — Tarif erst nach der Aktion.`
-                : `Bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitende (${activeEmployees}/${TRIAL_MAX_EMPLOYEES} aktiv). Petite All-In ab 29 € — PDF, DATEV & Lohnbüro inklusive.`}
+                ? `30 Tage kostenlos · bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitende (${activeEmployees}/${TRIAL_MAX_EMPLOYEES} aktiv). Danach Tarif per Rechnung — persönliche Freischaltung.`
+                : `Bis zu ${TRIAL_MAX_EMPLOYEES} Mitarbeitende (${activeEmployees}/${TRIAL_MAX_EMPLOYEES} aktiv). Danach Petite All-In ab 29 € — Rechnung statt Kreditkarte.`}
               {endLabel ? (
                 <>
                   {" "}
@@ -86,19 +86,19 @@ export function TrialStatusBanner({
               onClick={() => openUpgrade({ kind: "trial_ending", daysRemaining })}
               className="inline-flex min-h-9 shrink-0 items-center rounded-xl bg-brand px-3 text-xs font-semibold text-brand-foreground"
             >
-              {urgent ? "Heute Tarif sichern" : "Tarif sichern — ein Klick"}
+              {urgent ? "Heute Zugang anfragen" : "Zugang anfragen"}
             </button>
           ) : (
             <Link
               href="/dashboard/billing"
               className="inline-flex min-h-9 shrink-0 items-center rounded-xl bg-brand px-3 text-xs font-semibold text-brand-foreground"
             >
-              Tarif wählen
+              Tarif & Abrechnung
             </Link>
           )
         ) : (
           <p className="shrink-0 rounded-xl border border-line bg-surface px-3 py-2 text-xs text-muted-foreground dark:border-white/10">
-            Tarif wählt deine Leitung
+            Zugang klärt deine Leitung
           </p>
         )}
       </div>
