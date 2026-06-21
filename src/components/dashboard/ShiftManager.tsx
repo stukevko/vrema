@@ -17,7 +17,8 @@ import { StaffingHintBadge } from "@/components/planning/StaffingHintBadge";
 import { generateTaskListForShift } from "@/lib/actions/shift-tasks";
 import { confirmAutopilotDrafts, discardAutopilotDrafts, runAutopilotDraft } from "@/lib/actions/autopilot";
 import { PlannerAutopilotPanel } from "@/components/planning/PlannerAutopilotPanel";
-import { PlannerWeekList } from "@/components/planning/PlannerWeekList";
+import { PlannerMonthGrid } from "@/components/planning/PlannerMonthGrid";
+import type { GermanRegion } from "@/lib/holidays/de";
 import { buildMemberWeekMinutes, slotKey, type BoardShiftSlot } from "@/lib/planning/shift-board-model";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import { useVocabulary } from "@/components/VocabularyContext";
@@ -309,6 +310,7 @@ export function ShiftManager({
   initialFocusWeek = null,
   initialAutopilotAction = null,
   planTitle = "Schichtplan",
+  holidayRegion = null,
 }: {
   members: Member[];
   shifts: ShiftRow[];
@@ -317,6 +319,7 @@ export function ShiftManager({
   shiftTemplates?: ShiftTemplateRow[];
   companyModules?: CompanyModules;
   shiftCycleWeeks?: ShiftCycleWeeks;
+  holidayRegion?: GermanRegion | null;
   vacationConflictDays?: Array<{ userId: string; dayOfWeek: number; type?: "VACATION" | "SICK" }>;
   /** userId → Wochentage (0–6), an denen die Person als nicht verfügbar markiert ist */
   unavailableDaysByUserId?: Record<string, number[]>;
@@ -347,6 +350,11 @@ export function ShiftManager({
   );
   const [boardAddSheetOpen, setBoardAddSheetOpen] = useState(false);
   const [boardAddDay, setBoardAddDay] = useState<number | null>(null);
+  const [boardAddDateIso, setBoardAddDateIso] = useState<string | null>(null);
+  const [planMonthAnchor, setPlanMonthAnchor] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1, 12, 0, 0, 0);
+  });
   const [planCalendarMonday, setPlanCalendarMonday] = useState(() => {
     if (initialFocusWeek && initialFocusWeek <= shiftCycleWeeks) {
       return mondayOfWeekContaining(dateForPlannerCycleDay(initialFocusWeek as ShiftCycleWeeks, 1));
@@ -411,6 +419,21 @@ export function ShiftManager({
     d.setDate(d.getDate() + delta * 7);
     setPlanCalendarMonday(mondayOfWeekContaining(d));
     setTimelineDate(isoFromPlannerDate(d));
+    setMessage(null);
+  };
+  const shiftPlanMonth = (delta: -1 | 1) => {
+    setPlanMonthAnchor((prev) => {
+      const d = new Date(prev);
+      d.setMonth(d.getMonth() + delta);
+      return d;
+    });
+    setMessage(null);
+  };
+  const goPlanToday = () => {
+    const today = new Date();
+    setPlanMonthAnchor(new Date(today.getFullYear(), today.getMonth(), 1, 12, 0, 0, 0));
+    setPlanCalendarMonday(mondayOfWeekContaining(today));
+    setTimelineDate(isoFromPlannerDate(today));
     setMessage(null);
   };
   const onTimelineDateInput = (iso: string) => {
@@ -2486,7 +2509,29 @@ export function ShiftManager({
 
   const openAddForDay = (dayOfWeek: number) => {
     setBoardAddDay(dayOfWeek);
+    setBoardAddDateIso(null);
     setBoardAddSheetOpen(true);
+  };
+
+  const openAddForCalendarDate = (iso: string) => {
+    const parsed = new Date(`${iso}T12:00:00`);
+    if (Number.isNaN(parsed.getTime())) return;
+    setPlanCalendarMonday(mondayOfWeekContaining(parsed));
+    setBoardAddDay(parsed.getDay());
+    setBoardAddDateIso(iso);
+    setBoardAddSheetOpen(true);
+  };
+
+  const editShiftFromCalendar = (shift: ShiftRow) => {
+    const member = members.find((m) => m.id === shift.userId);
+    setShiftEdit({
+      userId: shift.userId,
+      shiftId: shift.id,
+      dayOfWeek: shift.dayOfWeek,
+      label: member?.name ?? member?.email ?? "Mitarbeiter",
+      startTime: shift.startTime,
+      endTime: shift.endTime,
+    });
   };
 
   const editPlannerAssignment = (slot: BoardShiftSlot, userId: string, shiftId: string) => {
@@ -2540,18 +2585,18 @@ export function ShiftManager({
 
   const PlannerMainView = (
     <>
-      <PlannerWeekList
-        weekDayDates={weekDayDates}
+      <p className="mb-2 text-[11px] text-muted-foreground">
+        <span className="font-semibold text-foreground">So geht&apos;s:</span> Tag antippen → Person wählen → Von/Bis
+        eintragen → Speichern.
+      </p>
+      <PlannerMonthGrid
+        monthAnchor={planMonthAnchor}
         shiftCycleWeeks={shiftCycleWeeks}
-        selectedWeekIndex={selectedWeekIndex}
-        members={members}
         shifts={displayShifts}
-        shiftTemplates={shiftTemplates}
-        neededStaff={neededStaff}
-        isPending={isPending}
-        onOpenAddForDay={openAddForDay}
-        onEditAssignment={editPlannerAssignment}
-        onRemoveAssignment={removePlannerAssignment}
+        members={members}
+        holidayRegion={holidayRegion}
+        onAddShift={openAddForCalendarDate}
+        onEditShift={editShiftFromCalendar}
       />
       <OvertimeRecoveryPopover
         open={overtimePopover != null}
@@ -2595,6 +2640,7 @@ export function ShiftManager({
       />
       <ShiftAddSheet
         open={boardAddSheetOpen}
+        dateIso={boardAddDateIso}
         dayOfWeek={boardAddDay}
         members={members}
         selectedUserId={selectedUserId}
@@ -2605,11 +2651,13 @@ export function ShiftManager({
         onClose={() => {
           setBoardAddSheetOpen(false);
           setBoardAddDay(null);
+          setBoardAddDateIso(null);
         }}
         onConfirm={(dayOfWeek, userId, slotStart, slotEnd) => {
           saveBoardShift(dayOfWeek, slotStart, slotEnd, userId);
           setBoardAddSheetOpen(false);
           setBoardAddDay(null);
+          setBoardAddDateIso(null);
         }}
       />
       {weatherFetchErr ? <p className="mt-2 text-[10px] text-muted-foreground">{weatherFetchErr}</p> : null}
@@ -2648,16 +2696,11 @@ export function ShiftManager({
     [displayShifts],
   );
 
-  const cycleWeekLabel =
-    shiftCycleWeeks > 1
-      ? `Plan-Muster Woche ${selectedWeekIndex} von ${shiftCycleWeeks} (wiederholt sich im Kalender)`
-      : null;
-
   const weekPicker = (
     <PlannerPeriodNav
-      planCalendarMonday={planCalendarMonday}
-      onShiftWeek={shiftTimelineWeek}
-      cycleWeekLabel={cycleWeekLabel}
+      monthAnchor={planMonthAnchor}
+      onShiftMonth={shiftPlanMonth}
+      onGoToday={goPlanToday}
     />
   );
 

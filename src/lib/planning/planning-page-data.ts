@@ -13,6 +13,7 @@ import { tenantWhere } from "@/lib/tenant-guard";
 import { normalizeCycleWeeks, type ShiftCycleWeeks } from "@/lib/shift-cycle";
 import { normalizeVocabulary, type ShiftVocabulary } from "@/lib/vocabulary";
 import { logServerError } from "@/lib/server-logger";
+import type { GermanRegion } from "@/lib/holidays/de";
 
 const MODULE_SELECT = {
   industry: true,
@@ -63,6 +64,7 @@ const SHIFT_SELECT = {
 
 export type PlanningManagerPageData = {
   companyName: string;
+  holidayRegion: GermanRegion | null;
   shiftVocabulary: ShiftVocabulary;
   members: Awaited<ReturnType<typeof loadPlanningTeamMembers>>;
   shifts: Awaited<ReturnType<typeof loadPlanningShifts>>;
@@ -104,14 +106,18 @@ export async function loadPlanningShiftCycleWeeks(companyId: string): Promise<Sh
 
 export async function loadPlanningCompanyMeta(
   companyId: string,
-): Promise<{ name: string; shiftVocabulary: ShiftVocabulary }> {
+): Promise<{ name: string; shiftVocabulary: ShiftVocabulary; holidayRegion: GermanRegion | null }> {
   const company = await db.company.findUnique({
     where: { id: companyId },
-    select: { name: true, shiftVocabulary: true },
+    select: { name: true, shiftVocabulary: true, region: true },
   });
+  const region = company?.region;
+  const holidayRegion =
+    region && typeof region === "string" && region.startsWith("DE-") ? (region as GermanRegion) : null;
   return {
     name: company?.name?.trim() ?? "",
     shiftVocabulary: normalizeVocabulary(company?.shiftVocabulary),
+    holidayRegion,
   };
 }
 
@@ -266,9 +272,10 @@ export async function loadPlanningManagerPageData(
   const companyMeta =
     settled[6].status === "fulfilled"
       ? settled[6].value
-      : { name: "", shiftVocabulary: "SHIFT" as ShiftVocabulary };
+      : { name: "", shiftVocabulary: "SHIFT" as ShiftVocabulary, holidayRegion: null };
   const companyName = companyMeta.name;
   const shiftVocabulary = companyMeta.shiftVocabulary;
+  const holidayRegion = companyMeta.holidayRegion;
   const companyModules = await loadPlanningCompanyModules(companyId);
 
   let openShifts: Awaited<ReturnType<typeof loadPlanningOpenShifts>> = [];
@@ -297,6 +304,7 @@ export async function loadPlanningManagerPageData(
 
   return {
     companyName,
+    holidayRegion,
     shiftVocabulary,
     members,
     shifts,

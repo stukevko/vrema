@@ -75,7 +75,7 @@ export default async function PlanningPage({
           icon={CalendarClock}
           eyebrow="Planung"
           title={planLabels.planTitle}
-          description="Tag „+ Schicht“ → Person wählen → Uhrzeit eintragen → Speichern."
+          description="Tag antippen → Person wählen → Uhrzeit eintragen → Speichern."
           className="hidden md:block"
         />
         <PlanningTradeApprovalsHint count={data.pendingTrades.length} />
@@ -123,6 +123,7 @@ export default async function PlanningPage({
             shiftTemplates={data.shiftTemplates}
             companyModules={data.companyModules}
             planTitle={planLabels.planTitle}
+            holidayRegion={data.holidayRegion}
           />
         </Suspense>
         {data.companyModules.shiftTrade ? (

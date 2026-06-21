@@ -2,41 +2,43 @@
 
 import { useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { formatPlannerWeekRange } from "@/lib/planning/cycle-display-date";
+import { monthYearLabel } from "@/lib/planning/cycle-display-date";
 
 type PlannerPeriodNavProps = {
-  planCalendarMonday: Date;
-  onShiftWeek: (delta: -1 | 1) => void;
-  cycleWeekLabel?: string | null;
+  monthAnchor: Date;
+  onShiftMonth: (delta: -1 | 1) => void;
+  onGoToday: () => void;
 };
 
-export function PlannerPeriodNav({ planCalendarMonday, onShiftWeek, cycleWeekLabel }: PlannerPeriodNavProps) {
-  const weekLabel = useMemo(() => formatPlannerWeekRange(planCalendarMonday), [planCalendarMonday]);
+export function PlannerPeriodNav({ monthAnchor, onShiftMonth, onGoToday }: PlannerPeriodNavProps) {
+  const monthLabel = useMemo(() => monthYearLabel(monthAnchor), [monthAnchor]);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/10 px-3 py-2.5">
-      <div className="min-w-0">
-        <p className="text-sm font-bold text-foreground">{weekLabel}</p>
-        {cycleWeekLabel ? (
-          <p className="text-[11px] text-muted-foreground">{cycleWeekLabel}</p>
-        ) : null}
-      </div>
+    <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-1">
+      <h2 className="text-xl font-bold capitalize tracking-tight text-foreground sm:text-2xl">{monthLabel}</h2>
       <div className="flex items-center gap-1">
         <button
           type="button"
-          onClick={() => onShiftWeek(-1)}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-foreground hover:bg-muted/40"
-          aria-label="Vorherige Woche"
+          onClick={() => onShiftMonth(-1)}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground hover:bg-muted/50"
+          aria-label="Vorheriger Monat"
         >
-          <ChevronLeft className="h-4 w-4" aria-hidden />
+          <ChevronLeft className="h-5 w-5" aria-hidden />
         </button>
         <button
           type="button"
-          onClick={() => onShiftWeek(1)}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-foreground hover:bg-muted/40"
-          aria-label="Nächste Woche"
+          onClick={() => onShiftMonth(1)}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground hover:bg-muted/50"
+          aria-label="Nächster Monat"
         >
-          <ChevronRight className="h-4 w-4" aria-hidden />
+          <ChevronRight className="h-5 w-5" aria-hidden />
+        </button>
+        <button
+          type="button"
+          onClick={onGoToday}
+          className="ml-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-brand hover:bg-brand-soft"
+        >
+          Heute
         </button>
       </div>
     </div>
