@@ -71,7 +71,7 @@ export function ShiftAddSheet({
               <Drawer.Description className="mt-0.5 text-xs text-muted-foreground">
                 {dayLabel}
                 {memberLabel ? ` · ${memberLabel}` : ""}
-                {" — Vorlage wählen oder individuelle Zeiten eingeben."}
+                {" — Schichtzeit wählen oder selbst eingeben."}
               </Drawer.Description>
             </div>
             <button
@@ -87,7 +87,7 @@ export function ShiftAddSheet({
           <div className="overflow-y-auto px-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
             {templates.length > 0 ? (
               <div className="space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Vorlage wählen</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Schichtzeit</p>
                 <div className="flex flex-col gap-2">
                   {templates.map((t) => (
                     <button
@@ -113,7 +113,7 @@ export function ShiftAddSheet({
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Noch keine Vorlagen — unter Einstellungen anlegen oder individuelle Zeiten nutzen.
+                Noch keine Zeiten hinterlegt — unter Einstellungen anlegen oder unten selbst eingeben.
               </p>
             )}
 
@@ -123,7 +123,7 @@ export function ShiftAddSheet({
                 onClick={() => setCustomMode((v) => !v)}
                 className="text-sm font-semibold text-brand underline-offset-2 hover:underline"
               >
-                {customMode ? "Individuelle Zeiten ausblenden" : "Individuelle Zeiten (einmalig)"}
+                {customMode ? "Eigene Zeiten ausblenden" : "Andere Zeiten eingeben"}
               </button>
 
               {customMode ? (

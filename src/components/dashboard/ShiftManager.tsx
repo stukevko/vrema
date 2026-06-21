@@ -43,7 +43,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildComplianceFlagsByShiftId, type ShiftPlanRow } from "@/lib/planning/compliance";
 import { validateShiftTimesForSave } from "@/lib/planning/shift-display";
-import { countWeekCoverageGapSlots } from "@/lib/planning/planner-coverage-metrics";
 import {
   AlarmClock,
   Brain,
@@ -74,9 +73,12 @@ import {
   weekIndexForPlannerDate,
 } from "@/lib/planning/cycle-display-date";
 import { getWeekCycleIndex, type ShiftCycleWeeks } from "@/lib/shift-cycle";
-import { PlannerDayEditor } from "@/components/planning/PlannerDayEditor";
-import { PlannerMonthGrid } from "@/components/planning/PlannerMonthGrid";
-import { PlannerPeriodNav, type PlannerPlanView } from "@/components/planning/PlannerPeriodNav";
+import { PlannerPeriodNav } from "@/components/planning/PlannerPeriodNav";
+import {
+  buildPlannerComplianceHints,
+  countPlannerStaffingGaps,
+  formatPlannerWeekStatusLine,
+} from "@/lib/planning/planner-week-status";
 import type { DailyWeatherForecast } from "@/lib/weather/shared";
 import { isRainLikeCondition } from "@/lib/weather/shared";
 import { Avatar } from "@/components/ui/avatar";
@@ -174,12 +176,6 @@ function snapMinutes(total: number) {
 
 function shiftKey(startTime: string, endTime: string) {
   return `${startTime}-${endTime}`;
-}
-
-/** Mo–So × Tagesraster: Obergrenze für „Lücken“-Zählung (Fortschrittsbalken / Farbe). */
-function maxWeekCoverageSlots(coverageSlotMinutes: number) {
-  const perDay = Math.ceil(TIMELINE_TOTAL_MINUTES / Math.max(1, coverageSlotMinutes));
-  return 7 * perDay;
 }
 
 function dayOrderMonFirst(dayOfWeek: number) {
@@ -357,8 +353,6 @@ export function ShiftManager({
     }
     return mondayOfWeekContaining(new Date());
   });
-  const [planView, setPlanView] = useState<PlannerPlanView>("month");
-  const [selectedPlanDayIso, setSelectedPlanDayIso] = useState(() => isoFromPlannerDate(new Date()));
   const [planStatusExpanded, setPlanStatusExpanded] = useState(false);
   const selectedWeekIndex = useMemo(
     () => getWeekCycleIndex(planCalendarMonday, shiftCycleWeeks),
@@ -401,36 +395,10 @@ export function ShiftManager({
   const planWeekRangeLabel = useMemo(() => formatPlannerWeekRange(planWeekMonday), [planWeekMonday]);
   const planWeekMondayIso = useMemo(() => isoFromPlannerDate(planWeekMonday), [planWeekMonday]);
   const weekDayDates = useMemo(() => isoWeekDatesFromMonday(planCalendarMonday), [planCalendarMonday]);
-  const shiftPlanMonth = (delta: -1 | 1) => {
-    const d = new Date(planCalendarMonday);
-    d.setMonth(d.getMonth() + delta, 1);
-    setPlanCalendarMonday(mondayOfWeekContaining(d));
-    const today = new Date();
-    if (today.getMonth() === d.getMonth() && today.getFullYear() === d.getFullYear()) {
-      setSelectedPlanDayIso(isoFromPlannerDate(today));
-    } else {
-      setSelectedPlanDayIso(isoFromPlannerDate(d));
-    }
-    setMessage(null);
-  };
-  const selectPlanDay = (monday: Date, iso: string) => {
+  const selectPlanWeek = (monday: Date) => {
     setPlanCalendarMonday(monday);
-    setSelectedPlanDayIso(iso);
+    setTimelineDate(isoFromPlannerDate(monday));
     setMessage(null);
-  };
-  const openAddForSelectedPlanDay = () => {
-    const parsed = new Date(`${selectedPlanDayIso}T12:00:00`);
-    if (Number.isNaN(parsed.getTime())) return;
-    setBoardAddDay(parsed.getDay());
-    setBoardAddSheetOpen(true);
-    if (!selectedUserId && members[0]) setSelectedUserId(members[0].id);
-    if (activeTemplateId) {
-      const t = shiftTemplates.find((x) => x.id === activeTemplateId);
-      if (t) {
-        setStartTime(t.startTime.slice(0, 5));
-        setEndTime(t.endTime.slice(0, 5));
-      }
-    }
   };
   const canTimelinePrevWeek = useMemo(() => {
     const parsed = new Date(`${timelineDate}T12:00:00`);
@@ -944,41 +912,21 @@ export function ShiftManager({
     () => buildComplianceFlagsByShiftId(shifts, selectedWeekIndex),
     [shifts, selectedWeekIndex]
   );
-  const weekCoverageGapSlots = useMemo(() => {
-    const shiftRows: ShiftPlanRow[] = shifts
-      .filter((s) => s.weekIndex === selectedWeekIndex && !s.isDraft)
-      .map((s) => ({
-        id: s.id,
-        userId: s.userId,
-        weekIndex: s.weekIndex,
-        dayOfWeek: s.dayOfWeek,
-        startTime: s.startTime,
-        endTime: s.endTime,
-      }));
-    return countWeekCoverageGapSlots({
-      members,
-      shifts: shiftRows,
-      selectedWeekIndex,
-      conflictEntries: vacationConflictDays ?? [],
-      neededStaff,
-      coverageSlotMinutes,
-    });
-  }, [
-    shifts,
-    selectedWeekIndex,
-    members,
-    vacationConflictDays,
-    neededStaff,
-    coverageSlotMinutes,
-  ]);
-  const weekMaxCoverageGapSlots = useMemo(
-    () => maxWeekCoverageSlots(coverageSlotMinutes),
-    [coverageSlotMinutes],
+  const staffingGaps = useMemo(
+    () =>
+      countPlannerStaffingGaps(
+        displayShifts,
+        selectedWeekIndex,
+        members,
+        shiftTemplates,
+        neededStaff,
+      ),
+    [displayShifts, selectedWeekIndex, members, shiftTemplates, neededStaff],
   );
-  const weekCoverageGapFillRatio = useMemo(() => {
-    if (weekMaxCoverageGapSlots <= 0) return 1;
-    return Math.max(0, Math.min(1, 1 - weekCoverageGapSlots / weekMaxCoverageGapSlots));
-  }, [weekCoverageGapSlots, weekMaxCoverageGapSlots]);
+  const plannerComplianceHints = useMemo(
+    () => buildPlannerComplianceHints(displayShifts, selectedWeekIndex, members),
+    [displayShifts, selectedWeekIndex, members],
+  );
   const restRiskShiftCount = useMemo(() => {
     let n = 0;
     for (const s of shifts) {
@@ -987,6 +935,15 @@ export function ShiftManager({
     }
     return n;
   }, [shifts, selectedWeekIndex, complianceByShiftId]);
+  const weekStatusLine = useMemo(
+    () =>
+      formatPlannerWeekStatusLine({
+        openShiftSlots: staffingGaps.openShiftSlots,
+        missingAssignments: staffingGaps.missingAssignments,
+        restRiskCount: restRiskShiftCount,
+      }),
+    [staffingGaps, restRiskShiftCount],
+  );
   const mobileDayShifts = useMemo(() => {
     return shifts
       .filter((s) => s.weekIndex === selectedWeekIndex && s.dayOfWeek === mobileSelectedDay)
@@ -2357,7 +2314,7 @@ export function ShiftManager({
     setStartTime(t.startTime.slice(0, 5));
     setEndTime(t.endTime.slice(0, 5));
     showToast(
-      `Vorlage „${t.name}“ (${t.startTime.slice(0, 5)}–${t.endTime.slice(0, 5)}) — Tag wählen und „+ Schicht“ oder Person zuweisen.`,
+      `${t.name} (${t.startTime.slice(0, 5)}–${t.endTime.slice(0, 5)}) — Tag wählen und „+ Schicht“ oder Person zuweisen.`,
       "info",
     );
     if (boardAddDay != null) {
@@ -2535,69 +2492,6 @@ export function ShiftManager({
 
   const PlannerMainView = (
     <>
-      {planView === "month" ? (
-        <div className="space-y-3">
-          <PlannerMonthGrid
-            planCalendarMonday={planCalendarMonday}
-            selectedDayIso={selectedPlanDayIso}
-            shiftCycleWeeks={shiftCycleWeeks}
-            shifts={displayShifts}
-            neededStaff={neededStaff}
-            onSelectDay={selectPlanDay}
-          />
-          <PlannerDayEditor
-            selectedIso={selectedPlanDayIso}
-            shiftCycleWeeks={shiftCycleWeeks}
-            members={members}
-            shifts={displayShifts}
-            shiftTemplates={shiftTemplates}
-            neededStaff={neededStaff}
-            isPending={isPending}
-            onOpenAddSlot={openAddForSelectedPlanDay}
-            onEditAssignment={(slot, userId, shiftId) => {
-              const member = members.find((m) => m.id === userId);
-              setShiftEdit({
-                userId,
-                shiftId,
-                dayOfWeek: slot.dayOfWeek,
-                label: member?.name ?? member?.email ?? "Mitarbeiter",
-                startTime: slot.startTime,
-                endTime: slot.endTime,
-              });
-            }}
-            onRemoveAssignment={(userId, dayOfWeek, shiftId, slotStart, slotEnd) => {
-              if (!shiftId?.trim()) {
-                const msg = "Zuweisung konnte nicht identifiziert werden — bitte Seite neu laden.";
-                setMessage(msg);
-                showToast(msg, "error");
-                return;
-              }
-              const sk = slotKey(dayOfWeek, slotStart, slotEnd);
-              setMessage(null);
-              setSlotBusy(sk, true);
-              setHiddenShiftIds((prev) => new Set(prev).add(shiftId));
-              setBoardOptimisticShifts((prev) => prev.filter((s) => s.id !== shiftId));
-              startTransition(async () => {
-                const result = await removeShiftViaApi(shiftId);
-                setSlotBusy(sk, false);
-                if (!result.ok) {
-                  setHiddenShiftIds((prev) => {
-                    const next = new Set(prev);
-                    next.delete(shiftId);
-                    return next;
-                  });
-                  setMessage(result.error);
-                  showToast(result.error, "error");
-                  return;
-                }
-                const member = members.find((m) => m.id === userId);
-                showToast(`${member?.name ?? member?.email ?? "Mitarbeiter"} von der Schicht entfernt.`, "success");
-                scheduleBoardRefresh();
-              });
-            }}
-          />
-        </div>
-      ) : (
       <ShiftCentricBoard
         compact
         members={members}
@@ -2747,7 +2641,6 @@ export function ShiftManager({
           });
         }}
       />
-      )}
       <OvertimeRecoveryPopover
         open={overtimePopover != null}
         userId={overtimePopover?.userId ?? null}
@@ -2843,15 +2736,16 @@ export function ShiftManager({
     [displayShifts],
   );
 
-  const weekPicker = enableTaskListActions ? (
-    <div className="space-y-3">
-      <PlannerPeriodNav
-        planCalendarMonday={planCalendarMonday}
-        planView={planView}
-        onSelectMonday={setPlanCalendarMonday}
-        onPlanViewChange={setPlanView}
-        onShiftMonth={shiftPlanMonth}
-      />
+  const weekPicker = (
+    <PlannerPeriodNav
+      planCalendarMonday={planCalendarMonday}
+      onSelectMonday={selectPlanWeek}
+      onShiftWeek={shiftTimelineWeek}
+    />
+  );
+
+  const plannerPdfExport = enableTaskListActions ? (
+    <div className="mt-4">
       <ShiftPlanPdfExport
         companyName={companyName}
         plan={plan}
@@ -2861,15 +2755,7 @@ export function ShiftManager({
         shifts={pdfShifts}
       />
     </div>
-  ) : (
-    <PlannerPeriodNav
-      planCalendarMonday={planCalendarMonday}
-      planView={planView}
-      onSelectMonday={setPlanCalendarMonday}
-      onPlanViewChange={setPlanView}
-      onShiftMonth={shiftPlanMonth}
-    />
-  );
+  ) : null;
 
   const selectedMemberChip =
     selectedMember ? (
@@ -2890,17 +2776,18 @@ export function ShiftManager({
             aria-expanded={planStatusExpanded}
           >
             <span className="text-xs leading-snug text-foreground">
-              {weekCoverageGapSlots === 0 ? (
-                <span className="text-success-foreground">Woche komplett besetzt</span>
-              ) : (
-                <span className="text-warning-foreground">{weekCoverageGapSlots} offene Fenster</span>
-              )}
-              <span className="text-muted-foreground">
-                {" · "}
-                {restRiskShiftCount === 0
-                  ? "keine Ruhezeit-Probleme"
-                  : `${restRiskShiftCount} Ruhezeit-Warnung${restRiskShiftCount === 1 ? "" : "en"}`}
+              <span
+                className={
+                  staffingGaps.openShiftSlots === 0 && restRiskShiftCount === 0
+                    ? "text-success-foreground"
+                    : "text-warning-foreground"
+                }
+              >
+                {weekStatusLine.primary}
               </span>
+              {weekStatusLine.secondary ? (
+                <span className="text-muted-foreground">{` · ${weekStatusLine.secondary}`}</span>
+              ) : null}
             </span>
             <span className="shrink-0 text-[10px] font-semibold text-brand">
               {planStatusExpanded ? "Weniger" : "Details"}
@@ -2910,9 +2797,16 @@ export function ShiftManager({
             <div className="space-y-3 border-t border-border px-3 py-3">
               <div className="flex flex-wrap gap-2 text-xs">
                 <span className="rounded-full border border-border bg-background px-2.5 py-1 text-foreground">
-                  {weekCoverageGapSlots === 0
-                    ? "Mindestbesetzung OK"
-                    : `${weekCoverageGapSlots}/${weekMaxCoverageGapSlots} Fenster offen`}
+                  {staffingGaps.openShiftSlots === 0
+                    ? "Alle Schichten besetzt"
+                    : staffingGaps.missingAssignments > 0
+                      ? `${staffingGaps.missingAssignments} Person${staffingGaps.missingAssignments === 1 ? "" : "en"} fehlen noch`
+                      : `${staffingGaps.openShiftSlots} offene Schicht${staffingGaps.openShiftSlots === 1 ? "" : "en"}`}
+                </span>
+                <span className="rounded-full border border-border bg-background px-2.5 py-1 text-foreground">
+                  {restRiskShiftCount === 0
+                    ? "Keine Ruhezeit-Konflikte"
+                    : `${restRiskShiftCount} Ruhezeit-Hinweis${restRiskShiftCount === 1 ? "" : "e"}`}
                 </span>
                 <span className="rounded-full border border-border bg-background px-2.5 py-1 text-foreground">
                   {criticalOvertimeCount === 0
@@ -2944,7 +2838,7 @@ export function ShiftManager({
                   href="#planner-compliance-radar"
                   className="dashboard-action-btn rounded-xl border border-border bg-background px-3 py-2 text-center text-xs font-medium text-foreground hover:bg-muted/40"
                 >
-                  Compliance &amp; Budget anzeigen
+                  Plan-Check &amp; Budget anzeigen
                 </a>
               ) : null}
             </div>
@@ -2956,6 +2850,7 @@ export function ShiftManager({
         <div className="block min-w-0">
           {weekPicker}
           {PlannerMainView}
+          {plannerPdfExport}
         </div>
       ) : (
         <div className="block">
@@ -3127,18 +3022,25 @@ export function ShiftManager({
           id="planner-compliance-radar"
           className="sticky bottom-0 z-20 mt-4 space-y-2 rounded-xl border border-border bg-background/95 px-3 py-3 text-[11px] text-muted-foreground shadow-[0_-8px_30px_rgba(0,0,0,0.06)] backdrop-blur-sm"
         >
-        <p className="font-semibold text-foreground">Compliance-Radar · Budget</p>
-        <div className="flex flex-wrap gap-3">
-          <span className="inline-flex items-center gap-1">
-            <Coffee className="h-3.5 w-3.5 text-danger" aria-hidden />
-            Schicht &gt;6h: 30-Min-Pause prüfen (nur Sollzeit im Plan)
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <AlarmClock className="h-3.5 w-3.5 text-warning" aria-hidden />
-            &lt;11h Ruhe zwischen aufeinanderfolgenden Schichten (Mo–So, Zykluswoche {selectedWeekIndex})
-          </span>
-        </div>
-        <p className="text-[10px] text-warning-foreground/90">Hinweis: keine Rechtsberatung – vor Veröffentlichung prüfen.</p>
+        <p className="font-semibold text-foreground">Plan-Check · Budget</p>
+        {plannerComplianceHints.length === 0 ? (
+          <p className="text-success-foreground">Keine Ruhezeit-Konflikte in dieser Woche.</p>
+        ) : (
+          <ul className="space-y-2">
+            {plannerComplianceHints.map((hint) => (
+              <li key={hint.id} className="rounded-lg border border-warning/25 bg-warning-soft/30 px-2.5 py-2">
+                <p className="flex items-start gap-1.5 text-foreground">
+                  <AlarmClock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning-foreground" aria-hidden />
+                  {hint.message}
+                </p>
+                <p className="mt-1 pl-5 text-[10px] font-medium text-muted-foreground">{hint.action}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="text-[10px] text-muted-foreground">
+          Hinweis: Planungs-Orientierung, keine Rechtsberatung. Pausen prüfst du im laufenden Betrieb.
+        </p>
         <div className="flex flex-wrap items-baseline justify-between gap-2 border-t border-border pt-2">
           <span className="text-foreground">Geplante Brutto-Lohnkosten (Woche {selectedWeekIndex})</span>
           <span className="font-sans tabular-nums font-semibold text-foreground">

@@ -472,7 +472,7 @@ export function ShiftCentricBoard({
                       type="button"
                       disabled={isPending}
                       onClick={() => onOpenAddSlot(dow)}
-                      title="Schicht anlegen — Vorlage oder individuelle Zeiten"
+                      title="Schicht anlegen"
                       className="mt-auto flex items-center justify-center gap-1 rounded-lg border border-dashed border-border py-2 text-[10px] font-semibold text-muted-foreground transition hover:border-brand/40 hover:bg-brand-soft/20 hover:text-brand disabled:opacity-40"
                     >
                       <Plus className="h-3.5 w-3.5" aria-hidden />
