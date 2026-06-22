@@ -1,8 +1,10 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getMyVacationRequests, getTeamVacationRequestsWithContext } from "@/lib/actions/vacation";
+import { getVacationPlanContext } from "@/lib/actions/vacation-plan";
 import { VacationList } from "@/components/dashboard/VacationList";
 import { VacationRequestForm } from "@/components/dashboard/VacationRequestForm";
+import { VacationPlanSection } from "@/components/dashboard/VacationPlanSection";
 import { TeamVacationSection } from "@/components/dashboard/TeamVacationSection";
 import { TeamAbsencesSection } from "@/components/dashboard/TeamAbsencesSection";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
@@ -17,9 +19,12 @@ export default async function VacationPage() {
   const isManager = ["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role);
   const companyId = session.user.companyId;
 
-  const [myRequests, teamRequests] = await Promise.all([
+  const planYear = new Date().getFullYear();
+
+  const [myRequests, teamRequests, planContext] = await Promise.all([
     getMyVacationRequests(),
     isManager ? getTeamVacationRequestsWithContext() : Promise.resolve([]),
+    getVacationPlanContext(planYear),
   ]);
 
   const pendingTeamCount = teamRequests.filter((r) => r.status === "PENDING").length;
@@ -47,6 +52,25 @@ export default async function VacationPage() {
         }
       />
 
+      <VacationPlanSection
+        year={planContext.year}
+        submissionsOpen={planContext.submissionsOpen}
+        isManager={planContext.isManager}
+        myWishes={planContext.myWishes.map((w) => ({
+          id: w.id,
+          userId: w.userId,
+          userName: "",
+          year: w.year,
+          startDate: w.startDate,
+          endDate: w.endDate,
+          days: w.days,
+          note: w.note,
+          status: w.status,
+          submittedAt: w.submittedAt,
+        }))}
+        teamWishes={planContext.teamWishes}
+      />
+
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="min-w-0">
           <VacationRequestForm />
@@ -69,6 +93,7 @@ export default async function VacationPage() {
             status: r.status,
             userName: r.user?.name ?? r.user?.email ?? "Unbekannt",
             decisionNote: r.decisionNote ?? null,
+            hasSickAttachment: Boolean(r.sickAttachmentMime),
             context: r.context,
             approvedBy: r.approvedBy ?? null,
           }))}

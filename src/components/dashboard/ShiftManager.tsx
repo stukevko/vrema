@@ -1,7 +1,7 @@
 "use client";
 import { userErrorMessage } from "@/lib/errors/user-message";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Drawer } from "vaul";
 import {
   applyStandardWeek,
@@ -11,6 +11,7 @@ import {
   setShiftForDay,
   toggleShiftTradeOffer,
 } from "@/lib/actions/team";
+import type { VacationConflictDay } from "@/lib/actions/vacation";
 import { getPlannerQuickSuggest, type PlannerQuickSuggestRow } from "@/lib/actions/planner-quick-suggest";
 import { getPlannerStaffingHints, type PlannerStaffingHint } from "@/lib/actions/predictive";
 import { StaffingHintBadge } from "@/components/planning/StaffingHintBadge";
@@ -112,6 +113,15 @@ type ShiftRow = {
 };
 
 const DAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+
+function isoDateForJsDayInWeek(weekDayIsos: string[], dayOfWeek: number): string | null {
+  const idx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  return weekDayIsos[idx] ?? null;
+}
+
+function absenceConflictKey(userId: string, isoDate: string): string {
+  return `${userId}-${isoDate}`;
+}
 const WEEK_SHORT_MON = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] as const;
 /** Mobile: volle Wochentagsnamen für bessere Lesbarkeit. */
 const MOBILE_DAY_NAMES = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"] as const;
@@ -316,7 +326,7 @@ export function ShiftManager({
   companyModules?: CompanyModules;
   shiftCycleWeeks?: ShiftCycleWeeks;
   holidayRegion?: GermanRegion | null;
-  vacationConflictDays?: Array<{ userId: string; dayOfWeek: number; type?: "VACATION" | "SICK" }>;
+  vacationConflictDays?: VacationConflictDay[];
   /** userId → Wochentage (0–6), an denen die Person als nicht verfügbar markiert ist */
   unavailableDaysByUserId?: Record<string, number[]>;
   /** Manager: Schicht-Checkliste für den sichtbaren Tag im Timeline erzeugen */
@@ -780,13 +790,28 @@ export function ShiftManager({
     }
     return map;
   }, [shifts, selectedWeekIndex]);
-  const conflictTypeByCell = useMemo(() => {
+  const conflictTypeByUserIso = useMemo(() => {
     const map = new Map<string, "VACATION" | "SICK">();
     for (const entry of vacationConflictDays ?? []) {
-      map.set(`${entry.userId}-${entry.dayOfWeek}`, entry.type ?? "VACATION");
+      if (!entry.isoDate) continue;
+      map.set(absenceConflictKey(entry.userId, entry.isoDate), entry.type ?? "VACATION");
     }
     return map;
   }, [vacationConflictDays]);
+
+  const getAbsenceConflict = useCallback(
+    (userId: string, dayOfWeek: number) => {
+      const iso = isoDateForJsDayInWeek(weekDayDates, dayOfWeek);
+      if (!iso) return undefined;
+      return conflictTypeByUserIso.get(absenceConflictKey(userId, iso));
+    },
+    [conflictTypeByUserIso, weekDayDates],
+  );
+
+  const getAbsenceConflictByIso = useCallback(
+    (userId: string, isoDate: string) => conflictTypeByUserIso.get(absenceConflictKey(userId, isoDate)),
+    [conflictTypeByUserIso],
+  );
 
   useEffect(() => {
     if (members.length === 0) {
@@ -819,15 +844,15 @@ export function ShiftManager({
     [shifts, selectedWeekIndex]
   );
   const selectedUserVacationDays = useMemo(
-    () => new Set(DAY_LABELS.map((_, d) => d).filter((d) => conflictTypeByCell.has(`${selectedUserId}-${d}`))),
-    [selectedUserId, conflictTypeByCell]
+    () => new Set(DAY_LABELS.map((_, d) => d).filter((d) => getAbsenceConflict(selectedUserId, d))),
+    [selectedUserId, getAbsenceConflict],
   );
   const selectedUserSickDays = useMemo(
     () =>
       new Set(
-        DAY_LABELS.map((_, d) => d).filter((d) => conflictTypeByCell.get(`${selectedUserId}-${d}`) === "SICK")
+        DAY_LABELS.map((_, d) => d).filter((d) => getAbsenceConflict(selectedUserId, d) === "SICK"),
       ),
-    [selectedUserId, conflictTypeByCell]
+    [selectedUserId, getAbsenceConflict],
   );
   const timelineHasShifts = useMemo(
     () =>
@@ -839,10 +864,10 @@ export function ShiftManager({
     return members.map((m) => {
       const shift = shiftByUserAndDay.get(`${m.id}-${selectedWeekIndex}-${timelineDay}`);
       const previousShift = shiftByUserAndDay.get(`${m.id}-${selectedWeekIndex}-${previousDay}`);
-      const conflict = conflictTypeByCell.get(`${m.id}-${timelineDay}`);
+      const conflict = getAbsenceConflictByIso(m.id, timelineDate);
       return { member: m, shift, previousShift, conflict };
     });
-  }, [members, shiftByUserAndDay, conflictTypeByCell, timelineDay, selectedWeekIndex]);
+  }, [members, shiftByUserAndDay, getAbsenceConflictByIso, timelineDate, selectedWeekIndex]);
   const timelineWxDay = useMemo(() => {
     const idx = monWeekIndexFromTimelineDay(timelineDay);
     return weatherWeek[idx] ?? null;
@@ -1214,7 +1239,7 @@ export function ShiftManager({
     dayOfWeek: number = timelineDay,
     weekIndex: ShiftCycleWeeks = selectedWeekIndex,
   ) => {
-    const conflict = conflictTypeByCell.get(`${userId}-${dayOfWeek}`);
+    const conflict = getAbsenceConflict(userId, dayOfWeek);
     if (conflict) {
       setMessage(`Schicht blockiert: ${conflict === "SICK" ? "Krank" : "Urlaub"}.`);
       return;
@@ -1269,7 +1294,7 @@ export function ShiftManager({
       .map((m) => {
         const shift = shiftByUserAndDay.get(`${m.id}-${selectedWeekIndex}-${timelineDay}`);
         const prevShift = shiftByUserAndDay.get(`${m.id}-${selectedWeekIndex}-${(timelineDay + 6) % 7}`);
-        const conflict = conflictTypeByCell.get(`${m.id}-${timelineDay}`);
+        const conflict = getAbsenceConflictByIso(m.id, timelineDate);
         if (conflict) return null;
 
         const start = shift ? toMinutes(shift.startTime) : null;
@@ -2207,7 +2232,7 @@ export function ShiftManager({
   );
 
   const executeShiftAssignment = (userId: string, slot: BoardShiftSlot) => {
-    const conflict = conflictTypeByCell.get(`${userId}-${slot.dayOfWeek}`);
+    const conflict = getAbsenceConflict(userId, slot.dayOfWeek);
     if (conflict) {
       const msg = conflict === "SICK" ? "Krank — keine Schicht möglich." : "Urlaub — keine Schicht möglich.";
       setMessage(msg);
@@ -2290,7 +2315,7 @@ export function ShiftManager({
     for (const m of members) {
       const days: number[] = [];
       for (let d = 0; d <= 6; d++) {
-        if (conflictTypeByCell.has(`${m.id}-${d}`)) days.push(d);
+        if (getAbsenceConflict(m.id, d)) days.push(d);
       }
       if (days.length) conflictDays[m.id] = days;
     }
@@ -2331,7 +2356,7 @@ export function ShiftManager({
       setMessage("Bitte gültige Start- und Endzeit wählen.");
       return;
     }
-    const conflict = conflictTypeByCell.get(`${userId}-${dayOfWeek}`);
+    const conflict = getAbsenceConflict(userId, dayOfWeek);
     if (conflict) {
       setMessage(conflict === "SICK" ? "Krank — keine Schicht möglich." : "Urlaub — keine Schicht möglich.");
       return;
@@ -2363,7 +2388,7 @@ export function ShiftManager({
           (m) =>
             !assigned.has(m.id) &&
             !isOpenShiftPlaceholderEmail(m.email) &&
-            !conflictTypeByCell.has(`${m.id}-${dayOfWeek}`),
+            !getAbsenceConflict(m.id, dayOfWeek),
         );
         if (next) setSelectedUserId(next.id);
         showToast("Gespeichert — nächste Person wählen.", "success");
@@ -2483,6 +2508,7 @@ export function ShiftManager({
         shiftCycleWeeks={shiftCycleWeeks}
         shifts={displayShifts}
         members={members}
+        absenceDays={vacationConflictDays}
         holidayRegion={holidayRegion}
         onAddShift={openAddForCalendarDate}
         onEditShift={editShiftFromCalendar}

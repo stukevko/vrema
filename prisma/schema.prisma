@@ -51,6 +51,13 @@ enum AbsenceRequestStatus {
   REJECTED
 }
 
+enum VacationWishStatus {
+  WISH
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
 enum TicketStatus {
   OPEN
   PENDING
@@ -304,6 +311,8 @@ model Company {
   workLogs          WorkLog[]
   correctionRequests WorkLogCorrectionRequest[]
   vacationRequests  VacationRequest[]
+  vacationWishes    VacationWish[]
+  vacationPlanYears VacationPlanYear[]
   workSchedules     WorkSchedule[]
   shifts            Shift[]
   workLogAudits     WorkLogAudit[]
@@ -414,6 +423,8 @@ model User {
   reviewedCorrections WorkLogCorrectionRequest[] @relation("CorrectionReviewer")
   vacationRequests VacationRequest[]
   approvedVacations VacationRequest[] @relation("ApprovedBy")
+  vacationWishes   VacationWish[]
+  reviewedVacationWishes VacationWish[] @relation("VacationWishReviewer")
   workSchedules    WorkSchedule[]
   shifts           Shift[]
   workLogAudits    WorkLogAudit[]
@@ -811,17 +822,60 @@ model VacationRequest {
   status      VacationStatus @default(PENDING)
   approvedById String?
   approvedAt  DateTime?
+  /// Optional: AU-Foto/PDF bei Krankmeldung (nur Manager, max. 5 MB).
+  sickAttachmentMime        String?
+  sickAttachmentData      String?   @db.Text
+  sickAttachmentUploadedAt DateTime?
+  sickAttachmentRetainUntil DateTime?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
   company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   approvedBy User?    @relation("ApprovedBy", fields: [approvedById], references: [id])
+  vacationWish VacationWish?
 
   @@index([companyId, userId])
   @@index([companyId, status])
   @@index([companyId, startDate])
   @@index([companyId, endDate])
+}
+
+model VacationPlanYear {
+  companyId       String
+  year            Int
+  submissionsOpen Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, year])
+}
+
+model VacationWish {
+  id                  String             @id @default(cuid())
+  companyId           String
+  userId              String
+  year                Int
+  startDate           DateTime
+  endDate             DateTime
+  days                Int
+  note                String?
+  status              VacationWishStatus @default(WISH)
+  submittedAt         DateTime?
+  reviewedById        String?
+  reviewedAt          DateTime?
+  vacationRequestId   String?            @unique
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy      User?            @relation("VacationWishReviewer", fields: [reviewedById], references: [id])
+  vacationRequest VacationRequest? @relation(fields: [vacationRequestId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, year, status])
+  @@index([companyId, userId, year])
 }
 
 model BlogPost {

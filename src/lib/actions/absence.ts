@@ -6,6 +6,7 @@ import { requireTenant } from "@/lib/tenant-guard";
 import { sendVacationStatusEmail } from "@/lib/email/transactional";
 import type { AbsenceRequestStatus, VacationStatus } from "@prisma/client";
 import { countBerlinCalendarDaysInclusive } from "@/lib/time/timezone";
+import { removeShiftsForApprovedAbsenceRange } from "@/lib/planning/absence-shift-sync";
 
 export async function listAbsencesForManagers() {
   const { companyId, role } = await requireTenant();
@@ -37,7 +38,7 @@ export async function decideAbsence(input: {
   // nachgelagerte Check den Fehler wirft.
   const existing = await db.absence.findFirst({
     where: { id: input.absenceId, orgId: companyId },
-    select: { id: true },
+    select: { id: true, userId: true, start: true, end: true, sourceVacationRequestId: true },
   });
   if (!existing) {
     throw new Error("Abwesenheit gehört nicht zu Ihrer Organisation.");
@@ -66,6 +67,15 @@ export async function decideAbsence(input: {
         approvedById: userId,
         approvedAt: new Date(),
       },
+    });
+  }
+
+  if (input.status === "APPROVED") {
+    await removeShiftsForApprovedAbsenceRange({
+      companyId,
+      userId: updated.userId,
+      startDate: updated.start,
+      endDate: updated.end,
     });
   }
 

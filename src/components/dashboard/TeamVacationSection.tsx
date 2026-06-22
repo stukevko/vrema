@@ -16,6 +16,7 @@ type Row = {
   status: "PENDING" | "APPROVED" | "REJECTED";
   userName?: string;
   decisionNote?: string | null;
+  hasSickAttachment?: boolean;
   context?: VacationDecisionContext;
   approvedBy?: { name: string | null } | null;
 };

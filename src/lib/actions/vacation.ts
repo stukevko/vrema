@@ -21,6 +21,17 @@ import {
   getBerlinDayBoundsUtc,
   listBerlinDateKeysInclusive,
 } from "@/lib/time/timezone";
+import { removeShiftsForApprovedAbsenceRange } from "@/lib/planning/absence-shift-sync";
+import { sickAttachmentRetainUntil } from "@/lib/sick-attachment";
+
+export type VacationConflictDay = {
+  userId: string;
+  /** Kalendertag Europe/Berlin (YYYY-MM-DD). */
+  isoDate: string;
+  type: "VACATION" | "SICK";
+  /** Wochentag 0=So … 6=Sa — für Legacy-Board-Helfer. */
+  dayOfWeek: number;
+};
 
 export async function requestVacation(data: {
   startDate: Date;
@@ -67,6 +78,7 @@ export async function requestSickLeave(data: {
   startDate: Date;
   endDate: Date;
   note?: string;
+  attachment?: { mime: string; dataUrl: string } | null;
 }) {
   const { userId, companyId } = await requireTenant();
   const startBounds = getBerlinDayBoundsUtc(data.startDate);
@@ -74,6 +86,8 @@ export async function requestSickLeave(data: {
   const normalizedStartDate = startBounds.start;
   const normalizedEndDate = endBounds.end;
   const days = countBerlinCalendarDaysInclusive(normalizedStartDate, normalizedEndDate);
+
+  const uploadedAt = data.attachment ? new Date() : null;
 
   const request = await db.vacationRequest.create({
     data: {
@@ -86,6 +100,10 @@ export async function requestSickLeave(data: {
       status: VacationStatus.APPROVED,
       approvedAt: new Date(),
       reason: data.note?.trim() || null,
+      sickAttachmentMime: data.attachment?.mime ?? null,
+      sickAttachmentData: data.attachment?.dataUrl ?? null,
+      sickAttachmentUploadedAt: uploadedAt,
+      sickAttachmentRetainUntil: uploadedAt ? sickAttachmentRetainUntil(uploadedAt) : null,
     },
   });
   await db.absence.create({
@@ -103,9 +121,16 @@ export async function requestSickLeave(data: {
     },
   });
 
+  const shiftsRemoved = await removeShiftsForApprovedAbsenceRange({
+    companyId,
+    userId,
+    startDate: normalizedStartDate,
+    endDate: normalizedEndDate,
+  });
+
   revalidatePath("/dashboard/vacation");
   revalidatePath("/dashboard/planning");
-  return request;
+  return { request, shiftsRemoved };
 }
 
 export async function approveVacation(requestId: string, opts?: { note?: string }) {
@@ -168,7 +193,15 @@ export async function approveVacation(requestId: string, opts?: { note?: string 
     href: "/dashboard/vacation",
   });
 
+  await removeShiftsForApprovedAbsenceRange({
+    companyId,
+    userId: updated.userId,
+    startDate: updated.startDate,
+    endDate: updated.endDate,
+  });
+
   revalidatePath("/dashboard/vacation");
+  revalidatePath("/dashboard/planning");
   revalidatePath("/dashboard");
   return updated;
 }
@@ -454,10 +487,10 @@ export async function getTeamVacationRequestsWithContext() {
 }
 
 /** Planer-RSC: companyId aus Session — kein requireTenant/redirect. */
-export async function getVacationConflictDaysForCompany(companyId: string) {
+export async function getVacationConflictDaysForCompany(companyId: string): Promise<VacationConflictDay[]> {
   const now = new Date();
   const horizonEnd = new Date(now);
-  horizonEnd.setDate(horizonEnd.getDate() + 120);
+  horizonEnd.setDate(horizonEnd.getDate() + 365);
   const nowStart = getBerlinDayBoundsUtc(now).start;
   const horizonEndDay = getBerlinDayBoundsUtc(horizonEnd).end;
 
@@ -489,30 +522,32 @@ export async function getVacationConflictDaysForCompany(companyId: string) {
     },
   });
 
-  /** JSON-Key: User-IDs können Bindestriche enthalten (z. B. UUID) — kein „split("-")“. */
   const conflicts = new Map<string, "VACATION" | "SICK">();
-  const conflictKey = (userId: string, dayOfWeek: number) => JSON.stringify([userId, dayOfWeek]);
-  for (const req of requests) {
-    const conflictType: "VACATION" | "SICK" = req.absenceType === AbsenceType.SICK ? "SICK" : "VACATION";
-    const dateKeys = listBerlinDateKeysInclusive(req.startDate, req.endDate);
-    for (const dateKey of dateKeys) {
-      const key = conflictKey(req.userId, berlinDateKeyToDayOfWeek(dateKey));
+  const conflictKey = (userId: string, isoDate: string) => JSON.stringify([userId, isoDate]);
+
+  const markRange = (
+    userId: string,
+    start: Date,
+    end: Date,
+    conflictType: "VACATION" | "SICK",
+  ) => {
+    for (const dateKey of listBerlinDateKeysInclusive(start, end)) {
+      const key = conflictKey(userId, dateKey);
       const existing = conflicts.get(key);
       if (existing !== "SICK") {
         conflicts.set(key, conflictType);
       }
     }
+  };
+
+  for (const req of requests) {
+    const conflictType: "VACATION" | "SICK" =
+      req.absenceType === AbsenceType.SICK ? "SICK" : "VACATION";
+    markRange(req.userId, req.startDate, req.endDate, conflictType);
   }
   for (const req of absences) {
     const conflictType: "VACATION" | "SICK" = req.type === AbsenceType.SICK ? "SICK" : "VACATION";
-    const dateKeys = listBerlinDateKeysInclusive(req.start, req.end);
-    for (const dateKey of dateKeys) {
-      const key = conflictKey(req.userId, berlinDateKeyToDayOfWeek(dateKey));
-      const existing = conflicts.get(key);
-      if (existing !== "SICK") {
-        conflicts.set(key, conflictType);
-      }
-    }
+    markRange(req.userId, req.start, req.end, conflictType);
   }
 
   return Array.from(conflicts.entries())
@@ -520,16 +555,20 @@ export async function getVacationConflictDaysForCompany(companyId: string) {
       try {
         const parsed = JSON.parse(entry) as unknown;
         if (!Array.isArray(parsed) || parsed.length !== 2) return null;
-        const [userId, dow] = parsed;
+        const [userId, isoDate] = parsed;
         if (typeof userId !== "string" || !userId) return null;
-        const dayOfWeek = Number(dow);
-        if (!Number.isInteger(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6) return null;
-        return { userId, dayOfWeek, type };
+        if (typeof isoDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return null;
+        return {
+          userId,
+          isoDate,
+          type,
+          dayOfWeek: berlinDateKeyToDayOfWeek(isoDate),
+        };
       } catch {
         return null;
       }
     })
-    .filter((x): x is { userId: string; dayOfWeek: number; type: "VACATION" | "SICK" } => x != null);
+    .filter((x): x is VacationConflictDay => x != null);
 }
 
 export async function getVacationConflictDaysForPlanning() {

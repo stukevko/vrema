@@ -3,29 +3,27 @@ import { userErrorMessage } from "@/lib/errors/user-message";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { requestSickLeave, requestVacation } from "@/lib/actions/vacation";
-import { CalendarDays, Loader2, ShieldCheck } from "lucide-react";
+import { requestVacation } from "@/lib/actions/vacation";
+import { submitSickLeaveForm } from "@/lib/actions/vacation-sick-form";
+import { SICK_ATTACHMENT_MAX_BYTES } from "@/lib/sick-attachment";
+import { CalendarDays, Loader2, Paperclip, ShieldCheck } from "lucide-react";
 
 export function VacationRequestForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [mode, setMode] = useState<"vacation" | "sick">("vacation");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setSuccess(false);
+    setSuccessMessage(null);
 
     const form = e.currentTarget;
     const data = new FormData(form);
     const startDate = new Date(data.get("startDate") as string);
     const endDate = new Date(data.get("endDate") as string);
-    // DSGVO: Bei Urlaubsanträgen wird KEIN Grund erhoben (Datenminimierung,
-    // Art. 5 DSGVO). Nur die Krankmeldung erlaubt eine optionale Notiz – ohne
-    // medizinische Details (siehe Hinweis im UI).
-    const sickNote = mode === "sick" ? (data.get("sickNote") as string | null) : null;
 
     if (endDate < startDate) {
       setError("Enddatum muss nach dem Startdatum liegen.");
@@ -35,11 +33,16 @@ export function VacationRequestForm() {
     startTransition(async () => {
       try {
         if (mode === "sick") {
-          await requestSickLeave({ startDate, endDate, note: sickNote?.trim() || undefined });
+          const result = await submitSickLeaveForm(data);
+          setSuccessMessage(
+            result.shiftsRemoved > 0
+              ? `Krankmeldung gespeichert — ${result.shiftsRemoved} geplante Schicht${result.shiftsRemoved === 1 ? "" : "en"} im Planer entfernt.`
+              : "Krankmeldung erfolgreich gespeichert!",
+          );
         } else {
           await requestVacation({ startDate, endDate });
+          setSuccessMessage("Antrag erfolgreich eingereicht!");
         }
-        setSuccess(true);
         form.reset();
         router.refresh();
       } catch (err: unknown) {
@@ -73,7 +76,7 @@ export function VacationRequestForm() {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
+      <form onSubmit={handleSubmit} className="min-w-0 space-y-4" encType={mode === "sick" ? "multipart/form-data" : undefined}>
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">Von</label>
           <input
@@ -93,9 +96,6 @@ export function VacationRequestForm() {
           />
         </div>
         {mode === "vacation" ? (
-          // DSGVO: Kein Grund-Feld bei Urlaub. Arbeitgeber dürfen keinen Grund
-          // verlangen (BUrlG, Datenminimierung). Klarer Trust-Hinweis statt
-          // Eingabefeld – Mitarbeiter sieht sofort, warum nichts mehr abgefragt wird.
           <div className="flex items-start gap-2 rounded-xl border border-emerald-200/60 bg-emerald-50 px-3 py-2.5 text-[12px] leading-snug text-emerald-900 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-200">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
             <span>
@@ -121,18 +121,31 @@ export function VacationRequestForm() {
                 eintragen – das ist arbeitsrechtlich nicht erforderlich.
               </p>
             </div>
+            <div>
+              <label htmlFor="sick-attachment" className="text-xs text-muted-foreground mb-1.5 block">
+                AU-Foto oder PDF (optional)
+              </label>
+              <input
+                id="sick-attachment"
+                name="attachment"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                className="w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-brand-soft file:px-3 file:py-2 file:text-xs file:font-semibold file:text-brand"
+              />
+              <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                <Paperclip className="h-3.5 w-3.5" aria-hidden />
+                Max. {Math.round(SICK_ATTACHMENT_MAX_BYTES / (1024 * 1024))} MB · nur für die Leitung sichtbar · 3 Jahre Aufbewahrung
+              </p>
+            </div>
             <p className="text-[11px] text-red-700 dark:text-red-300">
-              Krankmeldung wird direkt als Abwesenheit eingetragen und in der Planung rot blockiert.
+              Krankmeldung trägt dich sofort als abwesend ein — geplante Schichten an diesen Tagen werden aus dem Planer
+              entfernt.
             </p>
           </>
         )}
 
         {error && <p className="text-xs text-red-400">{error}</p>}
-        {success && (
-          <p className="text-xs text-primary">
-            {mode === "vacation" ? "Antrag erfolgreich eingereicht!" : "Krankmeldung erfolgreich gespeichert!"}
-          </p>
-        )}
+        {successMessage && <p className="text-xs text-primary">{successMessage}</p>}
 
         <button
           type="submit"

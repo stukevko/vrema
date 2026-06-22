@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { approveVacation, rejectVacation, type VacationDecisionContext } from "@/lib/actions/vacation";
-import { Check, X, Clock, AlertTriangle, Users, ShieldCheck, Loader2, Info, Inbox } from "lucide-react";
+import { Check, X, Clock, AlertTriangle, Users, ShieldCheck, Loader2, Info, Inbox, Paperclip } from "lucide-react";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +23,8 @@ type VacationRequest = {
   approvedBy?: { name: string | null } | null;
   /** Persistierter Kommentar/Begründung vom Genehmiger (Task 3). */
   decisionNote?: string | null;
+  /** Krankmeldung mit AU-Anhang (nur Manager-Link). */
+  hasSickAttachment?: boolean;
   /** Nur in Manager-Sicht (Team-Anträge): Resturlaub & Konflikte */
   context?: VacationDecisionContext;
 };
@@ -156,6 +158,17 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                       {req.reason}
                     </p>
                   )}
+                  {canApprove && req.absenceType === "SICK" && req.hasSickAttachment ? (
+                    <a
+                      href={`/api/sick-attachment/${req.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-brand hover:underline"
+                    >
+                      <Paperclip className="h-3.5 w-3.5" aria-hidden />
+                      AU-Nachweis ansehen
+                    </a>
+                  ) : null}
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2">
                   <StatusBadge tone={STATUS_TONES[req.status]} glass size="sm">

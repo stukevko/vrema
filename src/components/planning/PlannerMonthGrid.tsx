@@ -13,11 +13,18 @@ import { getWeekCycleIndex, type ShiftCycleWeeks } from "@/lib/shift-cycle";
 const DOW_LABELS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] as const;
 const MON_FIRST_DOW = [1, 2, 3, 4, 5, 6, 0] as const;
 
+type AbsenceDayChip = {
+  userId: string;
+  isoDate: string;
+  type: "VACATION" | "SICK";
+};
+
 type PlannerMonthGridProps = {
   monthAnchor: Date;
   shiftCycleWeeks: ShiftCycleWeeks;
   shifts: BoardShiftRow[];
   members: BoardMember[];
+  absenceDays?: AbsenceDayChip[];
   holidayRegion?: GermanRegion | null;
   onAddShift: (iso: string) => void;
   onEditShift: (shift: BoardShiftRow, iso: string) => void;
@@ -40,6 +47,7 @@ export function PlannerMonthGrid({
   shiftCycleWeeks,
   shifts,
   members,
+  absenceDays = [],
   holidayRegion,
   onAddShift,
   onEditShift,
@@ -75,6 +83,17 @@ export function PlannerMonthGrid({
     }
     return map;
   }, [displayYear, displayMonth, holidayRegion]);
+
+  const absencesByIso = useMemo(() => {
+    const map = new Map<string, Array<{ userId: string; type: "VACATION" | "SICK"; label: string }>>();
+    for (const entry of absenceDays) {
+      const label = (memberLabelById.get(entry.userId) ?? "MA").split(/\s+/)[0] ?? "MA";
+      const list = map.get(entry.isoDate) ?? [];
+      list.push({ userId: entry.userId, type: entry.type, label });
+      map.set(entry.isoDate, list);
+    }
+    return map;
+  }, [absenceDays, memberLabelById]);
 
   const shiftsByIso = useMemo(() => {
     const map = new Map<string, BoardShiftRow[]>();
@@ -127,6 +146,7 @@ export function PlannerMonthGrid({
                 const isFirstOfMonth = inMonth && date.getDate() === 1;
                 const isWeekend = colIdx >= 5;
                 const dayShifts = shiftsByIso.get(iso) ?? [];
+                const dayAbsences = absencesByIso.get(iso) ?? [];
                 const holidayName =
                   holidayRegion != null
                     ? (holidaysByIso.get(iso) ?? getHolidayForDate(iso, holidayRegion)?.name ?? null)
@@ -172,7 +192,20 @@ export function PlannerMonthGrid({
                           {holidayName}
                         </span>
                       ) : null}
-                      {dayShifts.slice(0, inMonth ? 3 : 0).map((shift) => {
+                      {dayAbsences.slice(0, inMonth ? 2 : 0).map((absence) => (
+                        <span
+                          key={`${absence.userId}-${iso}`}
+                          className={`truncate rounded-[5px] px-1.5 py-[3px] text-[10px] font-semibold leading-none shadow-sm ${
+                            absence.type === "SICK"
+                              ? "bg-[#FF3B30] text-white"
+                              : "bg-amber-500 text-white"
+                          }`}
+                          title={absence.type === "SICK" ? `${absence.label} · Krank` : `${absence.label} · Urlaub`}
+                        >
+                          {absence.label} {absence.type === "SICK" ? "krank" : "Urlaub"}
+                        </span>
+                      ))}
+                      {dayShifts.slice(0, inMonth ? Math.max(0, 3 - dayAbsences.length) : 0).map((shift) => {
                         const label = memberLabelById.get(shift.userId) ?? "Schicht";
                         const shortLabel = label.split(/\s+/)[0] ?? label;
                         return (
@@ -198,9 +231,9 @@ export function PlannerMonthGrid({
                           </span>
                         );
                       })}
-                      {inMonth && dayShifts.length > 3 ? (
+                      {inMonth && dayShifts.length + dayAbsences.length > 3 ? (
                         <span className="px-0.5 text-[10px] font-medium text-muted-foreground">
-                          +{dayShifts.length - 3}
+                          +{dayShifts.length + dayAbsences.length - 3}
                         </span>
                       ) : null}
                     </div>
