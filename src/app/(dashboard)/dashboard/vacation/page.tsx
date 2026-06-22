@@ -5,6 +5,7 @@ import { getVacationPlanContext } from "@/lib/actions/vacation-plan";
 import { VacationList } from "@/components/dashboard/VacationList";
 import { VacationRequestForm } from "@/components/dashboard/VacationRequestForm";
 import { VacationPlanSection } from "@/components/dashboard/VacationPlanSection";
+import { AbsencePrivacyInfo } from "@/components/dashboard/AbsencePrivacyInfo";
 import { TeamVacationSection } from "@/components/dashboard/TeamVacationSection";
 import { TeamAbsencesSection } from "@/components/dashboard/TeamAbsencesSection";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
@@ -40,8 +41,8 @@ export default async function VacationPage() {
         variant="card"
         icon={CalendarDays}
         eyebrow="Abwesenheit"
-        title="Urlaub & Abwesenheit"
-        description="Anträge stellen, verwalten und als Führungskraft freigeben."
+        title="Abwesenheit"
+        description="Urlaub beantragen, krank melden — als Führungskraft freigeben."
         hideOnMobile
         badge={
           isManager && pendingTeamCount > 0 ? (
@@ -51,6 +52,8 @@ export default async function VacationPage() {
           ) : null
         }
       />
+
+      <AbsencePrivacyInfo isManager={isManager} />
 
       <VacationPlanSection
         year={planContext.year}

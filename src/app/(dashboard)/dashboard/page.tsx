@@ -119,7 +119,7 @@ function managerPrimaryFocus(
   }
   if (stats.pendingVacations > 0) {
     return {
-      title: `${stats.pendingVacations} Urlaubsantrag${stats.pendingVacations === 1 ? "" : "e"} offen`,
+      title: `${stats.pendingVacations} Abwesenheitsantrag${stats.pendingVacations === 1 ? "" : "e"} offen`,
       description: "Resturlaub & Konflikte werden direkt am Antrag angezeigt – sicher entscheiden.",
       href: "/dashboard/vacation#team-vacation-requests",
       cta: "Anträge prüfen",
@@ -375,7 +375,7 @@ export default async function DashboardPage({
             <Link href="/dashboard/reports" className="w-full">Detailbericht öffnen</Link>
           </IconMenu.Item>
           <IconMenu.Item asChild icon={<CalendarPlus className="h-4 w-4" />}>
-            <Link href="/dashboard/vacation" className="w-full">Urlaub erfassen</Link>
+            <Link href="/dashboard/vacation" className="w-full">Abwesenheit melden</Link>
           </IconMenu.Item>
           <IconMenu.Separator />
           <IconMenu.Item asChild icon={<CalendarDays className="h-4 w-4" />}>
@@ -560,7 +560,7 @@ export default async function DashboardPage({
                 [
                   { href: "/dashboard/planning", label: "Wochenplan" },
                   { href: "/dashboard/reports", label: "Zeiten" },
-                  { href: "/dashboard/vacation", label: "Urlaub" },
+                  { href: "/dashboard/vacation", label: "Abwesenheit" },
                 ] as const
               ).map((q) => (
                 <Link

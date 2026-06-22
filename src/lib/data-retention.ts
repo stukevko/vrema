@@ -14,6 +14,7 @@ export type DataRetentionReport = {
   deletedEmptyCompanies: number;
   deletedOldWorkLogs: number;
   deletedOldVacationRequests: number;
+  purgedExpiredSickAttachments: number;
   config: RetentionConfig;
   executedAt: string;
 };
@@ -106,6 +107,29 @@ export async function runDataRetention(prisma: PrismaClient): Promise<DataRetent
     }
   }
 
+  /** AU-Anhänge: nach `sickAttachmentRetainUntil` Rohdaten entfernen (Art. 5 / Art. 9). */
+  let purgedExpiredSickAttachments = 0;
+  const companiesForSick = await prisma.company.findMany({
+    select: { id: true },
+    where: { isActive: true },
+  });
+  for (const c of companiesForSick) {
+    const purged = await prisma.vacationRequest.updateMany({
+      where: {
+        companyId: c.id,
+        sickAttachmentRetainUntil: { lt: now },
+        sickAttachmentData: { not: null },
+      },
+      data: {
+        sickAttachmentMime: null,
+        sickAttachmentData: null,
+        sickAttachmentUploadedAt: null,
+        sickAttachmentRetainUntil: null,
+      },
+    });
+    purgedExpiredSickAttachments += purged.count;
+  }
+
   return {
     deletedExpiredSessions: expiredSessions.count,
     deletedExpiredVerificationTokens: expiredTokens.count,
@@ -113,6 +137,7 @@ export async function runDataRetention(prisma: PrismaClient): Promise<DataRetent
     deletedEmptyCompanies: emptyCompanies.count,
     deletedOldWorkLogs,
     deletedOldVacationRequests,
+    purgedExpiredSickAttachments,
     config,
     executedAt: now.toISOString(),
   };

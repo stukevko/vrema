@@ -155,7 +155,7 @@ export function getMobileBottomNavItems(
       {
         href: "/dashboard/account",
         label: "Mehr",
-        subtitle: "Team & Urlaub",
+        subtitle: "Team & Abwesenheit",
         icon: MoreHorizontal,
         kind: "more",
       },
@@ -189,7 +189,7 @@ export function getMobileBottomNavItems(
 const MOBILE_SCREEN_ROUTES: { prefix: string; title: string }[] = [
   { prefix: "/dashboard/planning", title: "Planer" },
   { prefix: "/dashboard/team", title: "Team" },
-  { prefix: "/dashboard/vacation", title: "Urlaub" },
+  { prefix: "/dashboard/vacation", title: "Abwesenheit" },
   { prefix: "/dashboard/insights", title: "Auswertung" },
   { prefix: "/dashboard/reports", title: "Berichte" },
   { prefix: "/dashboard/tasks", title: "Aufgaben" },
@@ -219,7 +219,7 @@ export function getMobileScreenTitle(pathname: string, role: string): string {
 export function getEmployeeMobileMoreNavItems(): MobileBottomNavItem[] {
   return [
     { href: "/dashboard/team", label: "Team", subtitle: "Kollegen", icon: Users },
-    { href: "/dashboard/vacation", label: "Urlaub", subtitle: "Frei/Tage", icon: CalendarClock },
+    { href: "/dashboard/vacation", label: "Abwesenheit", subtitle: "Urlaub & Krank", icon: CalendarClock },
     { href: "/dashboard/account", label: "Profil", subtitle: "Konto", icon: UserCircle2 },
     { href: "/dashboard/support", label: "Hilfe", subtitle: "Support", icon: LifeBuoy },
   ];
@@ -239,7 +239,7 @@ export function getManagerMobileMoreNavItems(
   }
   items.push(
     { href: "/dashboard/team", label: "Team", subtitle: "", icon: Users },
-    { href: "/dashboard/vacation", label: "Urlaub", subtitle: "", icon: CalendarDays },
+    { href: "/dashboard/vacation", label: "Abwesenheit", subtitle: "", icon: CalendarDays },
     { href: "/dashboard/reports", label: "Berichte", subtitle: "", icon: FileText },
   );
   if (modules.shiftTasks) {

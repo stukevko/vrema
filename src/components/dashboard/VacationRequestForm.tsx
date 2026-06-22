@@ -57,7 +57,7 @@ export function VacationRequestForm() {
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <CalendarDays className="w-5 h-5 text-primary" />
         </div>
-        <h2 className="font-semibold">{mode === "vacation" ? "Urlaub beantragen" : "Krankmeldung"}</h2>
+        <h2 className="font-semibold">Abwesenheit melden</h2>
       </div>
       <div className="mb-4 inline-flex w-full max-w-full rounded-lg border border-border bg-background p-1 text-xs sm:w-auto">
         <button
@@ -134,7 +134,12 @@ export function VacationRequestForm() {
               />
               <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground">
                 <Paperclip className="h-3.5 w-3.5" aria-hidden />
-                Max. {Math.round(SICK_ATTACHMENT_MAX_BYTES / (1024 * 1024))} MB · nur für die Leitung sichtbar · 3 Jahre Aufbewahrung
+                Max. {Math.round(SICK_ATTACHMENT_MAX_BYTES / (1024 * 1024))} MB · nur für die Leitung · Download über gesicherten Link
+              </p>
+              <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">
+                Mit Upload stimmst du der Speicherung zum Nachweis gegenüber deinem Arbeitgeber zu (Art. 9 Abs. 2 lit. b
+                DSGVO i. V. m. § 26 BDSG). Aufbewahrung 3 Jahre, danach automatische Löschung. Keine Diagnose im
+                Dokument nötig — nur Arbeitsunfähigkeit.
               </p>
             </div>
             <p className="text-[11px] text-red-700 dark:text-red-300">

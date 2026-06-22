@@ -20,7 +20,7 @@ export async function TeamAbsencesSection({ companyId }: { companyId: string }) 
       <div>
         <h2 className="text-lg font-semibold tracking-tight">Freigaben · Abwesenheiten</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Krankmeldungen und sonstige Abwesenheiten — Urlaubsanträge findest du oben im Team-Bereich.
+          Urlaubs- und Krankmeldungen aus dem Team — sonstige Abwesenheiten findest du weiter unten.
         </p>
       </div>
 

@@ -23,6 +23,7 @@ import {
 } from "@/lib/time/timezone";
 import { removeShiftsForApprovedAbsenceRange } from "@/lib/planning/absence-shift-sync";
 import { sickAttachmentRetainUntil } from "@/lib/sick-attachment";
+import { VACATION_REQUEST_LIST_SELECT } from "@/lib/vacation/safe-select";
 
 export type VacationConflictDay = {
   userId: string;
@@ -36,7 +37,6 @@ export type VacationConflictDay = {
 export async function requestVacation(data: {
   startDate: Date;
   endDate: Date;
-  reason?: string;
 }) {
   const { userId, companyId } = await requireTenant();
   const startBounds = getBerlinDayBoundsUtc(data.startDate);
@@ -53,7 +53,7 @@ export async function requestVacation(data: {
       startDate: normalizedStartDate,
       endDate: normalizedEndDate,
       days,
-      reason: data.reason,
+      reason: null,
     },
   });
   await db.absence.create({
@@ -64,7 +64,7 @@ export async function requestVacation(data: {
       start: normalizedStartDate,
       end: normalizedEndDate,
       status: AbsenceRequestStatus.REQUESTED,
-      reason: data.reason,
+      reason: null,
       sourceVacationRequestId: request.id,
     },
   });
@@ -99,7 +99,7 @@ export async function requestSickLeave(data: {
       days,
       status: VacationStatus.APPROVED,
       approvedAt: new Date(),
-      reason: data.note?.trim() || null,
+      reason: data.note?.trim().slice(0, 500) || null,
       sickAttachmentMime: data.attachment?.mime ?? null,
       sickAttachmentData: data.attachment?.dataUrl ?? null,
       sickAttachmentUploadedAt: uploadedAt,
@@ -114,7 +114,7 @@ export async function requestSickLeave(data: {
       start: normalizedStartDate,
       end: normalizedEndDate,
       status: AbsenceRequestStatus.APPROVED,
-      reason: data.note?.trim() || null,
+      reason: data.note?.trim().slice(0, 500) || null,
       sourceVacationRequestId: request.id,
       reviewedById: userId,
       reviewedAt: new Date(),
@@ -280,7 +280,10 @@ export async function getMyVacationRequests() {
   return db.vacationRequest.findMany({
     where: tenantWhere(companyId, { userId }),
     orderBy: { createdAt: "desc" },
-    include: { approvedBy: { select: { name: true } } },
+    select: {
+      ...VACATION_REQUEST_LIST_SELECT,
+      approvedBy: { select: { name: true } },
+    },
   });
 }
 
@@ -328,7 +331,8 @@ export async function getTeamVacationRequestsWithContext() {
   const requests = await db.vacationRequest.findMany({
     where: tenantWhere(companyId),
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-    include: {
+    select: {
+      ...VACATION_REQUEST_LIST_SELECT,
       user: { select: { id: true, name: true, email: true, vacationDays: true, staffingRole: true } },
       approvedBy: { select: { name: true } },
     },

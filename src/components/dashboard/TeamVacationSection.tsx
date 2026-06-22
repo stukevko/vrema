@@ -28,13 +28,13 @@ export function TeamVacationSection({ rows }: { rows: Row[] }) {
   return (
     <div id="team-vacation-requests" ref={ref} className="scroll-mt-24">
       <DashboardSectionCard
-        title="Team-Anträge"
+        title="Team-Abwesenheiten"
         className={
           flash ? "border-primary ring-4 ring-primary/40 transition-all duration-500" : "transition-all duration-500"
         }
       >
         {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Keine offenen Urlaubsanträge — alles erledigt.</p>
+          <p className="text-sm text-muted-foreground">Keine offenen Anträge — alles erledigt.</p>
         ) : (
           <VacationList requests={rows} canApprove={true} />
         )}

@@ -26,7 +26,7 @@ function guideForPath(
       return {
         title: `Mein ${planTitle}`,
         hint: `${slots} & Tausch — Fragen an die Leitung.`,
-        cta: { href: "/dashboard/vacation", label: "Urlaub" },
+        cta: { href: "/dashboard/vacation", label: "Abwesenheit" },
       };
     }
     return {

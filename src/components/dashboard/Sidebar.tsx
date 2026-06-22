@@ -279,7 +279,7 @@ export function DashboardMobileBottomNav({
               <div className="border-b border-border px-5 pb-3 pt-2">
                 <Drawer.Title className="text-lg font-semibold text-foreground">Mehr</Drawer.Title>
                 <Drawer.Description className="text-sm text-muted-foreground">
-                  {role === "EMPLOYEE" ? "Team, Urlaub und Konto." : "Team, Auswertung, Berichte und Einstellungen."}
+                  {role === "EMPLOYEE" ? "Team, Abwesenheit und Konto." : "Team, Auswertung, Berichte und Einstellungen."}
                 </Drawer.Description>
               </div>
               <div className="space-y-0.5 overflow-y-auto px-3 py-2">

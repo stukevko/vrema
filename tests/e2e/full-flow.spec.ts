@@ -149,7 +149,7 @@ test.describe("VREMA full browser flow", () => {
 
     // Phase 3b: Sick leave flow -> planning lock visualization
     await page.goto("/dashboard/vacation");
-    await expect(page.getByRole("heading", { name: "Urlaub & Abwesenheit" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Abwesenheit" })).toBeVisible();
     await page.getByRole("button", { name: "Krank melden" }).click();
     const today = new Date().toISOString().slice(0, 10);
     await page.locator('input[name="startDate"]').fill(today);
