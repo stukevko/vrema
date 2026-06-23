@@ -153,20 +153,34 @@ export function getMobileBottomNavItems(
         kind: "link",
       },
       {
+        href: "/dashboard/vacation",
+        label: "Abwesenheit",
+        subtitle: "Urlaub & Krank",
+        icon: CalendarClock,
+        kind: "link",
+      },
+      {
         href: "/dashboard/account",
         label: "Mehr",
-        subtitle: "Team & Abwesenheit",
+        subtitle: "Team & Profil",
         icon: MoreHorizontal,
         kind: "more",
       },
     ];
   }
 
-  // Chef: gleiches Easy-Prinzip wie Mitarbeiter — 3 Tabs, Rest im Drawer.
+  // Chef: Start · Planer · Abwesenheit · Mehr (Team, Berichte im Drawer).
   if (["COMPANY_OWNER", "MANAGER", "SUPER_ADMIN"].includes(role)) {
     return [
       { href: "/dashboard", label: "Start", subtitle: "Fokus", icon: LayoutDashboard, kind: "link" },
       { href: "/dashboard/planning", label: "Planer", subtitle: "Woche", icon: CalendarDays, kind: "link" },
+      {
+        href: "/dashboard/vacation",
+        label: "Abwesenheit",
+        subtitle: "Freigaben",
+        icon: CalendarClock,
+        kind: "link",
+      },
       {
         href: "/dashboard/settings",
         label: "Mehr",
@@ -219,7 +233,6 @@ export function getMobileScreenTitle(pathname: string, role: string): string {
 export function getEmployeeMobileMoreNavItems(): MobileBottomNavItem[] {
   return [
     { href: "/dashboard/team", label: "Team", subtitle: "Kollegen", icon: Users },
-    { href: "/dashboard/vacation", label: "Abwesenheit", subtitle: "Urlaub & Krank", icon: CalendarClock },
     { href: "/dashboard/account", label: "Profil", subtitle: "Konto", icon: UserCircle2 },
     { href: "/dashboard/support", label: "Hilfe", subtitle: "Support", icon: LifeBuoy },
   ];
@@ -239,7 +252,6 @@ export function getManagerMobileMoreNavItems(
   }
   items.push(
     { href: "/dashboard/team", label: "Team", subtitle: "", icon: Users },
-    { href: "/dashboard/vacation", label: "Abwesenheit", subtitle: "", icon: CalendarDays },
     { href: "/dashboard/reports", label: "Berichte", subtitle: "", icon: FileText },
   );
   if (modules.shiftTasks) {

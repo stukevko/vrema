@@ -11,9 +11,9 @@ type Props = {
 export function AbsencePrivacyInfo({ isManager }: Props) {
   return (
     <details className="group rounded-2xl border border-line bg-surface-muted/40 dark:border-white/10 dark:bg-surface-muted/30">
-      <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground marker:content-none sm:px-5 sm:py-3.5">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground marker:content-none sm:px-5">
         <ShieldCheck className="h-4 w-4 shrink-0 text-brand" aria-hidden />
-        Was sieht wer? — Datenschutz in Kurzform
+        <span className="min-w-0 truncate">Datenschutz — wer sieht was?</span>
         <span className="ml-auto text-xs font-normal text-muted-foreground group-open:hidden">Aufklappen</span>
       </summary>
       <div className="space-y-4 border-t border-line px-4 pb-4 pt-3 text-[13px] leading-relaxed text-foreground dark:border-white/10 sm:px-5 sm:pb-5">

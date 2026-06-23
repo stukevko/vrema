@@ -186,7 +186,7 @@ function MobileNavTab({
   const iconClass = clsx("h-5 w-5 shrink-0 stroke-[1.75]", isActive && "text-brand");
   const labelClass = clsx("text-[11px] font-medium leading-none", isActive && "font-semibold text-brand");
   const subtitleClass = clsx(
-    "text-[9px] leading-none text-muted-foreground/75",
+    "hidden text-[10px] leading-none text-muted-foreground/75 sm:block",
     isActive && "text-brand/70",
   );
 
@@ -235,13 +235,22 @@ export function DashboardMobileBottomNav({
         ? getManagerMobileMoreNavItems(role, companyModules)
         : [];
   const morePaths = new Set(moreItems.map((item) => item.href));
-  const colCount = items.length <= 2 ? 2 : items.length <= 3 ? 3 : 5;
+  const colCount = items.length;
+  const gridCols =
+    colCount <= 2
+      ? "grid-cols-2"
+      : colCount === 3
+        ? "grid-cols-3"
+        : colCount === 4
+          ? "grid-cols-4"
+          : "grid-cols-5";
 
   return (
     <>
       <nav
         className={clsx(
-          "fixed bottom-0 left-0 right-0 z-50 w-full max-w-full overflow-x-hidden glossy-bottom-nav px-2 pt-1.5 md:hidden pb-safe",
+          "fixed bottom-0 left-0 right-0 z-50 w-full max-w-full overflow-x-hidden glossy-bottom-nav pt-1.5 md:hidden pb-safe",
+          "px-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))]",
           className,
         )}
         aria-label="Hauptnavigation"
@@ -249,7 +258,7 @@ export function DashboardMobileBottomNav({
         <div
           className={clsx(
             "mx-auto grid w-full min-w-0 max-w-lg gap-0.5 overflow-hidden",
-            colCount === 2 ? "grid-cols-2" : colCount === 3 ? "grid-cols-3" : "grid-cols-5",
+            gridCols,
           )}
         >
           {items.map((item) => {

@@ -58,20 +58,20 @@ export async function TeamAbsencesSection({ companyId }: { companyId: string }) 
                   {new Date(item.end).toLocaleDateString("de-DE")}
                 </p>
                 {item.reason ? <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p> : null}
-                <div className="mt-3 flex flex-wrap items-center gap-2">
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                   <FormSubmitButton
                     name="status"
                     value="APPROVED"
                     label="Genehmigen"
                     pendingLabel="Speichere..."
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary disabled:opacity-60"
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary disabled:opacity-60 sm:w-auto"
                   />
                   <FormSubmitButton
                     name="status"
                     value="REJECTED"
                     label="Ablehnen"
                     pendingLabel="Speichere..."
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-60"
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold text-red-700 disabled:opacity-60 sm:w-auto"
                   />
                 </div>
               </form>

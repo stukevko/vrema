@@ -98,7 +98,7 @@ export function VacationPlanSection({ year, submissionsOpen, isManager, myWishes
   };
 
   return (
-    <section className="rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)] dark:border-white/10 sm:p-8">
+    <section className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)] dark:border-white/10 sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Nur Urlaub</p>
@@ -108,15 +108,16 @@ export function VacationPlanSection({ year, submissionsOpen, isManager, myWishes
           </p>
         </div>
         {isManager ? (
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={handleDownload} disabled={isPending}>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+            <Button type="button" variant="outline" size="md" className="w-full sm:w-auto" onClick={handleDownload} disabled={isPending}>
               <Download className="h-4 w-4" aria-hidden />
               CSV laden
             </Button>
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="md"
+              className="w-full sm:w-auto"
               disabled={isPending}
               onClick={() =>
                 run(
@@ -175,8 +176,8 @@ export function VacationPlanSection({ year, submissionsOpen, isManager, myWishes
             className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm"
           />
         </div>
-        <div className="sm:col-span-2 lg:col-span-4 flex flex-wrap gap-2">
-          <Button type="submit" disabled={!submissionsOpen || isPending}>
+        <div className="sm:col-span-2 lg:col-span-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <Button type="submit" className="w-full sm:w-auto" disabled={!submissionsOpen || isPending}>
             {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarRange className="h-4 w-4" />}
             Wunsch hinzufügen
           </Button>
@@ -184,6 +185,7 @@ export function VacationPlanSection({ year, submissionsOpen, isManager, myWishes
             <Button
               type="button"
               variant="outline"
+              className="w-full sm:w-auto"
               disabled={isPending}
               onClick={() => run(() => submitMyVacationWishes(year), "Wünsche abgegeben — dein Chef sieht sie jetzt.")}
             >
@@ -248,10 +250,11 @@ export function VacationPlanSection({ year, submissionsOpen, isManager, myWishes
                   </p>
                 </div>
                 {w.status === "SUBMITTED" ? (
-                  <div className="flex gap-2">
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <Button
                       type="button"
-                      size="sm"
+                      size="md"
+                      className="w-full sm:w-auto"
                       disabled={isPending}
                       onClick={() =>
                         run(() => approveVacationWish(w.id), `${w.userName}: Urlaub genehmigt und im Planer aktiv.`)
@@ -262,8 +265,9 @@ export function VacationPlanSection({ year, submissionsOpen, isManager, myWishes
                     </Button>
                     <Button
                       type="button"
-                      size="sm"
+                      size="md"
                       variant="outline"
+                      className="w-full sm:w-auto"
                       disabled={isPending}
                       onClick={() => run(() => rejectVacationWish(w.id), "Wunsch abgelehnt.")}
                     >

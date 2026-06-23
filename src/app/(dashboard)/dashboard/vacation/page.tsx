@@ -6,6 +6,7 @@ import { VacationList } from "@/components/dashboard/VacationList";
 import { VacationRequestForm } from "@/components/dashboard/VacationRequestForm";
 import { VacationPlanSection } from "@/components/dashboard/VacationPlanSection";
 import { AbsencePrivacyInfo } from "@/components/dashboard/AbsencePrivacyInfo";
+import { CollapsibleMobileSection } from "@/components/dashboard/CollapsibleMobileSection";
 import { TeamVacationSection } from "@/components/dashboard/TeamVacationSection";
 import { TeamAbsencesSection } from "@/components/dashboard/TeamAbsencesSection";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
@@ -29,11 +30,33 @@ export default async function VacationPage() {
   ]);
 
   const pendingTeamCount = teamRequests.filter((r) => r.status === "PENDING").length;
+  const openWishCount = planContext.myWishes.filter((w) => w.status === "WISH").length;
+
+  const planSection = (
+    <VacationPlanSection
+      year={planContext.year}
+      submissionsOpen={planContext.submissionsOpen}
+      isManager={planContext.isManager}
+      myWishes={planContext.myWishes.map((w) => ({
+        id: w.id,
+        userId: w.userId,
+        userName: "",
+        year: w.year,
+        startDate: w.startDate,
+        endDate: w.endDate,
+        days: w.days,
+        note: w.note,
+        status: w.status,
+        submittedAt: w.submittedAt,
+      }))}
+      teamWishes={planContext.teamWishes}
+    />
+  );
 
   return (
-    <DashboardPageShell maxWidth="5xl" className="sm:space-y-8">
+    <DashboardPageShell maxWidth="5xl" className="max-md:space-y-4 sm:space-y-8">
       {isManager && pendingTeamCount > 0 ? (
-        <p className="inline-flex items-center gap-2 rounded-full bg-warning-soft px-3 py-1 text-xs font-semibold text-warning-foreground md:hidden">
+        <p className="inline-flex items-center gap-2 rounded-full bg-warning-soft px-3 py-1.5 text-xs font-semibold text-warning-foreground md:hidden">
           {pendingTeamCount} {pendingTeamCount === 1 ? "Antrag" : "Anträge"} warten auf Entscheidung
         </p>
       ) : null}
@@ -53,32 +76,12 @@ export default async function VacationPage() {
         }
       />
 
-      <AbsencePrivacyInfo isManager={isManager} />
-
-      <VacationPlanSection
-        year={planContext.year}
-        submissionsOpen={planContext.submissionsOpen}
-        isManager={planContext.isManager}
-        myWishes={planContext.myWishes.map((w) => ({
-          id: w.id,
-          userId: w.userId,
-          userName: "",
-          year: w.year,
-          startDate: w.startDate,
-          endDate: w.endDate,
-          days: w.days,
-          note: w.note,
-          status: w.status,
-          submittedAt: w.submittedAt,
-        }))}
-        teamWishes={planContext.teamWishes}
-      />
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      {/* Mobil: Formular zuerst — Kernaktion ohne Scroll */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
         <div className="min-w-0">
           <VacationRequestForm />
         </div>
-        <div className="min-w-0 space-y-4 rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90 sm:p-8">
+        <div className="min-w-0 space-y-4 rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)] dark:border-white/10 dark:bg-surface/90 sm:p-8">
           <h2 className="font-semibold tracking-tight">Meine Anträge</h2>
           <VacationList requests={myRequests} canApprove={false} />
         </div>
@@ -104,6 +107,19 @@ export default async function VacationPage() {
       ) : null}
 
       {isManager ? <TeamAbsencesSection companyId={companyId} /> : null}
+
+      <CollapsibleMobileSection
+        label={
+          openWishCount > 0
+            ? `Urlaubswünsche ${planYear} (${openWishCount} Entwurf${openWishCount === 1 ? "" : "e"})`
+            : `Urlaubswünsche ${planYear}`
+        }
+        defaultOpen={false}
+      >
+        {planSection}
+      </CollapsibleMobileSection>
+
+      <AbsencePrivacyInfo isManager={isManager} />
     </DashboardPageShell>
   );
 }

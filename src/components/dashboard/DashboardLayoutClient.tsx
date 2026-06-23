@@ -87,7 +87,13 @@ export function DashboardLayoutClient({
     <VocabularyProvider labels={planVocabulary}>
     <UpgradeProvider>
     <div className="dashboard-mobile-breathe flex h-screen min-h-0 w-full min-w-0 overflow-hidden overflow-x-hidden bg-background text-foreground">
-      <Toaster richColors position="top-center" closeButton duration={2200} />
+      <Toaster
+        richColors
+        position="top-center"
+        closeButton
+        duration={2200}
+        toastOptions={{ className: "max-md:!top-[calc(env(safe-area-inset-top)+3.25rem)]" }}
+      />
       <OfflineClockSync />
       <DashboardSidebar
         className="no-print"
@@ -118,10 +124,11 @@ export function DashboardLayoutClient({
           ref={mainScrollRef}
           className={clsx(
             "dashboard-touch-scroll native-app-tap relative z-0 w-full max-w-full flex-1 min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-y-contain touch-pan-y md:pt-0",
+            "max-md:px-[max(1rem,env(safe-area-inset-left))] max-md:pr-[max(1rem,env(safe-area-inset-right))]",
             role === "EMPLOYEE" || ["COMPANY_OWNER", "MANAGER"].includes(role)
-              ? "max-md:px-4 max-md:pt-[calc(2.75rem+env(safe-area-inset-top,0px))] max-md:pb-[calc(3.75rem+env(safe-area-inset-bottom,0px))]"
-              : "max-md:px-3 max-md:pt-[calc(3.25rem+env(safe-area-inset-top,0px))] max-md:pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))]",
-            "pt-[calc(4.25rem+env(safe-area-inset-top,0px))] pb-[max(6.25rem,calc(env(safe-area-inset-bottom,0px)+5.25rem))] sm:px-2 md:overflow-y-auto md:px-8 md:pb-6",
+              ? "max-md:pt-[calc(2.75rem+env(safe-area-inset-top,0px))] max-md:pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))]"
+              : "max-md:px-3 max-md:pt-[calc(3.25rem+env(safe-area-inset-top,0px))] max-md:pb-[calc(4rem+env(safe-area-inset-bottom,0px))]",
+            "md:overflow-y-auto md:px-8 md:pb-6 md:pt-[calc(4.25rem+env(safe-area-inset-top,0px))]",
           )}
         >
           <DashboardPullToRefresh scrollRef={mainScrollRef} enabled={!employeeStampHome} />

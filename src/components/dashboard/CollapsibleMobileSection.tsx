@@ -26,7 +26,7 @@ export function CollapsibleMobileSection({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="mb-2 flex min-h-10 w-full items-center justify-between gap-2 border-t border-border/50 py-3 text-left text-sm font-medium text-muted-foreground active:text-foreground md:hidden"
+        className="mb-2 flex min-h-11 w-full items-center justify-between gap-2 border-t border-border/50 py-3 text-left text-sm font-medium text-muted-foreground active:text-foreground md:hidden"
       >
         <span>{label}</span>
         <ChevronDown

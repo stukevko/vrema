@@ -107,7 +107,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
           description={
             canApprove
               ? "Sobald Teammitglieder Anträge stellen, erscheinen sie hier inkl. Resturlaub und Konflikt-Hinweis."
-              : "Nutze das Antragsformular auf dieser Seite — Zeitraum und Grund genügen."
+              : "Zeitraum wählen und absenden — kein Urlaubsgrund nötig."
           }
         />
         <ToastContainer toasts={toasts} remove={remove} />
@@ -154,7 +154,7 @@ export function VacationList({ requests, canApprove }: VacationListProps) {
                     "AU folgt"), aber niemals Diagnose – siehe Eingabe-Hinweis.
                   */}
                   {req.reason && req.absenceType === "SICK" && (
-                    <p className="mt-1 truncate text-xs text-danger-foreground">
+                    <p className="mt-1 line-clamp-2 text-xs text-danger-foreground">
                       {req.reason}
                     </p>
                   )}
