@@ -126,7 +126,7 @@ export function DashboardSidebar({
         className="group flex flex-col items-center border-b border-border px-4 py-5 text-center transition-colors md:px-5 md:hover:bg-muted/25"
         aria-label="VREMA Dashboard"
       >
-        <VremaLockup size={36} className="text-foreground" />
+        <VremaLockup size={36} variant="tile" className="text-foreground" />
         <p className="mt-2.5 max-w-[16rem] text-center text-xs text-muted-foreground">
           Zeiterfassung & Planung
         </p>

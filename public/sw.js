@@ -2,12 +2,12 @@
  * Navigation: network-first, Fallback auf Cache, dann offline.html.
  * Statische Assets: stale-while-revalidate.
  */
-const CACHE_NAME = "vrema-shell-v5";
-const RUNTIME_CACHE = "vrema-runtime-v5";
+const CACHE_NAME = "vrema-shell-v6";
+const RUNTIME_CACHE = "vrema-runtime-v6";
 const OFFLINE_URL = "/offline.html";
 const PRECACHE_URLS = [
   OFFLINE_URL,
-  "/vrema_logo.png",
+  "/brand-tile.svg",
   "/favicon.ico",
   "/apple-touch-icon.png",
   "/android-chrome-192x192.png",

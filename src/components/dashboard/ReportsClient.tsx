@@ -1131,7 +1131,7 @@ export function ReportsClient({
       <motion.div className="print-root mx-auto max-w-6xl space-y-5 px-1 sm:space-y-6 sm:px-0">
         <header className="print-only print-header">
           <div className="print-header__brand">
-            <VremaLockup size={28} />
+            <VremaLockup size={28} variant="tile" />
           </div>
           <div className="print-header__meta">
             <p className="font-semibold">{pdfHeaderFirmenzeile(companyName)}</p>

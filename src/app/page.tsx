@@ -172,7 +172,7 @@ export default function LandingPage() {
               className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none"
               aria-label="VREMA"
             >
-              <VremaLockup size={32} className="text-foreground" />
+              <VremaLockup size={36} variant="tile" className="text-foreground" />
             </Link>
 
             <div className="hidden items-center gap-x-8 text-sm text-muted-foreground md:flex">
@@ -775,7 +775,7 @@ export default function LandingPage() {
       <footer className="w-full max-w-full border-t border-line bg-surface-muted py-10 text-fg-muted">
         <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col items-start justify-between gap-6 overflow-x-hidden px-4 md:flex-row md:items-center">
           <div className="flex min-w-0 max-w-full items-center gap-3 text-foreground">
-            <VremaLockup size={32} tagline="Intelligente Zeiterfassung" />
+            <VremaLockup size={34} variant="tile" tagline="Intelligente Zeiterfassung" />
           </div>
 
           <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-fg-muted">
