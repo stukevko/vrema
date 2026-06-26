@@ -4,7 +4,7 @@ import path from "node:path";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const logoPath = path.join(process.cwd(), "vremalogo.png");
+  const logoPath = path.join(process.cwd(), "public", "vrema_logo.png");
 
   try {
     const buffer = await fs.readFile(logoPath);

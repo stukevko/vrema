@@ -4,7 +4,7 @@ import path from "node:path";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const icoPath = path.join(process.cwd(), "favicon.ico");
+  const icoPath = path.join(process.cwd(), "public", "favicon.ico");
 
   try {
     const buffer = await fs.readFile(icoPath);

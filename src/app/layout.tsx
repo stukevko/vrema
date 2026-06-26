@@ -89,7 +89,6 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: [
-        { url: "/vrema_logo_icon.svg", type: "image/svg+xml" },
         { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
         { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
         { url: "/favicon.ico", type: "image/x-icon", sizes: "any" },
@@ -126,11 +125,10 @@ export default function RootLayout({
       <head>
         <meta charSet="utf-8" />
         <ThemeScript />
-        {/* Moderne Browser: SVG-Favicon priorisiert (skaliert pixel-perfect, Light/Dark-tauglich) */}
-        <link rel="icon" type="image/svg+xml" href="/vrema_logo_icon.svg" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         {/* Manifest wird über `metadata.manifest` (→ /site.webmanifest) injected; doppelte Referenz entfernt. */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

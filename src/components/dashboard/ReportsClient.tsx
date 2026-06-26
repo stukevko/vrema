@@ -16,7 +16,7 @@ import {
   X,
   Printer,
 } from "lucide-react";
-import { VremaMarkLogo } from "@/components/brand/VremaMarkLogo";
+import { VremaLockup } from "@/components/brand/VremaMarkLogo";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { DashboardSectionCard, dashboardSurfaceClass } from "@/components/dashboard/DashboardSectionCard";
 import { Button } from "@/components/ui/Button";
@@ -1131,8 +1131,7 @@ export function ReportsClient({
       <motion.div className="print-root mx-auto max-w-6xl space-y-5 px-1 sm:space-y-6 sm:px-0">
         <header className="print-only print-header">
           <div className="print-header__brand">
-            <VremaMarkLogo size={28} className="!text-black dark:!text-black" />
-            <span className="text-sm font-bold tracking-tight">VREMA</span>
+            <VremaLockup size={28} />
           </div>
           <div className="print-header__meta">
             <p className="font-semibold">{pdfHeaderFirmenzeile(companyName)}</p>

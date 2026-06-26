@@ -33,7 +33,7 @@ function layout(title: string, body: string): string {
             <table cellpadding="0" cellspacing="0">
               <tr>
                 <td style="vertical-align:middle;">
-                  <img src="${APP_URL}/vrema_logo_icon.png" alt="VREMA – Schichtplanung und Zeiterfassung für Teams" width="40" height="40" style="display:block;" />
+                  <img src="${APP_URL}/android-chrome-192x192.png" alt="VREMA – Schichtplanung und Zeiterfassung für Teams" width="40" height="40" style="display:block;" />
                 </td>
                 <td style="padding-left:10px;vertical-align:middle;">
                   <span style="color:${BASE.textPrimary};font-size:16px;font-weight:700;">Vrema</span>

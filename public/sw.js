@@ -2,10 +2,16 @@
  * Navigation: network-first, Fallback auf Cache, dann offline.html.
  * Statische Assets: stale-while-revalidate.
  */
-const CACHE_NAME = "vrema-shell-v3";
-const RUNTIME_CACHE = "vrema-runtime-v3";
+const CACHE_NAME = "vrema-shell-v5";
+const RUNTIME_CACHE = "vrema-runtime-v5";
 const OFFLINE_URL = "/offline.html";
-const PRECACHE_URLS = [OFFLINE_URL, "/vrema_logo.png", "/android-chrome-192x192.png"];
+const PRECACHE_URLS = [
+  OFFLINE_URL,
+  "/vrema_logo.png",
+  "/favicon.ico",
+  "/apple-touch-icon.png",
+  "/android-chrome-192x192.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
