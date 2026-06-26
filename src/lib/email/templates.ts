@@ -371,3 +371,39 @@ export function trialReminderEmailHtml(data: {
 
   return layout(headline, body);
 }
+
+export function flyerSignupOperatorEmailHtml(data: {
+  companyName: string;
+  ownerName: string;
+  ownerEmail: string;
+  campaignLabel: string;
+  refCode: string;
+  dashboardUrl: string;
+}): string {
+  const headline = `Neuer Flyer-Signup — ${data.campaignLabel}`;
+  const body = `
+    <p style="color:${BASE.textPrimary};font-size:15px;margin:0 0 20px;line-height:1.6;">
+      Jemand hat sich über die Flyer-Aktion registriert. E-Mail-Verifizierung läuft — danach im Super-Admin freischalten.
+    </p>
+    <div style="background:${BASE.card};border:1px solid ${BASE.border};border-radius:12px;padding:16px 20px;margin:0 0 24px;">
+      <table cellpadding="0" cellspacing="0" width="100%">
+        ${kv("firma", data.companyName)}
+        ${kv("inhaber", data.ownerName)}
+        ${kv("e-mail", data.ownerEmail)}
+        ${kv("kampagne", data.campaignLabel)}
+        ${kv("ref-code", data.refCode)}
+      </table>
+    </div>
+    <table cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="background:${BASE.accent};border-radius:10px;">
+          <a href="${data.dashboardUrl}"
+             style="display:inline-block;padding:12px 28px;color:#000;font-weight:700;font-size:14px;text-decoration:none;">
+            $ super-admin öffnen →
+          </a>
+        </td>
+      </tr>
+    </table>`;
+
+  return layout(headline, body);
+}

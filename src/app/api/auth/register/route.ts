@@ -14,6 +14,9 @@ import {
   computeFlyerTrialEndsAt,
 } from "@/lib/trial/referral";
 import { computeTrialEndsAt } from "@/lib/trial/constants";
+import { flyerReferralDisplayName } from "@/lib/trial/referral";
+import { sendFlyerSignupOperatorEmail } from "@/lib/email/transactional";
+import { notifySuperAdminFlyerSignup } from "@/lib/operator/notify";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -236,6 +239,25 @@ export async function POST(req: NextRequest) {
       recipientEmail: normalizedEmail,
       verifyUrl,
     });
+
+    if (referredBy && isFlyerReferralCode(referredBy)) {
+      const campaignLabel = flyerReferralDisplayName(referredBy);
+      void Promise.allSettled([
+        sendFlyerSignupOperatorEmail({
+          companyName: company.name,
+          ownerName: normalizedName,
+          ownerEmail: normalizedEmail,
+          campaignLabel,
+          refCode: referredBy,
+        }),
+        notifySuperAdminFlyerSignup({
+          companyName: company.name,
+          ownerEmail: normalizedEmail,
+          refCode: referredBy,
+          campaignLabel,
+        }),
+      ]);
+    }
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (err) {

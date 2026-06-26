@@ -92,6 +92,7 @@ export function DashboardLayoutClient({
         position="top-center"
         closeButton
         duration={2200}
+        visibleToasts={1}
         toastOptions={{ className: "max-md:!top-[calc(env(safe-area-inset-top)+3.25rem)]" }}
       />
       <OfflineClockSync />

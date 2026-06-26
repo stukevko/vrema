@@ -22,10 +22,10 @@ export function ManagerMobileCockpit({
 
   if (!hasUrgentFocus) {
     return (
-      <section aria-label="Tagesstatus" className="flex min-h-[min(36vh,16rem)] flex-col items-center justify-center py-8 text-center md:hidden">
+      <section aria-label="Tagesstatus" className="py-2 text-center md:hidden">
         <p className="text-sm text-muted-foreground">{firstName ? `Hallo ${firstName}` : "Hallo"}</p>
-        <p className="mt-3 text-2xl font-semibold tracking-tight text-foreground">Alles läuft.</p>
-        <p className="mt-2 max-w-xs text-sm text-muted-foreground">
+        <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">Alles läuft.</p>
+        <p className="mt-1.5 max-w-xs mx-auto text-sm text-muted-foreground">
           Heute musst du nichts freigeben oder prüfen.
         </p>
       </section>

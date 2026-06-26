@@ -15,7 +15,6 @@ import {
 } from "@/lib/actions/notifications";
 
 const POLL_MS = 60_000;
-const SEEN_STORAGE_KEY = "vrema:lastNotifSeen";
 
 function formatRelative(iso: string): string {
   const date = new Date(iso);
@@ -79,38 +78,6 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
       window.removeEventListener("focus", onFocus);
     };
   }, [refreshUnread]);
-
-  // Beim Mounten: höchste bisher gesehene Notification mit aktuellster aus dem Server abgleichen
-  // → zeige Toast für genau die neueste, falls sie noch ungesehen ist.
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const rows = await listMyNotifications();
-        if (cancelled || rows.length === 0) return;
-        const latest = rows[0];
-        const seen = window.localStorage.getItem(SEEN_STORAGE_KEY);
-        if (seen === latest.id) return;
-        if (!latest.readAt) {
-          toast(latest.title, {
-            description: latest.body ?? undefined,
-            action: latest.href
-              ? {
-                  label: "Öffnen",
-                  onClick: () => router.push(latest.href!),
-                }
-              : undefined,
-          });
-        }
-        window.localStorage.setItem(SEEN_STORAGE_KEY, latest.id);
-      } catch {
-        /* still */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [router]);
 
   useEffect(() => {
     if (!open) return;

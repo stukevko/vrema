@@ -44,6 +44,7 @@ import { getCompanyModulesForTenant } from "@/lib/actions/company-modules";
 import type { CompanyModules } from "@/lib/company-modules";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { ManagerMobileCockpit } from "@/components/dashboard/ManagerMobileCockpit";
+import { DashboardLatestNotification } from "@/components/dashboard/DashboardLatestNotification";
 import { CollapsibleDesktopSection } from "@/components/dashboard/CollapsibleDesktopSection";
 import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
 import { vocabularyLabels } from "@/lib/vocabulary";
@@ -468,6 +469,10 @@ export default async function DashboardPage({
           />
         </div>
       ) : null}
+
+      <div className="order-1 max-md:order-2 md:hidden">
+        <DashboardLatestNotification />
+      </div>
 
       {teamStats && (
         <div className="order-1 mt-1 min-w-0 max-md:order-3 sm:mt-2 max-md:hidden">

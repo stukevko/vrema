@@ -1,6 +1,14 @@
+import {
+  isBillingExempt,
+  isInAppTrial,
+  isTrialExpired,
+  trialDaysRemaining,
+  type CompanyTrialFields,
+} from "@/lib/trial/state";
+
 export type TrialReminderKind = "3d" | "1d" | "expired";
 
-export type TrialReminderCompany = {
+export type TrialReminderCompany = CompanyTrialFields & {
   id: string;
   name: string;
   referredBy: string | null;
@@ -9,8 +17,26 @@ export type TrialReminderCompany = {
   trialExpiredNotifiedAt: Date | null;
 };
 
-/** Manuelle Abrechnung — Trial-Erinnerungen deaktiviert. */
-export function pendingTrialReminder(_company: TrialReminderCompany): TrialReminderKind | null {
+/** Firma braucht aktuell eine Trial-Erinnerung? (reine Logik, testbar). */
+export function pendingTrialReminder(company: TrialReminderCompany): TrialReminderKind | null {
+  if (isBillingExempt(company)) return null;
+  if (company.tenantStatus === "ACTIVE") return null;
+  if (!company.trialEndsAt) return null;
+
+  const days = trialDaysRemaining(company);
+
+  if (isTrialExpired(company)) {
+    if (company.trialExpiredNotifiedAt) return null;
+    const msSinceEnd = Date.now() - company.trialEndsAt.getTime();
+    if (msSinceEnd > 3 * 24 * 60 * 60 * 1000) return null;
+    return "expired";
+  }
+
+  if (!isInAppTrial(company)) return null;
+
+  if (days <= 3 && days >= 2 && !company.trialRemind3dSentAt) return "3d";
+  if (days <= 1 && days >= 1 && !company.trialRemind1dSentAt) return "1d";
+
   return null;
 }
 
@@ -23,26 +49,26 @@ export function trialInAppNotification(kind: TrialReminderKind, daysRemaining: n
     case "3d":
       return {
         title: "Noch 3 Tage Testphase",
-        body: "Wir melden uns zur Freischaltung.",
-        href: "/dashboard/access-pending",
+        body: "Kurz Zugang anfragen — wir schalten frei.",
+        href: "/dashboard/billing",
       };
     case "1d":
       return {
         title: "Morgen endet die Testphase",
-        body: "Kurz schreiben — wir schalten frei.",
-        href: "/dashboard/access-pending",
+        body: "Jetzt Zugang anfragen — persönliche Freischaltung.",
+        href: "/dashboard/billing",
       };
     case "expired":
       return {
-        title: "Zugang wartet auf Freischaltung",
-        body: "Kontakt aufnehmen — wir helfen sofort.",
-        href: "/dashboard/access-pending",
+        title: "Testphase vorbei",
+        body: "Zugang anfragen — wir schalten sofort frei.",
+        href: "/dashboard/trial-ended",
       };
     default:
       return {
-        title: `Noch ${daysRemaining} Tage`,
-        body: "Freischaltung läuft.",
-        href: "/dashboard/access-pending",
+        title: `Noch ${daysRemaining} Tage Testphase`,
+        body: "Rechtzeitig Zugang anfragen.",
+        href: "/dashboard/billing",
       };
   }
 }
@@ -50,11 +76,11 @@ export function trialInAppNotification(kind: TrialReminderKind, daysRemaining: n
 export function trialReminderSubject(kind: TrialReminderKind, companyName: string): string {
   switch (kind) {
     case "3d":
-      return `VREMA: Freischaltung — ${companyName}`;
+      return `VREMA: Noch 3 Tage — ${companyName}`;
     case "1d":
-      return `VREMA: Freischaltung — ${companyName}`;
+      return `VREMA: Letzter Tag — ${companyName}`;
     case "expired":
-      return `VREMA: Zugang — ${companyName}`;
+      return `VREMA: Testphase beendet — ${companyName}`;
   }
   return `VREMA: ${companyName}`;
 }

@@ -17,6 +17,7 @@ import {
   verificationEmailHtml,
   noShowReminderEmailHtml,
   trialReminderEmailHtml,
+  flyerSignupOperatorEmailHtml,
 } from "@/lib/email/templates";
 import type { TrialReminderKind } from "@/lib/trial/reminders";
 import { trialReminderSubject } from "@/lib/trial/reminders";
@@ -222,6 +223,28 @@ export async function sendTrialReminderEmail(data: {
       billingUrl,
       flyerCampaignLabel: data.flyerCampaignLabel,
     }),
+  );
+}
+
+// ─── Flyer-Signup → Betreiber (Kevin) ───────────────────────────────────────
+export async function sendFlyerSignupOperatorEmail(data: {
+  companyName: string;
+  ownerName: string;
+  ownerEmail: string;
+  campaignLabel: string;
+  refCode: string;
+}) {
+  const { getOperatorNotifyEmails } = await import("@/lib/operator/notify");
+  const recipients = getOperatorNotifyEmails();
+  if (recipients.length === 0) return;
+
+  const dashboardUrl = `${APP_URL}/dashboard`;
+  const html = flyerSignupOperatorEmailHtml({ ...data, dashboardUrl });
+
+  await Promise.all(
+    recipients.map((to) =>
+      sendInternal(to, `VREMA Flyer: ${data.companyName} (${data.campaignLabel})`, html),
+    ),
   );
 }
 
