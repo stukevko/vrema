@@ -2589,7 +2589,7 @@ export function ShiftManager({
         .filter(
           (m) =>
             !isOpenShiftPlaceholderEmail(m.email) &&
-            ["EMPLOYEE", "MANAGER", "COMPANY_OWNER"].includes(m.role ?? "EMPLOYEE"),
+            ["EMPLOYEE", "MANAGER", "COMPANY_OWNER", "SUPER_ADMIN"].includes(m.role ?? "EMPLOYEE"),
         )
         .map((m) => ({
           id: m.id,

@@ -143,7 +143,58 @@ function safeCompanySlug(companyName: string): string {
     .toLowerCase();
 }
 
-const MONTH_DAYS_PER_PAGE = 16;
+/** Mindestbreite pro Tag-Spalte (mm) — darunter wird der Monat auf mehrere Seiten gesplittet. */
+const MIN_DAY_COL_MM = 7.5;
+
+export function resolveExportMembers(
+  members: ShiftPlanPdfMember[],
+  monthDays: Date[],
+  shiftCycleWeeks: ShiftCycleWeeks,
+  shifts: ShiftPlanPdfShift[],
+): ShiftPlanPdfMember[] {
+  const byId = new Map<string, ShiftPlanPdfMember>();
+  for (const m of members) {
+    if (m.name.trim().length > 0) byId.set(m.id, m);
+  }
+  for (const date of monthDays) {
+    const weekIndex = getWeekCycleIndex(date, shiftCycleWeeks);
+    const dow = date.getDay();
+    for (const shift of shifts) {
+      if (Number.isNaN(shift.dayOfWeek)) continue;
+      if (shift.weekIndex !== weekIndex || shift.dayOfWeek !== dow) continue;
+      if (!byId.has(shift.userId)) {
+        byId.set(shift.userId, { id: shift.userId, name: "Mitarbeiter", area: null });
+      }
+    }
+  }
+  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, "de-DE"));
+}
+
+function chunkMonthDaysForPdf(monthDays: Date[], contentWidth: number, nameColWidth: number): Date[][] {
+  const maxDaysPerPage = Math.max(
+    7,
+    Math.floor((contentWidth - nameColWidth) / MIN_DAY_COL_MM),
+  );
+  if (monthDays.length <= maxDaysPerPage) return [monthDays];
+  const chunks: Date[][] = [];
+  for (let i = 0; i < monthDays.length; i += maxDaysPerPage) {
+    chunks.push(monthDays.slice(i, i + maxDaysPerPage));
+  }
+  return chunks;
+}
+
+function drawPdfPageFooters(doc: jsPDF, marginL: number, marginR: number) {
+  const pageCount = doc.getNumberOfPages();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  for (let page = 1; page <= pageCount; page++) {
+    doc.setPage(page);
+    doc.setFontSize(7);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Seite ${page} / ${pageCount}`, pageWidth / 2, pageHeight - 6, { align: "center" });
+  }
+  doc.setTextColor(0, 0, 0);
+}
 
 function pdfHeaderFirmenzeile(companyName: string): string {
   return pdfSafe(payrollDocumentTitle(companyName));
@@ -164,23 +215,21 @@ export function buildShiftPlanMonthPdf(input: {
   const { companyName, monthAnchor, shiftCycleWeeks, members, shifts } = input;
   const monthDays = monthDaysInAnchor(monthAnchor);
   const shiftByUserIso = buildShiftsByUserIsoForMonth(monthDays, shiftCycleWeeks, shifts);
-  const sortedMembers = [...members]
-    .filter((m) => m.name.trim().length > 0)
-    .sort((a, b) => a.name.localeCompare(b.name, "de-DE"));
+  const sortedMembers = resolveExportMembers(members, monthDays, shiftCycleWeeks, shifts);
 
   const marginL = 8;
   const marginR = 8;
   const marginT = 12;
+  const marginB = 10;
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const contentWidth = pageWidth - marginL - marginR;
   const monthLabel = monthYearLabel(monthAnchor);
   const totalShifts = countMonthShiftSlots(shiftByUserIso);
 
-  const dayChunks: Date[][] = [];
-  for (let i = 0; i < monthDays.length; i += MONTH_DAYS_PER_PAGE) {
-    dayChunks.push(monthDays.slice(i, i + MONTH_DAYS_PER_PAGE));
-  }
+  const nameColWidth = 36;
+  const dayChunks = chunkMonthDaysForPdf(monthDays, contentWidth, nameColWidth);
 
   dayChunks.forEach((chunk, chunkIndex) => {
     if (chunkIndex > 0) doc.addPage();
@@ -202,9 +251,15 @@ export function buildShiftPlanMonthPdf(input: {
       marginT,
     });
 
-    const nameColWidth = 38;
-    const dayColWidth = Math.max(13, (contentWidth - nameColWidth) / chunk.length);
-    const fontSize = chunk.length > 14 ? 6.5 : 7.5;
+    const dayColWidth = (contentWidth - nameColWidth) / chunk.length;
+    const dataRowCount = Math.max(1, sortedMembers.length);
+    const tableTop = marginT + 8;
+    const availableHeight = pageHeight - tableTop - marginB;
+    const fontSize = Math.min(
+      8,
+      Math.max(5.5, Math.min(7.5, availableHeight / (dataRowCount + 2) / 2.8, dayColWidth / 2.2)),
+    );
+    const cellPadding = Math.min(3, Math.max(1.5, fontSize / 3));
 
     const head = ["Mitarbeiter", ...chunk.map((d) => dayColumnHeaderFromDate(d))];
     const body =
@@ -231,39 +286,33 @@ export function buildShiftPlanMonthPdf(input: {
     });
 
     autoTable(doc, {
-      startY: marginT + 8,
-      margin: { left: marginL, right: marginR },
+      startY: tableTop,
+      tableWidth: contentWidth,
+      margin: { left: marginL, right: marginR, bottom: marginB },
       head: [head],
       body,
       styles: {
         font: "helvetica",
         fontSize,
-        cellPadding: 2,
+        cellPadding,
         overflow: "linebreak",
         valign: "middle",
+        lineWidth: 0.1,
+        lineColor: [203, 213, 225],
       },
       headStyles: {
         fillColor: [15, 118, 110],
         textColor: [255, 255, 255],
         fontStyle: "bold",
-        fontSize: Math.max(6, fontSize - 0.5),
+        fontSize: Math.max(5.5, fontSize - 0.5),
         halign: "center",
       },
       columnStyles,
       alternateRowStyles: { fillColor: [248, 250, 252] },
-      didDrawPage: (data) => {
-        const pageCount = doc.getNumberOfPages();
-        doc.setFontSize(7);
-        doc.setTextColor(100, 116, 139);
-        doc.text(
-          `Seite ${data.pageNumber} / ${pageCount}`,
-          pageWidth / 2,
-          doc.internal.pageSize.getHeight() - 6,
-          { align: "center" },
-        );
-      },
     });
   });
+
+  drawPdfPageFooters(doc, marginL, marginR);
 
   const y = monthAnchor.getFullYear();
   const mo = String(monthAnchor.getMonth() + 1).padStart(2, "0");

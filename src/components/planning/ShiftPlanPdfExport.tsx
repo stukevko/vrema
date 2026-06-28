@@ -7,6 +7,7 @@ import {
   buildShiftPlanMonthPdf,
   buildShiftsByUserIsoForMonth,
   monthDaysInAnchor,
+  resolveExportMembers,
   type ShiftPlanPdfMember,
   type ShiftPlanPdfShift,
 } from "@/lib/planning/shift-plan-pdf";
@@ -33,6 +34,10 @@ export function ShiftPlanPdfExport({
   const { show } = useToast();
   const monthLabel = useMemo(() => monthYearLabel(monthAnchor), [monthAnchor]);
   const monthDays = useMemo(() => monthDaysInAnchor(monthAnchor), [monthAnchor]);
+  const exportMembers = useMemo(
+    () => resolveExportMembers(members, monthDays, shiftCycleWeeks, shifts),
+    [members, monthDays, shiftCycleWeeks, shifts],
+  );
   const shiftsInMonth = useMemo(() => {
     const map = buildShiftsByUserIsoForMonth(monthDays, shiftCycleWeeks, shifts);
     let n = 0;
@@ -41,8 +46,8 @@ export function ShiftPlanPdfExport({
   }, [monthDays, shiftCycleWeeks, shifts]);
 
   const pageHint =
-    monthDays.length > 16 ? " · ggf. 2+ Seiten" : monthDays.length > 10 ? " · ggf. 2 Seiten" : "";
-  const metaLine = `${monthLabel} · ${members.length} Pers. · ${shiftsInMonth} Schichten${pageHint}`;
+    monthDays.length > 28 ? " · ggf. 2+ Seiten" : "";
+  const metaLine = `${monthLabel} · ${exportMembers.length} Pers. · ${shiftsInMonth} Schichten${pageHint}`;
 
   const exportPdf = () => {
     const { doc, fileName } = buildShiftPlanMonthPdf({
