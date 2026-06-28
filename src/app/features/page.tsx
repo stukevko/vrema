@@ -8,8 +8,8 @@ import {
   LineChart,
   MonitorSmartphone,
   ShieldCheck,
-  Sparkles,
   Timer,
+  CalendarDays,
 } from "lucide-react";
 import { getSiteUrl, SEO_KEYWORDS } from "@/lib/seo/site";
 import { pricingTiersHint, trialMarketingParagraph } from "@/lib/marketing/trial-copy";
@@ -19,7 +19,7 @@ const base = getSiteUrl();
 export const metadata: Metadata = {
   title: "Features",
   description:
-    "VREMA Features für Teams und Betriebe: 1-Klick-Stempeluhr, Echtzeit-Auswertungen, Einsatzplanung, PDF-Reports, DATEV-Export und Privacy by Design – ohne GPS-Tracking.",
+    "VREMA Features: Stempeluhr, Schichtplan, Berichte, PDF & DATEV-Export — federleicht, DSGVO-konform, ohne GPS.",
   keywords: [...SEO_KEYWORDS, "Einsatzplanung", "PDF-Reports", "DATEV Export"],
   alternates: { canonical: `${base}/features` },
   openGraph: {
@@ -54,9 +54,9 @@ const FEATURES: Feature[] = [
   },
   {
     icon: LineChart,
-    tag: "Live-Insights",
-    title: "Echtzeit-Auswertungen",
-    body: "Stunden, Wochen und Abweichungen sofort sichtbar – live für Inhaber, kompakt für die Führung, transparent für das Team.",
+    tag: "Berichte",
+    title: "Stunden & Exporte",
+    body: "Monatsberichte, PDF-Stundenzettel und DATEV-CSV — klar für Chefs, nachvollziehbar fürs Lohnbüro.",
   },
   {
     icon: ShieldCheck,
@@ -77,10 +77,10 @@ const FEATURES: Feature[] = [
     body: "Fester Link am Küchen- oder Service-Tablet — nur PIN eingeben, kein GPS. Ideal, wenn das Handy in der Spüle bleiben soll.",
   },
   {
-    icon: Sparkles,
-    tag: "Planning",
-    title: "Planungs-Autopilot",
-    body: "Wetter, Feiertage und deine Historie — schlägt Belegung vor. Du bestätigst Entwürfe, nichts geht blind live.",
+    icon: CalendarDays,
+    tag: "Planer",
+    title: "Schichtplan per Drag & Drop",
+    body: "Wochenplan auf dem Board — Schichten zuweisen, tauschen, drucken. Gleiche Ansicht auf Desktop und Handy, ohne parallele Excel-Welt.",
   },
 ];
 

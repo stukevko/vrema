@@ -126,9 +126,9 @@ export function VremaWordmark({
   );
 }
 
-/** Marketing-Logo: scharfes horizontales Lockup (Kreis + VREMA), nav-tauglich skaliert. */
+/** Marketing-Logo: Kreis-Marke + Wortmarke horizontal, volle Größe ohne PNG-Rand. */
 export function VremaLandingLogo({
-  size = 44,
+  size = 40,
   className,
   tagline,
   /** Immer helle Marke — z. B. dunkler Footer unabhängig vom Theme. */
@@ -139,25 +139,20 @@ export function VremaLandingLogo({
   tagline?: string;
   onDark?: boolean;
 }): React.JSX.Element {
+  const wordSize = Math.round(size * 0.65);
+
   if (onDark) {
     return (
-      <span className={clsx("inline-flex items-center gap-x-2.5", className)}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={VREMA_BRAND.markDark}
-          alt=""
-          aria-hidden
-          className="block shrink-0 object-contain"
-          style={{ width: size, height: size }}
-        />
+      <span className={clsx("inline-flex items-center gap-2.5 sm:gap-3", className)}>
+        <VremaMarkLogo size={size} variant="tile" className="shrink-0" />
         <span className="flex min-w-0 flex-col justify-center leading-none">
-          <span className="font-bold tracking-tighter text-white" style={{ fontSize: Math.round(size * 0.62) }}>
+          <span className="font-bold tracking-[-0.04em] text-white" style={{ fontSize: wordSize }}>
             VREMA
           </span>
           {tagline ? (
             <span
-              className="mt-1 font-medium uppercase text-white/70"
-              style={{ fontSize: Math.max(9, Math.round(size * 0.24)), letterSpacing: "0.16em" }}
+              className="mt-1 font-medium uppercase tracking-[0.16em] text-white/70"
+              style={{ fontSize: Math.max(9, Math.round(size * 0.24)) }}
             >
               {tagline}
             </span>
@@ -168,11 +163,24 @@ export function VremaLandingLogo({
   }
 
   return (
-    <VremaLockup
-      size={size}
-      variant="tile"
-      tagline={tagline}
-      className={clsx("items-center text-foreground", className)}
-    />
+    <span className={clsx("inline-flex items-center gap-2.5 sm:gap-3", className)}>
+      <VremaMarkLogo size={size} variant="tile" className="shrink-0" />
+      <span className="flex min-w-0 flex-col justify-center leading-none">
+        <span
+          className="font-bold tracking-[-0.04em] text-[#0a1628] dark:text-white"
+          style={{ fontSize: wordSize }}
+        >
+          VREMA
+        </span>
+        {tagline ? (
+          <span
+            className="mt-1 font-medium uppercase tracking-[0.16em] text-muted-foreground"
+            style={{ fontSize: Math.max(9, Math.round(size * 0.24)) }}
+          >
+            {tagline}
+          </span>
+        ) : null}
+      </span>
+    </span>
   );
 }

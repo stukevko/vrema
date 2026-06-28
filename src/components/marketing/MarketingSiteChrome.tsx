@@ -20,10 +20,10 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
           <div className="flex min-w-0 items-center gap-x-8 lg:gap-x-12">
             <Link
               href="/"
-              className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none"
+              className="flex shrink-0 items-center py-1"
               aria-label="VREMA"
             >
-              <VremaLandingLogo size={44} />
+              <VremaLandingLogo size={40} />
             </Link>
 
             <div className="hidden items-center gap-x-8 text-sm text-muted-foreground md:flex">

@@ -26,8 +26,7 @@ import {
   Menu,
   ExternalLink,
   X,
-  Flame,
-  CalendarClock,
+  Users,
   LayoutGrid,
 } from "lucide-react";
 import { Drawer } from "vaul";
@@ -74,35 +73,34 @@ function AppWindow({
   );
 }
 
-// ─── Die 3 Kern-Versprechen (FINAL · Teams/KMU) ─────────────────────────────
+// ─── Die 3 Kern-Versprechen (ehrlich · federleicht) ─────────────────────────
 const PILLARS = [
   {
-    icon: CalendarClock,
-    tag: "Planung",
-    title: "Zeit sparen am Sonntagabend",
-    desc: "Plane 20 Mitarbeiter in unter 10 Minuten. Mit dem Shift-Centric Board ziehst du dein Team per Drag & Drop in Sekunden in freie Slots.",
+    icon: Zap,
+    tag: "Einfach",
+    title: "In Minuten live — nicht in Wochen",
+    desc: "Stempeln, Schichtplan und Team in einer App. Am Handy oder am Terminal — ohne Schulungsmarathon und ohne SAP-Rollout.",
   },
   {
-    icon: Flame,
-    tag: "Kosten",
-    title: "Überstunden killen, bevor sie entstehen",
-    desc: "VREMA denkt mit. Das System zeigt dir sofort ein Flammen-Icon, wenn ein Mitarbeiter heißläuft, und schlägt dir mit einem Klick den perfekten Tag für den Freizeitausgleich vor.",
+    icon: Users,
+    tag: "Skalierbar",
+    title: "Vom 5er-Team bis 50+ Leute",
+    desc: "Gleiche Oberfläche für kleine Teams und wachsende Betriebe: Drag-&-Drop-Planer, Wochen-Saldo, Abwesenheit und Teamverwaltung — ohne neue Software pro Standort.",
   },
   {
     icon: FileText,
     tag: "Lohnbüro",
-    title: "Steuerberater-Konform in 1 Klick",
-    desc: "Keine Zettelwirtschaft beim Stempeln. Am Monatsende exportierst du die Stundenzettel als perfekte PDF (Hochformat) oder direkt als DATEV-CSV fürs Lohnbüro.",
+    title: "Export, der ankommt",
+    desc: "Stundenzettel als PDF, CSV oder DATEV für dein Lohnbüro. Korrekturen mit Begründung — du entscheidest, was rausgeht.",
   },
 ];
 
-const CORE_MODULES = ["Stempeln", "Planer", "Team", "Berichte"];
+const CORE_MODULES = ["Stempeln", "Planer", "Team", "Abwesenheit", "Berichte"];
 const EXTENSION_MODULES = [
-  "Wetter-Prognosen",
-  "Umsatz-Stoß-Analysen",
-  "Automatischer Schicht-Tausch",
+  "Schicht-Tausch",
   "Schicht-Checklisten",
-  "Planungs-Autopilot",
+  "Wetter im Planer",
+  "Stoßzeiten & Umsatz",
 ];
 
 const STATS = [
@@ -169,10 +167,10 @@ export default function LandingPage() {
           <div className="flex min-w-0 items-center gap-x-8 lg:gap-x-12">
             <Link
               href="/"
-              className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none"
+              className="flex shrink-0 items-center py-1"
               aria-label="VREMA"
             >
-              <VremaLandingLogo size={44} />
+              <VremaLandingLogo size={40} />
             </Link>
 
             <div className="hidden items-center gap-x-8 text-sm text-muted-foreground md:flex">
@@ -281,11 +279,12 @@ export default function LandingPage() {
               </div>
 
               <h1 className="mb-5 max-w-full hyphens-auto break-words text-[1.65rem] font-bold leading-[1.12] tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-[3.25rem]">
-                Schichtplanung & Zeiterfassung für Teams — In 10 Minuten statt 5 Stunden.
+                Schichtplan & Zeiterfassung — federleicht für deinen Betrieb.
               </h1>
 
               <p className="mb-10 max-w-full hyphens-auto break-words text-lg leading-relaxed text-muted-foreground md:max-w-xl">
-                Ob Gastro, Handwerk, Pflege oder Handel: VREMA plant dein Team, warnt vor teuren Überstunden und schickt die Abrechnung fehlerfrei ans Lohnbüro. Kein SAP-Chaos, keine Excel-Zettelwirtschaft.
+                Stempeln, Planen, Team und Berichte in einer modernen App. Kein SAP, keine Excel-Listen, keine
+                KI-Versprechen — nur das, was du wirklich brauchst. Für Gastro, Handwerk, Pflege und Handel.
               </p>
 
               <div className="flex max-w-full flex-col items-stretch gap-3 sm:items-start">
@@ -303,9 +302,9 @@ export default function LandingPage() {
 
               <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {[
-                  { label: "Shift-Centric", text: "Planen per Drag & Drop." },
-                  { label: "Überstunden-Warnung", text: "Flammen-Icon & Ausgleich." },
-                  { label: "Lohnbüro-Ready", text: "PDF Hochformat & DATEV." },
+                  { label: "Stempeln", text: "Mobil & Terminal." },
+                  { label: "Planer", text: "Drag & Drop Board." },
+                  { label: "Berichte", text: "PDF & DATEV-CSV." },
                 ].map((seal) => (
                   <div
                     key={seal.label}
@@ -461,9 +460,9 @@ export default function LandingPage() {
           <div className="mb-16 min-w-0 transition-all duration-300">
             <p className="text-xs text-muted-foreground uppercase tracking-widest mb-4">01 / Warum VREMA</p>
             <h2 className="max-w-full hyphens-auto break-words text-4xl font-bold leading-tight text-foreground md:text-5xl">
-              Drei Versprechen.
+              Federleicht.
               <br />
-              <span className="text-muted-foreground">Kein Feature-Wirrwarr.</span>
+              <span className="text-muted-foreground">Ehrlich. Für echten Betrieb.</span>
             </h2>
           </div>
 
@@ -503,18 +502,18 @@ export default function LandingPage() {
         <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden px-4">
           <div className="grid min-w-0 max-w-full items-center gap-16 lg:grid-cols-2">
             <div className="min-w-0 max-w-full transition-all duration-300">
-              <p className="text-xs text-primary uppercase tracking-widest mb-4">02 / Module</p>
+              <p className="text-xs text-primary uppercase tracking-widest mb-4">02 / Schlank bleiben</p>
               <h2 className="mb-6 max-w-full hyphens-auto break-words text-4xl font-black leading-tight md:text-5xl">
-                Nur das bezahlen,
+                Kern immer dabei.
                 <br />
-                <span className="text-muted-foreground">was du wirklich nutzt.</span>
+                <span className="text-muted-foreground">Erweiterungen nur bei Bedarf.</span>
               </h2>
               <p className="hyphens-auto break-words leading-relaxed text-muted-foreground">
-                Der Kern (Stempeln, Planer, Team, Berichte) steht für jeden Betrieb bereit. Zusatzmodule wie
-                Wetter-Prognosen, Umsatz-Stoß-Analysen oder automatischer Schicht-Tausch lassen sich einfach per
-                Klick im Admin-Bereich aktivieren oder ausschalten. Keine überladene UI.
+                Stempeln, Planer, Team, Abwesenheit und Berichte sind für jeden Betrieb da. Schicht-Tausch,
+                Checklisten, Wetter im Planer oder Stoßzeiten schaltest du in den Einstellungen an — aus ist weg aus
+                der Navigation. Kein Menü-Chaos, kein Feature-Zoo.
               </p>
-              <p className="mt-4 text-sm font-medium text-foreground">Lego, nicht SAP — schlank bleiben, modular wachsen.</p>
+              <p className="mt-4 text-sm font-medium text-foreground">Lego, nicht SAP — schlank starten, modular wachsen.</p>
             </div>
 
             <div className="min-w-0 max-w-full overflow-x-hidden transition-all duration-300">
