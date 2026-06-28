@@ -32,18 +32,26 @@ export type ShiftPlanPdfShift = {
 
 const pdfSafe = pdfAsciiSafe;
 
-function formatTimeHm(value: string): string {
+function formatTimeCompactForPdf(value: string): string {
   const m = value.match(/^(\d{1,2}):(\d{2})/);
   if (!m) return value.slice(0, 5);
-  return `${m[1]!.padStart(2, "0")}:${m[2]}`;
+  const h = Number(m[1]);
+  const min = m[2];
+  if (min === "00") return String(h);
+  return `${h}:${min}`;
 }
 
 function formatShiftCell(shift: ShiftPlanPdfShift): string {
-  const start = formatTimeHm(shift.startTime);
-  const end = formatTimeHm(shift.endTime);
+  const start = formatTimeCompactForPdf(shift.startTime);
+  const end = formatTimeCompactForPdf(shift.endTime);
   const br = Math.max(0, shift.breakDuration ?? 0);
-  if (br > 0) return `${start}-${end}\nPause ${br} Min`;
+  if (br > 0) return `${start}-${end}\nP ${br}m`;
   return `${start}-${end}`;
+}
+
+/** Für Tests — kompakte Zellen-Darstellung im PDF. */
+export function formatPdfShiftCell(shift: ShiftPlanPdfShift): string {
+  return formatShiftCell(shift);
 }
 
 function formatShiftCells(shifts: ShiftPlanPdfShift[]): string {
@@ -143,8 +151,39 @@ function safeCompanySlug(companyName: string): string {
     .toLowerCase();
 }
 
-/** Mindestbreite pro Tag-Spalte (mm) — darunter wird der Monat auf mehrere Seiten gesplittet. */
-const MIN_DAY_COL_MM = 7.5;
+/** Halbmonat pro Seite — besser lesbar auf A4 quer als 30 Spalten. */
+export const HALF_MONTH_PDF_DAYS = 15;
+
+/** Mindestbreite pro Tag-Spalte (mm). */
+const MIN_DAY_COL_MM = 11.5;
+
+export function chunkMonthDaysForPdf(
+  monthDays: Date[],
+  contentWidth: number,
+  nameColWidth: number,
+): Date[][] {
+  if (monthDays.length > HALF_MONTH_PDF_DAYS) {
+    const first = monthDays.slice(0, HALF_MONTH_PDF_DAYS);
+    const second = monthDays.slice(HALF_MONTH_PDF_DAYS);
+    return second.length > 0 ? [first, second] : [first];
+  }
+  const maxDaysPerPage = Math.max(
+    7,
+    Math.floor((contentWidth - nameColWidth) / MIN_DAY_COL_MM),
+  );
+  if (monthDays.length <= maxDaysPerPage) return [monthDays];
+  const chunks: Date[][] = [];
+  for (let i = 0; i < monthDays.length; i += maxDaysPerPage) {
+    chunks.push(monthDays.slice(i, i + maxDaysPerPage));
+  }
+  return chunks;
+}
+
+/** Seiten durch Tages-Split (ohne vertikale MA-Umbrüche). */
+export function estimateMonthPdfDayPages(monthDayCount: number): number {
+  if (monthDayCount <= HALF_MONTH_PDF_DAYS) return 1;
+  return Math.ceil(monthDayCount / HALF_MONTH_PDF_DAYS);
+}
 
 export function resolveExportMembers(
   members: ShiftPlanPdfMember[],
@@ -170,20 +209,7 @@ export function resolveExportMembers(
   return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, "de-DE"));
 }
 
-function chunkMonthDaysForPdf(monthDays: Date[], contentWidth: number, nameColWidth: number): Date[][] {
-  const maxDaysPerPage = Math.max(
-    7,
-    Math.floor((contentWidth - nameColWidth) / MIN_DAY_COL_MM),
-  );
-  if (monthDays.length <= maxDaysPerPage) return [monthDays];
-  const chunks: Date[][] = [];
-  for (let i = 0; i < monthDays.length; i += maxDaysPerPage) {
-    chunks.push(monthDays.slice(i, i + maxDaysPerPage));
-  }
-  return chunks;
-}
-
-function drawPdfPageFooters(doc: jsPDF, marginL: number, marginR: number) {
+function drawPdfPageFooters(doc: jsPDF, _marginL: number, _marginR: number) {
   const pageCount = doc.getNumberOfPages();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -244,7 +270,7 @@ export function buildShiftPlanMonthPdf(input: {
       titleLine: monthLabel,
       subtitleLine:
         dayChunks.length > 1
-          ? `Tage ${rangeLabel} · ${sortedMembers.length} Pers. · ${totalShifts} Schichten`
+          ? `${rangeLabel} · ${sortedMembers.length} Pers. · ${totalShifts} Schichten`
           : `${sortedMembers.length} Pers. · ${totalShifts} Schichten`,
       marginL,
       marginR,
@@ -256,8 +282,8 @@ export function buildShiftPlanMonthPdf(input: {
     const tableTop = marginT + 8;
     const availableHeight = pageHeight - tableTop - marginB;
     const fontSize = Math.min(
-      8,
-      Math.max(5.5, Math.min(7.5, availableHeight / (dataRowCount + 2) / 2.8, dayColWidth / 2.2)),
+      8.5,
+      Math.max(7, availableHeight / (dataRowCount + 2) / 2.4),
     );
     const cellPadding = Math.min(3, Math.max(1.5, fontSize / 3));
 

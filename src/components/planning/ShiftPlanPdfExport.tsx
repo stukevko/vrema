@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/Toast";
 import {
   buildShiftPlanMonthPdf,
   buildShiftsByUserIsoForMonth,
+  estimateMonthPdfDayPages,
   monthDaysInAnchor,
   resolveExportMembers,
   type ShiftPlanPdfMember,
@@ -45,8 +46,8 @@ export function ShiftPlanPdfExport({
     return n;
   }, [monthDays, shiftCycleWeeks, shifts]);
 
-  const pageHint =
-    monthDays.length > 28 ? " · ggf. 2+ Seiten" : "";
+  const dayPages = estimateMonthPdfDayPages(monthDays.length);
+  const pageHint = dayPages > 1 ? ` · ${dayPages} Seiten (Halbmonat)` : "";
   const metaLine = `${monthLabel} · ${exportMembers.length} Pers. · ${shiftsInMonth} Schichten${pageHint}`;
 
   const exportPdf = () => {
@@ -87,7 +88,7 @@ export function ShiftPlanPdfExport({
           </Button>
         </summary>
         <div className="border-t border-brand/15 px-3 pb-3 pt-2 text-[11px] text-muted-foreground">
-          Kompletter Monat: alle Mitarbeitenden × alle Tage — Querformat für WhatsApp.
+          Kompletter Monat auf {dayPages > 1 ? `${dayPages} Seiten` : "1 Seite"} — alle Mitarbeitenden × alle Tage.
         </div>
       </details>
 
@@ -99,7 +100,7 @@ export function ShiftPlanPdfExport({
           <div className="min-w-0">
             <p className="text-sm font-bold text-foreground">Plan fürs Team teilen</p>
             <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-              {metaLine} — Querformat, alle Tage des Monats.
+              {metaLine} — Querformat, Halbmonat pro Seite.
             </p>
           </div>
         </div>

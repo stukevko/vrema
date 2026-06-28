@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   buildShiftsByUserIsoForMonth,
+  chunkMonthDaysForPdf,
+  formatPdfShiftCell,
   monthDaysInAnchor,
   resolveExportMembers,
 } from "@/lib/planning/shift-plan-pdf";
@@ -59,5 +61,44 @@ describe("resolveExportMembers", () => {
       ],
     );
     expect(rows.map((r) => r.id)).toEqual(["u1", "u2"]);
+  });
+});
+
+describe("chunkMonthDaysForPdf", () => {
+  it("teilt volle Monate in zwei Halbmonate", () => {
+    const days = monthDaysInAnchor(new Date(2026, 5, 1));
+    const chunks = chunkMonthDaysForPdf(days, 281, 36);
+    expect(chunks).toHaveLength(2);
+    expect(chunks[0]).toHaveLength(15);
+    expect(chunks[1]).toHaveLength(15);
+    expect(chunks[0]![0]!.getDate()).toBe(1);
+    expect(chunks[1]![0]!.getDate()).toBe(16);
+  });
+});
+
+describe("formatPdfShiftCell", () => {
+  it("nutzt kompakte Zeiten ohne fuehrende Nullen", () => {
+    expect(
+      formatPdfShiftCell({
+        userId: "u1",
+        weekIndex: 1,
+        dayOfWeek: 1,
+        startTime: "08:00",
+        endTime: "16:00",
+      }),
+    ).toBe("8-16");
+  });
+
+  it("zeigt Pause nur wenn > 0", () => {
+    expect(
+      formatPdfShiftCell({
+        userId: "u1",
+        weekIndex: 1,
+        dayOfWeek: 1,
+        startTime: "14:00",
+        endTime: "22:00",
+        breakDuration: 30,
+      }),
+    ).toBe("14-22\nP 30m");
   });
 });
