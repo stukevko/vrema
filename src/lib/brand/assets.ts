@@ -10,4 +10,6 @@ export const VREMA_BRAND = {
   appleTouchIcon: "/apple-touch-icon.png",
   androidChrome192: "/android-chrome-192x192.png",
   androidChrome512: "/android-chrome-512x512.png",
+  /** Volles Logo (Icon + Wortmarke) — Landing & Marketing. */
+  logoLockup: "/vrema_logo.png",
 } as const;

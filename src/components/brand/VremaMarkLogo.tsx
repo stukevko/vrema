@@ -125,3 +125,39 @@ export function VremaWordmark({
     </span>
   );
 }
+
+/** Volles Logo-Bild für Landing/Marketing — vrema_logo.png, gut lesbar skaliert. */
+export function VremaLandingLogo({
+  height = 44,
+  className,
+}: {
+  height?: number;
+  className?: string;
+}): React.JSX.Element {
+  return (
+    <>
+      {/* Hell: Original invertiert (dunkles PNG → sichtbar auf hellem Hintergrund) */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={VREMA_BRAND.logoLockup}
+        alt="VREMA"
+        className={clsx(
+          "w-auto max-w-[min(100%,12rem)] object-contain object-left invert dark:hidden",
+          className,
+        )}
+        style={{ height }}
+      />
+      {/* Dunkel: helle Wortmarke */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/vrema-logo-white.png"
+        alt="VREMA"
+        className={clsx(
+          "hidden w-auto max-w-[min(100%,12rem)] object-contain object-left dark:block",
+          className,
+        )}
+        style={{ height }}
+      />
+    </>
+  );
+}

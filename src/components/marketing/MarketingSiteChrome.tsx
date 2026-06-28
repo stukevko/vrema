@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { Drawer } from "vaul";
-import { VremaLockup } from "@/components/brand/VremaMarkLogo";
+import { VremaLandingLogo } from "@/components/brand/VremaMarkLogo";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 /**
@@ -23,7 +23,7 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
               className="flex min-w-0 max-w-[45%] shrink-0 items-center py-1 sm:max-w-none"
               aria-label="VREMA"
             >
-              <VremaLockup size={36} variant="tile" className="text-foreground" />
+              <VremaLandingLogo height={44} />
             </Link>
 
             <div className="hidden items-center gap-x-8 text-sm text-muted-foreground md:flex">
@@ -114,7 +114,7 @@ export function MarketingSiteChrome({ children }: { children: React.ReactNode })
       <footer className="mt-auto w-full border-t border-slate-900 bg-slate-950 py-10 text-slate-300 dark:border-white/[0.06] dark:bg-[#0a0c10]">
         <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col items-start justify-between gap-6 px-4 md:flex-row md:items-center">
           <Link href="/" className="flex min-w-0 max-w-full items-center gap-3 text-slate-100" aria-label="VREMA">
-            <VremaLockup size={34} variant="tile" tagline="Intelligente Zeiterfassung" />
+            <VremaLandingLogo height={40} />
           </Link>
 
           <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-300">
