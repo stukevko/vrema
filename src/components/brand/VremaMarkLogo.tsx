@@ -126,38 +126,53 @@ export function VremaWordmark({
   );
 }
 
-/** Volles Logo-Bild für Landing/Marketing — vrema_logo.png, gut lesbar skaliert. */
+/** Marketing-Logo: scharfes horizontales Lockup (Kreis + VREMA), nav-tauglich skaliert. */
 export function VremaLandingLogo({
-  height = 44,
+  size = 44,
   className,
+  tagline,
+  /** Immer helle Marke — z. B. dunkler Footer unabhängig vom Theme. */
+  onDark = false,
 }: {
-  height?: number;
+  size?: number;
   className?: string;
+  tagline?: string;
+  onDark?: boolean;
 }): React.JSX.Element {
+  if (onDark) {
+    return (
+      <span className={clsx("inline-flex items-center gap-x-2.5", className)}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={VREMA_BRAND.markDark}
+          alt=""
+          aria-hidden
+          className="block shrink-0 object-contain"
+          style={{ width: size, height: size }}
+        />
+        <span className="flex min-w-0 flex-col justify-center leading-none">
+          <span className="font-bold tracking-tighter text-white" style={{ fontSize: Math.round(size * 0.62) }}>
+            VREMA
+          </span>
+          {tagline ? (
+            <span
+              className="mt-1 font-medium uppercase text-white/70"
+              style={{ fontSize: Math.max(9, Math.round(size * 0.24)), letterSpacing: "0.16em" }}
+            >
+              {tagline}
+            </span>
+          ) : null}
+        </span>
+      </span>
+    );
+  }
+
   return (
-    <>
-      {/* Hell: Original invertiert (dunkles PNG → sichtbar auf hellem Hintergrund) */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={VREMA_BRAND.logoLockup}
-        alt="VREMA"
-        className={clsx(
-          "w-auto max-w-[min(100%,12rem)] object-contain object-left invert dark:hidden",
-          className,
-        )}
-        style={{ height }}
-      />
-      {/* Dunkel: helle Wortmarke */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/vrema-logo-white.png"
-        alt="VREMA"
-        className={clsx(
-          "hidden w-auto max-w-[min(100%,12rem)] object-contain object-left dark:block",
-          className,
-        )}
-        style={{ height }}
-      />
-    </>
+    <VremaLockup
+      size={size}
+      variant="tile"
+      tagline={tagline}
+      className={clsx("items-center text-foreground", className)}
+    />
   );
 }

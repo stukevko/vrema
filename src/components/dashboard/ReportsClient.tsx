@@ -9,7 +9,6 @@ import {
   Lock,
   Download,
   FileSpreadsheet,
-  Sparkles,
   Loader2,
   CheckCircle2,
   Check,
@@ -46,7 +45,6 @@ import {
   workLogStatusPrintLabel,
   type WorkLogStatus,
 } from "@/lib/reports/work-log-display";
-import type { AIReportAnalysisPayload } from "@/lib/ai/types";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -177,53 +175,6 @@ function correctionDeltaSummary(params: {
 function durationMins(row: LogRow) {
   if (!row.clockOut) return null;
   return workedMinutes({ clockIn: row.clockIn, clockOut: row.clockOut, breakMins: row.breakMins });
-}
-
-function buildReportAnalysisFromFacts(params: {
-  month: string;
-  totalMinutes: number;
-  totalEntries: number;
-  avgBreakMins: number;
-  correctionNeeds: number;
-  logs: LogRow[];
-}): AIReportAnalysisPayload {
-  const totalHours = minutesToDecimalHours(params.totalMinutes, 2);
-  const avgBreakLabel = `${Math.round(params.avgBreakMins)} Min`;
-  const weekdayLoad = new Map<number, number>();
-  let breakRiskCount = 0;
-  for (const log of params.logs) {
-    const inAt = new Date(log.clockIn);
-    const weekday = inAt.getDay();
-    const dur = durationMins(log) ?? 0;
-    weekdayLoad.set(weekday, (weekdayLoad.get(weekday) ?? 0) + Math.max(0, dur));
-    if (dur >= 360 && log.breakMins < 30) breakRiskCount += 1;
-  }
-  const peakDay = Array.from(weekdayLoad.entries()).sort((a, b) => b[1] - a[1])[0];
-  const dayLabel = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"][
-    peakDay?.[0] ?? 1
-  ];
-  const tips = [
-    `Kapazitäts-Tipp: Höchste Auslastung am ${dayLabel} erkannt${peakDay ? ` (${minutesToDecimalHours(peakDay[1], 1)}h)` : ""}. Prüfen Sie dort die Schichtverteilung.`,
-    breakRiskCount > 0
-      ? `Compliance-Tipp: ${breakRiskCount} Schichten mit möglichem Pausenverstoß erkannt. Planen Sie für diese Teams feste Pausenfenster ein.`
-      : "Compliance-Tipp: Keine kritischen Pausenverstöße erkannt. Halten Sie die aktuelle Pausenstruktur stabil.",
-    params.correctionNeeds > 0
-      ? `Prozess-Tipp: ${params.correctionNeeds} Korrekturbedarfe im Zeitraum. Zielwert < 3 durch klarere Schicht-Startregeln.`
-      : "Prozess-Tipp: Sehr saubere Datenlage ohne Korrekturbedarf. Nutzen Sie das als Standard für alle Abteilungen.",
-  ];
-
-  return {
-    generatedAt: new Date().toISOString(),
-    summary:
-      `Für ${params.month} wurden ${totalHours} Stunden in ${params.totalEntries} Einträgen dokumentiert. ` +
-      `Die durchschnittliche Pausendauer liegt bei ${avgBreakLabel}, mit ${params.correctionNeeds} Korrekturbedarfen im Zeitraum.`,
-    highlights: [
-      `Gesamtstunden: ${totalHours} h`,
-      `Durchschnittliche Pausendauer: ${avgBreakLabel}`,
-      `Korrekturbedarfe im Zeitraum: ${params.correctionNeeds}`,
-      ...tips,
-    ],
-  };
 }
 
 function decimalHoursDE(minutes: number): string {
@@ -409,8 +360,6 @@ export function ReportsClient({
   const [correctionDecisionError, setCorrectionDecisionError] = useState<string | null>(null);
 
   const [isDatevDownloading, setIsDatevDownloading] = useState(false);
-  const [isAIAnalyzing, setIsAIAnalyzing] = useState(false);
-  const [aiAnalysis, setAIAnalysis] = useState<AIReportAnalysisPayload | null>(null);
   const hasProAccess = canExportPdf(plan);
   const totalHoursDecimal = minutesToDecimalHours(totalMinutes, 2);
   const productiveDays = new Set(
@@ -1087,40 +1036,6 @@ export function ReportsClient({
     });
   };
 
-  const runAIAnalysis = async () => {
-    if (isAIAnalyzing) return;
-    setIsAIAnalyzing(true);
-    try {
-      const finishedLogs = logs.filter((log) => log.clockOut);
-      const avgBreakMins =
-        finishedLogs.length === 0
-          ? 0
-          : finishedLogs.reduce((sum, log) => sum + Math.max(0, log.breakMins), 0) / finishedLogs.length;
-      const correctionNeeds = logs.filter(
-        (log) =>
-          log.status === "MANUAL_ADJUSTED" ||
-          (log.note?.includes("Korrektur durch Chef") ?? false) ||
-          (log.note?.includes("MANAGER-BEARBEITUNG") ?? false) ||
-          (log.note?.includes("MANAGER_EDIT") ?? false) ||
-          (log.note?.includes("Manuell korrigiert") ?? false)
-      ).length;
-      const analysis = buildReportAnalysisFromFacts({
-        month,
-        totalMinutes,
-        totalEntries: logs.length,
-        avgBreakMins,
-        correctionNeeds,
-        logs,
-      });
-      setAIAnalysis(analysis);
-      show("Auswertung wurde erstellt.", "success");
-    } catch (err: unknown) {
-      show("Die Auswertung konnte nicht erstellt werden. Bitte erneut versuchen.", "error");
-    } finally {
-      setIsAIAnalyzing(false);
-    }
-  };
-
   return (
     <>
       <div
@@ -1199,19 +1114,6 @@ export function ReportsClient({
                 </option>
               ))}
             </select>
-            <button
-              type="button"
-              onClick={runAIAnalysis}
-              disabled={isAIAnalyzing}
-              className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition-all active:scale-[0.99] sm:py-2.5 md:min-h-0 md:w-auto ${
-                isAIAnalyzing
-                  ? "animate-pulse border-brand/35 bg-brand-soft text-brand shadow-[var(--shadow-card-hover)]"
-                  : "border-brand/25 bg-surface text-brand md:hover:bg-brand-soft"
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              {isAIAnalyzing ? "Auswertung läuft …" : "Auswertung starten"}
-            </button>
             <button
               type="button"
               onClick={hasProAccess ? exportPdf : undefined}
@@ -1684,39 +1586,6 @@ export function ReportsClient({
           ))}
         </div>
         </div>
-
-        {(isAIAnalyzing || aiAnalysis) && (
-          <div className="no-print rounded-2xl border border-brand/20 bg-surface p-5 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-brand-soft text-brand">
-                <Sparkles className="h-4 w-4" />
-              </span>
-              <div>
-                <p className="text-xs uppercase tracking-widest text-fg-muted">Hinweise</p>
-                <h3 className="text-sm font-semibold text-fg">Tipps aus deinen Betriebsdaten</h3>
-              </div>
-            </div>
-
-            {isAIAnalyzing ? (
-              <div className="space-y-2">
-                <div className="h-4 animate-pulse rounded-full bg-brand-soft" />
-                <div className="h-4 w-11/12 animate-pulse rounded-full bg-brand-soft" />
-                <div className="h-4 w-9/12 animate-pulse rounded-full bg-brand-soft" />
-              </div>
-            ) : aiAnalysis ? (
-              <div className="space-y-3">
-                <p className="text-sm leading-relaxed text-fg">{aiAnalysis.summary}</p>
-                <ul className="space-y-2">
-                  {aiAnalysis.highlights.map((item) => (
-                    <li key={item} className="text-sm leading-relaxed text-fg-muted">
-                      ✨ {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </div>
-        )}
 
         </section>
 

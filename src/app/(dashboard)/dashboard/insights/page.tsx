@@ -8,8 +8,6 @@ import { PredictiveStaffingCard } from "@/components/dashboard/PredictiveStaffin
 import { ComplianceCard } from "@/components/dashboard/ComplianceCard";
 import { PlanVsIstCard } from "@/components/dashboard/PlanVsIstCard";
 import { RevenueSignalCard } from "@/components/dashboard/RevenueSignalCard";
-import { DashboardAISection } from "@/components/dashboard/DashboardAISection";
-import { AsyncAIInsights, AIInsightsSkeleton } from "@/components/dashboard/AsyncAIInsights";
 import {
   DashboardManagerGuidance,
   DashboardGuidanceSection,
@@ -107,11 +105,6 @@ export default async function InsightsPage() {
           <Suspense fallback={null}>
             <VremaInsightsCard />
           </Suspense>
-          <DashboardAISection>
-            <Suspense fallback={<AIInsightsSkeleton />}>
-              <AsyncAIInsights companyId={companyId} />
-            </Suspense>
-          </DashboardAISection>
         </DashboardGuidanceSection>
       </DashboardManagerGuidance>
 

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   ShieldCheck,
-  Lock,
   AlertOctagon,
   AlertTriangle,
   Info,
@@ -53,10 +52,6 @@ export async function VremaInsightsCard() {
             <ShieldCheck className="h-3 w-3" aria-hidden />
             Nur deine Firma
           </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-foreground/[0.04] px-2 py-0.5 text-[10px] font-medium text-muted-foreground dark:bg-white/[0.04]">
-            <Lock className="h-3 w-3" aria-hidden />
-            Kein Chat-KI
-          </span>
         </div>
       </header>
 
@@ -75,12 +70,6 @@ export async function VremaInsightsCard() {
         </div>
       )}
 
-      <footer className="mt-4 border-t border-border/60 pt-3 text-[11px] text-muted-foreground dark:border-white/[0.04]">
-        Wird genauer, je öfter du Wochenpläne abschließt.{" "}
-        <Link href="/dashboard/settings#ai-insights" className="font-semibold text-brand hover:underline">
-          Lernfaktoren ansehen
-        </Link>
-      </footer>
     </section>
   );
 }

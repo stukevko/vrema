@@ -61,19 +61,19 @@ describe("workedMinutes", () => {
     const mins = workedMinutes({
       clockIn: "2026-06-01T08:00:00+02:00",
       clockOut: "2026-06-02T16:00:00+02:00",
-      breakMins: 0,
+      breakMins: 30,
     });
     // Soll als 8h-Schicht interpretiert werden, nicht als 32h.
-    expect(mins).toBe(8 * 60);
+    expect(mins).toBe(8 * 60 - 30);
   });
 
   it("echte Nachtschicht (Start ≥22:00, Ende früh am Folgetag)", () => {
     const mins = workedMinutes({
       clockIn: "2026-06-01T22:00:00+02:00",
       clockOut: "2026-06-02T06:00:00+02:00",
-      breakMins: 0,
+      breakMins: 30,
     });
-    expect(mins).toBe(8 * 60);
+    expect(mins).toBe(8 * 60 - 30);
   });
 });
 

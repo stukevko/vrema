@@ -13,6 +13,7 @@ import {
   writeWorkLogAudit,
 } from "@/lib/worklogs/clock-core";
 import { getMonthBoundsUtc, parseDateTimeLocalBerlin } from "@/lib/time/timezone";
+import { finalizeBreakMinutesOnClose } from "@/lib/time/auto-break";
 
 function parseClockInstant(value: string | null | undefined): Date | null | undefined {
   if (value === undefined) return undefined;
@@ -23,6 +24,24 @@ function parseClockInstant(value: string | null | undefined): Date | null | unde
   if (berlin) return berlin;
   const d = new Date(trimmed);
   return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function applyAutoBreakToWorkLogFields(params: {
+  clockIn: Date;
+  clockOut: Date | null;
+  breakMins: number;
+  note?: string | null;
+}): { breakMins: number; note?: string | null } {
+  if (!params.clockOut) {
+    return { breakMins: params.breakMins, note: params.note };
+  }
+  const finalized = finalizeBreakMinutesOnClose({
+    clockIn: params.clockIn,
+    clockOut: params.clockOut,
+    breakMins: params.breakMins,
+    note: params.note,
+  });
+  return { breakMins: finalized.breakMins, note: finalized.note };
 }
 import { assertClockIpAllowed } from "@/lib/security/ip-allowlist-server";
 
@@ -211,6 +230,21 @@ export async function updateWorkLogByManager(params: {
   }
   if (params.status !== undefined) {
     data.status = params.status;
+  }
+
+  const finalClockIn = data.clockIn ?? existing.clockIn;
+  const finalClockOut = data.clockOut !== undefined ? data.clockOut : existing.clockOut;
+  const finalBreak = data.breakMins ?? existing.breakMins;
+  const finalNote = data.note !== undefined ? data.note : existing.note;
+  if (finalClockOut) {
+    const autoBreak = applyAutoBreakToWorkLogFields({
+      clockIn: finalClockIn,
+      clockOut: finalClockOut,
+      breakMins: finalBreak,
+      note: finalNote,
+    });
+    data.breakMins = autoBreak.breakMins;
+    if (autoBreak.note !== undefined) data.note = autoBreak.note;
   }
 
   const updated = await db.$transaction(async (tx) => {
@@ -452,13 +486,19 @@ export async function decideWorkLogCorrectionRequest(input: {
         where: tenantWhere(companyId, { id: req.workLogId }),
       });
       if (!before) throw new Error("Verknüpfter Zeiteintrag gehört nicht zu dieser Firma.");
+      const autoBreak = applyAutoBreakToWorkLogFields({
+        clockIn: req.requestedClockIn,
+        clockOut: req.requestedClockOut,
+        breakMins: req.requestedBreakMins,
+        note: noteParts || null,
+      });
       await tx.workLog.update({
         where: { id: req.workLogId },
         data: {
           clockIn: req.requestedClockIn,
           clockOut: req.requestedClockOut,
-          breakMins: req.requestedBreakMins,
-          note: noteParts || null,
+          breakMins: autoBreak.breakMins,
+          note: autoBreak.note || null,
           status: "MANUAL_ADJUSTED",
         },
       });
@@ -481,14 +521,20 @@ export async function decideWorkLogCorrectionRequest(input: {
         JSON.stringify(after)
       );
     } else {
+      const autoBreak = applyAutoBreakToWorkLogFields({
+        clockIn: req.requestedClockIn,
+        clockOut: req.requestedClockOut,
+        breakMins: req.requestedBreakMins,
+        note: noteParts || `[REQUEST_APPROVED:${req.id}]`,
+      });
       const created = await tx.workLog.create({
         data: {
           companyId: req.companyId,
           userId: req.userId,
           clockIn: req.requestedClockIn,
           clockOut: req.requestedClockOut,
-          breakMins: req.requestedBreakMins,
-          note: noteParts || `[REQUEST_APPROVED:${req.id}]`,
+          breakMins: autoBreak.breakMins,
+          note: autoBreak.note || `[REQUEST_APPROVED:${req.id}]`,
           status: "MANUAL_ADJUSTED",
         },
       });

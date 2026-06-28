@@ -3,6 +3,7 @@ import {
   getBerlinDateKey,
   getBerlinWallClockMinutes,
 } from "@/lib/time/timezone";
+import { resolveEffectiveBreakMins } from "@/lib/time/auto-break";
 
 export type WorkLogLike = {
   clockIn: Date | string;
@@ -31,22 +32,14 @@ function capCostEstimateMinutes(minutes: number): number {
   return Math.min(minutes, MAX_COST_ESTIMATE_MINUTES);
 }
 
-/**
- * Netto-Arbeitsminuten (Europe/Berlin).
- *
- * - Gleicher Berlin-Kalendertag: reine Wanduhr-Differenz (kein UTC-Tageswechsel-Phantom).
- * - Ausstempeln genau +1 Tag mit späterer Uhrzeit: typischer +24h-DB-Bug → Wanduhr auf Starttag.
- * - Echte Nachtschicht (Start ≥ 22:00, Ende am Folgetag früh): Mitternachts-Spanne.
- * - Sonst: UTC-Instant-Differenz (mehrtägig / Sonderfälle).
- */
-export function workedMinutes(log: WorkLogLike): number {
+/** Brutto-Arbeitsminuten ohne Pausenabzug (Europe/Berlin, gleiche Spanne wie `workedMinutes`). */
+export function grossWorkedMinutes(log: WorkLogLike): number {
   if (!log.clockOut) return 0;
 
   const start = toDate(log.clockIn);
   const end = toDate(log.clockOut);
   if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) return 0;
 
-  const breakNorm = Math.max(0, Math.floor(log.breakMins || 0));
   const startKey = getBerlinDateKey(start);
   const endKey = getBerlinDateKey(end);
   const startM = getBerlinWallClockMinutes(start);
@@ -55,7 +48,7 @@ export function workedMinutes(log: WorkLogLike): number {
   if (startKey === endKey) {
     const gross =
       endM >= startM ? endM - startM : MINUTES_PER_DAY - startM + endM;
-    return Math.max(0, gross - breakNorm);
+    return Math.max(0, gross);
   }
 
   const dayDiff = daysBetweenBerlinDateKeys(startKey, endKey);
@@ -70,22 +63,40 @@ export function workedMinutes(log: WorkLogLike): number {
         utcGross >= wallGross + 23 * 60 &&
         utcGross <= wallGross + 25 * 60
       ) {
-        return Math.max(0, wallGross - breakNorm);
+        return Math.max(0, wallGross);
       }
       if (wallGross > 0 && wallGross <= 16 * 60) {
-        return Math.max(0, wallGross - breakNorm);
+        return Math.max(0, wallGross);
       }
     }
 
     if (startM >= 22 * 60 && endM <= 8 * 60) {
       const gross = MINUTES_PER_DAY - startM + endM;
-      return Math.max(0, gross - breakNorm);
+      return Math.max(0, gross);
     }
   }
 
   if (end.getTime() <= start.getTime()) return 0;
   const utcGross = Math.round((end.getTime() - start.getTime()) / 60_000);
-  return Math.max(0, utcGross - breakNorm);
+  return Math.max(0, utcGross);
+}
+
+/**
+ * Netto-Arbeitsminuten (Europe/Berlin).
+ *
+ * - Gleicher Berlin-Kalendertag: reine Wanduhr-Differenz (kein UTC-Tageswechsel-Phantom).
+ * - Ausstempeln genau +1 Tag mit späterer Uhrzeit: typischer +24h-DB-Bug → Wanduhr auf Starttag.
+ * - Echte Nachtschicht (Start ≥ 22:00, Ende am Folgetag früh): Mitternachts-Spanne.
+ * - Sonst: UTC-Instant-Differenz (mehrtägig / Sonderfälle).
+ */
+export function workedMinutes(log: WorkLogLike): number {
+  if (!log.clockOut) return 0;
+
+  const gross = grossWorkedMinutes(log);
+  if (gross <= 0) return 0;
+
+  const breakNorm = resolveEffectiveBreakMins(log, undefined, gross);
+  return Math.max(0, gross - breakNorm);
 }
 
 export function sumWorkedMinutes<T extends WorkLogLike>(logs: T[]): number {

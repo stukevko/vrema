@@ -5,6 +5,7 @@ import { getWeekCycleIndex } from "@/lib/shift-cycle";
 import { generateTaskListForShiftCore } from "@/lib/shift-tasks/generate-task-list";
 import { randomUUID } from "crypto";
 import { parseBerlinShiftStart, getBerlinDateKey, berlinDateKeyToDayOfWeek } from "@/lib/time/timezone";
+import { finalizeBreakMinutesOnClose } from "@/lib/time/auto-break";
 
 const LATE_GRACE_MINUTES = 15;
 let constraintsEnsured = false;
@@ -198,11 +199,19 @@ export async function closeClockForUser(params: {
       nextBreakMins += extraBreak;
     }
 
+    const finalized = finalizeBreakMinutesOnClose({
+      clockIn: active.clockIn,
+      clockOut: now,
+      breakMins: nextBreakMins,
+      note: active.note,
+    });
+
     const updated = await tx.workLog.update({
       where: { id: active.id },
       data: {
         clockOut: now,
-        breakMins: nextBreakMins,
+        breakMins: finalized.breakMins,
+        note: finalized.note,
         isOnBreak: false,
         breakStartedAt: null,
       },

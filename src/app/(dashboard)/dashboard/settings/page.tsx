@@ -16,7 +16,6 @@ import { ApiKeysSection } from "@/components/dashboard/ApiKeysSection";
 import { TeamCsvImport } from "@/components/dashboard/TeamCsvImport";
 import { BrandingSection } from "@/components/dashboard/BrandingSection";
 import { ClockGeofenceSection } from "@/components/dashboard/ClockGeofenceSection";
-import { AiInsightsAuditSection } from "@/components/dashboard/AiInsightsAuditSection";
 import type { LucideIcon } from "lucide-react";
 import {
   Settings,
@@ -240,21 +239,6 @@ export default async function SettingsPage() {
             </h2>
           </div>
           <ApiKeysSection apiKeys={apiKeys} />
-        </section>
-      )}
-
-      {(isOwner || role === "MANAGER") && (
-        <section
-          id="ai-insights"
-          className="space-y-4"
-        >
-          <div className="mb-4 flex items-center gap-2">
-            <Brain className="h-4 w-4 text-muted-foreground" />
-            <h2 className="font-sans text-sm font-semibold uppercase tracking-widest text-foreground">
-              Planungs-Hinweise · Zurücksetzen
-            </h2>
-          </div>
-          <AiInsightsAuditSection />
         </section>
       )}
         </div>
