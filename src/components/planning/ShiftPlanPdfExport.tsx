@@ -1,15 +1,23 @@
 "use client";
 
 import { FileDown, Share2 } from "lucide-react";
+import { useMemo } from "react";
 import { useToast } from "@/components/ui/Toast";
-import { buildShiftPlanPdf, type ShiftPlanPdfMember, type ShiftPlanPdfShift } from "@/lib/planning/shift-plan-pdf";
+import {
+  buildShiftPlanMonthPdf,
+  buildShiftsByUserIsoForMonth,
+  monthDaysInAnchor,
+  type ShiftPlanPdfMember,
+  type ShiftPlanPdfShift,
+} from "@/lib/planning/shift-plan-pdf";
+import { monthYearLabel } from "@/lib/planning/cycle-display-date";
 import { Button } from "@/components/ui/Button";
 
 type Props = {
   companyName: string;
   plan: string;
+  monthAnchor: Date;
   shiftCycleWeeks: import("@/lib/shift-cycle").ShiftCycleWeeks;
-  weekIndex: import("@/lib/shift-cycle").ShiftCycleWeeks;
   members: ShiftPlanPdfMember[];
   shifts: ShiftPlanPdfShift[];
 };
@@ -17,25 +25,35 @@ type Props = {
 export function ShiftPlanPdfExport({
   companyName,
   plan: _plan,
+  monthAnchor,
   shiftCycleWeeks,
-  weekIndex,
   members,
   shifts,
 }: Props) {
   const { show } = useToast();
-  const shiftsInWeek = shifts.filter((s) => s.weekIndex === weekIndex && !Number.isNaN(s.dayOfWeek)).length;
-  const metaLine = `Woche ${weekIndex}${shiftCycleWeeks > 1 ? `/${shiftCycleWeeks}` : ""} · ${members.length} Pers. · ${shiftsInWeek} Schichten`;
+  const monthLabel = useMemo(() => monthYearLabel(monthAnchor), [monthAnchor]);
+  const monthDays = useMemo(() => monthDaysInAnchor(monthAnchor), [monthAnchor]);
+  const shiftsInMonth = useMemo(() => {
+    const map = buildShiftsByUserIsoForMonth(monthDays, shiftCycleWeeks, shifts);
+    let n = 0;
+    for (const list of map.values()) n += list.length;
+    return n;
+  }, [monthDays, shiftCycleWeeks, shifts]);
+
+  const pageHint =
+    monthDays.length > 16 ? " · ggf. 2+ Seiten" : monthDays.length > 10 ? " · ggf. 2 Seiten" : "";
+  const metaLine = `${monthLabel} · ${members.length} Pers. · ${shiftsInMonth} Schichten${pageHint}`;
 
   const exportPdf = () => {
-    const { doc, fileName } = buildShiftPlanPdf({
+    const { doc, fileName } = buildShiftPlanMonthPdf({
       companyName,
-      weekIndex,
+      monthAnchor,
       shiftCycleWeeks,
       members,
       shifts,
     });
     doc.save(fileName);
-    show(`Schichtplan Woche ${weekIndex} gespeichert — bereit für WhatsApp.`, "success");
+    show(`Schichtplan ${monthLabel} gespeichert — alle Tage & Mitarbeitende.`, "success");
   };
 
   return (
@@ -64,7 +82,7 @@ export function ShiftPlanPdfExport({
           </Button>
         </summary>
         <div className="border-t border-brand/15 px-3 pb-3 pt-2 text-[11px] text-muted-foreground">
-          Querformat für WhatsApp — alle Schichten der gewählten Woche.
+          Kompletter Monat: alle Mitarbeitenden × alle Tage — Querformat für WhatsApp.
         </div>
       </details>
 
@@ -75,7 +93,9 @@ export function ShiftPlanPdfExport({
           </span>
           <div className="min-w-0">
             <p className="text-sm font-bold text-foreground">Plan fürs Team teilen</p>
-            <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{metaLine} — Querformat für WhatsApp.</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+              {metaLine} — Querformat, alle Tage des Monats.
+            </p>
           </div>
         </div>
         <Button
@@ -84,7 +104,7 @@ export function ShiftPlanPdfExport({
           size="sm"
           leadingIcon={<FileDown className="h-4 w-4" />}
           onClick={exportPdf}
-          aria-label={`Schichtplan Woche ${weekIndex} als PDF herunterladen`}
+          aria-label={`Schichtplan ${monthLabel} als PDF herunterladen`}
           className="shrink-0 self-start sm:self-center"
         >
           PDF herunterladen

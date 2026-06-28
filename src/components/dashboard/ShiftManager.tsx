@@ -2627,8 +2627,8 @@ export function ShiftManager({
       <ShiftPlanPdfExport
         companyName={companyName}
         plan={plan}
+        monthAnchor={planMonthAnchor}
         shiftCycleWeeks={shiftCycleWeeks}
-        weekIndex={selectedWeekIndex}
         members={pdfMembers}
         shifts={pdfShifts}
       />

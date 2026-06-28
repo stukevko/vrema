@@ -5,9 +5,11 @@ import {
   dateForPlannerCycleDay,
   dayOrderMonFirst,
   formatPlannerWeekRange,
+  isoFromPlannerDate,
+  monthYearLabel,
   mondayOfWeekContaining,
 } from "@/lib/planning/cycle-display-date";
-import type { ShiftCycleWeeks } from "@/lib/shift-cycle";
+import { getWeekCycleIndex, type ShiftCycleWeeks } from "@/lib/shift-cycle";
 
 /** Mo=1 … So=0 (JS getDay-Konvention im Planer). */
 const PLANNER_DAYS_MON_FIRST = [1, 2, 3, 4, 5, 6, 0] as const;
@@ -44,14 +46,231 @@ function formatShiftCell(shift: ShiftPlanPdfShift): string {
   return `${start}-${end}`;
 }
 
-function dayColumnHeader(weekIndex: ShiftCycleWeeks, dayOfWeek: number): string {
-  const d = dateForPlannerCycleDay(weekIndex, dayOfWeek);
-  const dateLine = d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
-  return `${DAY_SHORT[dayOfWeek]}\n${dateLine}`;
+function formatShiftCells(shifts: ShiftPlanPdfShift[]): string {
+  if (shifts.length === 0) return "—";
+  return shifts.map(formatShiftCell).join("\n");
 }
+
+/** Alle Kalendertage eines Monats (lokal, Mittags — DST-sicher). */
+export function monthDaysInAnchor(monthAnchor: Date): Date[] {
+  const y = monthAnchor.getFullYear();
+  const m = monthAnchor.getMonth();
+  const lastDay = new Date(y, m + 1, 0).getDate();
+  const days: Date[] = [];
+  for (let d = 1; d <= lastDay; d++) {
+    days.push(new Date(y, m, d, 12, 0, 0, 0));
+  }
+  return days;
+}
+
+/** Schichten pro Mitarbeiter und Kalendertag (ISO) im Monat. */
+export function buildShiftsByUserIsoForMonth(
+  monthDays: Date[],
+  shiftCycleWeeks: ShiftCycleWeeks,
+  shifts: ShiftPlanPdfShift[],
+): Map<string, ShiftPlanPdfShift[]> {
+  const map = new Map<string, ShiftPlanPdfShift[]>();
+  for (const date of monthDays) {
+    const weekIndex = getWeekCycleIndex(date, shiftCycleWeeks);
+    const dow = date.getDay();
+    const iso = isoFromPlannerDate(date);
+    for (const shift of shifts) {
+      if (Number.isNaN(shift.dayOfWeek)) continue;
+      if (shift.weekIndex !== weekIndex || shift.dayOfWeek !== dow) continue;
+      const key = `${shift.userId}-${iso}`;
+      const list = map.get(key) ?? [];
+      list.push(shift);
+      map.set(key, list);
+    }
+  }
+  return map;
+}
+
+function countMonthShiftSlots(map: Map<string, ShiftPlanPdfShift[]>): number {
+  let n = 0;
+  for (const list of map.values()) n += list.length;
+  return n;
+}
+
+function dayColumnHeaderFromDate(date: Date): string {
+  const dateLine = date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  return `${DAY_SHORT[date.getDay()]}\n${dateLine}`;
+}
+
+function drawPlanPdfHeader(params: {
+  doc: jsPDF;
+  companyName: string;
+  titleLine: string;
+  subtitleLine: string;
+  marginL: number;
+  marginR: number;
+  marginT: number;
+}) {
+  const { doc, companyName, titleLine, subtitleLine, marginL, marginR, marginT } = params;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const contentRight = pageWidth - marginR;
+
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.2);
+  doc.line(marginL, marginT + 4, contentRight, marginT + 4);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(0, 0, 0);
+  doc.text("Schichtplan", marginL, marginT - 4);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(100, 116, 139);
+  doc.text("· VREMA", marginL + 26, marginT - 4);
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(9);
+  doc.text(pdfHeaderFirmenzeile(companyName), marginL, marginT);
+  doc.text(pdfSafe(titleLine), contentRight, marginT - 4, { align: "right" });
+  doc.setFontSize(8);
+  const created = new Date().toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  doc.text(`${pdfSafe(subtitleLine)} · Erstellt: ${created}`, contentRight, marginT, { align: "right" });
+}
+
+function safeCompanySlug(companyName: string): string {
+  return pdfSafe(companyName.trim() || "betrieb")
+    .replace(/[^a-zA-Z0-9_-]+/g, "-")
+    .slice(0, 24)
+    .toLowerCase();
+}
+
+const MONTH_DAYS_PER_PAGE = 16;
 
 function pdfHeaderFirmenzeile(companyName: string): string {
   return pdfSafe(payrollDocumentTitle(companyName));
+}
+
+function dayColumnHeader(weekIndex: ShiftCycleWeeks, dayOfWeek: number): string {
+  const d = dateForPlannerCycleDay(weekIndex, dayOfWeek);
+  return dayColumnHeaderFromDate(d);
+}
+
+export function buildShiftPlanMonthPdf(input: {
+  companyName: string;
+  monthAnchor: Date;
+  shiftCycleWeeks: ShiftCycleWeeks;
+  members: ShiftPlanPdfMember[];
+  shifts: ShiftPlanPdfShift[];
+}): { doc: jsPDF; fileName: string } {
+  const { companyName, monthAnchor, shiftCycleWeeks, members, shifts } = input;
+  const monthDays = monthDaysInAnchor(monthAnchor);
+  const shiftByUserIso = buildShiftsByUserIsoForMonth(monthDays, shiftCycleWeeks, shifts);
+  const sortedMembers = [...members]
+    .filter((m) => m.name.trim().length > 0)
+    .sort((a, b) => a.name.localeCompare(b.name, "de-DE"));
+
+  const marginL = 8;
+  const marginR = 8;
+  const marginT = 12;
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const contentWidth = pageWidth - marginL - marginR;
+  const monthLabel = monthYearLabel(monthAnchor);
+  const totalShifts = countMonthShiftSlots(shiftByUserIso);
+
+  const dayChunks: Date[][] = [];
+  for (let i = 0; i < monthDays.length; i += MONTH_DAYS_PER_PAGE) {
+    dayChunks.push(monthDays.slice(i, i + MONTH_DAYS_PER_PAGE));
+  }
+
+  dayChunks.forEach((chunk, chunkIndex) => {
+    if (chunkIndex > 0) doc.addPage();
+    const rangeLabel =
+      chunk.length === 1
+        ? chunk[0]!.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })
+        : `${chunk[0]!.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}–${chunk[chunk.length - 1]!.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}`;
+
+    drawPlanPdfHeader({
+      doc,
+      companyName,
+      titleLine: monthLabel,
+      subtitleLine:
+        dayChunks.length > 1
+          ? `Tage ${rangeLabel} · ${sortedMembers.length} Pers. · ${totalShifts} Schichten`
+          : `${sortedMembers.length} Pers. · ${totalShifts} Schichten`,
+      marginL,
+      marginR,
+      marginT,
+    });
+
+    const nameColWidth = 38;
+    const dayColWidth = Math.max(13, (contentWidth - nameColWidth) / chunk.length);
+    const fontSize = chunk.length > 14 ? 6.5 : 7.5;
+
+    const head = ["Mitarbeiter", ...chunk.map((d) => dayColumnHeaderFromDate(d))];
+    const body =
+      sortedMembers.length === 0
+        ? [["Kein Team eingetragen", ...chunk.map(() => "—")]]
+        : sortedMembers.map((m) => {
+            const label = m.area?.trim()
+              ? `${pdfSafe(m.name)}\n(${pdfSafe(m.area.trim())})`
+              : pdfSafe(m.name);
+            return [
+              label,
+              ...chunk.map((d) => {
+                const iso = isoFromPlannerDate(d);
+                return formatShiftCells(shiftByUserIso.get(`${m.id}-${iso}`) ?? []);
+              }),
+            ];
+          });
+
+    const columnStyles: Record<number, { halign: "left" | "center"; cellWidth: number; fontStyle?: "bold" }> = {
+      0: { cellWidth: nameColWidth, fontStyle: "bold", halign: "left" },
+    };
+    chunk.forEach((_, idx) => {
+      columnStyles[idx + 1] = { halign: "center", cellWidth: dayColWidth };
+    });
+
+    autoTable(doc, {
+      startY: marginT + 8,
+      margin: { left: marginL, right: marginR },
+      head: [head],
+      body,
+      styles: {
+        font: "helvetica",
+        fontSize,
+        cellPadding: 2,
+        overflow: "linebreak",
+        valign: "middle",
+      },
+      headStyles: {
+        fillColor: [15, 118, 110],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: Math.max(6, fontSize - 0.5),
+        halign: "center",
+      },
+      columnStyles,
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      didDrawPage: (data) => {
+        const pageCount = doc.getNumberOfPages();
+        doc.setFontSize(7);
+        doc.setTextColor(100, 116, 139);
+        doc.text(
+          `Seite ${data.pageNumber} / ${pageCount}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 6,
+          { align: "center" },
+        );
+      },
+    });
+  });
+
+  const y = monthAnchor.getFullYear();
+  const mo = String(monthAnchor.getMonth() + 1).padStart(2, "0");
+  return {
+    doc,
+    fileName: `schichtplan-${safeCompanySlug(companyName)}-${y}-${mo}.pdf`,
+  };
 }
 
 export function buildShiftPlanPdf(input: {
@@ -82,34 +301,16 @@ export function buildShiftPlanPdf(input: {
   const marginT = 12;
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
-  const contentRight = pageWidth - marginR;
 
-  doc.setDrawColor(226, 232, 240);
-  doc.setLineWidth(0.2);
-  doc.line(marginL, marginT + 4, contentRight, marginT + 4);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  doc.text("Schichtplan", marginL, marginT - 4);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(100, 116, 139);
-  doc.text("· VREMA", marginL + 26, marginT - 4);
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(9);
-  doc.text(pdfHeaderFirmenzeile(companyName), marginL, marginT);
-  doc.text(`Woche ${weekIndex} von ${shiftCycleWeeks} · ${pdfSafe(weekRange)}`, contentRight, marginT - 4, {
-    align: "right",
+  drawPlanPdfHeader({
+    doc,
+    companyName,
+    titleLine: `Woche ${weekIndex} von ${shiftCycleWeeks} · ${pdfSafe(weekRange)}`,
+    subtitleLine: `${sortedMembers.length} Pers. · ${weekShifts.length} Schichten`,
+    marginL,
+    marginR,
+    marginT,
   });
-  doc.setFontSize(8);
-  const created = new Date().toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  doc.text(`Erstellt: ${created}`, contentRight, marginT, { align: "right" });
 
   const head = [
     "Mitarbeiter",
@@ -187,12 +388,8 @@ export function buildShiftPlanPdf(input: {
     },
   });
 
-  const safeCompany = pdfSafe(companyName.trim() || "betrieb")
-    .replace(/[^a-zA-Z0-9_-]+/g, "-")
-    .slice(0, 24)
-    .toLowerCase();
   return {
     doc,
-    fileName: `schichtplan-${safeCompany}-woche-${weekIndex}.pdf`,
+    fileName: `schichtplan-${safeCompanySlug(companyName)}-woche-${weekIndex}.pdf`,
   };
 }
